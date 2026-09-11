@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a reproducible SAKU OSS defect. Do not disclose security-sensitive details here.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include secrets, personal/customer data, credentials, or vulnerability details. Security reports must use the Repository Security area and "Report a vulnerability".
+  - type: input
+    id: version
+    attributes:
+      label: Version or exact revision
+      description: Provide the release version or exact commit when known.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      options:
+        - Canonical contract interpretation
+        - Builder
+        - Trainer
+        - Sample Characters
+        - Documentation
+        - Packaging or installation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Use synthetic or redacted data only.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I removed secrets, credentials, personal/customer data, and vulnerability details.
+          required: true
+        - label: This is a bug report, not a request for Human Approval, Authority, paid support, or an SLA.
+          required: true

@@ -1,0 +1,17 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"urn:saku:candidate:data-state:v1",
+  "title":"SAKU Data State Vocabulary Candidate",
+  "description":"Use only where state distinctions carry semantic value; do not wrap every field.",
+  "enum":["PRESENT","ABSENT","UNKNOWN","NOT_CONFIGURED","NOT_APPLICABLE","EXTERNAL_EVIDENCE_REQUIRED"],
+  "x-saku-status":"CANDIDATE_NOT_ADOPTED",
+  "x-saku-semantics":{
+    "PRESENT":"Value is explicitly present in the observed artifact.",
+    "ABSENT":"Field or declaration is absent; no configuration conclusion follows.",
+    "UNKNOWN":"Available evidence cannot resolve the state.",
+    "NOT_CONFIGURED":"The configuration owner authoritatively reports no configuration.",
+    "NOT_APPLICABLE":"The item does not apply under the identified semantic context.",
+    "EXTERNAL_EVIDENCE_REQUIRED":"Resolution requires evidence owned outside this artifact."
+  },
+  "x-saku-invariants":["ABSENT != NOT_CONFIGURED","UNKNOWN != ABSENT","EXTERNAL_EVIDENCE_REQUIRED != UNKNOWN"]
+}

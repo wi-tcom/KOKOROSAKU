@@ -1,0 +1,25 @@
+SAKU OSS PUBLICATION CANDIDATE — PATH-SCOPED LICENSE INDEX
+
+This local candidate has no repository-wide license grant.
+
+1. Adopted Canonical exact four
+   License: Apache-2.0
+   Scope: only the exact four paths bound by ADOPTION_STATUS.json and the Owner license decision.
+
+2. Builder and Trainer code/runtime/test artifacts
+   License: MPL-2.0
+   Scope: only the exported paths identified by the source-to-public-path manifest.
+
+3. Builder and Trainer documentation
+   License: CC BY 4.0
+   Scope: only the exported documentation paths identified by the source-to-public-path manifest.
+
+4. PUBLIC_DOCS selected claims and newly authored publication documents
+   License: CC BY 4.0
+   Scope: only the exact publication-manifest paths.
+
+5. Three Sample Character data records
+   License: CC0-1.0
+   Scope: sample-general-compass, sample-erabazu-bridge, and sample-wit-guide only.
+
+No trademark or logo rights are granted. No Character data beyond the exact three Sample records is included. License texts and source Evidence are under LICENSES/ and the build provenance bundle.

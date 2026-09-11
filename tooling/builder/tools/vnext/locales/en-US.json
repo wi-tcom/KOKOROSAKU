@@ -1,0 +1,196 @@
+{
+  "_meta": {
+    "locale": "en-US",
+    "name": "English (US)",
+    "canonical_note": "Display only. Canonical enums and character_id are never translated."
+  },
+  "ui": {
+    "help": "Help",
+    "help_for": "Help for",
+    "close": "Close",
+    "meaning": "Meaning",
+    "example": "Example",
+    "behavior": "Behavior effect",
+    "interaction": "Interaction",
+    "caution": "Caution",
+    "language": "Language",
+    "about": "About",
+    "license": "License",
+    "expected_profile": "Expected Character Profile",
+    "design_tendency_note": "Design tendency — does not guarantee skill, qualification, or accuracy.",
+    "builder_title": "SAKU Builder vNext",
+    "trainer_title": "SAKU Trainer vNext",
+    "third_party": "Third-party notices",
+    "trademark": "Trademark",
+    "catalog_license": "Character Catalog license"
+  },
+  "label": {
+    "character_id": "character_id",
+    "display_name": "display name",
+    "catalog_code": "catalog_code",
+    "catalog_group": "catalog group",
+    "role_label": "role label",
+    "hard_invariants": "hard invariants",
+    "human_handoff": "human handoff conditions",
+    "seat_archetype": "seat archetype",
+    "seat_intensity": "intensity",
+    "front_minority": "front: minority_retention",
+    "front_selection": "front: selection_strength",
+    "axes_presentation": "presentation axes",
+    "professional_reasoning": "professional reasoning",
+    "ten_d": "10D (ten_d)",
+    "work_mode_affinity": "work mode affinity",
+    "internal_tension": "internal tension",
+    "expected_vs_observed": "expected vs observed",
+    "derived_metrics": "derived metrics",
+    "builder_candidate": "builder candidate",
+    "probe_scoring": "probe scoring"
+  },
+  "validation": {
+    "id_ascii": "character_id must be ASCII lowercase kebab-case",
+    "display_required": "display name is required",
+    "code_format": "catalog_code format is invalid (e.g. C01)",
+    "group_mismatch": "catalog_group does not match the catalog_code letter",
+    "id_embeds_code": "character_id appears to embed catalog_code (discouraged, C3)",
+    "p_needs_professional": "P group requires professional_reasoning",
+    "prohibited_empty": "professional_reasoning.prohibited_claims is empty",
+    "all_medium": "Seat1-7 are all MEDIUM (over-averaged) — place HIGH/LOW for contrast",
+    "high_tension": "High-tension composition (safety HIGH x ACCELERATOR HIGH) — integrate at Front, do not average",
+    "ok": "Canonical validation OK"
+  },
+  "help": {
+    "character_id": {
+      "meaning": "Permanent identity of the character. Immutable ASCII lowercase kebab-case.",
+      "example": "kisaragi-ren",
+      "behavior": "Identity only; never affects behavior or the Derived Profile.",
+      "interaction": "Independent of catalog_code and display name.",
+      "caution": "Do not embed catalog_code; do not translate; keep ASCII even for non-Latin names."
+    },
+    "display_name": {
+      "meaning": "The character's personal name shown to people. Unicode is allowed.",
+      "example": "如月 蓮",
+      "behavior": "Display only; no effect on Derived Profile.",
+      "interaction": "Separate from role_label and character_id.",
+      "caution": "Not an identity key; changing it must not change the canonical digest."
+    },
+    "catalog_group": {
+      "meaning": "Which catalog group the character belongs to (enum).",
+      "example": "CORE_CROSS_FUNCTIONAL",
+      "behavior": "Classification; does not drive thinking traits.",
+      "interaction": "Must match the first letter of catalog_code.",
+      "caution": "Enum value is canonical and never translated."
+    },
+    "role_label": {
+      "meaning": "The role name shown in the catalog. Translatable alias for display.",
+      "example": "Business Strategist",
+      "behavior": "Display only.",
+      "interaction": "Separate from display_name and character_id.",
+      "caution": "Alias is presentation; the canonical role identity is not changed by translation."
+    },
+    "hard_invariants": {
+      "meaning": "Conditions the character must always keep.",
+      "example": "Decides priorities but returns budget/contract sign-off to an authority.",
+      "behavior": "Primary guard after Persona Guard was removed.",
+      "interaction": "Backed by Conformance; surfaced in generated prompts.",
+      "caution": "Do not encode approvals, credentials, or mandates here."
+    },
+    "human_handoff": {
+      "meaning": "When to hand back to a human (reason_class + trigger).",
+      "example": "AUTHORITY_REQUIRED | budget or contract finalization",
+      "behavior": "Marks the boundary the character will not cross.",
+      "interaction": "Complements hard_invariants.",
+      "caution": "Store the condition only; no human name, endpoint, or approver."
+    },
+    "seat_archetype": {
+      "meaning": "How a seat mainly thinks internally.",
+      "example": "seat7 = ACCELERATOR (maximize speed/action)",
+      "behavior": "Shapes thinking-style and work-mode traits.",
+      "interaction": "Combines with intensity and other seats (see Interaction Map).",
+      "caution": "Choose from the seat's allowed set only."
+    },
+    "seat_intensity": {
+      "meaning": "How strongly the seat's tendency is applied.",
+      "example": "GUARDIAN HIGH",
+      "behavior": "Scales the archetype's contribution linearly.",
+      "interaction": "HIGH x opposing HIGH creates internal tension (not averaged).",
+      "caution": "HIGH is not authority; avoid all-MEDIUM (over-averaging)."
+    },
+    "front_minority": {
+      "meaning": "How much minority opinion the Front retains.",
+      "example": "HIGH = keep diverse views",
+      "behavior": "Raises minority retention, lowers convergence.",
+      "interaction": "With selection_strength HIGH, creates hold-vs-converge tension.",
+      "caution": "LOW compresses minority views at convergence."
+    },
+    "front_selection": {
+      "meaning": "How strongly the Front converges to one option.",
+      "example": "HIGH = strong convergence",
+      "behavior": "Raises convergence and decisiveness.",
+      "interaction": "Balances against minority_retention.",
+      "caution": "Too high can drop useful minority views."
+    },
+    "axes_presentation": {
+      "meaning": "Presentation-only axes (theme color, whitespace, weathering, pulse, pause...).",
+      "example": "j_theme_color = INDIGO_IRON_NAVY",
+      "behavior": "Affect expression only; not thinking/work-mode/strength traits.",
+      "interaction": "Changing a presentation axis leaves Work Mode Affinity unchanged (DP-03).",
+      "caution": "thinking_pause_ms is presentation, not real reasoning time."
+    },
+    "professional_reasoning": {
+      "meaning": "Adds where an expert looks. NOT a credential.",
+      "example": "Legal Analysis: issue spotting, evidence focus",
+      "behavior": "Adds reasoning focus, not authority.",
+      "interaction": "prohibited_claims guarantees no credential claim.",
+      "caution": "Profile != Credential != Qualification != Authority != Mandate."
+    },
+    "ten_d": {
+      "meaning": "Optional 10D fine tuning.",
+      "example": "(usually absent)",
+      "behavior": "Optional; absent by default.",
+      "interaction": "Independent of the 1+7 and 15 axes.",
+      "caution": "absent != zero != default; do not invent values."
+    },
+    "work_mode_affinity": {
+      "meaning": "Design-level fit for each work mode.",
+      "example": "STRATEGY = HIGH",
+      "behavior": "Derived from thinking traits (heuristic).",
+      "interaction": "Driven by composition, not presentation axes.",
+      "caution": "Affinity is not a guarantee of capability or accuracy."
+    },
+    "internal_tension": {
+      "meaning": "Opposing strong tendencies held together.",
+      "example": "GUARDIAN HIGH x ACCELERATOR HIGH",
+      "behavior": "Shown explicitly; not averaged to MEDIUM.",
+      "interaction": "Front integrates the tension.",
+      "caution": "Failing to integrate can make behavior swing."
+    },
+    "expected_vs_observed": {
+      "meaning": "Compares design expectation to probe observation.",
+      "example": "forward_progress expected HIGH, observed MEDIUM",
+      "behavior": "Highlights divergence (|delta|>=0.25).",
+      "interaction": "Feeds Adjustment Suggestions that point back to parameters.",
+      "caution": "Observed depends on the LLM and rater; interpret with care."
+    },
+    "derived_metrics": {
+      "meaning": "Evaluation metrics (tension, variance, etc.).",
+      "example": "internal_tension count",
+      "behavior": "Evaluation output, not canonical input.",
+      "interaction": "Computed by the Trainer.",
+      "caution": "Never auto-save to the SAKU Canonical."
+    },
+    "builder_candidate": {
+      "meaning": "A proposed revision from the Trainer.",
+      "example": "seat4 intensity HIGH -> MEDIUM",
+      "behavior": "A candidate pending human review.",
+      "interaction": "Handed back to the Builder.",
+      "caution": "The Trainer never overwrites the Canonical directly."
+    },
+    "probe_scoring": {
+      "meaning": "Score each probe response against its rubric (0.0-1.0).",
+      "example": "PB-FWD = 0.65",
+      "behavior": "Builds the Observed Character Profile.",
+      "interaction": "Compared against the Expected Profile.",
+      "caution": "Behavior-based; same text is not the same character."
+    }
+  }
+}

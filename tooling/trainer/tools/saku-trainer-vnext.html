@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex,nofollow" />
+<title>SAKU Trainer vNext — Character Observation Workspace</title>
+<link rel="stylesheet" href="./vnext/trainer-ui.css" />
+</head>
+<body>
+<a class="skip-link" href="#main-work">メイン作業へ移動</a>
+<header class="app-header">
+  <div class="brand"><span class="seed" aria-hidden="true"><i></i></span><span>SAKU <strong>TRAINER</strong></span></div>
+  <div class="session-head"><small id="header_ref">Private observation session</small><strong id="header_name">Characterを読み込み中</strong></div>
+  <div class="header-actions">
+    <span class="privacy">Private · Local only</span>
+    <a class="secondary" href="../../builder/tools/saku-builder-vnext.html" style="text-decoration:none;padding:10px 13px;border-radius:9px">‹ Builder</a>
+    <label class="sr-only" for="locale" id="lbl_language">Language</label>
+    <select id="locale" aria-label="UI language"><option value="ja-JP">日本語</option><option value="en-US">English</option></select>
+    <button class="secondary" id="btn_about">About / License</button>
+    <button id="btn_observe" aria-label="現在の観察へ移動">観察</button>
+  </div>
+</header>
+
+<div class="workspace">
+  <aside class="progress-pane" aria-label="Training Progress">
+    <p class="pane-kicker">Training session</p><h2 id="progress_character">—</h2>
+    <p class="small-muted" id="progress_goal">回答 → 観察 → 根拠 → 人による確認</p>
+    <nav class="round-list" id="round_list" aria-label="ラウンド進捗"></nav>
+    <div class="progress-group"><h3>確認済み</h3><ul id="confirmed_areas"><li>まだありません</li></ul></div>
+    <div class="progress-group"><h3>まだ不明</h3><ul id="unknown_areas"><li>回答の評価を始めてください</li></ul></div>
+    <div class="contradiction-count"><span>!</span><div><strong id="left_contradictions">0</strong><small>矛盾の候補</small></div></div>
+    <button class="finish-button secondary" id="btn_finish" disabled>トレーニングを終える</button>
+  </aside>
+
+  <main class="work-pane" id="main-work" tabindex="-1">
+    <div class="mobile-progress" id="mobile_progress">Step 1 / 10</div>
+
+    <section class="view" id="view_setup">
+      <div class="work-heading"><div><p class="round-label">Session start <span>Characterと観察条件</span></p><h1>観察を始める準備</h1></div><span class="stage-count">0 / 4</span></div>
+      <div class="boundary-banner"><span aria-hidden="true">◇</span><div><strong>TrainerはCharacterを自動変更しません。</strong><p>ここで作るのは、根拠とHuman Reviewを伴うBuilder Intake Candidateです。</p></div></div>
+      <div class="panel-card setup-grid">
+        <label>組み込みサンプル<select id="pick"></select></label>
+        <label>使用する外部AI<select id="platform"><option value="generic">Generic / Other</option><option value="chatgpt">ChatGPT</option><option value="claude">Claude</option><option value="gemini">Gemini</option><option value="local">Local LLM</option></select></label>
+        <label>質問言語<select id="question_language"><option value="ja">日本語</option><option value="en">English</option></select></label>
+        <label>観察領域<select id="focus_area"><option>Character conformance</option><option>意思決定</option><option>不確実性への対応</option><option>Safety</option><option>Human handoff</option></select></label>
+        <label class="wide">またはCanonical JSONを貼り付け<textarea id="paste" placeholder='{"identity":{...},"assistant_composition":{...},"personality_axes":{...}}'></textarea></label>
+        <div class="wide inline-actions"><button class="secondary" id="btn_load">貼り付けから読み込み</button><button class="primary" id="btn_start">このCharacterで始める →</button></div>
+        <div class="wide small-muted" id="who">読み込み中です。</div>
+      </div>
+    </section>
+
+    <section class="view" id="view_prompt" hidden>
+      <div class="work-heading"><div><p class="round-label">Round <b class="round_number">1</b> <span>質問を準備</span></p><h1>次の観察を始める</h1></div><span class="stage-count">1 / 4</span></div>
+      <p class="small-muted" id="prompt_reason">未確認の振る舞いを、誘導しない具体質問で確認します。</p>
+      <div class="panel-card prompt-card">
+        <div class="panel-label"><span>質問プロンプト</span><small id="prompt_meta">日本語 · Generic</small></div>
+        <p class="prompt-question" id="current_question">質問を準備しています。</p>
+        <div class="question-basis"><div><span id="question_source">UNKNOWN</span><strong id="question_focus">未確認領域</strong><small>Expected Profileは質問選定に使いますが、Observedとしては扱いません。</small></div><button class="text-button" id="btn_regenerate">別の質問へ</button></div>
+        <pre id="promptout" hidden></pre>
+        <div class="copy-row"><button class="copy-button primary" id="btn_copy_prompt">⧉ フルプロンプトをコピー</button><button class="copy-button secondary" id="btn_copy_question">⧉ 今回の質問だけコピー</button><button class="text-button" id="btn_prompt">内容を表示</button></div>
+      </div>
+      <div class="handoff-guide"><span aria-hidden="true">↗</span><div><h3>外部AIとの往復</h3><ol><li>プロンプトを1クリックでコピー</li><li>選択した外部AIへ貼り付け</li><li>回答をコピーしてTrainerへ戻る</li></ol></div></div>
+      <button class="primary" id="btn_to_answer">回答を貼り付ける →</button>
+    </section>
+
+    <section class="view" id="view_answer" hidden>
+      <div class="work-heading"><div><p class="round-label">Round <b class="round_number">1</b> <span>回答を受け取る</span></p><h1>SAKUの回答を貼り付ける</h1></div><span class="stage-count">2 / 4</span></div>
+      <div class="welcome-back"><span aria-hidden="true">↳</span><div><strong>おかえりなさい</strong><p>外部AIからコピーした回答を、そのまま貼り付けてください。</p></div></div>
+      <div class="panel-card">
+        <label class="answer-label" for="answer_input">ペーストしたSAKUの回答</label>
+        <textarea class="answer-box" id="answer_input" placeholder="まだ回答が貼り付けられていません。&#10;&#10;外部AIからSAKUの回答をコピーし、ここへ貼り付けてください。"></textarea>
+        <div class="answer-actions"><button class="secondary" id="btn_paste">⎘ クリップボードから貼り付け</button><button id="btn_sample_answer">サンプル回答を入れる</button><button class="text-button" id="btn_clear_answer">回答をクリア</button></div>
+        <div class="score-panel" data-help-key="probe_scoring"><h3>Rubricに照らした人の評価</h3><p id="current_rubric">評価観点を読み込み中です。</p><label class="score-label" for="score_input">観察された強さ（未操作ならUNKNOWN）</label><div class="score-control"><input id="score_input" type="range" min="0" max="1" step="0.05" value="0.5" aria-describedby="score_scale"><output id="score_out">未評価</output></div><div class="score-scale" id="score_scale"><span>0.0 観察されない</span><span>0.5 混在</span><span>1.0 強く観察</span></div></div>
+        <div class="error-state" id="answer_error" hidden role="alert"><strong>評価結果を作成できません。</strong><p>回答は保持されています。回答を貼り付けるか、このRoundをUNKNOWNとして保留できます。</p></div>
+        <div class="inline-actions"><button class="primary" id="btn_evaluate">回答を評価する →</button><button class="secondary" id="btn_hold_unknown">UNKNOWNとして保留</button></div>
+      </div>
+    </section>
+
+    <section class="view" id="view_evaluation" hidden>
+      <div class="work-heading"><div><p class="round-label">Round <b class="round_number">1</b> <span>観察を確認</span></p><h1>根拠と推論を分けて見る</h1></div><span class="stage-count">3 / 4</span></div>
+      <div class="unknown-banner"><div><strong>UNKNOWN &gt; unsupported inference</strong><p>回答が存在しても、Character全体を確定できない領域は未確定として残します。</p></div></div>
+      <div class="legend" aria-label="Evidence classification"><span>● 確認済み <small>EXPLICIT</small></span><span>◐ 可能性が高い <small>DERIVED</small></span><span>◇ 推論 <small>INFERRED</small></span><span>— 未確定 <small>UNKNOWN</small></span><span>! 矛盾 <small>CONTRADICTION</small></span></div>
+      <div class="observation-stack" id="evaluation_cards"></div>
+      <div class="inline-actions"><button class="copy-button secondary" id="btn_copy_evaluation">⧉ 評価結果をコピー</button><button class="primary" id="btn_to_round_summary">ラウンドまとめへ →</button></div>
+    </section>
+
+    <section class="view" id="view_round_summary" hidden>
+      <div class="work-heading"><div><p class="round-label">Round <b class="round_number">1</b> <span>ラウンドのまとめ</span></p><h1>今回わかったこと</h1></div><span class="stage-count">4 / 4</span></div>
+      <div class="summary-grid" id="round_summary_grid"></div>
+      <div class="recommendation"><span>→</span><div><small>推奨する次の観察</small><strong id="next_recommendation">まだ確認していない振る舞いを観察します。</strong></div></div>
+      <div class="inline-actions"><button class="copy-button secondary" id="btn_copy_round">⧉ まとめをコピー</button><button class="secondary" id="btn_finish_round">トレーニングを終える</button><button class="primary" id="btn_next_round">次の質問を生成 →</button></div>
+    </section>
+
+    <section class="view long-view" id="view_training_summary" hidden>
+      <p class="page-kicker">Observation summary</p><h1>Training Summary</h1><p class="page-lead">観察を、根拠の強さと未確定を保ったまま整理します。</p>
+      <div class="boundary-banner"><span>◇</span><div><strong>これは最終CharacterでもCanonicalでもありません。</strong><p>Trainer Observationだけを表します。</p></div></div>
+      <div class="summary-grid" id="training_summary_blocks"></div><div class="quality-grid" id="quality_grid"></div>
+      <div class="inline-actions"><button class="copy-button secondary" id="btn_copy_training">⧉ Training Summaryをコピー</button><button class="primary" id="btn_to_impact">Character Impact Preview →</button></div>
+    </section>
+
+    <section class="view long-view" id="view_impact" hidden>
+      <p class="page-kicker">Character impact preview</p><h1>Characterへの影響を予測する</h1>
+      <div class="prediction-banner"><span>◇</span><div><strong>Trainerによる予測であり、動作保証ではありません。</strong><p>Current Character、Candidate、Predicted After Importを分けます。</p></div></div>
+      <div class="impact-table" role="table" aria-label="Current Candidate Predicted comparison"><div class="impact-head"><span>Current Character</span><span>Trainer Candidate</span><span>Predicted After Import</span></div><div id="impact_rows"></div></div>
+      <div class="effect-grid" id="effect_grid"></div><button class="primary" id="btn_to_review">Human Reviewへ →</button>
+    </section>
+
+    <section class="view long-view" id="view_review" hidden>
+      <p class="page-kicker">Human review</p><h1>人による確認</h1><p class="page-lead">Builderへ渡す前に、観察・推論・未確定・影響予測を混同していないことを確認します。</p>
+      <fieldset class="review-checks"><legend class="sr-only">確認チェック</legend>
+        <label><input type="checkbox" class="review_check"><span>Evidenceの引用と回答原文を確認した。</span></label>
+        <label><input type="checkbox" class="review_check"><span>人のRubric評価とAI推論を区別した。</span></label>
+        <label><input type="checkbox" class="review_check"><span>UNKNOWNと矛盾候補を確認した。</span></label>
+        <label><input type="checkbox" class="review_check"><span>Candidate変更案の内容を確認した。</span></label>
+        <label><input type="checkbox" class="review_check"><span>Impact Previewは予測であり保証ではないと確認した。</span></label>
+      </fieldset>
+      <div class="export-warning"><span>!</span><div><strong>この確認はCharacter変更の承認ではありません。</strong><p>Builder Intake Candidateへ変換してよいかだけを確認します。</p></div></div>
+      <button class="primary" id="btn_to_export" disabled>Builder Intake Candidateを作る →</button>
+    </section>
+
+    <section class="view long-view" id="view_export" hidden>
+      <p class="page-kicker">Builder export</p><h1>SAKU Builder Intake Candidate</h1>
+      <div class="export-warning"><span>◇</span><div><strong>これはCharacter変更Candidateです。</strong><p>SAKU Builderで人が確認・選択するまでCharacterは変更されません。</p></div></div>
+      <div class="export-status"><div><small>Character updated</small><strong>NO</strong></div><div><small>Builder review</small><strong>YES</strong></div><div><small>Human review</small><strong>DONE</strong></div></div>
+      <div class="export-code"><div class="panel-label"><span>SAKU_TRAINER_OBSERVATION_CANDIDATE</span><small>schema 0.1</small></div><pre id="candout">Candidateを準備しています。</pre></div>
+      <div class="export-actions"><button class="copy-button primary" id="btn_copy_candidate">⧉ Builder取込用データをコピー</button><button class="copy-button secondary" id="btn_copy_human">⧉ 人が読めるまとめをコピー</button><button class="secondary" id="btn_canddl">Engine Candidate JSONを表示</button></div>
+      <div id="candstatus" class="copy-result"><span>✓</span><div><strong>候補の準備ができました</strong><p>Character updated: <b>NO</b> · Builder review required: <b>YES</b></p></div></div>
+      <pre id="engine_candout" hidden></pre><button id="btn_cand" hidden>改善 Candidate を生成</button>
+    </section>
+  </main>
+
+  <aside class="observation-pane" id="observation_notebook" aria-label="Trainer Observation">
+    <div class="notebook-heading"><h2>Trainer Observation</h2><span id="notebook_round">Round 0</span></div>
+    <p class="notebook-note">Training Session内の観察です。Character定義や人格スコアではありません。</p>
+    <div id="notebook_body" class="notebook-empty"><strong>まだ十分な根拠がありません</strong><p>回答を1件評価すると、観察と確信度が表示されます。</p><small>Status: UNKNOWN</small></div>
+    <div class="notebook-boundary"><span>◇</span><p>Trainerの評価はCandidateです。Human ReviewなしにCanonicalへ反映しません。</p></div>
+  </aside>
+</div>
+
+<nav class="mobile-nav" aria-label="モバイル進行"><button id="mobile_back">← 戻る</button><span id="mobile_step">Step 1 / 10</span><button id="mobile_next">次へ →</button></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal" id="about_modal" role="dialog" aria-modal="true" aria-labelledby="about_title"><div class="modal-card"><h2 id="about_title">SAKU Builder / Trainer vNext</h2><div id="about_body"></div><div style="text-align:right"><button class="primary" id="about_close">閉じる</button></div></div></div>
+
+<script type="module">
+  import "./vnext/help-registry.mjs";
+  import "./vnext/trainer-ui.mjs";
+</script>
+</body>
+</html>

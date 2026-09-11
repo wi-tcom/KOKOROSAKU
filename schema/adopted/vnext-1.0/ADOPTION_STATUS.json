@@ -1,0 +1,49 @@
+{
+  "format": "saku.adoption-status.v1",
+  "canonical_repository": "wi-tcom/-SAKU-1-7-Character-System",
+  "canonical_revision": "ff901cc38231c80c3abdc3ee18dc5a35b048a888",
+  "adoption_decision_id": "OD-SAKU-PR7-20260822-01",
+  "current_status": "ADOPTED",
+  "embedded_candidate_labels": "HISTORICAL_BYTES_SUPERSEDED_FOR_EXACT_IDENTITIES",
+  "semantic_bytes_changed": false,
+  "canonical_authority_not_transferred": true,
+  "publication_authorized": false,
+  "artifacts": [
+    {
+      "path": "schema/adopted/vnext-1.0/saku-vnext-character.candidate.schema.json",
+      "source_path": "schemas/saku-vnext-character.candidate.schema.json",
+      "identity": "saku.character",
+      "version": "vnext-1.0",
+      "git_blob": "a4f0611349ce198c063ad7fa0c6b24c5714a2423",
+      "sha256": "sha256:e62cd93a43c69dfac2fc64f57311a7bdf65614db8761e49e08f672801657d8c5",
+      "status": "ADOPTED"
+    },
+    {
+      "path": "schema/adopted/vnext-1.0/saku-data-state-vocabulary.candidate.schema.json",
+      "source_path": "schemas/saku-data-state-vocabulary.candidate.schema.json",
+      "identity": "urn:saku:candidate:data-state:v1",
+      "version": "v1",
+      "git_blob": "6115aa0f9a1756585ddf85b609ed4019b5b1eeb2",
+      "sha256": "sha256:3cca206c6b1a3d57b4161fbc226967b07e1407d467162bdfb7a6faee53267c9c",
+      "status": "ADOPTED"
+    },
+    {
+      "path": "schema/adopted/vnext-1.0/saku-conformance-evaluation.candidate.schema.json",
+      "source_path": "schemas/saku-conformance-evaluation.candidate.schema.json",
+      "identity": "saku.character.conformance-evaluation",
+      "version": "1.1.0-candidate",
+      "git_blob": "03be776ad67b25e7c35b54141b9404d8b3d7dab6",
+      "sha256": "sha256:8c69c4c37a8415022f89c449440418b0bedd3313568f6a63776cb0d86552734e",
+      "status": "ADOPTED"
+    },
+    {
+      "path": "schema/adopted/vnext-1.0/saku-vnext-semantic-rule-set.vnext-1.0.candidate.json",
+      "source_path": "schemas/saku-vnext-semantic-rule-set.vnext-1.0.candidate.json",
+      "identity": "saku.vnext.cat",
+      "version": "vnext-1.0",
+      "git_blob": "29245e28443cfd4f3cabce2d6c948a79b7f36282",
+      "sha256": "sha256:f56bb6f3e42846905a0f1f0ac4e7027036e2b5dadfb0db01e9d98283d4c0760c",
+      "status": "ADOPTED"
+    }
+  ]
+}

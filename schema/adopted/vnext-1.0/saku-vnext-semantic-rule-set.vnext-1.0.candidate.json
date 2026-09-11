@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:saku:candidate:semantic-rule-set:saku.vnext.cat:vnext-1.0",
+  "artifact_role": "CANONICAL_SEMANTIC_SPECIFICATION_CANDIDATE",
+  "status": "CANDIDATE_NOT_ADOPTED",
+  "semantic_owner": "02B_SAKU_Canonical_Schema",
+  "rule_set_id": "saku.vnext.cat",
+  "rule_set_version": "vnext-1.0",
+  "rules": {
+    "CAT-01": "catalog has exactly 64 Characters",
+    "CAT-02": "catalog_code format and uniqueness",
+    "CAT-03": "character_id format and uniqueness",
+    "CAT-04": "catalog_code prefix, catalog_group, counts and manifest identity agree",
+    "CAT-05": "Seats 1-7 function semantics agree with profile",
+    "CAT-06": "Seat8 is one logical HUMAN seat without intensity",
+    "CAT-07": "personality axes are structurally complete",
+    "CAT-08": "P01-P08 professional_reasoning mapping/status/prohibited claims; absent outside P",
+    "CAT-09/10": "runtime, authority, credential and organization boundary keys prohibited",
+    "CAT-11": "derived metrics prohibited from Canonical inputs",
+    "CAT-12": "ten_d presence requires explicit value_state"
+  },
+  "group_map": {
+    "C": "CORE_CROSS_FUNCTIONAL", "B": "BUSINESS", "T": "TECHNICAL",
+    "H": "HUMAN_SERVICE", "R": "RESEARCH_CREATIVE",
+    "P": "PROFESSIONAL_REASONING", "G": "ORGANIZATIONAL_DYNAMICS"
+  },
+  "group_counts": { "C": 10, "B": 10, "T": 14, "H": 8, "R": 6, "P": 8, "G": 8 },
+  "professional_profile_by_catalog_code": {
+    "P01": "LEGAL_ANALYSIS", "P02": "TAX_PRACTICE", "P03": "ACCOUNTING_AUDIT",
+    "P04": "LABOR_PRACTICE", "P05": "IP_ANALYSIS", "P06": "REGISTRATION_PROCEDURE",
+    "P07": "ADMINISTRATIVE_PROCEDURE", "P08": "VALUATION"
+  },
+  "seat_function": {
+    "seat1": "FRONT_COORDINATOR", "seat2": "SPECIALIST", "seat3": "FACT_CHECKER",
+    "seat4": "SAFETY_BOUNDARY", "seat5": "USER_ADVOCATE", "seat6": "RED_TEAM",
+    "seat7": "FORWARD_DRIVER"
+  },
+  "prohibited_boundary_keys": [
+    "memory", "experience", "runtime_state", "session_state", "model_selection",
+    "model_claude", "model_codex", "web_access", "tool_permission", "tool_execution",
+    "operational_rules", "calibration", "real_human_identity", "credential", "qualification",
+    "mandate", "endpoint", "sla", "routing", "assignment", "delegation", "approval_state",
+    "audit_log", "trust_receipt", "organization_runtime", "machi_assignment",
+    "signature_requirement", "amu_configuration"
+  ],
+  "prohibited_derived_metric_keys": [
+    "internal_tension", "opinion_variance", "front_flattening",
+    "minority_insight_retained", "novel_insight_count"
+  ],
+  "boundary_rule_identities": ["CAT-09/10", "CAT-11", "CAT-12"],
+  "reference_implementation": {
+    "path": "verification/python/saku_vnext_semantic_conformance.py",
+    "validator_id": "saku.semantic-conformance-validator",
+    "validator_version": "1.0.0-candidate",
+    "artifact_role": "REFERENCE_IMPLEMENTATION_AND_EVIDENCE_TOOLING"
+  }
+}
