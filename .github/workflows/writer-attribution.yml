@@ -1,0 +1,144 @@
+name: Writer Attribution Gate
+
+# 目的: ブランチ名前空間と実際の書き手（コミットトレーラー）の不一致を fail-closed で止める。
+# 根拠: 2026-09-11 監査 A-02。-SAKU-builder PR #15 の claude/ ブランチに
+#       Codex のコミットが 18 件混入していた事象の再発防止。
+# 検証: 本ロジックは実データで反証済み（CONTROL_writer-attribution.md §4 / §4-2）。
+#   真陽性 kokoroamu-trust#6  直接コミット 3 / 違反 3  → FAIL（run 34540855866）
+#   真陰性 erabazu.works#33   直接コミット 2 / 違反 0  → PASS（統合マージで持ち込まれた
+#                              Codex コミット 30 件を first-parent フィルタが正しく除外）
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  attribution:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Classify namespace and verify every direct commit
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+
+          CLAUDE_RE='Co-[Aa]uthored-[Bb]y:.*[Cc]laude'
+          CODEX_RE='Co-[Aa]uthored-[Bb]y:.*[Cc]odex'
+
+          # 署名運用の開始時刻。これより前の commit は署名が存在し得ないため、
+          # LEGACY_UNSIGNED として計上のみ行い、違反にしない。
+          # 根拠: Codex 署名運用の開始は -SAKU-builder ecdcded5 / 2026-09-10T22:42Z。
+          # この境界が無いと、既存の Codex PR がすべて落ちる（実測: Builder #15=18,
+          # #4=4, #16=1 違反）。統制の目的は遡及処罰ではなく、以降の帰属保証。
+          SIGNATURE_EPOCH="${SIGNATURE_EPOCH:-2026-09-10T22:42:00Z}"
+
+          prefix="${HEAD_REF%%/*}"
+          case "$prefix" in
+            claude)                        expect=claude ; mode=exclusive ;;
+            work|chat|codex|agent)         expect=codex  ; mode=exclusive ;;
+            candidate|integration|snapshot|review|task)
+                                           expect=any    ; mode=report ;;
+            *)
+              echo "::error::未宣言のブランチ名前空間です: '${HEAD_REF}'"
+              echo "書き手を表す接頭辞を付けてください（claude/ work/ chat/ codex/ agent/）。"
+              echo "両者が書く共有ブランチは candidate/ integration/ snapshot/ review/ task/ を使います。"
+              exit 1
+              ;;
+          esac
+
+          base="$(git merge-base "$BASE_SHA" "$HEAD_SHA")"
+
+          # このブランチ上で直接書かれたコミットだけを対象にする。
+          # --first-parent により、他ブランチをマージして持ち込まれたコミットは除外される。
+          # 統合ブランチが両者の成果を union するのは設計どおりなので、違反にしない。
+          mapfile -t commits < <(git rev-list --no-merges --first-parent "${base}..${HEAD_SHA}")
+
+          echo "namespace : ${prefix}/  (expect=${expect}, mode=${mode})"
+          echo "base      : ${base:0:12}"
+          echo "commits   : ${#commits[@]} 件（このブランチ上の直接コミット）"
+          echo
+
+          violations=0
+          claude_n=0
+          codex_n=0
+          unsigned_n=0
+          legacy_n=0
+          legacy_cross_n=0
+
+          epoch_ts="$(date -u -d "$SIGNATURE_EPOCH" +%s)"
+
+          for sha in "${commits[@]}"; do
+            msg="$(git log -1 --format=%B "$sha")"
+            subject="$(git log -1 --format=%s "$sha")"
+            commit_ts="$(git log -1 --format=%ct "$sha")"
+
+            if grep -Eq "$CLAUDE_RE" <<<"$msg"; then
+              writer=claude ; claude_n=$((claude_n + 1))
+            elif grep -Eq "$CODEX_RE" <<<"$msg"; then
+              writer=codex  ; codex_n=$((codex_n + 1))
+            else
+              writer=unsigned ; unsigned_n=$((unsigned_n + 1))
+            fi
+
+            # 境界日は「強制の開始点」。それ以前の commit は違反にしない。ただし黙って通さず計上する。
+            # 無署名なら LEGACY_UNSIGNED、署名があり名前空間と食い違うなら LEGACY_CROSSING。
+            # 後者を免除しないと「署名しなかった方が通り、正直に署名した方が落ちる」逆転が起きる
+            # （実例: -SAKU-1-7 #4 c6ba649、Claude 署名つきで work/ に 2026-08-20 に置かれた commit）。
+            # 境界日以前の履歴は不変（force push 禁止）で、越境の集合は閉じており全件監査済み。
+            if [ "$commit_ts" -lt "$epoch_ts" ]; then
+              if [ "$writer" = "unsigned" ]; then
+                echo "::notice::${sha:0:12} LEGACY_UNSIGNED（境界日以前・無署名）— ${subject}"
+                legacy_n=$((legacy_n + 1))
+                continue
+              elif [ "$mode" = "exclusive" ] && [ "$writer" != "$expect" ]; then
+                echo "::warning::${sha:0:12} LEGACY_CROSSING（境界日以前・${writer} 署名が ${prefix}/ に存在）— ${subject}"
+                legacy_cross_n=$((legacy_cross_n + 1))
+                continue
+              fi
+            fi
+
+            if [ "$mode" = "exclusive" ] && [ "$writer" != "$expect" ]; then
+              echo "::error::${sha:0:12} 書き手=${writer} / 名前空間=${prefix}/ が要求する書き手=${expect} — ${subject}"
+              violations=$((violations + 1))
+            fi
+          done
+
+          {
+            echo "### Writer Attribution"
+            echo
+            echo "| 項目 | 値 |"
+            echo "| --- | --- |"
+            echo "| ブランチ名前空間 | \`${prefix}/\` |"
+            echo "| 要求する書き手 | ${expect} |"
+            echo "| 直接コミット | ${#commits[@]} |"
+            echo "| Claude 署名 | ${claude_n} |"
+            echo "| Codex 署名 | ${codex_n} |"
+            echo "| 無署名 | ${unsigned_n} |"
+            echo "| うち LEGACY_UNSIGNED（境界日以前・無署名・免除） | ${legacy_n} |"
+            echo "| うち LEGACY_CROSSING（境界日以前・署名つき越境・免除） | ${legacy_cross_n} |"
+            echo "| 違反 | ${violations} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$mode" = "report" ]; then
+            echo "共有名前空間のため書き手の制約なし。内訳のみ記録しました。"
+            exit 0
+          fi
+
+          if [ "$violations" -gt 0 ]; then
+            echo
+            echo "違反 ${violations} 件。名前空間と書き手が一致していません。"
+            echo "対処: 正しい接頭辞のブランチに載せ替えるか、共有名前空間（candidate/ 等）へ移してください。"
+            exit 1
+          fi
+
+          echo "PASS — ${#commits[@]} 件すべてが ${expect} の署名を持っています。"
