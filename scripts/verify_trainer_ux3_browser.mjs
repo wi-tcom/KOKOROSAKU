@@ -1,0 +1,156 @@
+import { spawn } from 'node:child_process';
+import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const chrome='C:/Program Files/Google/Chrome/Application/chrome.exe';
+const harness=`<!doctype html><meta charset="utf-8"><pre id="report">RUNNING</pre><script type="module">
+import { testCharacter } from '/scripts/fixtures/trainer-ux3-character.mjs';
+import { openStore, current, newId, groupFor } from '/tools/v1/trainer-ux3.mjs';
+import { storeHandoff } from '/tools/unified-v1/handoff-binding.mjs';
+const checks=[],check=(x,m)=>{if(!x)throw new Error(m);checks.push(m);};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const until=async(fn)=>{for(let i=0;i<500;i++){if(fn())return;await wait(20);}throw new Error('TIMEOUT: '+fn);};
+let frame,doc;
+const errors=[];window.addEventListener('error',e=>errors.push(e.message));
+ const load=async(url='/tools/saku-trainer-ux3-compat.html')=>{if(frame)frame.remove();frame=document.createElement('iframe');frame.style.cssText='width:1280px;height:950px';frame.src=url;document.body.append(frame);await new Promise(r=>frame.onload=r);doc=frame.contentDocument;frame.contentWindow.addEventListener('error',e=>errors.push(e.message));await until(()=>doc.getElementById('start')||doc.getElementById('stage-02')||doc.getElementById('stage-03'));};
+const click=async(id,predicate)=>{doc.getElementById(id).click();await wait(180);if(predicate)await until(predicate);};
+const change=async(id,value)=>{const e=doc.getElementById(id);e.value=value;e.dispatchEvent(new Event('change',{bubbles:true}));await wait(180);};
+const type=async(id,value)=>{const e=doc.getElementById(id);e.value=value;e.dispatchEvent(new Event('input',{bubbles:true}));await wait(450);};
+const pick=async(name,value)=>{const e=doc.querySelector('input[name="'+name+'"][value="'+value+'"]');e.checked=true;e.dispatchEvent(new Event('input',{bubbles:true}));await wait(450);};
+const selectQuestion=async(id)=>{const e=doc.querySelector('input[name="question"][value="'+id+'"]');e.checked=true;e.dispatchEvent(new Event('change',{bubbles:true}));await wait(180);};
+try {
+ const character=testCharacter();localStorage.setItem('saku.workspace.active',JSON.stringify({character,identity:character.identity}));
+ await load();check(doc.querySelectorAll('.stages li').length===3,'UX-01 three-stage orientation');
+ check(doc.getElementById('save-state').textContent==='新しいSessionを作成しました','New Session is not mislabelled as resumed');
+ check(doc.querySelectorAll('#preparation-settings select').length===5,'UX-05 five preparation fields grouped');
+ check(doc.getElementById('session-management').open,'UX-06 session management initially open');
+ check(!doc.querySelector('#paste,#btn_load')&&!doc.body.innerText.includes('Character JSON'),'UX-08 no Character JSON input');
+ check(!doc.getElementById('start').disabled===false,'Cannot start without selected questions');
+ await change('execution-mode','CATEGORY_BATCH');await selectQuestion('PB-JUDGE');await selectQuestion('PB-FWD');
+ await click('start',()=>doc.getElementById('stage-02'));
+ check(doc.querySelectorAll('#stage-02 details.step').length===3,'UX-09 three AI accordions on one screen');
+ check(doc.defaultView.scrollY===0,'Stage transition starts at the visible heading');
+ check(doc.getElementById('ai-step-1').open,'Prompt accordion initially open');
+ const db=await openStore();let s=await db.load(await db.active()),eid=s.selected.execution;
+ const before=JSON.stringify(s.selected);doc.getElementById('ai-step-3').open=true;await wait(40);
+ check(JSON.stringify((await db.load(s.session_id)).selected)===before,'Accordion does not advance evidence');
+ await type('answer-input','First answer 🌸\\r\\nSecond answer.');
+ check(doc.getElementById('answer-feedback').textContent.includes('回答を入力しました'),'Response paste immediate visible feedback');
+ await click('back-prepare',()=>doc.getElementById('stage-01'));
+ check((await db.load(s.session_id)).drafts.responses[eid].includes('First answer'),'UX-02 UX-04 back preserves response draft');
+ await click('start',()=>doc.getElementById('stage-02'));
+ check(doc.getElementById('answer-input').value.includes('First answer'),'Resume same attempt/draft');
+ await click('save-response',()=>doc.getElementById('original-mapping'));
+ s=await db.load(s.session_id);const original=current(s).original;
+ check(Object.keys(s.originals).length===1&&!Object.keys(s.evaluations).length,'Original save creates no evaluation/result');
+ check(!doc.getElementById('evaluation-form'),'WHOLE is not inferred');
+ await click('bind-whole',()=>doc.getElementById('evaluation-form'));
+ check(!doc.querySelector('input[name="conclusion"]:checked'),'UX-11 conclusion has no default');
+ check(!doc.querySelector('input[name="confirmed"]:checked,input[name="reasons"]:checked'),'No checkboxes auto-selected');
+ check(doc.querySelectorAll('input[name="confirmed"]').length===8&&doc.querySelectorAll('input[name="reasons"]').length===7,'UX-12 UX-13 fixed choice counts');
+ check(!doc.body.innerText.includes('Expert')&&!doc.getElementById('summary_input'),'UX-10 normal evaluation without Expert or summary input');
+ check(!doc.body.innerText.includes('NOT_ASSESSEDとして保留'),'UX-15 no duplicate hold action');
+ check(doc.getElementById('evaluate').textContent==='結果を見る','UX-16 result CTA');
+ await click('evaluate');check(!doc.getElementById('global-error').hidden&&doc.getElementById('evaluation-form'),'Required choices fail without advancing');
+ await pick('conclusion','MATCH');await pick('confirmed','C01');await pick('confirmed','C_NONE');await pick('reasons','R01');
+ await click('evaluate');check(doc.getElementById('global-error').textContent.includes('同時に選べません'),'Invalid C_NONE combination actionable');
+ const notice=doc.getElementById('evaluation-error'), noticeRect=notice.getBoundingClientRect();
+ check(notice===doc.activeElement&&noticeRect.top>=0&&noticeRect.bottom<=doc.defaultView.innerHeight,'Invalid choices focus a visible actionable error beside the result CTA');
+ check(doc.querySelector('input[value="C_NONE"]').checked&&doc.querySelector('input[value="C01"]').checked,'Invalid selections retained unchanged');
+ doc.querySelector('input[value="C_NONE"]').checked=false;
+ await click('evaluate',()=>doc.getElementById('stage-03'));
+ s=await db.load(s.session_id);const r1=current(s).result,ev1=current(s).evaluation;
+ check(ev1.confirmed_note===''&&ev1.reason_note==='','UX-14 optional notes empty');
+ check(doc.getElementById('character-mutation-state').textContent.includes('この検証からの変更：なし'),'Explicit no-Character-write evidence');
+ await click('back-ai',()=>doc.getElementById('stage-02'));
+ check(doc.getElementById('saved-evaluation')&&doc.getElementById('answer-input').value===original.text,'UX-03 exact original/evaluation on 03 to 02');
+ await click('reevaluate',()=>doc.getElementById('evaluation-form'));
+ await pick('conclusion','NOT_ASSESSED');await pick('confirmed','C01');await pick('reasons','R07');
+ await click('evaluate',()=>doc.getElementById('stage-03'));
+ s=await db.load(s.session_id);check(Object.keys(s.results).length===2&&JSON.stringify(s.results[r1.id])===JSON.stringify(r1),'Browser re-evaluation appends E2/V2 preserving E1/V1');
+ await click('next-question',()=>doc.getElementById('stage-02'));
+ s=await db.load(s.session_id);check(s.selected.execution===eid&&current(s).original.id===original.id,'Batch next question uses same single Original');
+ await click('bind-unresolved');check(!doc.getElementById('evaluation-form'),'Unknown mapping stays unevaluable for this question only');
+ const mapping=doc.getElementById('original-mapping');mapping.setSelectionRange(0,12);
+ await click('bind-partial',()=>doc.getElementById('evaluation-form'));
+ s=await db.load(s.session_id);check(current(s).binding.kind==='PARTIAL','Browser PARTIAL selected via exact offsets');
+ await pick('conclusion','PARTIAL');await pick('confirmed','C_NONE');await pick('reasons','R02');await click('evaluate',()=>doc.getElementById('stage-03'));
+ s=await db.load(s.session_id);check(Object.keys(s.originals).length===1&&Object.keys(s.results).length===3,'Browser two independent question evaluations share one Original');
+ const head=current(s).result.id;await load();s=await db.load(s.session_id);check(current(s).result.id===head&&doc.getElementById('stage-03'),'Restart preserves selected exact result');
+ await click('history');check(doc.getElementById('history-dialog').open,'History opens');
+ const currentBefore=JSON.stringify(s.selected);doc.querySelector('[data-result="'+r1.id+'"]').click();await wait(220);
+ check(JSON.stringify((await db.load(s.session_id)).selected)===currentBefore,'Historical result view never switches current lineage');
+ await click('back-current',()=>doc.getElementById('stage-02'));await click('view-saved-result',()=>doc.getElementById('stage-03'));
+ await click('retest',()=>doc.getElementById('stage-02'));s=await db.load(s.session_id);
+ check(current(s).execution.id!==eid&&Object.keys(s.results).length===3&&!current(s).original,'Browser retest preserves evidence history');
+ await type('answer-input','Retest draft');await click('back-prepare',()=>doc.getElementById('stage-01'));
+ const savedId=s.session_id;await click('clear-session');check((await db.active())===null&&(await db.load(savedId)),'UX-07 Clear view detaches but preserves Session');
+ await load();check(doc.getElementById('current-character').textContent.trim()==='未選択','Reload after Clear view does not silently resume');
+ await change('saved-session',savedId);check((await db.active())===null,'Session selection alone does not load');
+ await click('resume-session');check((await db.active())===savedId,'Start explicitly resumes selected Session');
+ await click('start',()=>doc.getElementById('stage-02'));check(doc.getElementById('answer-input').value==='Retest draft','Resume retains retest draft');
+ await change('locale','en');check(doc.querySelector('h1').textContent==='02 Check with AI','JA/EN stage parity');
+ check(doc.querySelectorAll('#stage-02 details.step > summary').length===3,'EN accordions remain available');
+ await click('back-prepare',()=>doc.getElementById('stage-01'));
+ check(!/[\\u3040-\\u30ff\\u4e00-\\u9fff]/.test(doc.getElementById('preparation-settings').innerText.replace('日本語','')),'EN preparation controlled wording');
+ const list=await db.list();check(list.length===1,'No duplicate Session created by resume');
+ await change('saved-session',savedId);await click('delete-session');check(doc.getElementById('delete-dialog').open&&doc.getElementById('delete-description').textContent.includes(savedId),'Delete identifies exact Session/counts');
+ await click('cancel-delete');check(await db.load(savedId),'Cancel deletion preserves target');
+ await click('delete-session');await click('confirm-delete');check(!(await db.load(savedId))&&(await db.active())===null,'Delete removes only explicitly confirmed Session');
+ check(localStorage.getItem('saku.workspace.active')!==null,'Session deletion preserves Character');
+ // Atomic storage failure: abort a real IndexedDB transaction after all logical
+ // records have been computed; verify no partial Result or changed head appears.
+ const test=await db.create(testCharacter());let state=test;
+ const operation=async(type,payload)=>{const r=await db.run(state.session_id,{intent:newId('intent'),type,payload});state=r.session;return r;};
+ await operation('prepare',{expected:state.preparation,preparation:{...state.preparation,question_ids:['PB-JUDGE']}});await operation('start',{question_id:'PB-JUDGE',expected_execution:null});
+ const execution=current(state).execution;const responseOp={intent:'lost-response',type:'response',payload:{execution_id:execution.id,expected_original:null,text:'Atomic response'}};
+ const one=await db.run(state.session_id,responseOp),two=await db.run(state.session_id,responseOp);state=two.session;
+ check(two.replay&&one.result.original_id===two.result.original_id,'IndexedDB retry idempotency after lost response');
+ await operation('binding',{execution_id:execution.id,question_attempt_id:state.selected.question,original_id:current(state).original.id,expected_binding:null,kind:'WHOLE',human_explicit:true});
+ const beforeFailure=JSON.stringify(state);const put=IDBObjectStore.prototype.put;
+ IDBObjectStore.prototype.put=function(){this.transaction.abort();throw new Error('INJECTED_ABORT');};
+ let rejected=false;try{await db.run(state.session_id,{intent:'aborted-evaluation',type:'evaluate',payload:{execution_id:execution.id,question_attempt_id:state.selected.question,binding_id:current(state).binding.id,expected_evaluation:null,language:'ja',choices:{conclusion:'MATCH',confirmed:['C01'],reasons:['R01']}}});}catch{rejected=true;}finally{IDBObjectStore.prototype.put=put;}
+ check(rejected&&JSON.stringify(await db.load(state.session_id))===beforeFailure,'Atomic abort leaves no Evaluation/Result/head partial success');
+ // Two writers reading the same old head: exactly one commits, never both.
+ const ops=[1,2].map(i=>({intent:'race-'+i,type:'response',payload:{execution_id:execution.id,expected_original:current(state).original.id,text:'race '+i}}));
+ const race=await Promise.allSettled(ops.map(o=>db.run(state.session_id,o)));check(race.filter(r=>r.status==='fulfilled').length===1,'Concurrent expected-head conflict fails closed');
+ storeHandoff(localStorage,'trainer',character);
+  await load('/tools/saku-trainer-ux3-compat.html?desktop=viewer&character_id=wrong-character&character_revision=1.0.0');
+ check(doc.getElementById('global-error').textContent.includes('IDENTITY_MISMATCH')&&doc.getElementById('current-character').textContent.trim()==='Not selected','Trainer rejects mismatched Character without adopting fallback');
+ check(localStorage.getItem('saku.desktop.pendingTrainerCharacter')===null,'Rejected Character transport cannot replay');
+ storeHandoff(localStorage,'trainer',character);
+  await load('/tools/saku-trainer-ux3-compat.html?desktop=viewer&character_id=ux3-test&character_revision=1.0.0');
+ check(doc.getElementById('current-character').textContent.includes('Trainer UX3 Test'),'Fresh matching Character handoff succeeds');
+ check(localStorage.getItem('saku.desktop.pendingTrainerCharacter')===null,'Accepted Character handoff consumed once');
+ check(errors.filter(x=>!x.includes('INJECTED_ABORT')).length===0,'No browser runtime errors: '+errors);
+ document.getElementById('report').textContent=JSON.stringify({status:'PASS',passed:checks.length,checks});document.getElementById('report').dataset.status='PASS';
+}catch(error){document.getElementById('report').textContent=JSON.stringify({status:'FAIL',passed:checks.length,error:String(error.stack||error),checks,body:doc?.body.innerText.slice(-2500)});document.getElementById('report').dataset.status='FAIL';}
+</script>`;
+const mime={'.mjs':'text/javascript','.html':'text/html','.css':'text/css','.json':'application/json'};
+const server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost');if(u.pathname==='/__ux3__'){res.setHeader('Content-Type','text/html;charset=utf-8');res.end(harness);return;}const file=path.resolve(ROOT,decodeURIComponent(u.pathname).replace(/^\//,''));if(!file.startsWith(ROOT+path.sep))throw new Error('outside root');res.setHeader('Content-Type',(mime[path.extname(file)]||'text/plain')+';charset=utf-8');res.end(await readFile(file));}catch{res.statusCode=404;res.end('not found');}});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const profile=await mkdtemp(path.join(tmpdir(),'saku-ux3-test-'));
+const child=spawn(chrome,['--headless=new','--disable-gpu','--disable-background-networking','--no-first-run','--no-default-browser-check','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{windowsHide:true,stdio:['ignore','pipe','pipe']});
+let output='',errors='',socket; child.stderr.on('data',x=>errors+=x);
+const pause=ms=>new Promise(r=>setTimeout(r,ms));
+try {
+ let port;for(let i=0;i<100;i++){try{port=(await readFile(path.join(profile,'DevToolsActivePort'),'utf8')).split('\n')[0];break;}catch{await pause(100);}}
+ if(!port)throw new Error('Chrome control port unavailable');
+ const target=await (await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(`http://127.0.0.1:${server.address().port}/__ux3__`)}`,{method:'PUT'})).json();
+ socket=new WebSocket(target.webSocketDebuggerUrl);await new Promise(r=>socket.onopen=r);
+ let sequence=0;const pending=new Map();socket.onmessage=event=>{const data=JSON.parse(event.data);if(data.id){pending.get(data.id)?.(data);pending.delete(data.id);}};
+ const call=(method,params={})=>new Promise(resolve=>{const id=++sequence;pending.set(id,resolve);socket.send(JSON.stringify({id,method,params}));});
+ for(let i=0;i<1000;i++){
+   const r=await call('Runtime.evaluate',{expression:'document.getElementById("report")?.dataset.status',returnByValue:true});
+   if(r.result?.result?.value){output=(await call('Runtime.evaluate',{expression:'document.documentElement.outerHTML',returnByValue:true})).result.result.value;break;}
+   await pause(100);
+ }
+ if(!output)output=(await call('Runtime.evaluate',{expression:'document.documentElement.outerHTML',returnByValue:true})).result.result.value;
+} finally {socket?.close();child.kill();await new Promise(r=>child.exitCode!==null?r():child.once('exit',r));server.close();await rm(profile,{recursive:true,force:true});}
+const match=output.match(/<pre id="report" data-status="(PASS|FAIL)">([\s\S]*?)<\/pre>/);
+if(!match){console.error(output.slice(0,1800),errors.slice(-1000));process.exit(1);}
+const report=JSON.parse(match[2].replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>'));
+console.log(JSON.stringify(report,null,2));if(report.status!=='PASS')process.exitCode=1;

@@ -21,7 +21,7 @@
 //     contract names as the correct answer rather than a gap to fill with a
 //     guess.
 //
-// Knowledge source: tools/legacy schema/tuning/tuning-knowledge-20.json, carried from
+// Knowledge source: tools/unified-v1/tuning/tuning-knowledge-20.json, carried from
 // the authoritative packet with tuning-provenance.json recording its digests.
 // `verify_cognitive_tuning.mjs` re-reads the packet and fails on drift.
 
@@ -344,7 +344,7 @@ export function probeMap() {
 // carries, so an older CSV keeps working unchanged.
 //
 // Three derivations are prohibited outright and are not attempted anywhere in
-// this file: an occupation never implies authority, a credential, or a
+// this module ensures an occupation never implies authority, a credential, or a
 // permission. `license_jp` and `license_world` are deliberately not read for
 // that reason — a licence in a market survey is not a grant to anyone.
 export const OCCUPATION_SIGNAL_SOURCES = {

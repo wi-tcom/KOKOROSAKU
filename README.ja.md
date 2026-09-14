@@ -1,33 +1,25 @@
-# KOKOROSAKU v0.1.0β
+# KOKOROSAKU v0.1.0-beta.1
 
-> **翻訳について:** この文書は [English README](README.md) の日本語訳です。英語版が正本であり、内容が異なる場合は英語版が優先されます。
+English canonical documentation: [README.md](README.md)
 
-ステータス: `PUBLIC / v0.1.0-beta.1 / wi-tcom/KOKOROSAKU`
+KOKOROSAKUは、SAKU Builder／Trainerの公開sourceと評価用packageです。BuilderとTrainerの出力はCandidateのままで、Canonical Authorityや承認にはなりません。
 
-KOKOROSAKUは、SAKU Characterを作成・確認するための持ち運び可能なツールキットです。Unified V1 Schema、必須のCharacter Extension Contract、3体の合成Sample Character、静的なBuilder / Trainerを含みます。
+## インストールして使う
 
-## はじめに
+将来の公式GitHub Releaseから `SAKU Builder_0.1.0-beta.1_x64-setup.exe` を取得します。このβ版は未署名のため、Windows SmartScreenが警告を表示することがあります。実行前にSHA-256 `3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b` と一致することを確認してください。installerはgit treeとsource ZIPには含まれません。
 
-[Builder Quickstart](docs/getting-started/builder-quickstart.md)に従ってリポジトリのrootをHTTPで配信し、`/tooling/builder/index.html`を開いてください。
+## インストールせず試す
 
-Builderの主な日本語UI用語は次のとおりです。
+source archiveのrootをローカルHTTPで配信し、`tooling/builder/index.html` を開きます。module画面の `file://` 直開きは非対応です。
 
-1. 基本情報
-2. 目的と役割
-3. 仕事と使いどころ
-4. 人格・価値観と話し方
-5. 守ることと人に任せる条件
+## 開発者
 
-## 権限と境界
+repositoryをcloneし、Node 24.19.0で `npm ci`、`npm run desktop:prepare:public`、`npm run tauri:build` の順に実行します。exact toolchainは `docs/releases/0.1.0-beta.1/BUILD_ENVELOPE.json` を参照してください。
 
-- 有効なCharacter Schemaは`SAKU_UNIFIED_SCHEMA_V1`です。
-- Builder / Trainerの出力はCandidateであり、Canonical Adoption、Authority、Policy、Approval、Release、Productionではありません。
-- 席7の公開名称は`PERSONA_BRAND_GUARD_ASSISTANT`です。Authority、Policy、Approvalを発行しません。
-- Commercial 64、Character Catalog原典、Occupation Pack、AMU / MACHI状態、credential、private governance controlは含みません。
+## ライセンスとブランド
 
-## ライセンスとサポート
+repository-wideの一括許諾はありません。exact pathごとの分類は `public-path-license-map.json` が正です。
 
-ライセンスはexact pathごとに分類され、repository-wideの一括許諾はありません。`LICENSE`、`NOTICE`、`public-path-license-map.json`を参照してください。
+ブランド資産はwi-t.comの三重弧ファミリーに由来し、著作権が及ぶ範囲において `public-path-license-map.json` に示すexact pathをCC-BY-4.0で提供します。商標権およびブランド使用権は別扱いで、付与しません。
 
-OSSサポートはdocumentation-first、self-service、best effortです。保証応答時間や契約SLAはありません。
-
+OSS supportはdocumentation-first／self-service／best effortで、保証応答時間や契約SLAはありません。

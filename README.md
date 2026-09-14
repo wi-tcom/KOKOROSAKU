@@ -1,28 +1,31 @@
-# KOKOROSAKU v0.1.0β
+# KOKOROSAKU v0.1.0-beta.1
 
 Japanese documentation: [README.ja.md](README.ja.md)
 
-Status: PUBLIC / v0.1.0-beta.1 / wi-tcom/KOKOROSAKU
+KOKOROSAKU is the public SAKU Builder/Trainer source and evaluation package. Builder and Trainer output remains a Candidate and does not become Canonical Authority or approval.
 
-KOKOROSAKU is a portable SAKU Character authoring and review toolkit. This tree contains the active Unified V1 schema, its required Character Extension contract, three synthetic sample Characters, and the static Builder/Trainer interface.
+## Install and use
 
-Start with [Builder Quickstart](docs/getting-started/builder-quickstart.md), serve the repository root over HTTP, and open /tooling/builder/index.html.
+Download the Release asset `SAKU Builder_0.1.0-beta.1_x64-setup.exe` only from the future official GitHub Release. This beta is unsigned and Windows SmartScreen may display a warning. Before running it, verify:
 
-## Authority boundaries
+```powershell
+(Get-FileHash -Algorithm SHA256 -LiteralPath '.\SAKU Builder_0.1.0-beta.1_x64-setup.exe').Hash.ToLower()
+```
 
-- The active Character schema is SAKU_UNIFIED_SCHEMA_V1.
-- Builder and Trainer output remains a Candidate. It is not Canonical Adoption, Authority, policy, approval, release, or production state.
-- The Seat 7 public role is PERSONA_BRAND_GUARD_ASSISTANT. It does not issue authority, policy, or approval.
-- Commercial 64, Character Catalog source data, Occupation Packs, AMU/MACHI state, credentials, and private governance controls are not included.
+Expected SHA-256: `3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b`. The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
 
-## Publication state
+## Try without installing
 
-publication_authorized: YES (Owner 2026-09-13 / D-13)
+Serve the source archive root over local HTTP and open `tooling/builder/index.html`. Direct `file://` use is unsupported for module-based screens.
 
-This field records the Owner decision bound into the packet. It does not state that repository visibility, a tag, a release, or production publication has been executed.
+## Developers
 
-## Licensing and support
+Clone the repository, use Node 24.19.0, run `npm ci`, `npm run desktop:prepare:public`, and then `npm run tauri:build`. See `docs/releases/0.1.0-beta.1/BUILD_ENVELOPE.json` for the exact accepted beta toolchain and build boundary.
 
-This repository uses exact-path license classification; there is no repository-wide license grant. See [LICENSE](LICENSE), [NOTICE](NOTICE), and [public-path-license-map.json](public-path-license-map.json).
+## Licensing and brand
 
-OSS support is documentation-first, self-service, best effort, with no guaranteed response time or contractual SLA. See [SUPPORT.md](SUPPORT.md) and [SECURITY.md](SECURITY.md).
+This repository has no repository-wide license grant. Exact paths are classified in [public-path-license-map.json](public-path-license-map.json); see [LICENSE-POLICY.md](LICENSE-POLICY.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Brand assets are from the wi-t.com Triple-Arc family and, to the extent copyright subsists, are provided under CC-BY-4.0 at the exact paths listed in `public-path-license-map.json`; trademark and brand-use rights are separate and are not granted.
+
+OSS support is documentation-first, self-service, and best effort, with no guaranteed response time or contractual SLA.

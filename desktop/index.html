@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ja" data-theme="light" class="boot-pending">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SAKU Builder — ホーム</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./desktop.css">
+  <script>
+    window.__SAKU_DESKTOP_BOOT_FALLBACK = window.setTimeout(() => {
+      if (window.__SAKU_DESKTOP_BOOTED) return;
+      document.documentElement.classList.remove("boot-pending");
+      const status = document.getElementById("host-status");
+      if (status) { status.className = "status error"; status.textContent = "HOST_BOOT_FAILED — SAKU Builder failed to start."; }
+    }, 2000);
+  </script>
+  <noscript><style>html.boot-pending body{visibility:visible}</style></noscript>
+</head>
+<body>
+  <header class="topbar">
+    <div><span class="eyebrow">LOCAL DESKTOP CANDIDATE</span><span id="build-revision-head" class="build-revision" data-runtime-value></span><h1>SAKU Builder</h1></div>
+    <nav aria-label="補助メニュー"><a href="./help/getting-started.html">はじめに</a><a href="./help/index.html">ヘルプ</a><span class="desktop-language-control" role="group" aria-label="言語 / Language"><button type="button" data-desktop-locale="ja-JP" aria-pressed="true">日本語</button><button type="button" data-desktop-locale="en-US" aria-pressed="false">English</button></span></nav>
+</header>
+
+  <main>
+    <div id="home-content">
+      <section class="hero">
+        <p class="kicker">Choose what you want to do</p>
+        <h2>今日は何をしますか？</h2>
+        <p>見る・試す・確認する・作る、の順に利用者の目的から選べます。</p>
+        <div class="selected-character" id="selected-character" aria-live="polite">
+          <span class="selected-character-label">選択されたキャラクター</span>
+          <strong class="selected-character-name" id="selected-character-name" data-runtime-value>未選択</strong>
+          <span class="selected-character-state" id="active-saku-state"></span>
+          <button type="button" id="active-saku-clear" class="quiet" hidden>選択を解除</button>
+        </div>
+        <div id="host-status" class="status info" role="status" aria-live="polite" aria-atomic="true"><strong>HOST_LOADING</strong><span>アプリの状態を確認しています。</span></div>
+        <div id="host-recovery" class="recovery-panel" role="status" aria-live="polite" hidden>
+          <strong>次にできること</strong><p id="host-recovery-message" data-runtime-value></p>
+          <div class="actions"><button type="button" id="host-retry-workspace">Workspaceを選び直す</button><button type="button" id="host-retry-import">Packageを選び直す</button><a class="button" href="./help/index.html#import">Helpで確認する</a></div>
+        </div>
+      </section>
+
+      <section class="entry-grid" aria-label="主な操作">
+        <button type="button" class="entry-card primary-entry" id="view-characters"><span class="entry-number">01</span><strong>キャラクターを選択する</strong><span>キャラクターパッケージを読み込んでキャラクターを選択します。</span></button>
+        <a class="entry-card" id="create-edit-character" href="./tools/saku-builder.html?desktop=app"><span class="entry-number">02</span><strong>キャラクターを作る・編集する</strong><span>キャラクターを作成・編集します。</span></a>
+        <button type="button" class="entry-card" id="run-on-ai-platform"><span class="entry-number">03</span><strong>AIプラットホームでキャラクターを動作</strong><span>選択中のキャラクターを外部のAIに読み込ませて動かします。</span></button>
+        <a class="entry-card" id="train-character" href="./tools/saku-trainer.html"><span class="entry-number">04</span><strong>キャラクターをトレーニングする</strong><span>AIプロンプトの応答でキャラクターを調整します。</span></a>
+      </section>
+
+      <section class="supporting" aria-labelledby="setup-title">
+        <div class="section-heading"><span class="eyebrow">WORKSPACE &amp; IMPORT</span><h2 id="setup-title">準備とデータ</h2></div>
+        <div class="steps">
+          <article class="card" id="step-workspace"><h3>Workspace</h3><p>作成物とimport済みPackageの保存場所です。Install / Config / Logs / Cacheとは分離します。</p><div class="path" id="workspace-path" data-runtime-value>未選択</div><button id="choose-workspace" class="primary">選択または作成</button></article>
+          <article class="card" id="step-help"><h3>Getting Started / Help</h3><p>初回設定、操作、保存場所、アンインストール時の保持内容を確認できます。</p><div class="actions"><a class="button primary" href="./help/getting-started.html">はじめに</a><a class="button" href="./help/index.html">ヘルプを見る</a><a class="button" href="./help/manual.html">マニュアル</a></div></article>
+        </div>
+      </section>
+
+      <section class="paths" aria-labelledby="path-title"><div><span class="eyebrow">PATH SEPARATION</span><h2 id="path-title">保存場所</h2></div><dl><div><dt>Install</dt><dd id="install-path" data-runtime-value>確認中</dd></div><div><dt>Config</dt><dd id="config-path" data-runtime-value>確認中</dd></div><div><dt>Logs</dt><dd id="log-path" data-runtime-value>確認中</dd></div><div><dt>Cache</dt><dd id="cache-path" data-runtime-value>確認中</dd></div><div><dt>Workspace</dt><dd id="workspace-path-detail" data-runtime-value>未選択</dd></div></dl><p class="boundary">Uninstallはアプリを対象とし、Workspaceとprojectsは保持します。同期フォルダや別checkoutをruntime inputとして使いません。</p></section>
+
+      <section class="help-grid"><a href="./help/manual.html"><strong>マニュアル</strong><span>Unified V1の5章と全編集項目</span></a><a href="./help/getting-started.html"><strong>Getting Started</strong><span>初回設定と最短フロー</span></a><a href="./help/index.html#import"><strong>Package import</strong><span>互換性・hash・失敗時の対応</span></a><a href="./help/index.html#data"><strong>Data locations</strong><span>Workspace、設定、ログ、cache</span></a><a href="./help/index.html#uninstall"><strong>Uninstall</strong><span>保持されるデータ</span></a></section>
+    </div>
+
+    <section id="viewer-panel" class="viewer" hidden aria-labelledby="viewer-title">
+      <div class="viewer-header"><button type="button" id="viewer-back" class="quiet">← ホームへ戻る</button><div><span class="eyebrow">CHARACTER LIBRARY</span><h2 id="viewer-title">キャラクターを選択する</h2><p>読み込み・新規作成を行い、一覧から作業するキャラクターを選びます。</p></div></div>
+      <div id="viewer-status" class="status info" role="status" aria-live="polite" aria-atomic="true"><strong>VIEWER_READY</strong><span>読み込まれたCharacterを確認できます。</span></div>
+      <section class="acc" id="acc-intake">
+        <h3 class="acc-head"><button type="button" class="acc-toggle" aria-expanded="true" aria-controls="acc-intake-body">キャラクターを読み込む</button></h3>
+        <div class="acc-body" id="acc-intake-body">
+<section class="library-intake" aria-labelledby="library-intake-title">
+        <h3 id="library-intake-title">キャラクターを読み込む / 新規作成する</h3>
+        <div class="actions">
+          <button type="button" id="viewer-import-package" class="primary">Packageインポート</button>
+          <button type="button" id="viewer-import-file">個別インポート</button>
+          <button type="button" id="viewer-clear-list">一覧をクリア</button>
+          <button type="button" id="viewer-new-character">新規作成</button>
+        </div>
+        <input type="file" id="viewer-file-input" accept=".json,.yaml,.yml,application/json,text/yaml" multiple hidden>
+        <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Packageファイルをドロップして読み込む">`.zip` / `.witpkg` / `.json` をここへドロップ</div>
+        <p id="library-count" class="library-count" data-runtime-value></p>
+      </section>
+          <section class="import-history" aria-labelledby="import-history-title">
+            <h4 id="import-history-title">読み込み履歴</h4>
+            <div id="import-history"></div>
+          </section>
+          <section id="viewer-package" class="package-summary" aria-labelledby="viewer-package-title"><h3 id="viewer-package-title">Package / import状態</h3><dl id="viewer-package-fields"></dl></section>
+        </div>
+      </section>
+      <section class="acc" id="acc-search">
+        <h3 class="acc-head"><button type="button" class="acc-toggle" aria-expanded="true" aria-controls="acc-search-body">キャラクターを探す</button></h3>
+        <div class="acc-body" id="acc-search-body">
+<section class="catalog-tools" aria-labelledby="catalog-tools-title">
+          <h3 id="catalog-tools-title">Characterを探す</h3>
+          <div class="catalog-controls">
+            <label>検索<input id="catalog-search" type="search" placeholder="名前・役割・カテゴリで検索" autocomplete="off"></label>
+            <label>利用可能状態<select id="catalog-availability"><option value="ALL">すべて</option><option value="AVAILABLE">利用可能</option><option value="UNAVAILABLE">利用不可</option><option value="LOCKED">ロック中</option><option value="UNKNOWN">不明 / 未検証</option></select></label>
+            <label>Package状態<select id="catalog-package-state"><option value="ALL">すべて</option></select></label>
+            <label>カテゴリ<select id="catalog-category"><option value="ALL">すべて</option></select></label><label>向いている仕事<select id="catalog-work-mode"><option value="ALL">すべて</option></select></label>
+            <label>削除済み<select id="catalog-deleted"><option value="HIDE">表示しない</option><option value="SHOW">含めて表示</option><option value="ONLY">削除済みのみ</option></select></label><label>並び順<select id="catalog-sort"><option value="name">名前</option><option value="role">役割</option><option value="category">カテゴリ</option><option value="revision">Revision</option></select></label>
+          </div>
+          <div class="catalog-toolbar"><div class="view-switch" role="group" aria-label="Catalog表示"><button type="button" data-catalog-view="gallery" aria-pressed="true">Gallery</button><button type="button" data-catalog-view="list" aria-pressed="false">Compact / List</button><button type="button" data-catalog-view="table" aria-pressed="false">Table</button></div><div class="compare-controls"><span id="catalog-result-status" role="status" aria-live="polite">0件を表示</span><span id="compare-selection-status" role="status" aria-live="polite">比較対象 0件</span><button type="button" id="compare-open" disabled>選択したCharacterを比較</button><button type="button" id="compare-clear">選択を解除</button><button type="button" id="viewer-delete-selected">選択キャラクター削除</button></div></div>
+        </section>
+        </div>
+      </section>
+      <section class="acc" id="acc-list">
+        <h3 class="acc-head"><button type="button" class="acc-toggle" aria-expanded="true" aria-controls="acc-list-body">キャラクター一覧</button></h3>
+        <div class="acc-body" id="acc-list-body">
+        <div id="viewer-catalog" hidden>
+<div id="catalog-no-results" class="empty-state" hidden><h3>検索・絞り込み条件に一致するCharacterがありません。</h3><p>検索語または絞り込みを解除するとCatalogを再表示できます。</p><button type="button" id="catalog-reset">検索と絞り込みを解除</button></div>
+<div class="viewer-content"><section><div id="viewer-results" class="catalog-results gallery" aria-label="Character Catalog"></div></section><article id="viewer-detail" class="viewer-detail" aria-label="Character詳細"></article></div>
+<section id="compare-panel" class="compare-panel" hidden aria-labelledby="compare-title"><div class="compare-heading"><h3 id="compare-title">Character比較</h3><button type="button" id="compare-close">比較を閉じる</button></div><p>欠損値は推測せず、SAME / DIFFERENT / UNKNOWN / NOT_AVAILABLEを表示します。</p><div id="compare-output" class="compare-scroll"></div></section>
+        </div>
+<div id="viewer-empty" class="empty-state"><h3>表示できるCharacterがまだありません。</h3><p>上の「キャラクターを読み込む / 新規作成する」から追加してください。</p><div class="actions"><a class="button" href="./help/index.html#import">ヘルプを見る</a></div></div>
+        </div>
+      </section>
+      <section class="acc" id="acc-occupation">
+        <h3 class="acc-head"><button type="button" class="acc-toggle" aria-expanded="false" aria-controls="acc-occupation-body">職能CSVを読み込む</button></h3>
+        <div class="acc-body" id="acc-occupation-body" hidden>
+          <p class="acc-note">職種の情報はキャラクターの一部です。キャラクター全体を決めるものではありません。資格・権限・許可には結び付けません。</p>
+          <div class="actions">
+            <button type="button" id="occupation-import" class="primary">職能CSVを読み込む</button>
+            <button type="button" id="occupation-clear">読み込んだ職能情報を消す</button>
+          </div>
+          <input type="file" id="occupation-file-input" accept=".csv,text/csv" hidden>
+          <div id="occupation-status" class="status info" role="status" aria-live="polite"><strong>OCCUPATION_READY</strong><span>職能CSVはまだ読み込まれていません。</span></div>
+          <div id="occupation-source" class="occupation-source" data-runtime-value hidden></div>
+          <div id="occupation-table-wrap" class="occupation-table-wrap" hidden>
+            <table id="occupation-table" class="occupation-table"><thead><tr><th scope="col">選択</th><th scope="col">大分類</th><th scope="col">職能名</th><th scope="col">実務内容</th></tr></thead><tbody id="occupation-rows"></tbody></table>
+          </div>
+          <div id="occupation-pairing" class="occupation-pairing" hidden>
+            <h4>Builderへ渡す内容</h4>
+            <dl id="occupation-pairing-fields"></dl>
+            <div class="actions"><button type="button" id="occupation-to-builder" class="primary">この組み合わせで編集する</button></div>
+          </div>
+        </div>
+      </section>
+      <dialog id="character-actions" class="character-actions" aria-labelledby="character-actions-title">
+        <h3 id="character-actions-title" data-runtime-value></h3>
+        <p id="character-actions-summary" class="character-actions-summary" data-runtime-value></p>
+        <div class="actions">
+          <button type="button" data-character-action="view" class="primary">このキャラクターを選択する</button>
+          <button type="button" data-character-action="edit">キャラクターを作る・編集する</button>
+          <button type="button" data-character-action="train">トレーニングする</button>
+          <button type="button" data-character-action="tune">AI動作を調整する</button>
+          <button type="button" data-character-action="delete" class="danger">削除する</button>
+        </div>
+        <button type="button" id="character-actions-close" class="quiet">閉じる</button>
+      </dialog>
+    </section>
+
+    <section id="tuning-panel" class="viewer" hidden aria-labelledby="tuning-title">
+      <div class="viewer-header"><button type="button" id="tuning-back" class="quiet">← 戻る</button><div><span class="eyebrow">ADJUSTMENT / TUNING</span><h2 id="tuning-title">AI動作の調整</h2><p>気になる症状から選びます。ここでの推奨は、適用するまでCharacterを変更しません。</p></div></div>
+      <div id="tuning-subject" class="status info" role="status" aria-live="polite"><strong>TUNING_READY</strong><span>調整するキャラクターを選んでください。</span></div>
+      <div class="tuning-layout">
+        <section class="tuning-symptom-list" aria-labelledby="tuning-symptom-title">
+          <h3 id="tuning-symptom-title">気になる症状</h3>
+          <div id="tuning-symptoms"></div>
+        </section>
+        <section id="tuning-detail" class="tuning-detail" aria-label="調整の詳細"></section>
+      </div>
+    </section>
+    <section id="platform-panel" class="viewer" hidden aria-labelledby="platform-title">
+      <div class="viewer-header"><button type="button" id="platform-back" class="quiet">← 戻る</button><div><span class="eyebrow">RUN / AI PLATFORM</span><h2 id="platform-title">AIプラットホームでキャラクターを動作</h2><p>選択中のキャラクターを、お使いのAIにそのまま読み込ませて動かします。ここでキャラクターは変わりません。</p></div></div>
+      <div id="platform-subject" class="status info" role="status" aria-live="polite"><strong>PLATFORM_READY</strong><span>動かすキャラクターを選んでください。</span></div>
+
+      <ol class="platform-steps">
+        <li>
+          <h3>1. 動かすキャラクターを確認する</h3>
+          <p id="platform-active" class="platform-active" data-runtime-value>未選択</p>
+        </li>
+        <li>
+          <h3>2. 渡し方を選ぶ</h3>
+          <p>貼り付けやすい形を選びます。どれを選んでもキャラクターの中身は同じです。</p>
+          <div class="platform-formats" role="group" aria-label="渡し方">
+            <button type="button" class="button" data-platform-format="prompt" aria-pressed="true">キャラクタープロンプト</button>
+            <button type="button" class="button" data-platform-format="json" aria-pressed="false">JSON</button>
+            <button type="button" class="button" data-platform-format="yaml" aria-pressed="false">YAML</button>
+          </div>
+        </li>
+        <li>
+          <h3>3. 貼り付ける文をコピーする</h3>
+          <p>下の全文をコピーします。冒頭の指示と、キャラクター定義が入っています。</p>
+          <textarea id="platform-launch" class="platform-launch" readonly rows="12" aria-label="貼り付ける文"></textarea>
+          <div class="actions"><button type="button" id="platform-copy" class="button primary">コピーする</button><span id="platform-copy-state" class="platform-copy-state" role="status" aria-live="polite"></span></div>
+        </li>
+        <li>
+          <h3>4. AIの入力欄に貼る</h3>
+          <p>ChatGPT・Claude・Gemini など、お使いのAIの新しい会話を開き、最初のメッセージとして貼り付けます。ローカルLLMでも同じ手順です。連携設定やAPIの用意は要りません。</p>
+        </li>
+        <li>
+          <h3>5. 読み込ませる</h3>
+          <p>貼り付けた文には「この定義に従うこと」「足りない情報を勝手に作らないこと」が含まれています。そのまま送信してください。</p>
+        </li>
+        <li>
+          <h3>6. 最初のあいさつを受け取る</h3>
+          <p>キャラクターとして短いあいさつが返れば、読み込めています。返らない場合は、貼り付けが途中で切れていないか確認してください。</p>
+        </li>
+        <li>
+          <h3>7. そのまま話しかける</h3>
+          <p>あとは普通に質問や相談を続けます。会話の途中で人格がぶれたと感じたら、同じ文をもう一度貼り直せば読み直します。</p>
+        </li>
+        <li>
+          <h3>8. 気になった応答をSAKU Trainerへ持ち帰る</h3>
+          <p>「思っていた反応と違う」と感じた応答をコピーしておき、04 キャラクターをトレーニングする に貼り付けます。Expected・Observed・Diff を見て、キャラクターを直すかどうかを決められます。</p>
+          <div class="actions"><button type="button" id="platform-to-trainer" class="button">04 キャラクターをトレーニングする へ</button></div>
+        </li>
+      </ol>
+
+      <section class="platform-boundary" aria-labelledby="platform-boundary-title">
+        <h3 id="platform-boundary-title">この方法でできないこと</h3>
+        <p>一般のAIサービスに貼り付けて動かす方法です。次のことは保証されません。</p>
+        <ul>
+          <li>独立したプロセスとして動き続けること</li>
+          <li>会話をまたいで記憶が残ること</li>
+          <li>ツールや外部システムを操作できること</li>
+          <li>人間の担当者（席8）が実際に紐づくこと</li>
+          <li>AMUの動作状態が引き継がれること</li>
+        </ul>
+        <p>ここで扱うのはキャラクター定義そのものです。貼り付けても、SAKU側のキャラクターは変更されません。</p>
+      </section>
+    </section>
+  </main>
+
+  <footer><span id="build-revision-view" class="build-revision" data-runtime-value></span><span>STATUS = IMPLEMENTED_CANDIDATE</span><span>CODE_SIGNING = UNSIGNED</span><span>CANONICAL = NO</span></footer>
+  <script type="module" src="./i18n.mjs"></script><script type="module" src="./app.mjs"></script>
+</body>
+</html>

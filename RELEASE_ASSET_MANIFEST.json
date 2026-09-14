@@ -1,0 +1,50 @@
+{
+  "format": "wi-t.kokorosaku-release-asset-manifest.v1",
+  "version": "v0.1.0-beta.1",
+  "state": "CANDIDATE_NOT_RELEASED",
+  "publication_source": {
+    "repository": "wi-tcom/-SAKU-builder",
+    "exact_revision": "2b764b83eb62380fd97cb7de6144893b2f09cc5a",
+    "tree": "0da647e179a67f8df6c13d3bf202925586807d19"
+  },
+  "binary_build_source": {
+    "repository": "wi-tcom/-SAKU-builder",
+    "exact_revision": "b196cca183b246b97f24c8372da58d717c0bd45f",
+    "tree": "1fbccfbe7890b5e939b0401a71e785bc4574e7fd"
+  },
+  "build_envelope": {
+    "source_repository": "wi-tcom/-SAKU-builder",
+    "source_revision": "2b764b83eb62380fd97cb7de6144893b2f09cc5a",
+    "path": "docs/releases/0.1.0-beta.1/BUILD_ENVELOPE.json",
+    "sha256": "5c8769b995b97c454272aa964f5add636863c103d1137430a6ec633d36a2457d"
+  },
+  "assets": [
+    {
+      "filename": "SAKU Builder_0.1.0-beta.1_x64-setup.exe",
+      "bytes": 1810637,
+      "sha256": "3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b",
+      "authenticode": "NotSigned",
+      "release_asset": true
+    }
+  ],
+  "embedded_application": {
+    "filename": "saku-builder-desktop.exe",
+    "bytes": 3927040,
+    "sha256": "a43c100840dfcea60ef5dbc2a0bf6fefc9c27553be81ec5600d620d2fe7ea311",
+    "authenticode": "NotSigned",
+    "release_asset": false,
+    "location": "INSIDE_INSTALLER"
+  },
+  "superseded_installer": {
+    "bytes": 1810609,
+    "sha256_prefix": "a1016a56",
+    "staged": false,
+    "prohibited": true
+  },
+  "installer_in_git_tree": false,
+  "installer_in_source_archive": false,
+  "tag_created": false,
+  "release_created": false,
+  "publication_executed": false,
+  "release_asset_manifest_id": "sha256:48763345f50f65746f587cd026812e983167f4ac995afea8c9ec5caa4e9033ea"
+}

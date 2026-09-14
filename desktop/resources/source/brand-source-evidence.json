@@ -1,0 +1,25 @@
+{
+  "evidence": "saku.brand-source-evidence@1",
+  "source_repository": "wi-tcom/site-content",
+  "source_revision": "a3c24a1",
+  "source_path": "brand/logo/saku",
+  "provenance": "Owner-directed vector artwork (hand-defined SVG, rasterized with Chrome; no generative image model)",
+  "license": "CC-BY-4.0",
+  "rights_holder": "株式会社wi-t.com",
+  "trademark_rights_granted": false,
+  "copyright_scope_ja": "著作権が及ぶ範囲において",
+  "sources": {
+    "saku-1024.png": {
+      "bytes": 31854,
+      "sha256": "854a6d39ee28e8cacd2d8b8ca881875c62d72cdae6d649851897cc24431cba0c"
+    },
+    "saku.svg": {
+      "bytes": 341,
+      "sha256": "e1a72c0bcec0653c27eaf07afeaac27274c2f8dc2b9cfee0fc3eb8d043894403"
+    },
+    "saku-favicon.ico": {
+      "bytes": 5884,
+      "sha256": "52769ad1e2b7916cfb8d3800d362da8570016a20c6d0f3b653ee5140049e59b1"
+    }
+  }
+}

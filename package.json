@@ -1,0 +1,31 @@
+{
+  "name": "saku-builder-desktop-candidate",
+  "version": "0.1.0-beta.1",
+  "private": true,
+  "description": "Candidate Tauri 2 thin desktop host for SAKU Builder and Trainer",
+  "engines": {
+    "node": "24.19.0",
+    "npm": "11.17.0"
+  },
+  "scripts": {
+    "public:tooling": "node scripts/build_public_builder_tooling.mjs",
+    "public:tooling:verify": "node scripts/verify_public_builder_tooling.mjs",
+    "desktop:prepare": "node scripts/prepare_desktop_assets.mjs public-oss",
+    "desktop:prepare:public": "node scripts/prepare_desktop_assets.mjs public-oss",
+    "desktop:prepare:internal": "node scripts/prepare_desktop_assets.mjs owner-review-internal",
+    "desktop:verify": "node scripts/verify_desktop_host.mjs",
+    "viewer:verify": "node scripts/verify_viewer_entry_phase1.mjs",
+    "viewer:phase2:verify": "node scripts/verify_viewer_phase2.mjs",
+    "trainer:review:verify": "node scripts/verify_trainer_review_results.mjs",
+    "desktop:e2e:verify": "node scripts/verify_desktop_e2e_readiness.mjs",
+    "delivery:manifests:verify": "node scripts/verify_delivery_manifests.mjs",
+    "golden-ui:verify": "node scripts/verify_golden_ui.mjs",
+    "builder:workflow:verify": "node scripts/verify_builder_workflow.mjs",
+    "beta1:verify": "node scripts/verify_beta1_owner_fixes.mjs",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build --bundles nsis"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.11.4"
+  }
+}

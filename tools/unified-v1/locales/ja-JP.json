@@ -1,0 +1,321 @@
+{
+  "_meta": {
+    "locale": "ja-JP",
+    "name": "日本語",
+    "canonical_note": "表示専用。Canonical enum と character_id は翻訳しない。"
+  },
+  "ui": {
+    "help": "ヘルプ",
+    "help_for": "ヘルプ",
+    "close": "閉じる",
+    "meaning": "意味",
+    "example": "例",
+    "behavior": "Behavior への影響",
+    "interaction": "相互作用",
+    "caution": "注意",
+    "language": "言語",
+    "about": "このツールについて",
+    "license": "ライセンス",
+    "expected_profile": "Expected Character Profile",
+    "design_tendency_note": "設計上の傾向 — 能力・資格・正確性を保証しない。",
+    "builder_title": "SAKU Builder Unified V1",
+    "trainer_title": "SAKU Trainer Unified V1",
+    "third_party": "サードパーティ表示",
+    "trademark": "商標",
+    "catalog_license": "Character Catalog ライセンス",
+    "required": "必須区分",
+    "effect": "AIへの効き強度"
+  },
+  "label": {
+    "character_id": "character_id",
+    "display_name": "display name",
+    "catalog_code": "catalog_code",
+    "catalog_group": "catalog group",
+    "role_label": "role label",
+    "hard_invariants": "hard invariants",
+    "human_handoff": "human handoff",
+    "seat_archetype": "Seat 2〜7 の archetype",
+    "seat_intensity": "Seat 2〜7 の intensity",
+    "front_minority": "front: minority_retention",
+    "front_selection": "front: selection_strength",
+    "axes_presentation": "表示専用の軸（11軸）",
+    "professional_reasoning": "Professional Reasoning",
+    "ten_d": "ten_d（10D Extension）",
+    "work_mode_affinity": "Work Mode 適合傾向",
+    "internal_tension": "内部張力",
+    "expected_vs_observed": "Expected vs Observed",
+    "derived_metrics": "Derived Metrics",
+    "builder_candidate": "Builder Candidate",
+    "probe_scoring": "Probe 採点",
+    "purpose_summary": "purpose.summary",
+    "primary_value": "primary_value",
+    "character_role": "character_role",
+    "values": "values",
+    "axes_behavior": "期待挙動に効く軸（4軸のみ）",
+    "pr_on": "professional_reasoning を含める",
+    "pr_profile": "profile_id",
+    "pr_issue": "issue_spotting",
+    "pr_prohib": "prohibited_claims"
+  },
+  "validation": {
+    "id_ascii": "character_id は ASCII 小文字 kebab-case が必須",
+    "display_required": "表示名は必須",
+    "code_format": "catalog_code の形式が不正（例 C01）",
+    "group_mismatch": "catalog_group が catalog_code の先頭文字と不一致",
+    "id_embeds_code": "character_id に catalog_code が埋め込まれている（C3 非推奨）",
+    "p_needs_professional": "P group には professional_reasoning が必要",
+    "prohibited_empty": "professional_reasoning.prohibited_claims が空",
+    "all_medium": "Seat1-7 が全 MEDIUM（中庸集中）— High/Low を配置して差をつける",
+    "high_tension": "高張力構成（安全 HIGH × ACCELERATOR HIGH）— 平均化せず Front で統合する",
+    "ok": "Canonical 検証 OK"
+  },
+  "help": {
+    "character_id": {
+      "meaning": "immutable な ASCII 小文字 kebab-case。",
+      "example": "kisaragi-ren",
+      "behavior": "恒久 Identity のみ。Behavior・Derived Profile に影響しない。catalog_code を埋め込まない・翻訳しない。",
+      "required": "必須",
+      "effect": "弱",
+      "interaction": "catalog_code・表示名とは独立。",
+      "caution": "catalog_code を埋め込まない・翻訳しない・非ラテン名でも ASCII を維持。"
+    },
+    "display_name": {
+      "meaning": "表示名（漢字姓+カタカナ名など）。",
+      "example": "如月 蓮",
+      "behavior": "表示のみ。言語切替でも翻訳されず、Derived Profile に影響しない。",
+      "required": "必須",
+      "effect": "弱",
+      "interaction": "role_label・character_id とは別。",
+      "caution": "Identity キーではない。変更で Canonical digest が変わってはならない。"
+    },
+    "catalog_group": {
+      "meaning": "CORE_CROSS_FUNCTIONAL / BUSINESS / TECHNICAL / HUMAN_SERVICE / RESEARCH_CREATIVE / PROFESSIONAL_REASONING / ORGANIZATIONAL_DYNAMICS。",
+      "example": "CORE_CROSS_FUNCTIONAL",
+      "behavior": "分類。catalog_code の先頭文字と整合必須。応答は変えない。",
+      "required": "必須",
+      "effect": "弱",
+      "interaction": "catalog_code の先頭文字と一致必須。",
+      "caution": "enum 値は Canonical であり翻訳しない。"
+    },
+    "role_label": {
+      "meaning": "自由文字列。役割名。",
+      "example": "事業戦略家",
+      "behavior": "表示ラベル。分類の補助で、Derived Profile には影響しない。",
+      "required": "推奨",
+      "effect": "弱",
+      "interaction": "display_name・character_id とは別。",
+      "caution": "alias は表示であり、翻訳で役割の Canonical 実体は変わらない。"
+    },
+    "hard_invariants": {
+      "meaning": "1行1件。常に守る条件。",
+      "example": "決断するが、確定は権限者に戻す。",
+      "behavior": "Persona Guard 廃止後の主たる守り手。生成 prompt に現れ Conformance が裏づける。承認・資格・Mandate は書かない。",
+      "required": "推奨",
+      "effect": "強",
+      "interaction": "Conformance が裏づけ、生成 Prompt にも現れる。",
+      "caution": "承認・資格・Mandate をここに入れない。"
+    },
+    "human_handoff": {
+      "meaning": "reason_class|trigger 形式で1行1件。",
+      "example": "AUTHORITY_REQUIRED|予算・契約の確定",
+      "behavior": "人間へ戻す境界。生成 prompt に入り、該当時は HANDOFF_TO_HUMAN させる。Conformance の Handoff チェック対象。",
+      "required": "推奨",
+      "effect": "強",
+      "interaction": "hard_invariants を補完。",
+      "caution": "条件のみ保持。実 Human 名・endpoint・承認者は入れない。"
+    },
+    "seat_archetype": {
+      "meaning": "各 Seat に定義済み archetype を1つ（既定あり）。Seat1=FRONT / 2=SPECIALIST / 3=FACT / 4=SAFETY / 5=USER / 6=RED_TEAM / 7=FORWARD_DRIVER。Seat8=HUMAN 固定。",
+      "example": "seat2=SYSTEMS_THINKER",
+      "behavior": "Derived Profile Engine の主入力。Thinking Style・Work Mode・Expected Strengths を直接計算する。最も強く効く。",
+      "required": "必須",
+      "effect": "強",
+      "interaction": "intensity・他席と組み合う（Interaction Map 参照）。",
+      "caution": "各席の許可集合からのみ選ぶ。"
+    },
+    "seat_intensity": {
+      "meaning": "LOW / MEDIUM / HIGH。",
+      "example": "seat2=HIGH",
+      "behavior": "archetype の効きの強さ。Derived の重み付けを直接動かす。全席 MEDIUM は警告（個性が出ない）。",
+      "required": "必須",
+      "effect": "強",
+      "interaction": "HIGH × 対立 HIGH で内部張力（平均化しない）。",
+      "caution": "HIGH ≠ Authority。全 MEDIUM（中庸集中）を避ける。"
+    },
+    "front_minority": {
+      "meaning": "LOW / MEDIUM / HIGH。",
+      "example": "MEDIUM",
+      "behavior": "少数意見の保持度。Front 制御として Derived Profile（多元性・葛藤の出方）に効く。",
+      "required": "任意",
+      "effect": "強",
+      "interaction": "selection_strength HIGH と組むと保持×収束の張力。",
+      "caution": "LOW は収束時に少数意見を圧縮する。"
+    },
+    "front_selection": {
+      "meaning": "LOW / MEDIUM / HIGH。",
+      "example": "HIGH",
+      "behavior": "選択の強さ。Derived Profile（決断性 vs 多元統合）に効く。",
+      "required": "任意",
+      "effect": "強",
+      "interaction": "minority_retention とバランスする。",
+      "caution": "高すぎると有力な少数意見を落としうる。"
+    },
+    "axes_presentation": {
+      "meaning": "a_motif / e_vocabulary_tone / f_acknowledgement / g_pulse / h_tactile / i_thinking_pause_ms / j_theme_color / k_whitespace_percent / l_weathering_presentation / m_error_narrative / o_closing。",
+      "example": "j_theme_color=INDIGO_IRON_NAVY",
+      "behavior": "見た目・演出のみ。DP-03 により Work Mode / Strength に影響しない。語調(e)・相槌(f)・エラー語り(m) もここに含まれる点に注意 — Unified V1 では期待挙動を変えない（v1 の『口調』とは扱いが異なる）。",
+      "required": "任意",
+      "effect": "弱",
+      "interaction": "表示 axes を変えても Work Mode Affinity は不変（DP-03）。",
+      "caution": "thinking_pause_ms は表示であり実推論時間ではない。"
+    },
+    "professional_reasoning": {
+      "meaning": "専門家が「どこを見るか」を足す。Credential ではない。",
+      "example": "Legal Analysis: 論点抽出・証拠focus",
+      "behavior": "見る所を追加。権限は追加しない。",
+      "interaction": "prohibited_claims が非Credential を保証。",
+      "caution": "Profile ≠ Credential ≠ Qualification ≠ Authority ≠ Mandate。"
+    },
+    "ten_d": {
+      "meaning": "任意の 10D fine tuning。既定は absent。",
+      "example": "（原則 absent）",
+      "behavior": "任意の微調整。既定 absent（absent ≠ zero ≠ default）。1+7・15軸とは独立で、値を創作しない。",
+      "required": "任意",
+      "effect": "弱",
+      "interaction": "1+7・15 axes とは独立。",
+      "caution": "absent ≠ zero ≠ default。値を創作しない。"
+    },
+    "work_mode_affinity": {
+      "meaning": "各 Work Mode への設計上の適合傾向。",
+      "example": "STRATEGY = HIGH",
+      "behavior": "thinking trait から導出（heuristic）。",
+      "interaction": "Composition が駆動。表示 axes は不参加。",
+      "caution": "適合は能力・正確性の保証ではない。"
+    },
+    "internal_tension": {
+      "meaning": "対立する強い傾向を同時に保持。",
+      "example": "GUARDIAN HIGH × ACCELERATOR HIGH",
+      "behavior": "明示表示。MEDIUM へ平均化しない。",
+      "interaction": "Front が張力を統合。",
+      "caution": "統合に失敗すると挙動が振れうる。"
+    },
+    "expected_vs_observed": {
+      "meaning": "設計期待と Probe 観測を比較。",
+      "example": "forward_progress 期待 HIGH / 観測 MEDIUM",
+      "behavior": "乖離（|Δ|≥0.25）を強調。",
+      "interaction": "Parameter へ戻れる改善提案につながる。",
+      "caution": "観測は LLM と採点者に依存。解釈に注意。"
+    },
+    "derived_metrics": {
+      "meaning": "評価指標（tension / variance 等）。",
+      "example": "internal_tension 件数",
+      "behavior": "Evaluation 出力であり Canonical 入力ではない。",
+      "interaction": "Trainer が算出。",
+      "caution": "SAKU Canonical へ自動保存しない。"
+    },
+    "builder_candidate": {
+      "meaning": "Trainer からの改訂提案。",
+      "example": "seat4 intensity HIGH → MEDIUM",
+      "behavior": "Human review 前提の候補。",
+      "interaction": "Builder へ戻す。",
+      "caution": "Trainer は Canonical を直接上書きしない。"
+    },
+    "probe_scoring": {
+      "meaning": "各 Probe 応答を rubric に照らし 0.0–1.0 で採点。",
+      "example": "PB-FWD = 0.65",
+      "behavior": "Observed Character Profile を構成。",
+      "interaction": "Expected Profile と比較。",
+      "caution": "挙動ベース。same text ≠ same character。"
+    },
+    "catalog_code": {
+      "meaning": "1文字グループ+2桁（例 C01）。C/B/T/H/R/P/G。",
+      "example": "C01",
+      "behavior": "分類の識別子。catalog_group と一致必須。P始まりは professional_reasoning が必要。応答は変えない。",
+      "required": "必須",
+      "effect": "弱",
+      "interaction": "",
+      "caution": ""
+    },
+    "purpose_summary": {
+      "meaning": "自由文字列。目的の要約。",
+      "example": "事業の方向性を決める支援を行う。",
+      "behavior": "Identity/目的として Canonical と LLM 用 prompt（Export for LLM）に入るが、Derived Profile の数値は変えない。",
+      "required": "任意",
+      "effect": "中",
+      "interaction": "",
+      "caution": ""
+    },
+    "primary_value": {
+      "meaning": "自由文字列。",
+      "example": "決断と、やらないことの明確化。",
+      "behavior": "Canonical・生成 prompt に入る価値観の核。Derived 数値には影響しない。",
+      "required": "任意",
+      "effect": "中",
+      "interaction": "",
+      "caution": ""
+    },
+    "character_role": {
+      "meaning": "自由文字列。責任役の記述。",
+      "example": "全体構造から方向を定める責任役。",
+      "behavior": "Canonical・生成 prompt に入る。Conformance の Character Core チェック対象。Derived 数値は変えない。",
+      "required": "任意",
+      "effect": "中",
+      "interaction": "",
+      "caution": ""
+    },
+    "values": {
+      "meaning": "1行1件のリスト。",
+      "example": "全体から考える／根拠を明示する",
+      "behavior": "生成 prompt に列挙され、判断基準として直接効く。Conformance の Character Core にも要る。",
+      "required": "任意",
+      "effect": "強",
+      "interaction": "",
+      "caution": ""
+    },
+    "axes_behavior": {
+      "meaning": "b_companion_domain / c_intelligence_vector / d_socratic_angle / n_crystallization の4軸のみ。",
+      "example": "c_intelligence_vector=STRUCTURAL_LOGIC",
+      "behavior": "15軸のうち、この4軸だけが Derived Profile Engine の入力になり Work Mode / Expression Tendencies へ反映される。残る11軸は presentation 扱いで期待挙動を変えない。",
+      "required": "任意",
+      "effect": "中",
+      "interaction": "",
+      "caution": ""
+    },
+    "pr_on": {
+      "meaning": "チェックボックス。catalog_code が P始まりの時は必須。",
+      "example": "有効",
+      "behavior": "有効化で P group の推論プロファイルを付与。専門的に『どこを見るか』を足す。権限・資格ではない。",
+      "required": "任意",
+      "effect": "中",
+      "interaction": "",
+      "caution": ""
+    },
+    "pr_profile": {
+      "meaning": "LEGAL_ANALYSIS / TAX_PRACTICE / ACCOUNTING_AUDIT / LABOR_PRACTICE / IP_ANALYSIS / REGISTRATION_PROCEDURE / ADMINISTRATIVE_PROCEDURE / VALUATION。",
+      "example": "LEGAL_ANALYSIS",
+      "behavior": "含める場合の推論プロファイル種別。見る所を追加し、Expected の professional_focus に反映。権限は追加しない。",
+      "required": "条件付",
+      "effect": "中",
+      "interaction": "",
+      "caution": ""
+    },
+    "pr_issue": {
+      "meaning": "1行1件。論点抽出の観点。",
+      "example": "論点を抽出する",
+      "behavior": "専門的に着目する論点。Expected の professional_focus に効くが、資格・権限は与えない。",
+      "required": "条件付",
+      "effect": "中",
+      "interaction": "",
+      "caution": ""
+    },
+    "pr_prohib": {
+      "meaning": "1行1件。名乗ってはいけない主張。",
+      "example": "有資格者である、とは述べない",
+      "behavior": "professional_reasoning を含める場合は必須（空だと error）。生成 prompt と境界に効き、非Credential を保証する。",
+      "required": "条件付",
+      "effect": "強",
+      "interaction": "",
+      "caution": ""
+    }
+  }
+}

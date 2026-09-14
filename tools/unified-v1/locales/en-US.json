@@ -1,0 +1,321 @@
+{
+  "_meta": {
+    "locale": "en-US",
+    "name": "English (US)",
+    "canonical_note": "Display only. Canonical enums and character_id are never translated."
+  },
+  "ui": {
+    "help": "Help",
+    "help_for": "Help for",
+    "close": "Close",
+    "meaning": "Meaning",
+    "example": "Example",
+    "behavior": "Behavior effect",
+    "interaction": "Interaction",
+    "caution": "Caution",
+    "language": "Language",
+    "about": "About",
+    "license": "License",
+    "expected_profile": "Expected Character Profile",
+    "design_tendency_note": "Design tendency — does not guarantee skill, qualification, or accuracy.",
+    "builder_title": "SAKU Builder Unified V1",
+    "trainer_title": "SAKU Trainer Unified V1",
+    "third_party": "Third-party notices",
+    "trademark": "Trademark",
+    "catalog_license": "Character Catalog license",
+    "required": "Requiredness",
+    "effect": "AI effect strength"
+  },
+  "label": {
+    "character_id": "character_id",
+    "display_name": "display name",
+    "catalog_code": "catalog_code",
+    "catalog_group": "catalog group",
+    "role_label": "role label",
+    "hard_invariants": "hard invariants",
+    "human_handoff": "human handoff",
+    "seat_archetype": "Archetype for Seats 2-7",
+    "seat_intensity": "Intensity for Seats 2-7",
+    "front_minority": "front: minority_retention",
+    "front_selection": "front: selection_strength",
+    "axes_presentation": "Presentation-only axes (11)",
+    "professional_reasoning": "professional reasoning",
+    "ten_d": "ten_d (10D extension)",
+    "work_mode_affinity": "work mode affinity",
+    "internal_tension": "internal tension",
+    "expected_vs_observed": "expected vs observed",
+    "derived_metrics": "derived metrics",
+    "builder_candidate": "builder candidate",
+    "probe_scoring": "probe scoring",
+    "purpose_summary": "purpose.summary",
+    "primary_value": "primary_value",
+    "character_role": "character_role",
+    "values": "values",
+    "axes_behavior": "Axes that affect expected behavior (4 only)",
+    "pr_on": "Include professional_reasoning",
+    "pr_profile": "profile_id",
+    "pr_issue": "issue_spotting",
+    "pr_prohib": "prohibited_claims"
+  },
+  "validation": {
+    "id_ascii": "character_id must be ASCII lowercase kebab-case",
+    "display_required": "display name is required",
+    "code_format": "catalog_code format is invalid (e.g. C01)",
+    "group_mismatch": "catalog_group does not match the catalog_code letter",
+    "id_embeds_code": "character_id appears to embed catalog_code (discouraged, C3)",
+    "p_needs_professional": "P group requires professional_reasoning",
+    "prohibited_empty": "professional_reasoning.prohibited_claims is empty",
+    "all_medium": "Seat1-7 are all MEDIUM (over-averaged) — place HIGH/LOW for contrast",
+    "high_tension": "High-tension composition (safety HIGH x ACCELERATOR HIGH) — integrate at Front, do not average",
+    "ok": "Canonical validation OK"
+  },
+  "help": {
+    "character_id": {
+      "meaning": "Immutable ASCII lowercase kebab-case.",
+      "example": "kisaragi-ren",
+      "behavior": "Permanent identity only. Never affects behavior or the Derived Profile. Do not embed catalog_code and do not translate it.",
+      "required": "Required",
+      "effect": "Weak",
+      "interaction": "Independent of catalog_code and display name.",
+      "caution": "Do not embed catalog_code; do not translate; keep ASCII even for non-Latin names."
+    },
+    "display_name": {
+      "meaning": "The displayed name.",
+      "example": "Kisaragi Ren",
+      "behavior": "Display only. Never translated by the language toggle, and never affects the Derived Profile.",
+      "required": "Required",
+      "effect": "Weak",
+      "interaction": "Separate from role_label and character_id.",
+      "caution": "Not an identity key; changing it must not change the canonical digest."
+    },
+    "catalog_group": {
+      "meaning": "CORE_CROSS_FUNCTIONAL, BUSINESS, TECHNICAL, HUMAN_SERVICE, RESEARCH_CREATIVE, PROFESSIONAL_REASONING, or ORGANIZATIONAL_DYNAMICS.",
+      "example": "CORE_CROSS_FUNCTIONAL",
+      "behavior": "Classification. Must agree with the first letter of catalog_code. Does not change responses.",
+      "required": "Required",
+      "effect": "Weak",
+      "interaction": "Must match the first letter of catalog_code.",
+      "caution": "Enum value is canonical and never translated."
+    },
+    "role_label": {
+      "meaning": "Free text. The name of the role.",
+      "example": "Business strategist",
+      "behavior": "A display label that supports classification. Does not affect the Derived Profile.",
+      "required": "Recommended",
+      "effect": "Weak",
+      "interaction": "Separate from display_name and character_id.",
+      "caution": "Alias is presentation; the canonical role identity is not changed by translation."
+    },
+    "hard_invariants": {
+      "meaning": "One per line. Conditions always kept.",
+      "example": "Decides, but returns final sign-off to an authority.",
+      "behavior": "The primary guard after Persona Guard was removed. Surfaces in the generated prompt and is backed by Conformance. Never encode approvals, credentials, or mandates here.",
+      "required": "Recommended",
+      "effect": "Strong",
+      "interaction": "Backed by Conformance; surfaced in generated prompts.",
+      "caution": "Do not encode approvals, credentials, or mandates here."
+    },
+    "human_handoff": {
+      "meaning": "One per line as reason_class|trigger.",
+      "example": "AUTHORITY_REQUIRED | budget or contract finalization",
+      "behavior": "The boundary at which work returns to a human. Enters the generated prompt and forces HANDOFF_TO_HUMAN. Checked by the Handoff conformance test.",
+      "required": "Recommended",
+      "effect": "Strong",
+      "interaction": "Complements hard_invariants.",
+      "caution": "Store the condition only; no human name, endpoint, or approver."
+    },
+    "seat_archetype": {
+      "meaning": "One defined archetype per Seat (defaults provided). Seat 1 FRONT, 2 SPECIALIST, 3 FACT, 4 SAFETY, 5 USER, 6 RED_TEAM, 7 FORWARD_DRIVER. Seat 8 is fixed to HUMAN.",
+      "example": "seat2 = SYSTEMS_THINKER",
+      "behavior": "The main input to the Derived Profile Engine. Directly computes Thinking Style, Work Mode, and Expected Strengths. The strongest lever in Unified V1.",
+      "required": "Required",
+      "effect": "Strong",
+      "interaction": "Combines with intensity and other seats (see Interaction Map).",
+      "caution": "Choose from the seat's allowed set only."
+    },
+    "seat_intensity": {
+      "meaning": "LOW, MEDIUM, or HIGH.",
+      "example": "seat2 = HIGH",
+      "behavior": "How strongly the archetype applies. Scales the Derived weighting directly. All-MEDIUM raises a warning because no character emerges.",
+      "required": "Required",
+      "effect": "Strong",
+      "interaction": "HIGH x opposing HIGH creates internal tension (not averaged).",
+      "caution": "HIGH is not authority; avoid all-MEDIUM (over-averaging)."
+    },
+    "front_minority": {
+      "meaning": "LOW, MEDIUM, or HIGH.",
+      "example": "MEDIUM",
+      "behavior": "How much minority opinion is retained. As a Front control it shapes the Derived Profile's plurality and how tension surfaces.",
+      "required": "Optional",
+      "effect": "Strong",
+      "interaction": "With selection_strength HIGH, creates hold-vs-converge tension.",
+      "caution": "LOW compresses minority views at convergence."
+    },
+    "front_selection": {
+      "meaning": "LOW, MEDIUM, or HIGH.",
+      "example": "HIGH",
+      "behavior": "How strongly the front converges. Shapes the Derived Profile along decisiveness versus plural synthesis.",
+      "required": "Optional",
+      "effect": "Strong",
+      "interaction": "Balances against minority_retention.",
+      "caution": "Too high can drop useful minority views."
+    },
+    "axes_presentation": {
+      "meaning": "a_motif, e_vocabulary_tone, f_acknowledgement, g_pulse, h_tactile, i_thinking_pause_ms, j_theme_color, k_whitespace_percent, l_weathering_presentation, m_error_narrative, o_closing.",
+      "example": "j_theme_color = INDIGO_IRON_NAVY",
+      "behavior": "Appearance and staging only. Under DP-03 they never touch Work Mode or Strength. Note that vocabulary tone (e), acknowledgement (f), and error narrative (m) sit here too, so in Unified V1 they do not change expected behavior, unlike the speaking style field in v1.",
+      "required": "Optional",
+      "effect": "Weak",
+      "interaction": "Changing a presentation axis leaves Work Mode Affinity unchanged (DP-03).",
+      "caution": "thinking_pause_ms is presentation, not real reasoning time."
+    },
+    "professional_reasoning": {
+      "meaning": "Adds where an expert looks. NOT a credential.",
+      "example": "Legal Analysis: issue spotting, evidence focus",
+      "behavior": "Adds reasoning focus, not authority.",
+      "interaction": "prohibited_claims guarantees no credential claim.",
+      "caution": "Profile != Credential != Qualification != Authority != Mandate."
+    },
+    "ten_d": {
+      "meaning": "Optional 10D fine tuning. Absent by default.",
+      "example": "(usually absent)",
+      "behavior": "Optional adjustment, absent by default (absent is not zero and not a default). Independent of the 1+7 and the 15 axes. Never invent values.",
+      "required": "Optional",
+      "effect": "Weak",
+      "interaction": "Independent of the 1+7 and 15 axes.",
+      "caution": "absent != zero != default; do not invent values."
+    },
+    "work_mode_affinity": {
+      "meaning": "Design-level fit for each work mode.",
+      "example": "STRATEGY = HIGH",
+      "behavior": "Derived from thinking traits (heuristic).",
+      "interaction": "Driven by composition, not presentation axes.",
+      "caution": "Affinity is not a guarantee of capability or accuracy."
+    },
+    "internal_tension": {
+      "meaning": "Opposing strong tendencies held together.",
+      "example": "GUARDIAN HIGH x ACCELERATOR HIGH",
+      "behavior": "Shown explicitly; not averaged to MEDIUM.",
+      "interaction": "Front integrates the tension.",
+      "caution": "Failing to integrate can make behavior swing."
+    },
+    "expected_vs_observed": {
+      "meaning": "Compares design expectation to probe observation.",
+      "example": "forward_progress expected HIGH, observed MEDIUM",
+      "behavior": "Highlights divergence (|delta|>=0.25).",
+      "interaction": "Feeds Adjustment Suggestions that point back to parameters.",
+      "caution": "Observed depends on the LLM and rater; interpret with care."
+    },
+    "derived_metrics": {
+      "meaning": "Evaluation metrics (tension, variance, etc.).",
+      "example": "internal_tension count",
+      "behavior": "Evaluation output, not canonical input.",
+      "interaction": "Computed by the Trainer.",
+      "caution": "Never auto-save to the SAKU Canonical."
+    },
+    "builder_candidate": {
+      "meaning": "A proposed revision from the Trainer.",
+      "example": "seat4 intensity HIGH -> MEDIUM",
+      "behavior": "A candidate pending human review.",
+      "interaction": "Handed back to the Builder.",
+      "caution": "The Trainer never overwrites the Canonical directly."
+    },
+    "probe_scoring": {
+      "meaning": "Score each probe response against its rubric (0.0-1.0).",
+      "example": "PB-FWD = 0.65",
+      "behavior": "Builds the Observed Character Profile.",
+      "interaction": "Compared against the Expected Profile.",
+      "caution": "Behavior-based; same text is not the same character."
+    },
+    "catalog_code": {
+      "meaning": "One group letter plus two digits, such as C01. Letters: C, B, T, H, R, P, G.",
+      "example": "C01",
+      "behavior": "A classification identifier. Must match catalog_group. A code starting with P requires professional_reasoning. Does not change responses.",
+      "required": "Required",
+      "effect": "Weak",
+      "interaction": "",
+      "caution": ""
+    },
+    "purpose_summary": {
+      "meaning": "Free text. A summary of the purpose.",
+      "example": "Supports deciding the direction of the business.",
+      "behavior": "Reaches the Canonical definition and the generated LLM prompt (Export for LLM), but does not move any Derived Profile score.",
+      "required": "Optional",
+      "effect": "Medium",
+      "interaction": "",
+      "caution": ""
+    },
+    "primary_value": {
+      "meaning": "Free text.",
+      "example": "Decisions, and clarity about what will not be done.",
+      "behavior": "The core value, carried into the Canonical definition and the generated prompt. Does not affect Derived scores.",
+      "required": "Optional",
+      "effect": "Medium",
+      "interaction": "",
+      "caution": ""
+    },
+    "character_role": {
+      "meaning": "Free text. A description of the responsible role.",
+      "example": "The role that sets direction from the whole structure.",
+      "behavior": "Carried into the Canonical definition and the generated prompt. Checked by the Character Core conformance test. Does not move Derived scores.",
+      "required": "Optional",
+      "effect": "Medium",
+      "interaction": "",
+      "caution": ""
+    },
+    "values": {
+      "meaning": "One per line.",
+      "example": "Think from the whole / Show the basis",
+      "behavior": "Listed in the generated prompt and applied directly as criteria for judgment. Also required by the Character Core conformance check.",
+      "required": "Optional",
+      "effect": "Strong",
+      "interaction": "",
+      "caution": ""
+    },
+    "axes_behavior": {
+      "meaning": "Only b_companion_domain, c_intelligence_vector, d_socratic_angle, and n_crystallization.",
+      "example": "c_intelligence_vector = STRUCTURAL_LOGIC",
+      "behavior": "Of the 15 axes, only these four feed the Derived Profile Engine and reach Work Mode and Expression Tendencies. The other eleven are presentation and leave expected behavior unchanged.",
+      "required": "Optional",
+      "effect": "Medium",
+      "interaction": "",
+      "caution": ""
+    },
+    "pr_on": {
+      "meaning": "Checkbox. Required when catalog_code starts with P.",
+      "example": "Enabled",
+      "behavior": "Adds the P-group reasoning profile, which contributes what a professional looks at. It is not a credential and not authority.",
+      "required": "Optional",
+      "effect": "Medium",
+      "interaction": "",
+      "caution": ""
+    },
+    "pr_profile": {
+      "meaning": "LEGAL_ANALYSIS, TAX_PRACTICE, ACCOUNTING_AUDIT, LABOR_PRACTICE, IP_ANALYSIS, REGISTRATION_PROCEDURE, ADMINISTRATIVE_PROCEDURE, or VALUATION.",
+      "example": "LEGAL_ANALYSIS",
+      "behavior": "The kind of reasoning profile when included. Adds what the character examines and shows up in the Expected professional_focus. Adds no authority.",
+      "required": "Conditional",
+      "effect": "Medium",
+      "interaction": "",
+      "caution": ""
+    },
+    "pr_issue": {
+      "meaning": "One per line. The angles for spotting issues.",
+      "example": "Extract the legal issues",
+      "behavior": "What the character examines professionally. Reaches Expected professional_focus but grants neither credential nor authority.",
+      "required": "Conditional",
+      "effect": "Medium",
+      "interaction": "",
+      "caution": ""
+    },
+    "pr_prohib": {
+      "meaning": "One per line. Claims the character must never make.",
+      "example": "Never state that you are a licensed professional",
+      "behavior": "Required whenever professional_reasoning is included (empty is an error). Reaches the generated prompt and the boundary, and is what guarantees the profile is not a credential.",
+      "required": "Conditional",
+      "effect": "Strong",
+      "interaction": "",
+      "caution": ""
+    }
+  }
+}
