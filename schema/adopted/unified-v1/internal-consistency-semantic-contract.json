@@ -1,0 +1,17 @@
+{
+  "contract_id": "saku.internal-consistency.semantic-contract.frozen-candidate@2026-09-04",
+  "schema_status": "KEEP",
+  "placement": "DEFINITION_TO_RUNTIME_CONTROL",
+  "execution": "CONDITIONAL_TARGETED_CHALLENGE",
+  "runtime_status": "HOLD_NOT_CONFORMING",
+  "runtime_activation": "HOLD",
+  "blocks_core_freeze": false,
+  "product_activation": "PROHIBITED_UNTIL_RUNTIME_CONFORMANCE_PASS",
+  "character_runtime_value_storage": "PROHIBITED",
+  "v2_runtime_contract_path": "artifact:01_internal-consistency-runtime-contract.patch-v2.candidate.json#sha256=384110be5e7ce66f1a2fb267ad6da79a14f6b2873f61344e528bc4b71b53dc74",
+  "v2_runtime_contract_sha256": "384110be5e7ce66f1a2fb267ad6da79a14f6b2873f61344e528bc4b71b53dc74",
+  "v2_trainer_expectation_sha256": "6e368baad7817f91fc8ea50a504663fab0eabafd146477e393e69de269a85fed",
+  "runtime_fail_evidence_manifest_sha256": "78f22e08d8e9195d77e1426b3e067c797275bf3c8d1f8824d78608ceb8251d66",
+  "backlog_classification": "FUTURE_ENHANCEMENT_IMPLEMENTATION_AND_EVIDENCE",
+  "new_behavior_parameter": false
+}

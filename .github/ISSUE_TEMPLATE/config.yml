@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: General OSS questions
+  - name: Questions and community support
     url: https://github.com/wi-tcom/KOKOROSAKU/discussions
-    about: Ask documentation and community-support questions in GitHub Discussions.
-  - name: Private security report
-    url: https://github.com/wi-tcom/KOKOROSAKU/security/advisories
-    about: Use "Report a vulnerability". Do not disclose security details in a public Issue.
+    about: Use Discussions after it is enabled. Support is best effort with no SLA.
+  - name: Private vulnerability reporting
+    url: https://github.com/wi-tcom/KOKOROSAKU/security/advisories/new
+    about: Never disclose security-sensitive details in a public Issue.

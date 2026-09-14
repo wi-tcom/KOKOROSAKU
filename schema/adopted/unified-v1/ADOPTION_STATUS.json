@@ -1,0 +1,126 @@
+{
+  "format": "saku.public-adoption-status.v1",
+  "status": "CANONICAL_MAIN_ACTIVE_PUBLICATION_CANDIDATE",
+  "canonical_repository": "wi-tcom/-SAKU-1-7-Character-System",
+  "canonical_revision": "c78f00730b8fd6100403f4beeb04994c387b65c0",
+  "canonical_revision_state": "MERGED_CANONICAL_MAIN",
+  "candidate_source": {
+    "repository": "wi-tcom/-SAKU-1-7-Character-System",
+    "pull_request": 21,
+    "branch": "work/unified-v1-publication-clean",
+    "head": "58a98b5bfdc2e4476730e74a73f113940a0ddd5f",
+    "merge_commit": "c78f00730b8fd6100403f4beeb04994c387b65c0"
+  },
+  "active_schema": {
+    "identity": "SAKU_UNIFIED_SCHEMA_V1",
+    "path": "schema/adopted/unified-v1/saku-unified-character.v1.schema.json",
+    "sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817",
+    "role": "SOLE_ACTIVE_SAKU_CHARACTER_SCHEMA"
+  },
+  "adoption_record": {
+    "repository": "wi-tcom/-SAKU-1-7-Character-System",
+    "revision": "c78f00730b8fd6100403f4beeb04994c387b65c0",
+    "revision_state": "MERGED_CANONICAL_MAIN",
+    "path": "governance/canonical-adoptions/SAKU_UNIFIED_SCHEMA_V1.json",
+    "decision_id": "D-13",
+    "decision_id_status": "OWNER_ASSIGNED"
+  },
+  "publication_authorized": true,
+  "publication_authority": "OWNER",
+  "publication_decision_date": "2026-09-13",
+  "publication_execution_authorized": false,
+  "publication_schedule": "OWNER_TO_SET_AFTER_WORK_PACKAGE_ETA_AGGREGATION",
+  "kokorosaku_publication_contract": {
+    "version": "v0.1.0β",
+    "schema_identity": "SAKU_UNIFIED_SCHEMA_V1",
+    "schema_sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817",
+    "character_extension_contract_version": "1.0.0",
+    "character_extension_contract_included": true,
+    "publication_executed": false
+  },
+  "embedded_frozen_candidate_labels": "SUPERSEDED_BY_EXACT_ADOPTION_RECORD_FOR_THE_EXACT_SCHEMA_SHA256_ONLY",
+  "legacy_v1_status": "MIGRATION_SOURCE_ONLY",
+  "vnext_active_schema": false,
+  "vnext_publication_included": false,
+  "artifacts": [
+    {
+      "role": "ACTIVE_SCHEMA",
+      "path": "schema/adopted/unified-v1/saku-unified-character.v1.schema.json",
+      "sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817",
+      "status": "CANONICAL_MAIN_ACTIVE_SCHEMA"
+    },
+    {
+      "role": "FIELD_CLASSIFICATION_METADATA",
+      "path": "schema/adopted/unified-v1/field-classification-metadata.json",
+      "sha256": "ae505ad0b6dc70c16ea274a13beb19cc55484d4ba96224c74d6bd7ac9e1378fb",
+      "status": "PUBLIC_SUPPORT_ARTIFACT"
+    },
+    {
+      "role": "FIFTEEN_AXES_LAYER_MAPPING",
+      "path": "schema/adopted/unified-v1/15-axes-layer-mapping.tsv",
+      "sha256": "0f31871fbcf7ffec38f39808ff43cc121c41da97cc86ca350cc65976035f48f5",
+      "status": "PUBLIC_SUPPORT_ARTIFACT"
+    },
+    {
+      "role": "INPUT_INTEGRITY_INVARIANT",
+      "path": "schema/adopted/unified-v1/input-integrity-invariant.json",
+      "sha256": "241a4fec16245ef3f97d3ef0f698a9cb4abcd489be00e5d75883bf838d849569",
+      "status": "PUBLIC_SUPPORT_ARTIFACT"
+    },
+    {
+      "role": "INTERNAL_CONSISTENCY_SEMANTIC_CONTRACT",
+      "path": "schema/adopted/unified-v1/internal-consistency-semantic-contract.json",
+      "sha256": "5fbba77063a030b7c07cd63b37c9aa198764cccd1d3908093f8acaf393cbb8d1",
+      "status": "PUBLIC_SUPPORT_ARTIFACT_RUNTIME_ACTIVATION_HELD"
+    },
+    {
+      "role": "DIGEST_PROFILE",
+      "path": "schema/adopted/unified-v1/digest-profile.schema.json",
+      "sha256": "49e721071bfb59ade2819027c667314f88669bb172ff22eaadd49a99bf9692d4",
+      "status": "PUBLIC_SUPPORT_CANDIDATE_NOT_SEPARATELY_ADOPTED"
+    },
+    {
+      "role": "CHARACTER_EXTENSION_CONTRACT",
+      "path": "schema/adopted/unified-v1/character-extension.v1.schema.json",
+      "sha256": "2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b",
+      "status": "PUBLIC_REQUIRED_VALIDATION_DEPENDENCY"
+    }
+  ],
+  "resolver_mappings": [
+    {
+      "uri": "https://wi-t.com/schemas/saku/character-extension/1.0.0/schema.json",
+      "path": "schema/adopted/unified-v1/character-extension.v1.schema.json",
+      "sha256": "2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b",
+      "network_retrieval_required": false
+    }
+  ],
+  "schema_history": [
+    {
+      "effective_date": "2026-09-04",
+      "sha256": "6e94d1cabae6f839252a2f2d29d268f0a759c3a4fbc0766a508669d1e988ecac",
+      "transition": "INITIAL_UNIFIED_V1_ADOPTION"
+    },
+    {
+      "effective_date": "2026-09-09",
+      "sha256": "4cc8b54e0eb19bf24c59dc1e6b86416b7e417ec205e790c6bf55b4210ecda68c",
+      "transition": "64ALPHA_ADDITIVE_OPTIONAL_ROOT_EXTENSIONS",
+      "source_record": "governance/canonical-adoptions/SAKU_64ALPHA_FOUNDATION.json"
+    },
+    {
+      "effective_date": "2026-09-13",
+      "sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817",
+      "transition": "PROVENANCE_PATH_LEAK_REMOVAL",
+      "base_sha256": "4cc8b54e0eb19bf24c59dc1e6b86416b7e417ec205e790c6bf55b4210ecda68c",
+      "semantic_change": false,
+      "decision_id": "D-13"
+    }
+  ],
+  "invariants": [
+    "PUBLICATION != CANONICAL_ADOPTION",
+    "MERGE != RELEASE",
+    "RELEASE != PUBLICATION_EXECUTION",
+    "VNEXT_HISTORY != ACTIVE_SCHEMA",
+    "SUPPORT_ARTIFACT != ACTIVE_SCHEMA",
+    "NO_PUBLICATION_BEFORE_OWNER_EXECUTION_GATE"
+  ]
+}

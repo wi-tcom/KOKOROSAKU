@@ -1,17 +1,10 @@
 # Compatibility
 
-> `PRE_PUBLICATION_CANDIDATE / NOT_PUBLISHED`
-
-| Role | Exact revision / identity | Public claim boundary |
+| Role | Exact identity | Boundary |
 |---|---|---|
-| Canonical | `ff901cc38231c80c3abdc3ee18dc5a35b048a888` | `saku.character@vnext-1.0` and `saku.vnext.cat@vnext-1.0`; no runtime claim |
-| Builder | `76e445608bfe493526293876a40bd35a9c830b8e` | authoring/validation Candidate; not Canonical Authority |
-| Trainer | `b7826cd973412c674c923d932e77d250ec14e69e` | observation/evaluation Candidate; not Canonical Authority |
-| Samples | `f3186855c8bed6100108346384b3a73b44f7ea5b` | exact three synthetic data records only |
-| Public Docs | source SHA-256 `160e0bf3be49e279b9dcc40f54f5492e916535a4bac01097332d135b2626678d` | selected explanatory claims only |
+| Canonical public source | wi-tcom/-SAKU-1-7-Character-System@c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c | SAKU_UNIFIED_SCHEMA_V1; sole active Character schema |
+| Active schema | sha256:48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817 | Exact bytes required |
+| Character Extension contract | sha256:2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b | Included resolver dependency; no network retrieval required |
+| Builder public source | wi-tcom/-SAKU-builder@66c3634755962ea83d72ac71589f5f8f1b73de9f | Authoring and review Candidate; not Canonical Authority |
 
-Portability is a goal and tested scope, not a universal compatibility guarantee. Current main, PR head, accepted source, build input, release revision, and live public revision are distinct states.
-
-Unknown or unsupported revisions fail closed and are not silently migrated.
-
-This newly authored publication document is `CC BY 4.0` only at this exact publication-manifest path. Trademark rights are not granted.
+Unknown or unsupported versions fail closed. No implicit migration is performed. Portability is a tested scope, not a universal compatibility guarantee.

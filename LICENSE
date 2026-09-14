@@ -1,25 +1,15 @@
-SAKU OSS PUBLICATION CANDIDATE — PATH-SCOPED LICENSE INDEX
+KOKOROSAKU v0.1.0-beta.1 - EXACT-PATH LICENSE INDEX
 
-This local candidate has no repository-wide license grant.
+Rights holder: 株式会社wi-t.com
+Repository-wide license: false
+Trademark rights granted: false
 
-1. Adopted Canonical exact four
-   License: Apache-2.0
-   Scope: only the exact four paths bound by ADOPTION_STATUS.json and the Owner license decision.
+The public tree uses multiple exact-path licenses:
 
-2. Builder and Trainer code/runtime/test artifacts
-   License: MPL-2.0
-   Scope: only the exported paths identified by the source-to-public-path manifest.
+1. schema/adopted/unified-v1/** and samples/oss-launch/unified-v1/VALIDATION_STATUS.json: Apache-2.0.
+2. samples/oss-launch/unified-v1/sample-characters.json: CC0-1.0, limited to the exact three synthetic sample Character records.
+3. tooling/builder implementation files: MPL-2.0.
+4. tooling/builder/schemas/*.json: Apache-2.0, byte-identical to the corresponding Canonical contracts.
+5. tooling/builder/manual/saku-field-guide.data.json, Builder documentation, and newly authored public documentation: CC-BY-4.0.
 
-3. Builder and Trainer documentation
-   License: CC BY 4.0
-   Scope: only the exported documentation paths identified by the source-to-public-path manifest.
-
-4. PUBLIC_DOCS selected claims and newly authored publication documents
-   License: CC BY 4.0
-   Scope: only the exact publication-manifest paths.
-
-5. Three Sample Character data records
-   License: CC0-1.0
-   Scope: sample-general-compass, sample-erabazu-bridge, and sample-wit-guide only.
-
-No trademark or logo rights are granted. No Character data beyond the exact three Sample records is included. License texts and source Evidence are under LICENSES/ and the build provenance bundle.
+Exact file classification and source binding are in public-path-license-map.json. License notices are under LICENSES/. Open-source and documentation licenses do not grant rights to KOKOROSAKU, SAKU, WI-T.COM, or related names and logos.

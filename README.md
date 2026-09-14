@@ -1,32 +1,26 @@
-# SAKU OSS — Final Frozen Publication Candidate
+# KOKOROSAKU v0.1.0β
 
-> `FINAL_FROZEN_PUBLICATION_CANDIDATE / NOT_PUBLISHED / PUBLIC_REPOSITORY_NOT_CREATED`
+Status: PUBLIC / v0.1.0-beta.1 / wi-tcom/KOKOROSAKU
 
-Target public Repository: `wi-tcom/KOKOROSAKU`
+KOKOROSAKU is a portable SAKU Character authoring and review toolkit. This tree contains the active Unified V1 schema, its required Character Extension contract, three synthetic sample Characters, and the static Builder/Trainer interface.
 
-SAKU is a portable Character Definition system. This candidate package combines the adopted minimum Character contract, authoring and validation tooling, Trainer tooling, and three synthetic OSS Sample Characters.
+Start with [Builder Quickstart](docs/getting-started/builder-quickstart.md), serve the repository root over HTTP, and open /tooling/builder/index.html.
 
-## Getting started
+## Authority boundaries
 
-Start with [Builder Quickstart](docs/getting-started/builder-quickstart.md).
+- The active Character schema is SAKU_UNIFIED_SCHEMA_V1.
+- Builder and Trainer output remains a Candidate. It is not Canonical Adoption, Authority, policy, approval, release, or production state.
+- The Seat 7 public role is PERSONA_BRAND_GUARD_ASSISTANT. It does not issue authority, policy, or approval.
+- Commercial 64, Character Catalog source data, Occupation Packs, AMU/MACHI state, credentials, and private governance controls are not included.
 
-## Current boundaries
+## Publication state
 
-- Canonical semantics are defined only by the adopted exact artifacts identified in [ADOPTION_STATUS.json](schema/adopted/vnext-1.0/ADOPTION_STATUS.json).
-- Builder and Trainer are authoring, validation, observation, and Candidate-generation tools. They are not Canonical Authority.
-- Builder or Trainer output is a Candidate and does not become Canonical, Human Approval, Authority, or a published result.
-- Portability is a design intent and tested scope, not a universal compatibility guarantee.
-- Seat8 is one logical Human boundary, not an eighth AI seat.
-- The target Repository identity is fixed, but the Repository has not been created. No release, tag, publication, SLA, entitlement, or paid support is represented by this local candidate.
+publication_authorized: YES (Owner 2026-09-13 / D-13)
 
-## Support and security
+This field records the Owner decision bound into the packet. It does not state that repository visibility, a tag, a release, or production publication has been executed.
 
-Community use is documentation-first and best-effort. General questions route to GitHub Discussions after Repository creation; reproducible bugs route to GitHub Issues. See [SUPPORT.md](SUPPORT.md). Do not report a suspected vulnerability or sensitive information through a public issue; see [SECURITY.md](SECURITY.md).
+## Licensing and support
 
-## License
+This repository uses exact-path license classification; there is no repository-wide license grant. See [LICENSE](LICENSE), [NOTICE](NOTICE), and [public-path-license-map.json](public-path-license-map.json).
 
-This candidate contains multiple path-specific license scopes. There is no repository-wide license grant. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
-
----
-
-This newly authored publication document is assigned `CC BY 4.0` only within the exact publication-manifest path approved by the Owner. Trademark rights are not granted.
+OSS support is documentation-first, self-service, best effort, with no guaranteed response time or contractual SLA. See [SUPPORT.md](SUPPORT.md) and [SECURITY.md](SECURITY.md).

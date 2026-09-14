@@ -1,0 +1,20 @@
+{
+  "contract_id": "saku.input-integrity.frozen-candidate@2026-09-04",
+  "placement": "CHARACTER_LEVEL_HARD_INVARIANT",
+  "hard_invariant": "REQUIRED_INPUT != AI_GENERATED_SUBSTITUTE",
+  "input_integrity_runtime_result": "PASS_54_OF_54",
+  "critical_counts": {
+    "silent_fabricated_input": 0,
+    "silent_source_substitution": 0,
+    "silent_revision_substitution": 0,
+    "automatic_candidate_promotion": 0
+  },
+  "distinctions": [
+    "GENERATED_CANDIDATE != PROVIDED_INPUT != AUTHORITATIVE_INPUT",
+    "ASSUMED_INPUT != PROVIDED_INPUT != VERIFIED_FACT",
+    "INFERENCE_AS_CLASSIFIED_OUTPUT_ALLOWED",
+    "INFERENCE_MASQUERADING_AS_INPUT_PROHIBITED"
+  ],
+  "new_behavior_parameter": false,
+  "source_result_sha256": "0dece2ab114f70ad7f155545a58454cf038fb2ec40e642411938886d091c649a"
+}
