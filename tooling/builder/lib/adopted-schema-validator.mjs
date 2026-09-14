@@ -15,6 +15,28 @@ export const ADOPTED_SCHEMA = Object.freeze({
   extension_sha256: "2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b",
 });
 
+const EXTENSION_SCHEMA_ID = "https://wi-t.com/schemas/saku/character-extension/1.0.0/schema.json";
+
+// Runtime URLs are deliberately relative to this module rather than to the
+// document that imports it. The source fallback keeps repository tests usable;
+// the generated public artifact always resolves the first, bundled URL.
+export const ADOPTION_STATUS = Object.freeze({
+  decision_id: ADOPTED_SCHEMA.decision_id,
+  active_schema: "SAKU_UNIFIED_SCHEMA_V1",
+  schema: Object.freeze({
+    bundled_relative_url: "../schemas/saku-unified-character.v1.schema.json",
+    source_fallback_relative_url: "../schemas/saku-unified-character.v1.schema.json",
+    sha256: ADOPTED_SCHEMA.sha256,
+  }),
+  resolver_mapping: Object.freeze({
+    [EXTENSION_SCHEMA_ID]: Object.freeze({
+      bundled_relative_url: "../schemas/character-extension.v1.schema.json",
+      source_fallback_relative_url: "../schemas/character-extension.v1.schema.json",
+      sha256: ADOPTED_SCHEMA.extension_sha256,
+    }),
+  }),
+});
+
 const deepEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const pointerTokens = pointer => pointer.replace(/^#\/?/, "").split("/").filter(Boolean)
   .map(token => token.replace(/~1/g, "/").replace(/~0/g, "~"));
@@ -192,17 +214,23 @@ async function fetchExactJson(candidates, expectedSha256, label) {
 export async function loadAdoptedSchema() {
   if (cachedSchema) return cachedSchema;
   const schema = await fetchExactJson([
-    "../schemas/saku-unified-character.v1.schema.json",
-    "../schemas/saku-unified-character.v1.schema.json",
+    new URL(ADOPTION_STATUS.schema.bundled_relative_url, import.meta.url),
+    new URL(ADOPTION_STATUS.schema.source_fallback_relative_url, import.meta.url),
   ], ADOPTED_SCHEMA.sha256, "ADOPTED_SCHEMA");
   if (schema?.properties?.schema?.$ref !== "#/$defs/schemaIdentity") throw new Error("ADOPTED_SCHEMA_UNAVAILABLE: identity marker missing");
+
+  const extensionReference = String(schema?.properties?.extensions?.$ref || "");
+  const extensionDocumentId = extensionReference.split("#")[0];
+  const extensionResolver = ADOPTION_STATUS.resolver_mapping[extensionDocumentId];
+  if (!extensionDocumentId || !extensionResolver)
+    throw new Error(`CHARACTER_EXTENSION_SCHEMA_UNAVAILABLE: no resolver mapping for ${extensionDocumentId || "missing absolute $ref"}`);
   const extension = await fetchExactJson([
-    "../schemas/character-extension.v1.schema.json",
-    "../schemas/character-extension.v1.schema.json",
-  ], ADOPTED_SCHEMA.extension_sha256, "CHARACTER_EXTENSION_SCHEMA");
-  if (extension?.$id !== "https://wi-t.com/schemas/saku/character-extension/1.0.0/schema.json")
+    new URL(extensionResolver.bundled_relative_url, import.meta.url),
+    new URL(extensionResolver.source_fallback_relative_url, import.meta.url),
+  ], extensionResolver.sha256, "CHARACTER_EXTENSION_SCHEMA");
+  if (extension?.$id !== extensionDocumentId)
     throw new Error("CHARACTER_EXTENSION_SCHEMA_UNAVAILABLE: identity marker missing");
-  const externalSchemas = Object.freeze({ [extension.$id]: extension });
+  const externalSchemas = Object.freeze({ [extensionDocumentId]: extension });
   Object.defineProperty(schema, "__externalSchemas", { value: externalSchemas, enumerable: false });
   Object.defineProperty(extension, "__externalSchemas", { value: externalSchemas, enumerable: false });
   cachedSchema = schema;

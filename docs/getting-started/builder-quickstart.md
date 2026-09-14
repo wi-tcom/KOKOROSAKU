@@ -1,19 +1,22 @@
 # KOKOROSAKU Builder quickstart
 
+English is the canonical document. [日本語訳](builder-quickstart.ja.md) is available. Documentation is licensed under [CC BY 4.0](../../LICENSE-DOCS.md).
+
 This guide runs the static beta candidate locally on Windows. It does not install software, publish a Character, or grant any authority or permission.
 
 ## 1. Unpack and start the local server
 
-Open PowerShell in the folder that contains the downloaded ZIP. Replace
-`<downloaded-zip-name>` with the exact filename you received, then run:
+Extract the downloaded ZIP. Open PowerShell, enter the extracted
+`KOKOROSAKU-v0.1.0-beta.1` directory, and run:
 
 ```powershell
-Expand-Archive -LiteralPath '.\<downloaded-zip-name>.zip' -DestinationPath .\KOKOROSAKU-beta-candidate
-Set-Location .\KOKOROSAKU-beta-candidate
-python -m http.server 8000
+Set-Location .\KOKOROSAKU-v0.1.0-beta.1
+python -m http.server 8080
 ```
 
 Keep that PowerShell window open. If `python` is not found, install Python 3 or use a machine where Python 3 is already available.
+
+Warning: do not start the server in a parent directory above `KOKOROSAKU-v0.1.0-beta.1`; doing so changes the URL prefix and may expose unrelated local files.
 
 Do not open `index.html` directly with `file://`. The Builder loads JavaScript modules and the pinned Character schema through the local HTTP server.
 
@@ -21,7 +24,7 @@ Do not open `index.html` directly with `file://`. The Builder loads JavaScript m
 
 Open this exact address in a browser:
 
-<http://127.0.0.1:8000/tooling/builder/index.html>
+<http://localhost:8080/tooling/builder/index.html>
 
 The page should show the five authoring chapters:
 
@@ -53,7 +56,7 @@ Saving and downloading are separate actions. Neither action publishes the Charac
 
 After saving a Character, open:
 
-<http://127.0.0.1:8000/tooling/builder/trainer.html>
+<http://localhost:8080/tooling/builder/trainer.html>
 
 Trainer follows three stages: Prepare, Check with AI, and Review results. It creates a self-contained text pack for manual copy/paste to an external AI. External AI responses and Human evaluations are stored as Trainer evidence; Trainer does not directly mutate the Character.
 

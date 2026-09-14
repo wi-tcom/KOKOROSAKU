@@ -1,5 +1,5 @@
 {
-  "format": "wi-t.public-path-license-map.v2",
+  "format": "wi-t.public-path-license-map.v3",
   "version": "v0.1.0-beta.1",
   "repository": "wi-tcom/KOKOROSAKU",
   "rights_holder_exact": "株式会社wi-t.com",
@@ -49,6 +49,16 @@
       "artifact_sha256": "7b2c068d2a549fbccd24672d07d6b1f6847ea9ce0cbd61f5a6ba1a6396429db9"
     },
     {
+      "path": "CODE_OF_CONDUCT.ja.md",
+      "license": "CC-BY-4.0",
+      "scope": "OWNER_APPROVED_ROUND2_PUBLICATION_DOCUMENT",
+      "rights_holder": "株式会社wi-t.com",
+      "source_repository": "02C_SAKU_OSS_Launch/publication-metadata",
+      "exact_revision": "sha256:4d1386461d38c7677aef7c92db0d918742bb5b74278c3ab7bb627d9b8f27c790",
+      "source_path": "generated:CODE_OF_CONDUCT.ja.md",
+      "artifact_sha256": "cfa4a0a304c28d022fbb33df96bb9287c183e77b4178f29646e51b35449d360f"
+    },
+    {
       "path": "CODE_OF_CONDUCT.md",
       "license": "CC-BY-4.0",
       "scope": "OWNER_APPROVED_NEW_PUBLICATION_DOCUMENT",
@@ -59,6 +69,16 @@
       "artifact_sha256": "4de2decb32d404fb82c5b7a3d328f076eccd4eb0aab25f2602c0beaec70db797"
     },
     {
+      "path": "COMPATIBILITY.ja.md",
+      "license": "CC-BY-4.0",
+      "scope": "OWNER_APPROVED_ROUND2_PUBLICATION_DOCUMENT",
+      "rights_holder": "株式会社wi-t.com",
+      "source_repository": "02C_SAKU_OSS_Launch/publication-metadata",
+      "exact_revision": "sha256:4d1386461d38c7677aef7c92db0d918742bb5b74278c3ab7bb627d9b8f27c790",
+      "source_path": "generated:COMPATIBILITY.ja.md",
+      "artifact_sha256": "ce9f56684e2830abcaa5570df869a0102d7f1d6258e3ad3c25cbb9cf96114dad"
+    },
+    {
       "path": "COMPATIBILITY.md",
       "license": "CC-BY-4.0",
       "scope": "OWNER_APPROVED_NEW_PUBLICATION_DOCUMENT",
@@ -66,7 +86,17 @@
       "source_repository": "02C_SAKU_OSS_Launch/publication-metadata",
       "exact_revision": "sha256:6a1e78d5ea684b9d624834a0f1894cdd5ecb25b120992fc2498b8ac80596b232",
       "source_path": "generated:COMPATIBILITY.md",
-      "artifact_sha256": "14e8a86659283d32d1830f6f739675ec8f99f772ea49eb38fd4d4f4a4c4e28e6"
+      "artifact_sha256": "494e3b2f492ff81760e103a07ab13fcea0f92dbc00eaa7ea3344032ca170138b"
+    },
+    {
+      "path": "CONTRIBUTING.ja.md",
+      "license": "CC-BY-4.0",
+      "scope": "OWNER_APPROVED_ROUND2_PUBLICATION_DOCUMENT",
+      "rights_holder": "株式会社wi-t.com",
+      "source_repository": "02C_SAKU_OSS_Launch/publication-metadata",
+      "exact_revision": "sha256:4d1386461d38c7677aef7c92db0d918742bb5b74278c3ab7bb627d9b8f27c790",
+      "source_path": "generated:CONTRIBUTING.ja.md",
+      "artifact_sha256": "084018892d9bd5599dc9ad772001031bcd41d54c4ee3c216f9666855ff1321b2"
     },
     {
       "path": "CONTRIBUTING.md",
@@ -79,15 +109,26 @@
       "artifact_sha256": "5f5484835027063ba0e77feef279ce443ca5c70d88b81a1d9ead79aed89345ca"
     },
     {
+      "path": "docs/getting-started/builder-quickstart.ja.md",
+      "rights_holder": "株式会社wi-t.com",
+      "source_repository": "wi-tcom/-SAKU-builder",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
+      "source_path": "docs/getting-started/builder-quickstart.ja.md",
+      "source_artifact_sha256": "d17e4f9a08886a1c5687b659e7cfbb71b13a11026786bdfb6b6602c5c7f19d90",
+      "artifact_sha256": "d17e4f9a08886a1c5687b659e7cfbb71b13a11026786bdfb6b6602c5c7f19d90",
+      "license": "CC-BY-4.0",
+      "scope": "BUILDER_DOCUMENTATION"
+    },
+    {
       "path": "docs/getting-started/builder-quickstart.md",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "docs/getting-started/builder-quickstart.md",
-      "artifact_sha256": "d6058ae00e69c437070057af565319a354ffe3ffa4b591e3462fd94b0f923a7d",
+      "source_artifact_sha256": "d8b950c45b9f70682285d173bc5e7526da4c9f9e6f27b6e95030614129b2a2d3",
+      "artifact_sha256": "d8b950c45b9f70682285d173bc5e7526da4c9f9e6f27b6e95030614129b2a2d3",
       "license": "CC-BY-4.0",
-      "scope": "BUILDER_DOCUMENTATION",
-      "source_artifact_sha256": "d6058ae00e69c437070057af565319a354ffe3ffa4b591e3462fd94b0f923a7d"
+      "scope": "BUILDER_DOCUMENTATION"
     },
     {
       "path": "LICENSE",
@@ -152,145 +193,175 @@
     {
       "path": "public-path-license-map.json",
       "license": "CC-BY-4.0",
-      "scope": "OWNER_APPROVED_NEW_PUBLICATION_DOCUMENT",
+      "scope": "OWNER_APPROVED_ROUND2_PUBLICATION_DOCUMENT",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch/publication-metadata",
-      "exact_revision": "sha256:6a1e78d5ea684b9d624834a0f1894cdd5ecb25b120992fc2498b8ac80596b232",
+      "exact_revision": "sha256:4d1386461d38c7677aef7c92db0d918742bb5b74278c3ab7bb627d9b8f27c790",
       "source_path": "generated:public-path-license-map.json",
       "artifact_sha256": null,
       "artifact_hash_note": "SELF_REFERENTIAL_HASH_RECORDED_IN_EXTERNAL_PACKET_MANIFEST"
     },
     {
-      "path": "README.md",
+      "path": "README.ja.md",
       "license": "CC-BY-4.0",
-      "scope": "OWNER_APPROVED_NEW_PUBLICATION_DOCUMENT",
+      "scope": "OWNER_APPROVED_ROUND2_PUBLICATION_DOCUMENT",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch/publication-metadata",
-      "exact_revision": "sha256:6a1e78d5ea684b9d624834a0f1894cdd5ecb25b120992fc2498b8ac80596b232",
+      "exact_revision": "sha256:4d1386461d38c7677aef7c92db0d918742bb5b74278c3ab7bb627d9b8f27c790",
+      "source_path": "generated:README.ja.md",
+      "artifact_sha256": "73c7fd1ec0d6830b9a7c5037d298bbad5f79245fe0c19e11eb1b91f38a054bbd"
+    },
+    {
+      "path": "README.md",
+      "license": "CC-BY-4.0",
+      "scope": "OWNER_APPROVED_ROUND2_PUBLICATION_DOCUMENT",
+      "rights_holder": "株式会社wi-t.com",
+      "source_repository": "02C_SAKU_OSS_Launch/publication-metadata",
+      "exact_revision": "sha256:4d1386461d38c7677aef7c92db0d918742bb5b74278c3ab7bb627d9b8f27c790",
       "source_path": "generated:README.md",
-      "artifact_sha256": "b396fdddac62aa118253029979b4225da3d2c373057178ee598881e2dd0911d3"
+      "artifact_sha256": "8453efa728faa8d9f7641b21056cb6d4fb4e9b3719c922ca07b646f479aaa4a3"
     },
     {
       "path": "samples/oss-launch/unified-v1/sample-characters.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "samples/oss-launch/unified-v1/sample-characters.json",
+      "source_artifact_sha256": "2f3985bd6b033a744baffa79ec912c914e327b71dcacf6c7668286248df51005",
       "artifact_sha256": "5abad238039b3b03c14b7a09a0e4d040c351ddba8230dc69973b88873567ad86",
       "license": "CC0-1.0",
-      "scope": "EXACT_THREE_SYNTHETIC_SAMPLE_CHARACTERS",
-      "source_artifact_sha256": "2f3985bd6b033a744baffa79ec912c914e327b71dcacf6c7668286248df51005",
-      "export_transform": "wi-t.rights-holder-exact-normalization.v1"
+      "scope": "EXACT_THREE_SYNTHETIC_SAMPLE_CHARACTERS"
     },
     {
       "path": "samples/oss-launch/unified-v1/VALIDATION_STATUS.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "samples/oss-launch/unified-v1/VALIDATION_STATUS.json",
+      "source_artifact_sha256": "31b41976e351eeae799b612a95dfcf727e130004555c07119a810392b6061f0d",
       "artifact_sha256": "31b41976e351eeae799b612a95dfcf727e130004555c07119a810392b6061f0d",
       "license": "Apache-2.0",
-      "scope": "OWNER_EXACT_SAMPLE_VALIDATION_STATUS",
-      "source_artifact_sha256": "31b41976e351eeae799b612a95dfcf727e130004555c07119a810392b6061f0d"
+      "scope": "OWNER_SAMPLE_VALIDATION_STATUS"
     },
     {
       "path": "schema/adopted/unified-v1/15-axes-layer-mapping.tsv",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "schema/adopted/unified-v1/15-axes-layer-mapping.tsv",
+      "source_artifact_sha256": "0f31871fbcf7ffec38f39808ff43cc121c41da97cc86ca350cc65976035f48f5",
       "artifact_sha256": "0f31871fbcf7ffec38f39808ff43cc121c41da97cc86ca350cc65976035f48f5",
       "license": "Apache-2.0",
-      "scope": "OWNER_EXACT_NINE_CANONICAL_PUBLIC_FILES",
-      "source_artifact_sha256": "0f31871fbcf7ffec38f39808ff43cc121c41da97cc86ca350cc65976035f48f5"
+      "scope": "OWNER_CANONICAL_PUBLIC_ARTIFACT"
     },
     {
       "path": "schema/adopted/unified-v1/ADOPTION_STATUS.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "schema/adopted/unified-v1/ADOPTION_STATUS.json",
-      "artifact_sha256": "3dc1589907738fe8f92ce8f1f983f52589e8d781e3e34eff14ab2ac0d2c37eb8",
+      "source_artifact_sha256": "562275073e529f1d01ce38d2ab86714cc600ab80355560081b018acf19022581",
+      "artifact_sha256": "562275073e529f1d01ce38d2ab86714cc600ab80355560081b018acf19022581",
       "license": "Apache-2.0",
-      "scope": "OWNER_EXACT_NINE_CANONICAL_PUBLIC_FILES",
-      "source_artifact_sha256": "3dc1589907738fe8f92ce8f1f983f52589e8d781e3e34eff14ab2ac0d2c37eb8"
+      "scope": "OWNER_CANONICAL_PUBLIC_ARTIFACT"
     },
     {
       "path": "schema/adopted/unified-v1/character-extension.v1.schema.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "schema/adopted/unified-v1/character-extension.v1.schema.json",
+      "source_artifact_sha256": "2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b",
       "artifact_sha256": "2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b",
       "license": "Apache-2.0",
-      "scope": "OWNER_EXACT_NINE_CANONICAL_PUBLIC_FILES",
-      "source_artifact_sha256": "2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b"
+      "scope": "OWNER_CANONICAL_PUBLIC_ARTIFACT"
     },
     {
       "path": "schema/adopted/unified-v1/digest-profile.schema.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "schema/adopted/unified-v1/digest-profile.schema.json",
+      "source_artifact_sha256": "49e721071bfb59ade2819027c667314f88669bb172ff22eaadd49a99bf9692d4",
       "artifact_sha256": "49e721071bfb59ade2819027c667314f88669bb172ff22eaadd49a99bf9692d4",
       "license": "Apache-2.0",
-      "scope": "OWNER_EXACT_NINE_CANONICAL_PUBLIC_FILES",
-      "source_artifact_sha256": "49e721071bfb59ade2819027c667314f88669bb172ff22eaadd49a99bf9692d4"
+      "scope": "OWNER_CANONICAL_PUBLIC_ARTIFACT"
     },
     {
       "path": "schema/adopted/unified-v1/field-classification-metadata.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "schema/adopted/unified-v1/field-classification-metadata.json",
+      "source_artifact_sha256": "ae505ad0b6dc70c16ea274a13beb19cc55484d4ba96224c74d6bd7ac9e1378fb",
       "artifact_sha256": "ae505ad0b6dc70c16ea274a13beb19cc55484d4ba96224c74d6bd7ac9e1378fb",
       "license": "Apache-2.0",
-      "scope": "OWNER_EXACT_NINE_CANONICAL_PUBLIC_FILES",
-      "source_artifact_sha256": "ae505ad0b6dc70c16ea274a13beb19cc55484d4ba96224c74d6bd7ac9e1378fb"
+      "scope": "OWNER_CANONICAL_PUBLIC_ARTIFACT"
     },
     {
       "path": "schema/adopted/unified-v1/input-integrity-invariant.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "schema/adopted/unified-v1/input-integrity-invariant.json",
+      "source_artifact_sha256": "241a4fec16245ef3f97d3ef0f698a9cb4abcd489be00e5d75883bf838d849569",
       "artifact_sha256": "241a4fec16245ef3f97d3ef0f698a9cb4abcd489be00e5d75883bf838d849569",
       "license": "Apache-2.0",
-      "scope": "OWNER_EXACT_NINE_CANONICAL_PUBLIC_FILES",
-      "source_artifact_sha256": "241a4fec16245ef3f97d3ef0f698a9cb4abcd489be00e5d75883bf838d849569"
+      "scope": "OWNER_CANONICAL_PUBLIC_ARTIFACT"
     },
     {
       "path": "schema/adopted/unified-v1/internal-consistency-semantic-contract.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "schema/adopted/unified-v1/internal-consistency-semantic-contract.json",
+      "source_artifact_sha256": "5fbba77063a030b7c07cd63b37c9aa198764cccd1d3908093f8acaf393cbb8d1",
       "artifact_sha256": "5fbba77063a030b7c07cd63b37c9aa198764cccd1d3908093f8acaf393cbb8d1",
       "license": "Apache-2.0",
-      "scope": "OWNER_EXACT_NINE_CANONICAL_PUBLIC_FILES",
-      "source_artifact_sha256": "5fbba77063a030b7c07cd63b37c9aa198764cccd1d3908093f8acaf393cbb8d1"
+      "scope": "OWNER_CANONICAL_PUBLIC_ARTIFACT"
+    },
+    {
+      "path": "schema/adopted/unified-v1/README.ja.md",
+      "rights_holder": "株式会社wi-t.com",
+      "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
+      "source_path": "schema/adopted/unified-v1/README.ja.md",
+      "source_artifact_sha256": "1be07c4e4ecddcbeed7e565562650b66e0964745986c186d40f8945e48319a27",
+      "artifact_sha256": "1be07c4e4ecddcbeed7e565562650b66e0964745986c186d40f8945e48319a27",
+      "license": "CC-BY-4.0",
+      "scope": "CANONICAL_JAPANESE_DOCUMENTATION"
     },
     {
       "path": "schema/adopted/unified-v1/README.md",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "schema/adopted/unified-v1/README.md",
-      "artifact_sha256": "e4b451249bd6c6dfcfdefd8331a4f8e562ac80a262f9cea0ce4ef7d62fc8ad3b",
+      "source_artifact_sha256": "6fd2b88bbe1f8cb74956cccb3a268774ee0d2e252156f0e9b3853a1f04ac4944",
+      "artifact_sha256": "6fd2b88bbe1f8cb74956cccb3a268774ee0d2e252156f0e9b3853a1f04ac4944",
       "license": "Apache-2.0",
-      "scope": "OWNER_EXACT_NINE_CANONICAL_PUBLIC_FILES",
-      "source_artifact_sha256": "e4b451249bd6c6dfcfdefd8331a4f8e562ac80a262f9cea0ce4ef7d62fc8ad3b"
+      "scope": "OWNER_CANONICAL_PUBLIC_ARTIFACT"
     },
     {
       "path": "schema/adopted/unified-v1/saku-unified-character.v1.schema.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
-      "exact_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+      "exact_revision": "442748f7868c576fc56339add714609662d5ae5e",
       "source_path": "schema/adopted/unified-v1/saku-unified-character.v1.schema.json",
+      "source_artifact_sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817",
       "artifact_sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817",
       "license": "Apache-2.0",
-      "scope": "OWNER_EXACT_NINE_CANONICAL_PUBLIC_FILES",
-      "source_artifact_sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817"
+      "scope": "OWNER_CANONICAL_PUBLIC_ARTIFACT"
+    },
+    {
+      "path": "SECURITY.ja.md",
+      "license": "CC-BY-4.0",
+      "scope": "OWNER_APPROVED_ROUND2_PUBLICATION_DOCUMENT",
+      "rights_holder": "株式会社wi-t.com",
+      "source_repository": "02C_SAKU_OSS_Launch/publication-metadata",
+      "exact_revision": "sha256:4d1386461d38c7677aef7c92db0d918742bb5b74278c3ab7bb627d9b8f27c790",
+      "source_path": "generated:SECURITY.ja.md",
+      "artifact_sha256": "1b7973327fe8c3d47b0b039de24a21878065f77f84ba1a4ce40cf5d12835e5e0"
     },
     {
       "path": "SECURITY.md",
@@ -301,6 +372,16 @@
       "exact_revision": "sha256:6a1e78d5ea684b9d624834a0f1894cdd5ecb25b120992fc2498b8ac80596b232",
       "source_path": "generated:SECURITY.md",
       "artifact_sha256": "fba8d1d009df281683c848f419c21ae70c4ac987b940e5a1ca95bab22528f701"
+    },
+    {
+      "path": "SUPPORT.ja.md",
+      "license": "CC-BY-4.0",
+      "scope": "OWNER_APPROVED_ROUND2_PUBLICATION_DOCUMENT",
+      "rights_holder": "株式会社wi-t.com",
+      "source_repository": "02C_SAKU_OSS_Launch/publication-metadata",
+      "exact_revision": "sha256:4d1386461d38c7677aef7c92db0d918742bb5b74278c3ab7bb627d9b8f27c790",
+      "source_path": "generated:SUPPORT.ja.md",
+      "artifact_sha256": "8aff6dcd0259dbe40d13599165eff4b16bc4496a674b37528aa967d983be486f"
     },
     {
       "path": "SUPPORT.md",
@@ -316,333 +397,353 @@
       "path": "tooling/builder/about.html",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/about.html",
-      "artifact_sha256": "ca7c1445e05528577f7991017bc1540f11861bcecc4cbf3f349a14cadf2a3d2b",
+      "source_artifact_sha256": "c23400db0cec1fc2aaed35ca2a8b0f8e696a15b81d992a74a5d39d5482f8fae8",
+      "artifact_sha256": "c23400db0cec1fc2aaed35ca2a8b0f8e696a15b81d992a74a5d39d5482f8fae8",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "ca7c1445e05528577f7991017bc1540f11861bcecc4cbf3f349a14cadf2a3d2b"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/builder.css",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/builder.css",
+      "source_artifact_sha256": "3d30f3d3f359525e3a06288e01cfc268a09ace0538215f73f885dc924c38423a",
       "artifact_sha256": "3d30f3d3f359525e3a06288e01cfc268a09ace0538215f73f885dc924c38423a",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "3d30f3d3f359525e3a06288e01cfc268a09ace0538215f73f885dc924c38423a"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/index.html",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/index.html",
+      "source_artifact_sha256": "c9a57f42ec670308a8f135c737acab0e5f62dbd09594f11fdae1490e003ed3ea",
       "artifact_sha256": "c9a57f42ec670308a8f135c737acab0e5f62dbd09594f11fdae1490e003ed3ea",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "c9a57f42ec670308a8f135c737acab0e5f62dbd09594f11fdae1490e003ed3ea"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/active-character.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/active-character.mjs",
+      "source_artifact_sha256": "2cefeac0113595e4b353499050863e19ab1be2e6cfe452aed185082c37c721a1",
       "artifact_sha256": "2cefeac0113595e4b353499050863e19ab1be2e6cfe452aed185082c37c721a1",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "2cefeac0113595e4b353499050863e19ab1be2e6cfe452aed185082c37c721a1"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/adopted-schema-validator.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/adopted-schema-validator.mjs",
-      "artifact_sha256": "9c694754756fdf913765ce49c1221f4d98085b8e9d9fb1fe6ec6f9afb39a0424",
+      "source_artifact_sha256": "1ea8bdb37d16c3c0cc1049e8fee119f2e8c296683af38b5135c63994b1ed3ea6",
+      "artifact_sha256": "1ea8bdb37d16c3c0cc1049e8fee119f2e8c296683af38b5135c63994b1ed3ea6",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "9c694754756fdf913765ce49c1221f4d98085b8e9d9fb1fe6ec6f9afb39a0424"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/builder-field-registry.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/builder-field-registry.mjs",
+      "source_artifact_sha256": "ec14720e5cfde64debdeba1d9e4ba9377e1009f721278ee24fc73727f9820eaa",
       "artifact_sha256": "ec14720e5cfde64debdeba1d9e4ba9377e1009f721278ee24fc73727f9820eaa",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "ec14720e5cfde64debdeba1d9e4ba9377e1009f721278ee24fc73727f9820eaa"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/builder-ui.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/builder-ui.mjs",
+      "source_artifact_sha256": "49fea8ff268ae1fd2be545a4320b476432835d8a26b1be3df22c585018b33d9c",
       "artifact_sha256": "49fea8ff268ae1fd2be545a4320b476432835d8a26b1be3df22c585018b33d9c",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "49fea8ff268ae1fd2be545a4320b476432835d8a26b1be3df22c585018b33d9c"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/character-library.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/character-library.mjs",
+      "source_artifact_sha256": "36f2ea25d7782f6f8831ae1bd93a8dbbd237532d57372adb04d5e28d1184d849",
       "artifact_sha256": "36f2ea25d7782f6f8831ae1bd93a8dbbd237532d57372adb04d5e28d1184d849",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "36f2ea25d7782f6f8831ae1bd93a8dbbd237532d57372adb04d5e28d1184d849"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/frozen-ia-ui.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/frozen-ia-ui.mjs",
+      "source_artifact_sha256": "9ac05c6aa879b50ca95d319191bb4567e54d7669ac61e077d81a1dfbc945d7f4",
       "artifact_sha256": "9ac05c6aa879b50ca95d319191bb4567e54d7669ac61e077d81a1dfbc945d7f4",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "9ac05c6aa879b50ca95d319191bb4567e54d7669ac61e077d81a1dfbc945d7f4"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/handoff-binding.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/handoff-binding.mjs",
+      "source_artifact_sha256": "dad025296063984a8bc97803807444d9194fbcf2160bd5665a2b2c4a99758159",
       "artifact_sha256": "dad025296063984a8bc97803807444d9194fbcf2160bd5665a2b2c4a99758159",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "dad025296063984a8bc97803807444d9194fbcf2160bd5665a2b2c4a99758159"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/semantic-registry.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/semantic-registry.mjs",
+      "source_artifact_sha256": "403623e3e84f82733ca01025e9d6e08c7b83a4bf6dc09a185e64cc47dfdeb88c",
       "artifact_sha256": "403623e3e84f82733ca01025e9d6e08c7b83a4bf6dc09a185e64cc47dfdeb88c",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "403623e3e84f82733ca01025e9d6e08c7b83a4bf6dc09a185e64cc47dfdeb88c"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/trainer-contract.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/trainer-contract.mjs",
+      "source_artifact_sha256": "fcbbebec1c11f038ee2142944dd628f5a938b30e9264f283609d9157cd2b017b",
       "artifact_sha256": "fcbbebec1c11f038ee2142944dd628f5a938b30e9264f283609d9157cd2b017b",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "fcbbebec1c11f038ee2142944dd628f5a938b30e9264f283609d9157cd2b017b"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/trainer-ui.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/trainer-ui.mjs",
+      "source_artifact_sha256": "5b3fd2431cd7b25e77e172cbabd22e6a7bbe330ec3febef58b5309a3dbd8ec6c",
       "artifact_sha256": "5b3fd2431cd7b25e77e172cbabd22e6a7bbe330ec3febef58b5309a3dbd8ec6c",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "5b3fd2431cd7b25e77e172cbabd22e6a7bbe330ec3febef58b5309a3dbd8ec6c"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/trainer-ux3.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/trainer-ux3.mjs",
+      "source_artifact_sha256": "42ae8fa92c5a24ba6a03d0b2cc9400fc7e320ac08e567f31854b07528d640d5c",
       "artifact_sha256": "42ae8fa92c5a24ba6a03d0b2cc9400fc7e320ac08e567f31854b07528d640d5c",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "42ae8fa92c5a24ba6a03d0b2cc9400fc7e320ac08e567f31854b07528d640d5c"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/trainer-ux4.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/trainer-ux4.mjs",
+      "source_artifact_sha256": "46529e22eff104474449c566eb36941ebfabdd5fe946b94b16c633db48d01ca8",
       "artifact_sha256": "46529e22eff104474449c566eb36941ebfabdd5fe946b94b16c633db48d01ca8",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "46529e22eff104474449c566eb36941ebfabdd5fe946b94b16c633db48d01ca8"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/tuning-knowledge-20.data.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/tuning-knowledge-20.data.mjs",
+      "source_artifact_sha256": "32441deba1db090281229702b1997e13179a76d7dde1b86d0488a69a8bf44779",
       "artifact_sha256": "32441deba1db090281229702b1997e13179a76d7dde1b86d0488a69a8bf44779",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "32441deba1db090281229702b1997e13179a76d7dde1b86d0488a69a8bf44779"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/tuning-projection.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/tuning-projection.mjs",
+      "source_artifact_sha256": "a3af6b049f07e1168814795d9adbe898178c40653cdd269da8a0cfd67990026c",
       "artifact_sha256": "a3af6b049f07e1168814795d9adbe898178c40653cdd269da8a0cfd67990026c",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "a3af6b049f07e1168814795d9adbe898178c40653cdd269da8a0cfd67990026c"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/unified-authoring.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/unified-authoring.mjs",
+      "source_artifact_sha256": "5e55a422544d75fad3af78c8ca97327b422f041ff3c6827056de1d6a97050cbe",
       "artifact_sha256": "5e55a422544d75fad3af78c8ca97327b422f041ff3c6827056de1d6a97050cbe",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "5e55a422544d75fad3af78c8ca97327b422f041ff3c6827056de1d6a97050cbe"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/lib/unified-schema.mjs",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/lib/unified-schema.mjs",
+      "source_artifact_sha256": "f283c1fc03f77509611c2c02f5ba26748939181972db6ac75bfebf01a257bec4",
       "artifact_sha256": "f283c1fc03f77509611c2c02f5ba26748939181972db6ac75bfebf01a257bec4",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "f283c1fc03f77509611c2c02f5ba26748939181972db6ac75bfebf01a257bec4"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/LICENSE",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/LICENSE",
+      "source_artifact_sha256": "a84058e62f095755f6ad907ea7aea94853a693699296e692fb5e40c76cabaff3",
       "artifact_sha256": "a84058e62f095755f6ad907ea7aea94853a693699296e692fb5e40c76cabaff3",
       "license": "MPL-2.0",
-      "scope": "MPL_LICENSE_TEXT",
-      "source_artifact_sha256": "a84058e62f095755f6ad907ea7aea94853a693699296e692fb5e40c76cabaff3"
+      "scope": "MPL_LICENSE_TEXT"
     },
     {
       "path": "tooling/builder/LICENSE-DOCS.md",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/LICENSE-DOCS.md",
+      "source_artifact_sha256": "e96c5e5868ffd96dba6bd4bfa1a15fa9c56f2081ec8286112e4756d53358ae4e",
       "artifact_sha256": "e96c5e5868ffd96dba6bd4bfa1a15fa9c56f2081ec8286112e4756d53358ae4e",
       "license": "CC-BY-4.0",
-      "scope": "BUILDER_DOCUMENTATION",
-      "source_artifact_sha256": "e96c5e5868ffd96dba6bd4bfa1a15fa9c56f2081ec8286112e4756d53358ae4e"
+      "scope": "BUILDER_DOCUMENTATION"
+    },
+    {
+      "path": "tooling/builder/LICENSING.md",
+      "rights_holder": "株式会社wi-t.com",
+      "source_repository": "wi-tcom/-SAKU-builder",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
+      "source_path": "tooling/builder/LICENSING.md",
+      "source_artifact_sha256": "fb6505e3659cd020780c3ddfef1e7ee1c87d1d7fa531cd37505cb49b1f6eb416",
+      "artifact_sha256": "fb6505e3659cd020780c3ddfef1e7ee1c87d1d7fa531cd37505cb49b1f6eb416",
+      "license": "CC-BY-4.0",
+      "scope": "BUILDER_DOCUMENTATION"
     },
     {
       "path": "tooling/builder/manual/saku-field-guide.data.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/manual/saku-field-guide.data.json",
+      "source_artifact_sha256": "f5c2289e15a770457d9ec4ebe6384d8b7a7902b74ff2dc3a2475401901856aaf",
       "artifact_sha256": "f5c2289e15a770457d9ec4ebe6384d8b7a7902b74ff2dc3a2475401901856aaf",
       "license": "CC-BY-4.0",
-      "scope": "OWNER_EXACT_FIELD_GUIDE_DATA",
-      "source_artifact_sha256": "f5c2289e15a770457d9ec4ebe6384d8b7a7902b74ff2dc3a2475401901856aaf"
+      "scope": "BUILDER_DOCUMENTATION"
     },
     {
       "path": "tooling/builder/NOTICE",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/NOTICE",
+      "source_artifact_sha256": "3da6e655db6710e00cd2b141811302064729e3c0a318ef51d9709fc8f85aea19",
       "artifact_sha256": "f4dd78a2b64d41cebd0fdbb00789cd135db166801b1266767b46eca840125773",
       "license": "CC-BY-4.0",
-      "scope": "BUILDER_DOCUMENTATION",
-      "source_artifact_sha256": "3da6e655db6710e00cd2b141811302064729e3c0a318ef51d9709fc8f85aea19",
-      "export_transform": "wi-t.rights-holder-exact-normalization.v1"
+      "scope": "BUILDER_DOCUMENTATION"
+    },
+    {
+      "path": "tooling/builder/README.ja.md",
+      "rights_holder": "株式会社wi-t.com",
+      "source_repository": "wi-tcom/-SAKU-builder",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
+      "source_path": "tooling/builder/README.ja.md",
+      "source_artifact_sha256": "04c99d834bffc60c4388607c8f5b61087967c1447ca9ab5995a864de79e16f7e",
+      "artifact_sha256": "04c99d834bffc60c4388607c8f5b61087967c1447ca9ab5995a864de79e16f7e",
+      "license": "CC-BY-4.0",
+      "scope": "BUILDER_DOCUMENTATION"
     },
     {
       "path": "tooling/builder/README.md",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/README.md",
-      "artifact_sha256": "07dcf17aba650854b095e0fbb7b6935998e036a96e3e4f215d71a690072a9715",
+      "source_artifact_sha256": "1aa18fb50336c193524b6908215131775a52e4e44d14c508b7c9b2f6e2106fea",
+      "artifact_sha256": "1aa18fb50336c193524b6908215131775a52e4e44d14c508b7c9b2f6e2106fea",
       "license": "CC-BY-4.0",
-      "scope": "BUILDER_DOCUMENTATION",
-      "source_artifact_sha256": "07dcf17aba650854b095e0fbb7b6935998e036a96e3e4f215d71a690072a9715"
+      "scope": "BUILDER_DOCUMENTATION"
     },
     {
       "path": "tooling/builder/schemas/character-extension.v1.schema.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/schemas/character-extension.v1.schema.json",
+      "source_artifact_sha256": "2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b",
       "artifact_sha256": "2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b",
       "license": "Apache-2.0",
-      "scope": "BYTE_IDENTICAL_CANONICAL_CONTRACT",
-      "source_artifact_sha256": "2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b"
+      "scope": "BYTE_IDENTICAL_CANONICAL_CONTRACT"
     },
     {
       "path": "tooling/builder/schemas/saku-unified-character.v1.schema.json",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/schemas/saku-unified-character.v1.schema.json",
+      "source_artifact_sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817",
       "artifact_sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817",
       "license": "Apache-2.0",
-      "scope": "BYTE_IDENTICAL_CANONICAL_CONTRACT",
-      "source_artifact_sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817"
+      "scope": "BYTE_IDENTICAL_CANONICAL_CONTRACT"
     },
     {
       "path": "tooling/builder/THIRD_PARTY_NOTICES.md",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/THIRD_PARTY_NOTICES.md",
+      "source_artifact_sha256": "abd855e1e6f9beffd709e1441124ce5ed06491f0626a5a03f4c20d807687a475",
       "artifact_sha256": "abd855e1e6f9beffd709e1441124ce5ed06491f0626a5a03f4c20d807687a475",
       "license": "CC-BY-4.0",
-      "scope": "BUILDER_DOCUMENTATION",
-      "source_artifact_sha256": "abd855e1e6f9beffd709e1441124ce5ed06491f0626a5a03f4c20d807687a475"
+      "scope": "BUILDER_DOCUMENTATION"
     },
     {
       "path": "tooling/builder/TRADEMARK.md",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/TRADEMARK.md",
-      "artifact_sha256": "7094fe54033e2d420aa459ed9861be1e68cc5c0902f6b52898f0cb7b02f2fd3e",
+      "source_artifact_sha256": "b3e06de7b11a11a23d7ca1440967c7f0a23fecaec8bf36edb1dc2a236c1aeee3",
+      "artifact_sha256": "5b638d947d51b73a4430cea3de727a4deee86659609c8523bff68fe036a4865c",
       "license": "CC-BY-4.0",
-      "scope": "BUILDER_DOCUMENTATION",
-      "source_artifact_sha256": "d5fb1d9feeac3a326e5005812ce2c52b5c7bf0b2cd41c595ee567ce7a64b32dd",
-      "export_transform": "wi-t.rights-holder-exact-normalization.v1"
+      "scope": "BUILDER_DOCUMENTATION"
     },
     {
       "path": "tooling/builder/trainer.css",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/trainer.css",
+      "source_artifact_sha256": "40b2b217b345ca9fa59822708a707fa28527302a9c21f9ecbd559b065e68317b",
       "artifact_sha256": "40b2b217b345ca9fa59822708a707fa28527302a9c21f9ecbd559b065e68317b",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "40b2b217b345ca9fa59822708a707fa28527302a9c21f9ecbd559b065e68317b"
+      "scope": "BUILDER_IMPLEMENTATION"
     },
     {
       "path": "tooling/builder/trainer.html",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "66c3634755962ea83d72ac71589f5f8f1b73de9f",
+      "exact_revision": "abd7292c222b99e6b9648e9bdc8c2860d0b20117",
       "source_path": "tooling/builder/trainer.html",
+      "source_artifact_sha256": "80253f6857cc56e6b4fe4b6a9f76609e44d6b39d8c8372e4e0d88d1ba1c794f6",
       "artifact_sha256": "80253f6857cc56e6b4fe4b6a9f76609e44d6b39d8c8372e4e0d88d1ba1c794f6",
       "license": "MPL-2.0",
-      "scope": "BUILDER_IMPLEMENTATION",
-      "source_artifact_sha256": "80253f6857cc56e6b4fe4b6a9f76609e44d6b39d8c8372e4e0d88d1ba1c794f6"
+      "scope": "BUILDER_IMPLEMENTATION"
     }
   ]
 }

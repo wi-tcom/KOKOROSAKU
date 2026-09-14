@@ -1,5 +1,7 @@
 # KOKOROSAKU v0.1.0β
 
+Japanese documentation: [README.ja.md](README.ja.md)
+
 Status: PUBLIC / v0.1.0-beta.1 / wi-tcom/KOKOROSAKU
 
 KOKOROSAKU is a portable SAKU Character authoring and review toolkit. This tree contains the active Unified V1 schema, its required Character Extension contract, three synthetic sample Characters, and the static Builder/Trainer interface.

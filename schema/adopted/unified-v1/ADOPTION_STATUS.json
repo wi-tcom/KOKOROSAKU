@@ -40,8 +40,8 @@
   },
   "embedded_frozen_candidate_labels": "SUPERSEDED_BY_EXACT_ADOPTION_RECORD_FOR_THE_EXACT_SCHEMA_SHA256_ONLY",
   "legacy_v1_status": "MIGRATION_SOURCE_ONLY",
-  "vnext_active_schema": false,
-  "vnext_publication_included": false,
+  "legacy_transitional_schema_active": false,
+  "legacy_transitional_schema_publication_included": false,
   "artifacts": [
     {
       "role": "ACTIVE_SCHEMA",
@@ -119,7 +119,7 @@
     "PUBLICATION != CANONICAL_ADOPTION",
     "MERGE != RELEASE",
     "RELEASE != PUBLICATION_EXECUTION",
-    "VNEXT_HISTORY != ACTIVE_SCHEMA",
+    "LEGACY_TRANSITION_HISTORY != ACTIVE_SCHEMA",
     "SUPPORT_ARTIFACT != ACTIVE_SCHEMA",
     "NO_PUBLICATION_BEFORE_OWNER_EXECUTION_GATE"
   ]
