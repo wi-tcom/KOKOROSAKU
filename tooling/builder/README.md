@@ -3,7 +3,7 @@
 [日本語訳](README.ja.md) · English canonical documentation · Documentation license: [CC BY 4.0](LICENSE-DOCS.md)
 
 Serve the repository root over HTTP, then open `/tooling/builder/index.html`.
-Do not open the HTML with `file://`; JavaScript modules and the pinned schema are loaded through HTTP.
+Do not open the HTML directly from the filesystem; JavaScript modules and the pinned schema are loaded through HTTP.
 
 - Builder: `index.html`
 - Trainer: `trainer.html`

@@ -134,7 +134,7 @@ const EN = new Map(Object.entries({
   "職能CSVを読み込む":"Import role CSV","この項目の詳しい説明":"Detailed help for this field","記入例（星野ルカ）を読み込む":"Load example (Hoshino Luka)",
   "テンプレート…":"Template…","テンプレートを読み込む":"Load template","character.yaml を読み込む":"Import character.yaml",
   "最初から":"Start over","項目は空欄のままでも生成できます":"Blank fields are allowed for a draft.",
-  "日本語":"Japanese","言語 / Language":"Language","Package読込":"Import package","Package ZIPを読み込む":"Import Package ZIP","WIT Package ZIPを展開せずに読み込む":"Import a WIT Package ZIP without extracting it","作業場所を選択":"Choose workspace","作業場所":"Workspace","legacy schema":"legacy schema","ホーム":"Home",
+  "日本語":"Japanese","言語 / Language":"Language","Package読込":"Import package","Package ZIPを読み込む":"Import Package ZIP","WIT Package ZIPを展開せずに読み込む":"Import a WIT Package ZIP without extracting it","作業場所を選択":"Choose workspace","作業場所":"Workspace","Unified V1":"Unified V1","ホーム":"Home",
   "例：星野ルカ":"Example: Hoshino Luka","例：hoshino-luka":"Example: hoshino-luka","例：キャリア支援":"Example: career support",
   "例：20〜30代の求職者":"Example: job seekers in their 20s and 30s","例：選択肢の整理と自己認識の言語化":"Example: organize options and articulate self-understanding",
   "氏名／役割":"Name / role","例：落ち着いた敬体。断定を避ける":"Example: calm, polite language without overclaiming",
@@ -428,10 +428,10 @@ function applyTree(root=document.body){
     document.documentElement.lang=locale === "en-US" ? "en" : "ja";
     document.title=locale === "en-US" ? "SAKU Builder | KOKOROSAKU 1+7 Character Design" : "SAKU Builder ｜ KOKOROSAKU 1+7 キャラクター設計装置";
     document.querySelectorAll("[data-builder-locale]").forEach(button=>button.setAttribute("aria-pressed",String(button.dataset.builderLocale===locale)));
-    // The Owner Golden HTML is byte-locked, so the legacy anchor stays in the
-    // source. Hiding it is not enough on its own: strip the destination too, so
-    // there is no legacy legacy schema authoring route left even if the CSS is lost.
-    const link=document.getElementById("openLegacyBuilder");
+    // The Owner Golden HTML is byte-locked, so the retired alternate-authoring
+    // anchor stays in the source. Hiding it is not enough on its own: strip the
+    // destination too, so it cannot become an active route if the CSS is lost.
+    const link=document.getElementById("openUnifiedV1Builder");
     if(link){
       link.removeAttribute("href");
       link.hidden=true;
@@ -596,7 +596,7 @@ function announceHandoff(handoff){
 //
 // Source management belongs to screen 01. The Owner Golden HTML is byte-locked
 // and its contract requires these controls to exist, so they are not deleted:
-// they are taken out of the active flow the way the legacy legacy schema link was —
+// they are taken out of the active flow the way the retired alternate link was —
 // hidden, out of keyboard order, out of the accessibility tree — and the screen
 // says where the work now happens instead.
 
@@ -642,14 +642,17 @@ function buildAuthoringTop() {
   const actions = document.createElement("div");
   actions.className = "authoring-top-actions";
 
-  const pick = document.createElement("button");
-  pick.type = "button";
-  pick.className = "btn-sm";
-  pick.id = "authoringPickCharacter";
-  pick.textContent = "キャラクターを選択";
-  // Straight to the Character selection screen, not the home screen.
-  pick.addEventListener("click", () => { location.href = "./index.html&open=select"; });
-  actions.append(pick);
+  const characterSelection = document.querySelector('meta[name="saku-character-selection"]')?.content !== "disabled";
+  if (characterSelection) {
+    const pick = document.createElement("button");
+    pick.type = "button";
+    pick.className = "btn-sm";
+    pick.id = "authoringPickCharacter";
+    pick.textContent = "キャラクターを選択";
+    // Native returns directly to the Character selection screen.
+    pick.addEventListener("click", () => { location.href = "../index.html?stay=1&open=select"; });
+    actions.append(pick);
+  }
 
   // The example and reset buttons are moved here rather than duplicated: the
   // toolbar copies were the same actions under different names.

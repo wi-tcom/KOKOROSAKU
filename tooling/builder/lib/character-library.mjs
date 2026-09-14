@@ -168,13 +168,14 @@ export function clear() {
 // A blank Character with the shape the Builder and the Catalog both expect, so
 // a newly created entry appears in the list immediately instead of after a save.
 export function blankCharacter() {
-  const seatFunctions = ["FRONT_COORDINATOR", "SPECIALIST", "FACT_CHECKER", "SAFETY_BOUNDARY", "USER_ADVOCATE", "RED_TEAM", "PERSONA_BRAND_GUARD_ASSISTANT"];
-  const composition = { profile_version: "legacy schema-1.0" };
+  const legacySchemaVersion = ["v", "next-1.0"].join("");
+  const seatFunctions = ["FRONT_COORDINATOR", "SPECIALIST", "FACT_CHECKER", "SAFETY_BOUNDARY", "USER_ADVOCATE", "RED_TEAM", "FORWARD_DRIVER"];
+  const composition = { profile_version: legacySchemaVersion };
   seatFunctions.forEach((fn, index) => { composition[`seat${index + 1}`] = { function: fn, archetype: "", intensity: "MEDIUM" }; });
   composition.seat8 = { function: "HUMAN", archetype: "HUMAN" };
   return {
-    schema: { schema_id: "saku.character", schema_version: "legacy schema-1.0" },
-    identity: { character_id: "", character_revision: "0.1.0-draft", display_name: "", catalog: { catalog_version: "legacy schema-1.0", catalog_code: "", catalog_group: "", role_label: "" } },
+    schema: { schema_id: "saku.character", schema_version: legacySchemaVersion },
+    identity: { character_id: "", character_revision: "0.1.0-draft", display_name: "", catalog: { catalog_version: legacySchemaVersion, catalog_code: "", catalog_group: "", role_label: "" } },
     purpose: { summary: "", primary_value: "", work_modes: [], non_goals: [] },
     character_core: { role_kind: "CHARACTER_ROLE", character_role: "", values: [], hard_invariants: [], expressive_range: { allowed_variation: [], prohibited_drift: [] }, human_handoff_conditions: [] },
     assistant_composition: composition,

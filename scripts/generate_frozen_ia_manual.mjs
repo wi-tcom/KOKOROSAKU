@@ -1,0 +1,153 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  REGISTRY_ID, CANONICAL_EVIDENCE, CHAPTERS, FIELDS, TUNING_ITEMS,
+  EFFECT_STATES, PROMPT_INCLUDED_CAUTION, MANUAL_HOME_BY_SEMANTIC,
+  READ_ONLY_SEMANTICS, registryProjection,
+} from "../tools/v1/semantic-registry.mjs";
+import {
+  enrichManualFields, FIELD_TYPE_INVENTORY, P03_CHAPTERS, FIRST_TIME_STEPS,
+  P07_SYMPTOMS, TROUBLESHOOTING_ROUTES, USER_GLOSSARY, EXPERT_GLOSSARY,
+  TRAINER_BOUNDARY,
+} from "./manual_content_rebaseline.mjs";
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const MANUAL = path.join(ROOT, "manual");
+const HELP = path.join(ROOT, "desktop", "help");
+const esc = value => String(value ?? "").replace(/[&<>\"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" })[char]);
+const bi = (ja, en, tag = "span") => `<${tag} data-ja="${esc(ja)}" data-en="${esc(en)}">${esc(ja)}</${tag}>`;
+const link = (id, ja, en) => {
+  const anchor = id.includes("#") ? id.slice(id.lastIndexOf("#") + 1) : id;
+  return `<a href="#${anchor}" data-manual-home="${esc(id)}">${bi(ja, en)}</a>`;
+};
+
+const PAGES = Object.freeze([
+  ["P01", "KOKOROSAKUとは何か", "What KOKOROSAKU is"],
+  ["P02", "Characterを選ぶ", "Choose a Character"],
+  ["P03", "Characterを作る・編集する", "Create or edit a Character"],
+  ["P04", "1+7を理解する", "Understand 1+7"],
+  ["P05", "AI Platformで使う", "Use on an AI platform"],
+  ["P06", "Trainerで試す", "Test with Trainer"],
+  ["P07", "AIの動きから調整箇所を探す", "Find settings from AI behaviour"],
+  ["P08", "設定項目を探す・理解する", "Find and understand a setting"],
+  ["P09", "保存・Download・Export・再開", "Save, download, export, and resume"],
+  ["P10", "状態を確認する", "Check status"],
+  ["P11", "困ったとき", "Troubleshooting"],
+  ["P12", "用語集", "Glossary"],
+  ["P13", "Source・Version・Evidence", "Source, version, and evidence"],
+]);
+
+const ROUTES = Object.freeze([
+  { id: "A", ja: "はじめて使う", en: "First time", target: "P01", sequence: ["P01", "P02", "P03", "P04", "P05", "P06", "P07", "P08", "P09", "P10", "P11", "P12", "P13"] },
+  { id: "B", ja: "項目を調べる", en: "Look up a field", target: "P08", sequence: ["P08", "P12", "P13"] },
+  { id: "C", ja: "AIの動きから直す", en: "Fix from AI behaviour", target: "P07", sequence: ["P07", "P11", "P08", "P06"] },
+]);
+
+const STATE_MATRIX = Object.freeze([
+  ["Save", "Workspaceへ現在の作業を保存する", "Canonical採択・公開・承認", "Store current work in the Workspace", "Canonical adoption, publication, or approval"],
+  ["Workspace persistence", "アプリを閉じてもWorkspaceのデータを保持する", "別PCやCloudへの自動同期", "Keep Workspace data after closing the app", "Automatic sync to another computer or cloud"],
+  ["Download", "ブラウザーへファイル保存を依頼する", "保存完了の権威ある確認", "Request a browser file download", "Authoritative confirmation that saving completed"],
+  ["Export", "選択形式へCandidateを直列化する", "Canonical採択・Release", "Serialize a Candidate in the selected format", "Canonical adoption or release"],
+  ["Import", "ファイルを読み込み検証する", "未知・不正な内容の承認", "Read and validate a file", "Approval of unknown or invalid content"],
+  ["Local validation", "Builder内の決定的な検査", "外部Evidence・Authorityの検証", "Deterministic checks inside Builder", "Verification of external evidence or authority"],
+  ["Full Schema Validation", "採択済みSchemaへの構造適合を確認する", "意味上の正しさや承認", "Check structural conformance to the adopted Schema", "Semantic correctness or approval"],
+  ["Conformance", "指定rule setへの適合結果", "実行許可・資格", "A result against a stated rule set", "Execution authorization or credentials"],
+  ["Owner/Governance Adoption", "Owner/Governanceによる別の明示判断", "BuilderのValidation結果", "A separate explicit Owner/Governance decision", "A Builder validation result"],
+  ["Authority Approval", "正しいAuthorityによる外部判断", "CharacterやOccupationの記述", "An external decision by the proper Authority", "A Character or Occupation description"],
+  ["Release", "配布版を確定する別工程", "commit・merge・build", "A separate step that fixes a distributable version", "A commit, merge, or build"],
+  ["Publication", "公開を実行する別工程", "Release Candidateやlocal artifact", "A separate act of making something public", "A release candidate or local artifact"],
+]);
+
+const MANUAL_FIELDS = Object.freeze(enrichManualFields(FIELDS));
+
+const helpCard = field => {
+  const h = field.help;
+  const related = field.tuning.length ? field.tuning.join(", ") : "NONE";
+  const examples = (h.examples || []).length
+    ? `<ol class="examples" data-help-examples>${h.examples.map(value => `<li>${bi(value.ja, value.en)}</li>`).join("")}</ol>`
+    : "";
+  const optionDetails = (h.optionDetails || []).length ? `<div class="option-details" data-option-details>
+    <p>${bi(field.manualType === "SELECT_MULTI" ? "主要用途を先に選び、常用する補助用途だけを追加します。選択数が多いほどよいわけではありません。" : "現在選べる全選択肢です。意味、使いどころ、違いを比べて一つ選びます。", field.manualType === "SELECT_MULTI" ? "Choose the primary use first, then add only regularly used secondary modes. Selecting more is not automatically better." : "These are all currently selectable options. Compare meaning, use, and trade-offs before choosing one.")}</p>
+    ${h.optionDetails.map(item => `<article class="option-detail" data-option-value="${esc(item.value)}"><h4>${bi(item.name.ja, item.name.en)} <code>${esc(item.value)}</code></h4><dl><dt>${bi("意味","Meaning")}</dt><dd>${bi(item.meaning.ja,item.meaning.en)}</dd><dt>${bi("選ぶ場面","When to choose")}</dt><dd>${bi(item.when.ja,item.when.en)}</dd><dt>${bi("違い・注意","Trade-off")}</dt><dd>${bi(item.tradeoff.ja,item.tradeoff.en)}</dd><dt>${bi("例","Example")}</dt><dd>${bi(item.example.ja,item.example.en)}</dd></dl></article>`).join("")}
+  </div>` : "";
+  const structured = h.structuredGuide ? `<div class="structured-guide" data-structured-guide><dl><dt>${bi("一つの入力の意味","What one entry means")}</dt><dd>${bi(h.structuredGuide.entryMeaning.ja,h.structuredGuide.entryMeaning.en)}</dd><dt>${bi("追加する場面","When to add another")}</dt><dd>${bi(h.structuredGuide.addWhen.ja,h.structuredGuide.addWhen.en)}</dd><dt>${bi("分けるルール","Separation rule")}</dt><dd>${bi(h.structuredGuide.separateRule.ja,h.structuredGuide.separateRule.en)}</dd></dl><h4>${bi("入力例","Examples")}</h4><ol>${h.structuredGuide.examples.map(value=>`<li>${bi(value.ja,value.en)}</li>`).join("")}</ol></div>` : "";
+  return `<article class="field-card" id="field-${esc(field.id)}" data-field-path="${esc(field.canonicalPath)}">
+    <h3>${bi(field.label.ja, field.label.en)}</h3>
+    <dl>
+      <dt>${bi("人が答える問い", "Human question")}</dt><dd>${bi(field.humanQuestion.ja, field.humanQuestion.en)}</dd>
+      <dt>${bi("この項目について", "About this field")}</dt><dd>${bi(h.about.ja, h.about.en)}</dd>
+      <dt>${bi("なぜ今決めるか", "Why decide now")}</dt><dd>${bi(h.why.ja, h.why.en)}</dd>
+      <dt>${bi("何を書くか", "What to enter")}</dt><dd>${bi(h.what.ja, h.what.en)}</dd>
+      <dt>${bi("必須性", "Requiredness")}</dt><dd><code>${esc(field.requiredness)}</code></dd>
+      <dt>${bi("入力例", "Example")}</dt><dd>${bi(h.example.ja, h.example.en)}${examples}</dd>
+      <dt>${bi("注意点", "Caution")}</dt><dd>${bi(h.caution.ja, h.caution.en)}</dd>
+      <dt>${bi("関連するAIの動き", "Related AI behaviour")}</dt><dd>${bi(h.relatedAiBehavior.ja, h.relatedAiBehavior.en)}</dd>
+      <dt>${bi("関連項目", "Related fields")}</dt><dd>${bi(h.relatedItems.ja, h.relatedItems.en)} <code>${esc(related)}</code></dd>
+      <dt>${bi("どこで使うか", "Where it is used")}</dt><dd>${bi(h.usedAt.ja, h.usedAt.en)}</dd>
+      <dt>${bi("Save / Export", "Save / Export")}</dt><dd>${bi(h.persistence.ja, h.persistence.en)}</dd>
+      <dt>${bi("境界", "Boundary")}</dt><dd>${bi(field.boundary.ja, field.boundary.en)}</dd>
+    </dl>${optionDetails}${structured}
+    <details><summary>${bi("専門情報", "Expert details")}</summary><p><code>${esc(field.canonicalPath)}</code> · ${esc(field.editability)} · ${esc(field.effectState)} · ${esc(field.evidence)}</p></details>
+  </article>`;
+};
+
+const chapterBlocks = P03_CHAPTERS.map((chapter,index) => `<article id="chapter-${CHAPTERS[index].id}"><h3>${bi(chapter.title.ja,chapter.title.en)}</h3><dl><dt>${bi("決めること","What you decide")}</dt><dd>${bi(chapter.decide.ja,chapter.decide.en)}</dd><dt>${bi("なぜ重要か","Why it matters")}</dt><dd>${bi(chapter.why.ja,chapter.why.en)}</dd><dt>${bi("関係する動き","Related behaviour and use")}</dt><dd>${bi(chapter.behavior.ja,chapter.behavior.en)}</dd><dt>${bi("入力の種類","Input types")}</dt><dd>${bi(chapter.input.ja,chapter.input.en)}</dd><dt>${bi("入力方法","How to enter")}</dt><dd>${bi(chapter.how.ja,chapter.how.en)}</dd><dt>${bi("例","Examples")}</dt><dd>${bi(chapter.examples.ja,chapter.examples.en)}</dd><dt>${bi("確認方法","How to review")}</dt><dd>${bi(chapter.review.ja,chapter.review.en)}</dd><dt>${bi("次へ","Next step")}</dt><dd>${bi(chapter.next.ja,chapter.next.en)}</dd></dl></article>`).join("\n");
+const firstTimeWalkthrough = `<h3>${bi("初回作成の通し手順","Complete first-time walkthrough")}</h3><ol data-first-time-walkthrough>${FIRST_TIME_STEPS.map(step=>`<li>${bi(step.ja,step.en)}</li>`).join("")}</ol>`;
+const fieldCards = MANUAL_FIELDS.map(helpCard).join("\n");
+const effectRows = Object.entries(EFFECT_STATES).map(([id, value]) => `<tr><th><code>${id}</code></th><td>${bi(value.ja, value.en)}</td></tr>`).join("");
+const tuningRows = P07_SYMPTOMS.map((item,index) => `<li data-tuning-item="T${String(index+1).padStart(2,"0")}"><h3>${bi(item.notice.ja,item.notice.en)}</h3><dl><dt>${bi("気づき","What you notice")}</dt><dd>${bi(item.meaning.ja,item.meaning.en)}</dd><dt>${bi("考えられる意味","What it may mean")}</dt><dd>${bi(item.possible.ja,item.possible.en)}</dd><dt>${bi("関連する設定","Related setting")}</dt><dd>${bi(item.related.ja,item.related.en)}</dd><dt>${bi("変更候補","Possible change")}</dt><dd>${bi(item.change.ja,item.change.en)}</dd><dt>${bi("副作用","Side effect")}</dt><dd>${bi(item.sideEffect.ja,item.sideEffect.en)}</dd><dt>${bi("再確認","How to retest")}</dt><dd>${bi(item.retest.ja,item.retest.en)}</dd></dl>${link(`P08#${item.target}`,item.link.ja,item.link.en)}<details><summary>${bi("専門ID","Expert ID")}</summary><code>T${String(index+1).padStart(2,"0")}</code></details></li>`).join("");
+const stateRows = STATE_MATRIX.map(([name, jaMeans, jaNot, enMeans, enNot]) => `<tr><th>${esc(name)}</th><td>${bi(jaMeans, enMeans)}</td><td>${bi(jaNot, enNot)}</td></tr>`).join("");
+const troubleRows = TROUBLESHOOTING_ROUTES.map(item => `<li><h3>${bi(item.title.ja,item.title.en)}</h3><dl><dt>${bi("症状","Symptom")}</dt><dd>${bi(item.symptom.ja,item.symptom.en)}</dd><dt>${bi("最初の確認","First check")}</dt><dd>${bi(item.firstCheck.ja,item.firstCheck.en)}</dd><dt>${bi("次の行動","Next action")}</dt><dd>${bi(item.nextAction.ja,item.nextAction.en)}</dd><dt>${bi("行き先","Destination")}</dt><dd>${link(item.target,item.destination.ja,item.destination.en)}</dd></dl></li>`).join("");
+const glossary = entries => `<dl>${entries.map(item=>`<dt>${esc(item.term)}</dt><dd>${bi(item.description.ja,item.description.en)}</dd>`).join("")}</dl>`;
+const page = (id, body) => { const p = PAGES.find(item => item[0] === id); return `<section id="${id}" data-manual-page="${id}"><h2>${bi(p[1], p[2])}</h2>${body}</section>`; };
+
+const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="saku-manual-contract" content="SAKU Unified V1"><title>KOKOROSAKU — SAKU Builder Manual</title><style>
+:root{color-scheme:light;--ink:#17231d;--accent:#315f4d;--line:#c9d8d0;--paper:#f8fbf9}*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;color:var(--ink);background:var(--paper);line-height:1.65}header,main{max-width:1120px;margin:auto;padding:1rem}header{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);z-index:2}button,a{color:#174c3b}button{padding:.6rem .8rem}.routes{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem}.routes a,.field-card,section>article{background:#fff;border:1px solid var(--line);border-radius:.5rem;padding:.8rem}nav{display:flex;gap:.45rem;overflow:auto;padding:.5rem 0}section{scroll-margin-top:11rem;padding:1.2rem 0;border-bottom:1px solid var(--line)}code{overflow-wrap:anywhere}dt{font-weight:700;margin-top:.55rem}dd{margin-left:0}.field-card{margin:.7rem 0}table{width:100%;border-collapse:collapse}th,td{border:1px solid var(--line);padding:.5rem;text-align:left;vertical-align:top}.notice{border-left:4px solid #9b6a15;padding:.7rem;background:#fff8e8}@media(max-width:700px){.routes{grid-template-columns:1fr}header{position:static}table{display:block;overflow:auto}}
+</style></head><body><header><nav data-global-nav><a data-global-home href="../index.html">${bi("ホームへ戻る","Back to Home")}</a><a data-global-help href="./index.html">Help</a></nav><h1>${bi("KOKOROSAKU — SAKU Builder Manual", "KOKOROSAKU — SAKU Builder Manual")}</h1><button type="button" data-locale="ja" data-desktop-locale="ja-JP">${bi("日本語","Japanese")}</button> <button type="button" data-locale="en" data-desktop-locale="en-US">English</button><div class="routes">${ROUTES.map(route => `<a href="#${route.target}" data-mode="${route.id === "A" ? "route" : route.id === "B" ? "lookup" : "behavior"}"><strong>${bi(route.ja, route.en)}</strong></a>`).join("")}</div><nav aria-label="Manual pages">${PAGES.map(([id,ja,en]) => `<a href="#${id}">${bi(ja,en)}</a>`).join("")}</nav></header><main>
+${page("P01", `<p>${bi("KOKOROSAKUはCharacterの意図を、人とAIが読める形で作成・検証・説明するための製品体系です。SAKU BuilderはCanonical Authority、資格・権限・Human Approvalの発行者ではありません。", "KOKOROSAKU is a product system for creating, validating, and explaining Character intent in a form readable by people and AI. SAKU Builder is not a Canonical Authority and does not issue credentials, authority, or Human Approval.")}</p><ol>${ROUTES[0].sequence.map(id => `<li>${link(id, PAGES.find(p => p[0] === id)[1], PAGES.find(p => p[0] === id)[2])}</li>`).join("")}</ol>`) }
+${page("P02", `<p>${bi("利用目的に合うCharacterを選び、名前・役割・revision・sourceを確認します。UNKNOWNを利用可能や承認済みに補完しません。", "Choose a Character for the intended use, then inspect its name, role, revision, and source. UNKNOWN is never promoted to available or approved.")}</p><p>${bi("選択したCharacterと目的が一致し、sourceが確認できたら次へ進みます。", "Move on when the selected Character fits the purpose and its source is understood.")}</p>`) }
+${page("P03", `<p>${bi("SAKU Builderの5章を順に進み、Characterの目的、使いどころ、話し方、守る条件を定義します。入力内容は右側のPreviewで確認でき、Validationを通過するとWorkspaceへ保存できます。", "Work through SAKU Builder's five chapters to define purpose, use contexts, expression, and boundaries. Review input in Preview; after Validation succeeds, save it to the Workspace.")}</p><p>${bi("迷った項目では『この項目の詳しい説明』を開いてください。入力例は書き方を示すもので、初期値や推奨値ではありません。", "Open Help for this field when uncertain. Examples teach writing patterns; they are neither defaults nor recommendations.")}</p>${chapterBlocks}${firstTimeWalkthrough}`) }
+${page("P04", `<p>${bi("1+7は、1つの統合Characterと7つの固定補助役割で考える構造です。CharacterごとにSeat 3〜7を編集・有効化する仕組みではありません。", "1+7 is one integrated Character supported by seven fixed roles. It is not a system for editing or enabling Seats 3–7 per Character.")}</p><ol>${[["統合Character","Integrated Character"],["整理","Organize"],["調査","Research"],["反証","Challenge"],["構造化","Structure"],["表現","Express"],["安全境界","Safety boundary"],["人への受け渡し","Human handoff"]].map(([ja,en]) => `<li>${bi(ja,en)}</li>`).join("")}</ol>`) }
+${page("P05", `<p>${bi("Character定義がどこまで届くかを次の四状態で区別します。", "Distinguish how a Character definition reaches an AI using four states.")}</p><table><tbody>${effectRows}</tbody></table><p class="notice" id="PROMPT_INCLUDED_CAUTION">${bi(PROMPT_INCLUDED_CAUTION.ja, PROMPT_INCLUDED_CAUTION.en)}</p>`) }
+${page("P06", `<p>${bi("TrainerはExpectedとObservedの差をEvidenceとして確認します。Observed不足はNOT_ASSESSEDであり、PASSやMATCHではありません。", "Trainer compares Expected and Observed as evidence. Insufficient observation is NOT_ASSESSED, not PASS or MATCH.")}</p><p><strong>${bi("Trainer『変更候補をBuilderへ送る』", "Trainer: Send a change candidate to Builder")}</strong><br><strong>${bi("Builder『変更をCharacterへ反映する』", "Builder: Apply the change to the Character")}</strong></p><p>${bi("Candidateは元Characterを自動上書きせず、Canonical採択やrevision activationを行いません。", "A Candidate does not automatically overwrite the original Character and does not perform Canonical adoption or revision activation.")}</p><h3>${bi("現在利用できること","Available now")}</h3><ul data-trainer-current>${TRAINER_BOUNDARY.current.map(item=>`<li>${bi(item.ja,item.en)}</li>`).join("")}</ul><p>${bi("Focus areaは確認目的の表示であり、個別の全質問を直接選択する制御ではありません。『別の質問』で現在提供される別質問へ切り替えます。", "Focus area describes the assessment purpose; it does not directly select every individual question. Use Another question to switch among currently provided questions.")}</p><h3>${bi("将来対象：現在利用できるとは記載しないもの","Future targets — not currently available")}</h3><ul data-trainer-future>${TRAINER_BOUNDARY.future.map(item=>`<li>${bi(item.ja,item.en)}</li>`).join("")}</ul>`) }
+${page("P07", `<p>${bi("実際の応答で気になったことからBuilderの設定を探します。一つの症状だけで原因を断定せず、変更前後をTrainerで同じ条件に近づけて確認してください。", "Use observed response symptoms to find relevant Builder settings. Do not infer a cause from one symptom alone; compare before and after in Trainer under similar conditions.")}</p><ol data-symptom-count="20">${tuningRows}</ol>`) }
+${page("P08", `<h3>${bi("探し方","How to find a setting")}</h3><p>${bi("検索欄は前提にしません。章から探す、AIの動きから探す、Builderの入力欄横にある『この項目の詳しい説明』から探す、という三つの経路を使います。Schema path、内部field ID、T番号を知る必要はありません。", "This Manual does not assume a search box. Find settings from the five chapters, an AI-behaviour symptom, or Help for this field beside a Builder input. Normal users do not need a Schema path, internal field ID, or T number.")}</p><h3>${bi("全項目共通のHelp構造","Help structure used for every field")}</h3><ol><li>${bi("これは何か","What it is")}</li><li>${bi("何を入力・選択するか","What to enter or select")}</li><li>${bi("なぜ必要か","Why it is needed")}</li><li>${bi("入力例または全選択肢","Examples or all options")}</li><li>${bi("関連するAIの動き","Related AI behaviour")}</li><li>${bi("一緒に確認する項目","Fields to review together")}</li><li>${bi("どこで使われるか","Where it is used")}</li><li>${bi("保存後にどう残るか","How it persists")}</li><li>${bi("必要な注意","Necessary cautions")}</li></ol><p><strong>${bi("編集できる項目：47グループ","Editable fields: 47 groups")}</strong> — <span data-type-inventory>${esc(JSON.stringify(FIELD_TYPE_INVENTORY))}</span></p>${fieldCards}<h3>${bi("編集できない情報", "Information you cannot edit")}</h3>${READ_ONLY_SEMANTICS.map(item => `<article><strong>${bi(item.label.ja,item.label.en)}</strong><p>${bi(item.reason.ja,item.reason.en)}</p></article>`).join("")}`) }
+${page("P09", `<h3>${bi("Workspaceへ保存する","Save to the Workspace")}</h3><p>${bi("『この内容で保存する』を選ぶと、現在のCharacter形式をValidationし、編集元を上書きせず新しいrevisionを作り、選択済みWorkspaceの characters/<Character ID>/character.json とLibraryへ保存します。", "Save this content validates the current Character, creates a new revision without overwriting the source, and saves it to characters/<Character ID>/character.json in the selected Workspace and to Library.")}</p><p>${bi("成功は『Workspaceに保存しました』、revision、実際の保存先pathの三つで確認します。未了項目または書込失敗では保存せず、Library更新だけ失敗した場合も状態を分けて表示します。", "Confirm success from the Workspace saved message, revision, and actual save path. Missing fields or write failure stop saving; a Library-index failure after file save is reported separately.")}</p><h3>${bi("Download / Save As","Download / Save As")}</h3><p>${bi("Previewで形式を選び、ダウンロードを選び、OSの保存画面で場所と名前を決めます。インストールしたアプリでは保存pathまたはキャンセルが表示されます。ブラウザの『ダウンロードを要求しました』は保存完了の保証ではありません。", "Choose a Preview format, select Download, then choose the location and filename in the OS dialog. The installed app reports the path or cancellation. In a browser, Download requested is not authoritative confirmation that saving completed.")}</p><h3>${bi("CharacterをExportする","Export a Character")}</h3><ul><li><code>character.yaml</code> — ${bi("Builderで編集を続けるファイル。","Use this to continue editing in Builder.")}</li><li>Character File — ${bi("AMU/MACHI等へ完全なCharacter定義を渡すJSON。現在のBuilderへ読み戻す用途ではありません。","JSON for transferring a complete Character definition to AMU/MACHI or another consumer; it is not the current Builder reopen format.")}</li><li>${bi("外部AIプロンプト：外部AIへ貼り付ける表示用テキスト。Builderへ読み戻せません。","External AI Prompt: display text for pasting into an external AI; it cannot be reopened in Builder.")}</li><li>${bi("Guild概要：Guild登録用の要約。Builderへ読み戻せません。","Guild summary: a registration summary that cannot be reopened in Builder.")}</li><li>${bi("試験記録：確認結果の記録。Character本体ではありません。","Test record: a record of results, not the Character itself.")}</li></ul><p>${bi("外部利用向け形式は、内容とContactGuard結果を人が確認した後に生成します。確認後に変更した場合は再確認します。", "Generate external-use formats only after a person reviews the content and ContactGuard result. Review again after any change.")}</p><h3>${bi("Package Importの保存先","Where Package Import stores data")}</h3><p>${bi("検証済みPackageは選択Workspaceの imports に保存され、CharacterはLibraryへ追加されます。現在編集中のCharacterを自動上書きしません。", "A validated Package is stored under imports in the selected Workspace and its Characters are added to Library. It never automatically overwrites the Character being edited.")}</p><h3>${bi("後日再開する","Resume later")}</h3><ol><li>${bi("Workspace Saveの成功表示、revision、pathを確認する。","Confirm the Workspace Save message, revision, and path.")}</li><li>${bi("アプリを閉じ、後日再起動する。","Close and later restart the app.")}</li><li>${bi("Homeで『キャラクターを選択する』を開く。","On Home, open Choose a Character.")}</li><li>${bi("Libraryから保存したCharacterの最新revisionを選ぶ。","Choose the latest saved revision from Library.")}</li><li>${bi("『キャラクターを作る・編集する』へ進み、内容を確認して編集を続ける。","Open Create / Edit Character, verify the content, and continue editing.")}</li></ol><p>${bi("Library索引が空でも、選択Workspaceの保存記録から復元されます。復元時は件数とpathを表示し、Character本体は変更しません。", "If the Library index is empty, it is recovered from saved Workspace records. Recovery reports the count and path without changing Character content.")}</p>`) }
+${page("P10", `<h3>${bi("通常利用者向け","For ordinary users")}</h3><article><h4>${bi("保存できた？","Was it saved?")}</h4><p>${bi("『Workspaceに保存しました』、revision、保存先pathの三つを確認します。表示されていなければ保存完了とみなしません。", "Confirm the Workspace saved message, revision, and save path. Without all three, do not assume completion.")}</p></article><article><h4>${bi("Importできた？","Was it imported?")}</h4><p>${bi("Libraryの追加件数と対象Characterを確認します。Packageの内部チェックはBuilderが行います。", "Confirm the added count and Character in Library. Builder performs the Package checks.")}</p></article><article><h4>${bi("Characterとして使える？","Can it be used as a Character?")}</h4><p>${bi("Libraryで選択でき、Validationを通過し、Previewに内容が表示されれば、現在の対応形式として使用できます。AI応答品質の保証とは別です。", "If it is selectable in Library, passes Validation, and appears in Preview, it is usable in the currently supported format. This is separate from a guarantee of AI response quality.")}</p></article><article><h4>${bi("Validationに問題がある？","Is there a Validation problem?")}</h4><p>${bi("案内された項目を修正し、分からない場合は設定項目Helpを開きます。", "Correct the named field; if unclear, open its setting Help.")}</p></article><article><h4>${bi("AIで試せる？","Can it be tested with AI?")}</h4><p>${bi("Characterを選び、通常はCharacter Promptをコピーして新しいAI会話へ貼ります。実際の応答はTrainerで確認します。", "Select the Character, normally copy the Character Prompt into a new AI conversation, and check actual responses in Trainer.")}</p></article><details data-expert-status><summary>${bi("Expert / Advanced：技術・運用状態","Expert / Advanced: technical and operational states")}</summary><table><thead><tr><th>${bi("状態","State")}</th><th>${bi("意味する","Means")}</th><th>${bi("意味しない","Does not mean")}</th></tr></thead><tbody>${stateRows}</tbody></table></details>`) }
+${page("P11", `<ol data-troubleshooting-count="13">${troubleRows}</ol>`) }
+${page("P12", `<h3>${bi("通常利用者向け","For ordinary users")}</h3>${glossary(USER_GLOSSARY)}<details data-expert-glossary><summary>${bi("Expert / Advanced用語","Expert / Advanced glossary")}</summary>${glossary(EXPERT_GLOSSARY)}</details>`) }
+${page("P13", `<p>${bi("通常利用では技術情報を主表示にしません。再現や監査が必要なときだけ開きます。", "Technical information is not primary UI. Open it only when needed for reproduction or audit.")}</p><details><summary>${bi("正確なEvidence", "Exact evidence")}</summary><dl><dt>Registry</dt><dd><code>${REGISTRY_ID}</code></dd><dt>Canonical role</dt><dd><code>SAKU / NOT_BUILDER</code></dd><dt>Repository</dt><dd><code>${CANONICAL_EVIDENCE.repository}</code></dd><dt>Revision</dt><dd><code>${CANONICAL_EVIDENCE.revision}</code></dd><dt>Path</dt><dd><code>${CANONICAL_EVIDENCE.path}</code></dd><dt>SHA-256</dt><dd><code>${CANONICAL_EVIDENCE.sha256}</code></dd></dl></details>`) }
+</main><script>
+const setLocale = input => { const lang=String(input).toLowerCase().startsWith("en")?"en":"ja"; document.documentElement.lang=lang; document.querySelectorAll("[data-ja][data-en]").forEach(el=>{el.textContent=el.dataset[lang]}); localStorage.setItem("saku.manual.locale",lang); return lang; };
+document.querySelectorAll("[data-locale]").forEach(button=>button.addEventListener("click",()=>setLocale(button.dataset.locale)));
+window.SAKU_MANUAL={setLocale}; window.SAKU_DESKTOP_I18N={setLocale}; setLocale(localStorage.getItem("saku.manual.locale")||"ja");
+</script></body></html>`;
+
+const routerPage = ({ titleJa, titleEn, leadJa, leadEn, links, webview = false, extra = "" }) => `<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(titleEn)}</title><style>body{max-width:800px;margin:auto;padding:2rem;font:16px/1.7 system-ui;background:#f8fbf9;color:#17231d}a{display:block;margin:.7rem 0;padding:.8rem;border:1px solid #c9d8d0;border-radius:.5rem;color:#174c3b;background:white}button{padding:.5rem}nav[data-global-nav]{display:flex;gap:.5rem}</style></head><body><nav data-global-nav><a data-global-home href="../index.html">${bi("ホームへ戻る","Back to Home")}</a><a data-global-help href="./index.html">Help</a></nav><button data-locale="ja" data-desktop-locale="ja-JP">${bi("日本語","Japanese")}</button> <button data-locale="en" data-desktop-locale="en-US">English</button><h1>${bi(titleJa,titleEn)}</h1><p>${bi(leadJa,leadEn)}</p>${webview ? `<p>${bi("Windows WebView2の取得にはインターネット接続が必要です。取得に失敗した場合は理由を表示し、インストールを中止します。", "Downloading Windows WebView2 requires an internet connection. If it fails, the reason is shown and installation is cancelled.")}</p>` : ""}${extra}${links.map(([href,ja,en])=>`<a href="${href}">${bi(ja,en)}</a>`).join("")}<script>const setLocale=v=>{const l=String(v).toLowerCase().startsWith("en")?"en":"ja";document.documentElement.lang=l;document.querySelectorAll('[data-ja][data-en]').forEach(e=>e.textContent=e.dataset[l]);return l};document.querySelectorAll('[data-locale]').forEach(b=>b.addEventListener('click',()=>setLocale(b.dataset.locale)));window.SAKU_DESKTOP_I18N={setLocale};setLocale('ja');</script></body></html>`;
+
+const index = routerPage({ titleJa:"KOKOROSAKU Help", titleEn:"KOKOROSAKU Help", leadJa:"目的から入口を選びます。詳しい説明は同じManualで確認できます。", leadEn:"Choose an entry by purpose. Detailed guidance is available in the same Manual.", webview:true, extra:`<h2>${bi("データの場所とUninstall", "Data locations and uninstall")}</h2><p>${bi("作業用一覧は %LOCALAPPDATA%\\com.wi-t.saku-builder にあります。Uninstallの削除チェックは破壊的ですが、利用者が選んだ workspace/characters と workspace/imports は削除しません。", "The working index is under %LOCALAPPDATA%\\com.wi-t.saku-builder. The uninstall deletion checkbox is destructive, but it does not delete user-selected workspace/characters or workspace/imports.")}</p>`, links: ROUTES.map(route => [`./manual.html#${route.target}`, route.ja, route.en]) });
+const getting = routerPage({ titleJa:"はじめて使う", titleEn:"Getting Started", leadJa:"Characterを選び、5章で作成し、AI PlatformとTrainerで確認し、Workspaceへ保存します。", leadEn:"Choose a Character, author it through five chapters, review it on an AI Platform and in Trainer, then save it to the Workspace.", extra:`<p>${bi("一覧が空でも、保存済みworkspace/charactersからCharacter Libraryを復元できます。", "If the list is empty, the Character Library can be restored from saved workspace/characters.")}</p><p>${bi("Workspaceへの保存とCanonical採択は別です。", "Saving to the Workspace is separate from Canonical adoption.")}</p>`, links:[["./manual.html#P03","Characterを初めて作る通し手順","Complete first-time Character walkthrough"],["./manual.html#P09","Workspace保存と後日再開を確認する","Review Workspace save and later resume"],["index.html","目的別Helpへ戻る","Back to Help by purpose"]] });
+const tuning = routerPage({ titleJa:"AIの動きから調整箇所を探す", titleEn:"Find settings from AI behaviour", leadJa:"症状を選び、Expected / Observed / Diffを確認して一項目ずつ直します。", leadEn:"Choose a symptom, inspect Expected / Observed / Diff, and change one field at a time.", links:[["./manual.html#P07","症状から調整項目を探す","Find a setting from a symptom"],["./manual.html#P11","問題から復旧手順を探す","Find a recovery route"],["./manual.html#P08","Character設定の詳しい説明を見る","Read detailed Character setting Help"]] });
+
+const data = {
+  manual_profile: "saku.unified-v1.manual@1", guide_version: "2.1.0-candidate", version: "2.1.0-candidate", registry_id: REGISTRY_ID,
+  canonical_evidence: CANONICAL_EVIDENCE, entry_routes: ROUTES, pages: PAGES.map(([id,ja,en])=>({id,title:{ja,en}})),
+  contextual_views: ["V01_BEGINNER_JOURNEY","V02_INLINE_FIELD_HELP","V03_TRAINER_RELATED_FIELDS"],
+  single_home: MANUAL_HOME_BY_SEMANTIC, chapters: CHAPTERS, fields: MANUAL_FIELDS,
+  read_only_semantics: READ_ONLY_SEMANTICS, tuning_items: TUNING_ITEMS, effect_states: EFFECT_STATES,
+  state_matrix: STATE_MATRIX, troubleshooting: TROUBLESHOOTING_ROUTES, editable_denominator: MANUAL_FIELDS.length,
+  field_type_inventory: FIELD_TYPE_INVENTORY,
+  authoring_chapter_guidance: P03_CHAPTERS, first_time_walkthrough: FIRST_TIME_STEPS,
+  symptom_guidance: P07_SYMPTOMS, trainer_current_future: TRAINER_BOUNDARY,
+  glossary: { normal_user: USER_GLOSSARY, expert_advanced: EXPERT_GLOSSARY },
+  legacy_taxonomy_active: false, runtime_configuration_fields: 0, registry_projection: registryProjection(),
+};
+
+await mkdir(MANUAL,{recursive:true}); await mkdir(HELP,{recursive:true});
+await writeFile(path.join(MANUAL,"saku-field-guide.data.json"),`${JSON.stringify(data,null,2)}\n`,"utf8");
+await writeFile(path.join(MANUAL,"saku-field-guide.html"),html,"utf8");
+await writeFile(path.join(HELP,"index.html"),index,"utf8");
+await writeFile(path.join(HELP,"getting-started.html"),getting,"utf8");
+await writeFile(path.join(HELP,"tuning-faq.html"),tuning,"utf8");
+console.log(`FROZEN_MANUAL_IA_GENERATED pages=${PAGES.length} fields=${FIELDS.length} routes=${ROUTES.length}`);

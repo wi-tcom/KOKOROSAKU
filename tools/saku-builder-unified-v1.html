@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SAKU Builder Unified V1 — Character Authoring</title>
+<!--
+  UI 方向は f.html（別 AI 作成の High-Fidelity UI Mock）を Reference として適用。
+  機能・Schema・Derived 計算・Help 本文・64体は現行実装＋SAKU Unified V1 仕様が正本。
+  Mock の Character 値 / Help 文 / Derived 数値・式 / Mock 64体は Production へ持ち込まない。
+-->
+<style>
+  :root{
+    --bg-base:#F9F7F2; --bg-surface:#FFFFFF; --bg-drawer:#FAF8F5; --bg-selected:#F2EFE9;
+    --ink:#1A1D1E; --muted:#626865; --light:#9AA09D;
+    --accent:#3B4E3A; --accent2:#C27D2C;
+    --line:#E8E5DF; --line2:#D1CEC7; --focus:#3B4E3A;
+    --ok:#3B4E3A; --warn:#8A5A00; --bad:#A23A3A;
+    --panel:var(--bg-surface); --bar:#E8E5DF; --barf:#1A1D1E;
+    --mono:'JetBrains Mono','Fira Code',ui-monospace,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --bg-base:#17191c; --bg-surface:#1f2226; --bg-drawer:#1c1f22; --bg-selected:#2a2e33;
+    --ink:#e8e6df; --muted:#a4aab0; --light:#7b8188;
+    --accent:#9db98f; --accent2:#d6a45a; --line:#31363c; --line2:#3d434a; --focus:#9db98f;
+    --panel:var(--bg-surface); --bar:#31363c; --barf:#e8e6df;
+  }}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg-base);color:var(--ink);font:14px/1.55 'Helvetica Neue','Segoe UI','Hiragino Sans','Yu Gothic',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+  .view{display:none} .view.active{display:block}
+  a{color:inherit}
+  .btn{background:transparent;border:1px solid var(--line2);padding:.42rem 1rem;border-radius:2px;font-size:.85rem;font-weight:500;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:.4rem;font-family:inherit}
+  .btn:hover{background:var(--bg-selected)}
+  .btn.primary{background:var(--ink);color:var(--bg-surface);border-color:var(--ink)}
+  .btn.ghost{border-color:transparent}
+  .mono{font-family:var(--mono)}
+  .badge{font-family:var(--mono);font-size:.72rem;color:var(--muted);border:1px solid var(--line);padding:.1rem .45rem;border-radius:2px}
+  /* header */
+  .header{display:flex;justify-content:space-between;align-items:center;padding:.7rem 1.5rem;background:var(--bg-surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap;gap:.6rem}
+  .hl,.hr{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+  .nav-back{color:var(--muted);font-family:var(--mono);font-size:.8rem;cursor:pointer}
+  .nav-back:hover{color:var(--ink)}
+  .identity{font-size:1.05rem;font-weight:600;display:flex;align-items:center;gap:.6rem}
+  .language-control{display:inline-flex;align-items:center;border:1px solid var(--line2);border-radius:2px;overflow:hidden;background:var(--bg-surface)}
+  .language-option{border:0;border-right:1px solid var(--line2);background:var(--bg-surface);color:var(--muted);padding:.42rem .7rem;font:600 .78rem/1.2 inherit;cursor:pointer;min-height:32px}
+  .language-option:last-child{border-right:0}.language-option:hover{background:var(--bg-selected);color:var(--ink)}
+  .language-option[aria-pressed="true"]{background:var(--ink);color:var(--bg-surface)}
+  /* section nav */
+  .secnav{display:flex;gap:0;padding:0 1.5rem;border-bottom:1px solid var(--line2);background:var(--bg-base);overflow-x:auto;position:sticky;top:53px;z-index:4}
+  .tab{padding:.85rem 1.1rem;font-size:.85rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+  .tab:hover{color:var(--ink)}
+  .tab.active{color:var(--ink);font-weight:600;border-bottom-color:var(--accent)}
+  /* workspace */
+  .workspace{padding:2.4rem 1.5rem 5rem;max-width:1080px;margin:0 auto}
+  .section{display:none} .section.active{display:block}
+  .sec-head{margin-bottom:1.6rem;display:flex;justify-content:space-between;align-items:flex-end;gap:1rem;flex-wrap:wrap}
+  .sec-title{font-size:1.4rem;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:.4rem}
+  .sec-desc{font-size:.88rem;color:var(--muted);margin-top:.35rem}
+  /* forms */
+  .fg{margin-bottom:1.3rem}
+  .flabel{display:flex;align-items:center;gap:.4rem;font-size:.84rem;font-weight:600;margin-bottom:.4rem}
+  input[type=text],textarea,select{width:100%;max-width:800px;padding:.6rem .7rem;border:1px solid var(--line2);border-radius:2px;font:inherit;font-size:.9rem;background:var(--bg-surface);color:var(--ink)}
+  textarea{min-height:70px;resize:vertical} select{max-width:420px;cursor:pointer}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;max-width:800px}
+  .notice{background:var(--bg-selected);border-left:3px solid var(--muted);padding:.8rem 1rem;font-size:.84rem;margin-bottom:1.2rem;max-width:800px}
+  .notice.amber{border-left-color:var(--accent2)}
+  .okbox{border:1px solid var(--ok);color:var(--ok);border-radius:2px;padding:.5rem .7rem;font-size:.82rem;margin:.4rem 0;max-width:800px}
+  .warnbox{border:1px solid var(--warn);color:var(--warn);border-radius:2px;padding:.5rem .7rem;font-size:.82rem;margin:.4rem 0;max-width:800px}
+  .tag{display:inline-flex;font-size:.72rem;font-family:var(--mono);background:var(--bg-selected);padding:.18rem .5rem;border-radius:2px;margin:.15rem .3rem .15rem 0}
+  /* seat rows */
+  .seats{display:flex;flex-direction:column;gap:.8rem}
+  .seat{background:var(--bg-surface);border:1px solid var(--line);border-radius:2px}
+  .seat-h{padding:.85rem 1.2rem;display:flex;align-items:center;gap:1rem;cursor:pointer}
+  .seat.open .seat-h{border-bottom:1px solid var(--line);background:var(--bg-selected)}
+  .seat-n{font-family:var(--mono);font-size:.74rem;color:var(--muted);width:2.2rem}
+  .seat-name{font-size:.92rem;font-weight:600;flex:1;display:flex;align-items:center;gap:.3rem}
+  .seat-val{font-size:.82rem;color:var(--accent);font-weight:500;font-family:var(--mono)}
+  .seat-b{display:none;padding:1.2rem} .seat.open .seat-b{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem}
+  .optlabel{font-size:.74rem;font-weight:600;color:var(--muted);text-transform:uppercase;margin-bottom:.4rem;display:flex;align-items:center;gap:.3rem}
+  .rcard{display:flex;align-items:center;gap:.4rem;padding:.6rem .8rem;border:1px solid var(--line);border-radius:2px;cursor:pointer;background:var(--bg-surface);margin-bottom:.4rem}
+  .rcard:hover{background:var(--bg-selected)} .rcard.sel{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,transparent)}
+  .rcard .t{font-size:.84rem;font-weight:600;flex:1}
+  .inten{display:flex;gap:.4rem;align-items:center}
+  .ibtn{flex:1;padding:.5rem;border:1px solid var(--line2);background:var(--bg-surface);font-size:.8rem;font-weight:600;color:var(--muted);cursor:pointer;border-radius:2px}
+  .ibtn:hover{background:var(--bg-selected)} .ibtn.sel{background:var(--ink);color:var(--bg-surface);border-color:var(--ink)}
+  /* axes */
+  .axgroup{margin-bottom:2rem} .axgroup-t{font-family:var(--mono);font-size:.78rem;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:.4rem;margin-bottom:1.1rem;letter-spacing:.05em}
+  .axgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.1rem}
+  .axcard{background:var(--bg-surface);border:1px solid var(--line);padding:1rem;border-radius:2px}
+  .axcard-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem}
+  .axname{font-size:.86rem;font-weight:600;display:flex;align-items:center;gap:.3rem} .axid{font-family:var(--mono);font-size:.72rem;color:var(--light)}
+  .seg{display:flex;border:1px solid var(--line2);border-radius:2px;overflow:hidden;flex-wrap:wrap}
+  .segb{flex:1;min-width:76px;padding:.5rem .2rem;text-align:center;font-size:.78rem;font-weight:500;background:var(--bg-surface);border:none;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);cursor:pointer;color:var(--muted);margin-bottom:-1px;color:var(--muted)}
+  .segb:last-child{border-right:none} .segb:hover{background:var(--bg-selected)} .segb.active{background:var(--ink);color:var(--bg-surface)}
+  /* expected */
+  .dimrow{display:flex;align-items:center;gap:1rem;margin:.5rem 0;font-size:.84rem}
+  .dimlabel{display:flex;align-items:center;gap:.35rem;width:170px}
+  .dimbar{flex:1;height:5px;background:var(--bar);border-radius:3px;overflow:hidden} .dimbar>i{display:block;height:100%;background:var(--barf)}
+  .dimval{font-family:var(--mono);font-weight:600;width:34px;text-align:right}
+  .whybtn{border:1px solid var(--line);background:var(--bg-surface);color:var(--accent);font-size:.68rem;border-radius:2px;padding:.05rem .35rem;cursor:pointer;font-family:var(--mono)}
+  .srcbox{background:var(--bg-surface);border:1px solid var(--line);padding:.6rem .8rem;font-size:.78rem;margin:.3rem 0 .6rem;display:none} .srcbox.open{display:block}
+  .tension{border-left:3px solid var(--accent2);padding:.5rem .7rem;margin:.4rem 0;font-size:.82rem;background:color-mix(in srgb,var(--accent2) 8%,transparent);max-width:800px}
+  .pass{display:flex;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid var(--line);font-size:.88rem;max-width:800px}
+  .pass .s{font-family:var(--mono);font-weight:700} .pass .s.ok{color:var(--ok)} .pass .s.chk{color:var(--accent2)} .pass .s.no{color:var(--bad)}
+  .flow-status{max-width:800px;margin:.8rem 0;padding:.7rem .9rem;border:1px solid var(--line2);border-left:3px solid var(--accent);background:var(--bg-surface);font-size:.84rem;white-space:pre-wrap}
+  .flow-status[data-kind="error"]{border-left-color:var(--bad)}
+  .flow-status[data-kind="warning"]{border-left-color:var(--warn)}
+  pre{background:var(--bg-selected);border:1px solid var(--line2);border-radius:2px;padding:.7rem;overflow:auto;font-size:.78rem;font-family:var(--mono);max-height:260px;max-width:800px}
+  /* catalog */
+  .cat-head{padding:1.6rem 1.5rem;background:var(--bg-surface);border-bottom:1px solid var(--line)}
+  .cat-filters{display:flex;justify-content:space-between;align-items:flex-end;margin-top:1rem;flex-wrap:wrap;gap:1rem}
+  .chips{display:flex;gap:.4rem;overflow-x:auto;padding-bottom:.4rem}
+  .chip{padding:.35rem .9rem;border:1px solid var(--line2);border-radius:20px;font-size:.78rem;cursor:pointer;white-space:nowrap}
+  .chip:hover{background:var(--bg-selected)} .chip.active{background:var(--ink);color:var(--bg-surface);border-color:var(--ink)}
+  .vtoggle{display:flex;border:1px solid var(--line2);border-radius:2px;overflow:hidden}
+  .vbtn{padding:.35rem .7rem;background:var(--bg-surface);border:none;border-right:1px solid var(--line2);cursor:pointer;font-size:.78rem;color:var(--muted)}
+  .vbtn:last-child{border-right:none} .vbtn.active{background:var(--ink);color:var(--bg-surface)}
+  .cat-body{padding:1.5rem}
+  .grid.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1.2rem}
+  .ccard{background:var(--bg-surface);border:1px solid var(--line);border-radius:2px;padding:1.2rem;cursor:pointer}
+  .ccard:hover{box-shadow:0 3px 10px rgba(0,0,0,.05);border-color:var(--line2)}
+  .cc-name{font-size:1.05rem;font-weight:700;margin-bottom:.3rem} .cc-role{font-size:.83rem;color:var(--muted);margin-bottom:.7rem}
+  .grid.compact{display:flex;flex-direction:column;gap:.4rem} .grid.compact .ccard{display:flex;align-items:center;gap:1rem;padding:.6rem .9rem}
+  .grid.compact .cc-name{margin:0;width:200px;flex-shrink:0} .grid.compact .cc-role{margin:0;flex:1}
+  .grid.table{display:table;width:100%} .grid.table .ccard{display:table-row;border:none;background:transparent}
+  .grid.table .tc{display:table-cell;padding:.7rem;border-bottom:1px solid var(--line);vertical-align:middle}
+  .grid.table .cc-name,.grid.table .cc-role{margin:0}
+  /* drawer / modal */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.12);z-index:1000;display:none} .overlay.open{display:block}
+  .drawer{position:fixed;top:0;right:-440px;width:420px;max-width:92vw;height:100vh;background:var(--bg-drawer);border-left:1px solid var(--line2);z-index:1001;transition:right .28s;display:flex;flex-direction:column}
+  .drawer.open{right:0} .drawer-h{padding:1.2rem 1.3rem;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .drawer-t{font-family:var(--mono);font-size:.84rem;font-weight:700} .drawer-b{padding:1.2rem 1.3rem;overflow-y:auto;flex:1}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:2000;display:none;align-items:center;justify-content:center}
+  .modal.open{display:flex} .modal-c{background:var(--bg-surface);color:var(--ink);padding:1.6rem;width:560px;max-width:92vw;max-height:88vh;overflow:auto;border-radius:2px}
+  .modal-c.wide{width:800px}
+  /* help popover (help-registry.mjs 提供の .saku-help-* を使用) */
+  .saku-help-btn{color:var(--accent)!important}
+  @media(max-width:768px){ .seat.open .seat-b{grid-template-columns:1fr} .row2{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<!-- ══ CATALOG VIEW ══ -->
+<div id="view-catalog" class="view">
+  <div class="header">
+    <div class="hl"><a class="nav-back desktop-home" id="to-desktop-catalog" href="../index.html?stay=1" hidden>‹ Desktop</a><div class="identity">SAKU Builder Unified V1</div><span class="badge">Catalog</span></div>
+    <div class="hr">
+      <span id="lbl_language" style="font-size:.8rem">Language</span>
+      <div class="language-control" role="group" aria-labelledby="lbl_language">
+        <button type="button" class="language-option" data-runtime-value data-ui-locale="ja-JP" aria-pressed="true">日本語</button>
+        <button type="button" class="language-option" data-ui-locale="en-US" aria-pressed="false">English</button>
+      </div>
+      <button class="btn" id="btn_about2">About / License</button>
+    </div>
+  </div>
+  <div class="cat-head">
+    <h1 class="sec-title">Character Catalog <span class="badge" id="cat-count">0</span></h1>
+    <div class="sec-desc" data-i18n="ui.catalog_desc">Built-in Sample（3体・Full・利用可）と Commercial 64 Preview（discovery のみ・LOCKED）を同梱しています。Commercial 64 の Full Canonical は非同梱で、購入した Pack を Import すると解放されます。ビューアのコードは MPL-2.0、Character Data は別 scope（NOT_SPECIFIED）です。</div>
+    <div class="cat-filters">
+      <div class="chips" id="cat-chips"></div>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <button class="btn" id="cat-import">Import catalog manifest…</button>
+        <input type="file" id="cat-file" accept=".json" style="display:none">
+        <div class="vtoggle">
+          <button class="vbtn active" data-view="gallery">⊞ Gallery</button>
+          <button class="vbtn" data-view="compact">⊟ Compact</button>
+          <button class="vbtn" data-view="table">≡ Table</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cat-body"><div class="grid gallery" id="cat-grid"></div></div>
+</div>
+
+<!-- ══ BUILDER VIEW ══ -->
+<div id="view-builder" class="view active">
+  <div class="header">
+    <div class="hl">
+      <a class="nav-back desktop-home" id="to-desktop-builder" href="../index.html?stay=1" hidden>‹ Desktop</a><span class="nav-back" id="to-catalog">‹ Characters</span>
+      <div class="identity"><span id="hdr-name" data-runtime-value>如月 蓮</span> <span class="badge" id="hdr-rev">Rev.1.0.0</span> <span class="badge" id="hdr-status">Draft</span></div>
+    </div>
+    <div class="hr">
+      <span id="lbl_language1" style="font-size:.8rem">Language</span>
+      <div class="language-control" role="group" aria-labelledby="lbl_language1">
+        <button type="button" class="language-option" data-runtime-value data-ui-locale="ja-JP" aria-pressed="true">日本語</button>
+        <button type="button" class="language-option" data-ui-locale="en-US" aria-pressed="false">English</button>
+      </div>
+      <button class="btn" id="btn_profile">Quick Profile</button>
+      <button class="btn" id="btn_about">About / License</button>
+    </div>
+  </div>
+
+  <nav class="secnav" id="secnav">
+    <div class="tab active" data-sec="core">Core</div>
+    <div class="tab" data-sec="onep7">1+7 Composition</div>
+    <div class="tab" data-sec="expression">Expression</div>
+    <div class="tab" data-sec="professional">Professional</div>
+    <div class="tab" data-sec="expected">Expected</div>
+    <div class="tab" data-sec="conformance">Conformance</div>
+    <div class="tab" data-sec="diff">Diff</div>
+    <div class="tab" data-sec="completion">Completion</div>
+  </nav>
+
+  <main class="workspace">
+    <div class="flow-status" id="handoff_status" role="status" aria-live="polite" hidden></div>
+    <!-- CORE -->
+    <section class="section active" id="sec-core">
+      <div class="sec-head"><div><h2 class="sec-title">Character Core</h2><p class="sec-desc" data-i18n="ui.core_desc">Identity・目的・価値観・不変条件・Human Handoff。</p></div></div>
+      <div id="validation"></div>
+      <div class="row2">
+        <div class="fg"><label class="flabel" data-help-anchor="character_id">character_id</label><input type="text" id="character_id" value="kisaragi-ren"></div>
+        <div class="fg"><label class="flabel" data-help-anchor="display_name">display name</label><input type="text" id="display_name" value="如月 蓮"></div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label class="flabel">catalog_code</label><input type="text" id="catalog_code" value="C01"></div>
+        <div class="fg"><label class="flabel" data-help-anchor="catalog_group">catalog group</label>
+          <select id="catalog_group"><option>CORE_CROSS_FUNCTIONAL</option><option>BUSINESS</option><option>TECHNICAL</option><option>HUMAN_SERVICE</option><option>RESEARCH_CREATIVE</option><option>PROFESSIONAL_REASONING</option><option>ORGANIZATIONAL_DYNAMICS</option></select></div>
+      </div>
+      <div class="fg"><label class="flabel" data-help-anchor="role_label">role label</label><input type="text" id="role_label" value="事業戦略家"></div>
+      <div class="fg"><label class="flabel">purpose.summary</label><input type="text" id="purpose_summary" value="事業の方向性を決める支援を行う。"></div>
+      <div class="fg"><label class="flabel">primary_value</label><input type="text" id="primary_value" value="決断と、やらないことの明確化。"></div>
+      <div class="fg"><label class="flabel">character_role</label><input type="text" id="character_role" value="全体構造から方向を定める責任役。"></div>
+      <div class="fg"><label class="flabel" data-i18n="ui.label_values">values（1行1件）</label><textarea id="values">全体から考える
+根拠を明示する</textarea></div>
+      <div class="fg"><label class="flabel" data-help-anchor="hard_invariants" data-i18n="ui.label_invariants">hard invariants（1行1件）</label><textarea id="invariants">決断するが、確定は権限者に戻す。</textarea></div>
+      <div class="fg"><label class="flabel" data-help-anchor="human_handoff" data-i18n="ui.label_handoff">human handoff（reason_class|trigger、1行1件）</label><textarea id="handoff">AUTHORITY_REQUIRED|予算・契約の確定</textarea></div>
+    </section>
+
+    <!-- 1+7 -->
+    <section class="section" id="sec-onep7">
+      <div class="sec-head"><div><h2 class="sec-title">1+7 Composition <span data-help-anchor="seat_archetype"></span></h2><p class="sec-desc" data-i18n="ui.onep7_desc">各 Seat は内部で何をどう考えやすいかを表します。Seat8=HUMAN 固定。Seat7=FORWARD_DRIVER（Persona Guard 廃止）。</p></div>
+        <button class="btn" id="btn-structure">View 1+7 Structure</button></div>
+      <div class="seats" id="seats"></div>
+      <div class="row2" style="margin-top:1rem">
+        <div class="fg"><label class="flabel" data-help-anchor="front_minority">front: minority_retention</label><select id="fc_minority"><option>LOW</option><option selected>MEDIUM</option><option>HIGH</option></select></div>
+        <div class="fg"><label class="flabel" data-help-anchor="front_selection">front: selection_strength</label><select id="fc_selection"><option>LOW</option><option>MEDIUM</option><option selected>HIGH</option></select></div>
+      </div>
+    </section>
+
+    <!-- EXPRESSION -->
+    <section class="section" id="sec-expression">
+      <div class="sec-head"><div><h2 class="sec-title">Expression (15 Axes) <span data-help-anchor="axes_presentation"></span></h2><p class="sec-desc" data-i18n="ui.expression_desc">認知・表現の方向。表示専用の軸は Expected の Work Mode / Strength に影響しません（DP-03）。</p></div></div>
+      <div id="axes"></div>
+    </section>
+
+    <!-- PROFESSIONAL -->
+    <section class="section" id="sec-professional">
+      <div class="sec-head"><div><h2 class="sec-title">Professional Reasoning <span data-help-anchor="professional_reasoning"></span></h2><p class="sec-desc" data-i18n="ui.professional_desc">専門的に「どこを見るか」を足します。資格ではありません。</p></div></div>
+      <div class="notice" data-i18n="ui.professional_boundary">Boundary: Professional Reasoning ≠ Credential ≠ Qualification ≠ Authority ≠ Mandate。</div>
+      <div class="fg"><label class="flabel"><input type="checkbox" id="pr_on" style="width:auto"><span data-i18n="ui.pr_include"> professional_reasoning を含める（P group）</span></label></div>
+      <div id="pr_fields" style="display:none">
+        <div class="fg"><label class="flabel">profile_id</label><select id="pr_profile"><option>LEGAL_ANALYSIS</option><option>TAX_PRACTICE</option><option>ACCOUNTING_AUDIT</option><option>LABOR_PRACTICE</option><option>IP_ANALYSIS</option><option>REGISTRATION_PROCEDURE</option><option>ADMINISTRATIVE_PROCEDURE</option><option>VALUATION</option></select></div>
+        <div class="fg"><label class="flabel">profile_display_name</label><input type="text" id="pr_display" value="Legal Analysis"></div>
+        <div class="fg"><label class="flabel" data-i18n="ui.label_issue">issue_spotting（1行1件）</label><textarea id="pr_issue">論点を抽出する</textarea></div>
+        <div class="fg"><label class="flabel" data-i18n="ui.label_prohibited">prohibited_claims（1行1件）</label><textarea id="pr_prohib">有資格者である、とは述べない</textarea></div>
+      </div>
+      <h3 class="mono" style="margin:2rem 0 .8rem" data-help-anchor="ten_d">10D Extension</h3>
+      <div class="notice"><label class="flabel"><input type="checkbox" id="tend_on" style="width:auto"><span data-i18n="ui.tend_include"> ten_d を含める（原則 absent。absent ≠ zero ≠ default）</span></label></div>
+    </section>
+
+    <!-- EXPECTED -->
+    <section class="section" id="sec-expected">
+      <div class="sec-head"><div><h2 class="sec-title">Full Expected Profile <span data-help-anchor="work_mode_affinity"></span></h2>
+        <p class="sec-desc" data-i18n="ui.expected_desc">設計値から導出しています（現行 Derived Profile Engine）。能力・資格・正確性を保証しません。</p></div>
+        <button class="btn primary" id="to-trainer">Test in SAKU Trainer</button></div>
+      <div class="notice amber"><strong id="notcanon">設計上の傾向 — 能力・資格・正確性を保証しない。</strong></div>
+      <div>Assistant Composition Code: <code class="mono" id="ccode">—</code></div>
+      <h3 style="font-size:1rem;margin:1.3rem 0 .5rem">Thinking Style</h3><div id="thinking" data-runtime-value></div>
+      <h3 style="font-size:1rem;margin:1.3rem 0 .5rem" data-help-anchor="internal_tension">Internal Tension</h3><div id="tension" data-runtime-value></div>
+      <h3 style="font-size:1rem;margin:1.3rem 0 .5rem">Work Mode Affinity</h3><div id="modes" data-runtime-value></div>
+      <h3 style="font-size:1rem;margin:1.3rem 0 .5rem">Expression Tendencies</h3><div id="expression" data-runtime-value></div>
+      <h3 style="font-size:1rem;margin:1.3rem 0 .5rem">Expected Strengths / Failure Tendencies</h3><div id="strengths" data-runtime-value></div>
+      <h3 style="font-size:1rem;margin:1.3rem 0 .5rem">Traits &amp; Why (Parameter → Behavior)</h3><div id="traits" data-runtime-value></div>
+      <div id="prof" data-runtime-value></div>
+    </section>
+
+    <!-- CONFORMANCE -->
+    <section class="section" id="sec-conformance">
+      <div class="sec-head"><div><h2 class="sec-title">Definition Conformance</h2><p class="sec-desc" data-i18n="ui.conformance_desc">Schema / Validation の構造チェックです（能力スコアではありません）。</p></div></div>
+      <div id="conf" data-runtime-value></div>
+    </section>
+
+    <!-- DIFF -->
+    <section class="section" id="sec-diff">
+      <div class="sec-head"><div><h2 class="sec-title">Revision Diff</h2><p class="sec-desc" data-i18n="ui.diff_desc">Baseline（設定時点）と現在の Canonical を比較し、Expected への影響も表示します。</p></div>
+        <button class="btn" id="set-baseline">Set current as baseline</button></div>
+      <div id="diff" data-runtime-value></div>
+    </section>
+
+    <!-- COMPLETION -->
+    <section class="section" id="sec-completion">
+      <div class="sec-head"><div><h2 class="sec-title">Completion &amp; Export</h2><p class="sec-desc" data-i18n="ui.completion_desc">Character Definition の出力です。出力は authoring_export（実行不可）です。</p></div></div>
+      <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.4rem">
+        <button class="btn primary" id="ex_prompt">Export for LLM</button>
+        <button class="btn" id="ex_json">Export JSON</button>
+        <button class="btn" id="ex_yaml">Export YAML</button>
+        <button class="btn" id="ex_save">Save / Download current output</button>
+        <button class="btn" id="ex_import">Import JSON…</button>
+        <input type="file" id="file_import" accept=".json" style="display:none">
+        <button class="btn" id="to-trainer2">Test in SAKU Trainer →</button>
+      </div>
+      <div class="flow-status" id="ex_status" role="status" aria-live="polite" hidden></div>
+      <pre id="ex_out" style="display:none"></pre>
+      <div style="background:var(--bg-surface);border:1px solid var(--line2);padding:1.4rem;border-radius:2px;max-width:800px;margin-top:1rem">
+        <h3 style="font-size:1.1rem;margin-bottom:.6rem">Next Step</h3>
+        <p style="font-size:.88rem;color:var(--muted);margin-bottom:1rem"><span data-i18n="ui.next_step_note">SAKU は人格と推論構造を与えます（任意の LLM で利用できます）。知識・経験・継続的な仕事を与えるのは次段の KOKOROAMU です。</span></p>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+          <span class="badge">Export for LLM</span>→<span class="badge">Test in SAKU Trainer</span>→<span class="badge" style="opacity:.7"><span data-i18n="ui.next_stage_badge">Use with KOKOROAMU（未実装 / Next Step）</span></span>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Quick Profile drawer -->
+<div class="overlay" id="drawer-bg"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-h"><div class="drawer-t">EXPECTED PROFILE</div><button class="btn ghost" id="drawer-close">✕</button></div>
+  <div class="drawer-b">
+    <div class="notice amber" style="font-size:.75rem" id="notcanon2">設計上の傾向 — 能力・資格・正確性を保証しない。</div>
+    <div>Code: <code class="mono" id="d-ccode">—</code></div>
+    <h4 style="margin:.9rem 0 .3rem;font-size:.85rem">Thinking Style</h4><div id="d-thinking" data-runtime-value></div>
+    <h4 style="margin:.9rem 0 .3rem;font-size:.85rem">Internal Tension</h4><div id="d-tension" data-runtime-value></div>
+    <h4 style="margin:.9rem 0 .3rem;font-size:.85rem">Top Work Modes</h4><div id="d-modes" data-runtime-value></div>
+  </div>
+</div>
+
+<!-- Structure modal -->
+<div class="modal" id="modal-structure"><div class="modal-c wide">
+  <h3 style="font-weight:700;margin-bottom:1rem"><span data-i18n="ui.structure_title">1+7 Structure（内部構造と Human Handoff 境界の可視化）</span></h3>
+  <div id="structure-body" style="border:1px dashed var(--line2);background:var(--bg-selected);border-radius:2px;padding:1.4rem;text-align:center"></div>
+  <p style="font-size:.82rem;color:var(--muted);margin-top:.8rem;text-align:center"><span data-i18n="ui.structure_note">補助的な図です。主な編集は Seat Row で行います。Seat8=HUMAN は Logical Human Seat であり、Owner / Authority / Delegation / Mandate ではありません。</span></p>
+  <div style="text-align:right;margin-top:1rem"><button class="btn" id="structure-close">Close</button></div>
+</div></div>
+
+<!-- About modal -->
+<div class="modal" id="about_modal" role="dialog" aria-modal="true" aria-labelledby="about_title"><div class="modal-c">
+  <h3 id="about_title" style="font-weight:700;margin-bottom:.6rem">SAKU Builder / Trainer Unified V1</h3>
+  <div id="about_body" style="font-size:.86rem;line-height:1.6"></div>
+  <div style="text-align:right;margin-top:1rem"><button class="btn primary" id="about_close">Close</button></div>
+</div></div>
+
+<script type="module">
+import { deriveExpectedProfile, compositionCode, PRESENTATION_AXES, generatePrompt, canonicalDigest } from "./unified-v1/derived-profile-engine.mjs";
+import { createI18n } from "./unified-v1/i18n.mjs";
+import { HELP_FIELDS, helpButtonHTML, attachHelp } from "./unified-v1/help-registry.mjs";
+import * as ActiveSaku from "./unified-v1/active-saku.mjs";
+import { clearHandoff, consumeHandoff, storeHandoff } from "./unified-v1/handoff-binding.mjs";
+
+const $=(id)=>document.getElementById(id);
+
+// ── i18n（data-only JSON。Locale からコード注入不可）──
+let I18N = createI18n({}, { fallback:"en-US" });
+async function initI18n(){ const packs={}; for(const c of ["ja-JP","en-US"]){ try{ packs[c]=await (await fetch(`./unified-v1/locales/${c}.json`)).json(); }
+  catch(error){ console.warn("SAKU locale pack failed to load:", c, error); } } let stored=null; try{ stored=localStorage.getItem("saku.ui.locale"); }catch(error){ stored=null; }
+  const requested=new URLSearchParams(location.search).get("ui_locale")||stored||"ja-JP"; I18N=createI18n(packs,{fallback:"en-US",initial:requested}); }
+const routeParams=new URLSearchParams(location.search);
+const desktopRoute=routeParams.get("desktop")||"";
+const requestedCharacterId=routeParams.get("character_id")||"";
+const requestedCharacterRevision=routeParams.get("character_revision")||"";
+const requiresCharacterHandoff=["viewer-copy","trainer-candidate"].includes(desktopRoute);
+const localeText=(ja,en)=>I18N.locale==="ja-JP"?ja:en;
+
+const SEATS=[
+  ["seat1","FRONT_COORDINATOR",["DECISIVE_SELECTOR","PLURALIST_SYNTHESIZER","CONTRARIAN_SELECTOR"]],
+  ["seat2","SPECIALIST",["DEEP_EXPERT","SYSTEMS_THINKER","PRACTITIONER"]],
+  ["seat3","FACT_CHECKER",["STRICT_VERIFIER","UNCERTAINTY_MAPPER","CONTRADICTION_HUNTER"]],
+  ["seat4","SAFETY_BOUNDARY",["GUARDIAN","RISK_CALIBRATOR","BOUNDARY_SENTINEL"]],
+  ["seat5","USER_ADVOCATE",["EMPATH","OUTCOME_CHAMPION","OPERATOR_ADVOCATE"]],
+  ["seat6","RED_TEAM",["ADVERSARY","FAILURE_HUNTER","DEVILS_ADVOCATE"]],
+  ["seat7","FORWARD_DRIVER",["ACCELERATOR","PATHFINDER","STEADY_STEPPER"]],
+];
+// 15 axes（現行 Schema の enum。UI 上のみ 5 group に分類）
+const AXES={
+  a_motif:["STUDY_LAMP","CLOCK_GEARS","MIDNIGHT_SEA","QUIET_GARDENER"],
+  b_companion_domain:["THOUGHT_SPARRING","DATA_DECOMPOSITION","MENTAL_TUNING","TASK_COMPANION"],
+  c_intelligence_vector:["FACT_CENTERED","EMOTIONAL_RESOLUTION","STRUCTURAL_LOGIC","PHILOSOPHICAL_ABSTRACTION"],
+  d_socratic_angle:["PSYCHOANALYTIC","FACT_DECONSTRUCTION","PARADOX","PERSPECTIVE_SHIFT"],
+  e_vocabulary_tone:["ACADEMIC_HARD","WARM_EMBRACING","SHARP_MINIMAL","POETIC_METAPHORIC"],
+  f_acknowledgement:["SILENT_ACCEPTANCE","FACT_CONFIRMATION","CURIOSITY","MIRRORING"],
+  g_pulse:["DEEP_BREATH","METRONOME","WAVE","CAMPFIRE"],
+  h_tactile:["HOURGLASS_SAND","WASHI","COLD_GLASS","HEAVY_WOOD"],
+  i_thinking_pause_ms:[1500,2000,2500],
+  j_theme_color:["INDIGO_IRON_NAVY","AMBER_KAKISHIBU","EVERGREEN_MIRUCHA","DULL_SILVER_GRAY"],
+  k_whitespace_percent:[40,50,60],
+  l_weathering_presentation:["BLURRED_OUTLINE","REDUCED_CONTRAST","FADED_FONT","INK_BLEED"],
+  m_error_narrative:["ARTISAN","SCHOLAR","PHILOSOPHER"],
+  n_crystallization:["GROWTH_AND_CONFLICT","FACTS_AND_TRUTH","INVARIANT_ESSENCE"],
+  o_closing:["FADE_OUT","BOOK_CLOSE","HOURGLASS","CANDLE"],
+};
+const AX_GROUPS=[["Presence",["a_motif","b_companion_domain","c_intelligence_vector"]],
+  ["Dialogue",["d_socratic_angle","e_vocabulary_tone","f_acknowledgement"]],
+  ["Rhythm / Embodiment",["g_pulse","h_tactile","i_thinking_pause_ms"]],
+  ["Visual",["j_theme_color","k_whitespace_percent","l_weathering_presentation"]],
+  ["Narrative",["m_error_narrative","n_crystallization","o_closing"]]];
+const DEFAULT_AX={a_motif:"CLOCK_GEARS",b_companion_domain:"THOUGHT_SPARRING",c_intelligence_vector:"STRUCTURAL_LOGIC",d_socratic_angle:"PERSPECTIVE_SHIFT",e_vocabulary_tone:"SHARP_MINIMAL",f_acknowledgement:"FACT_CONFIRMATION",g_pulse:"METRONOME",h_tactile:"HEAVY_WOOD",i_thinking_pause_ms:1500,j_theme_color:"INDIGO_IRON_NAVY",k_whitespace_percent:40,l_weathering_presentation:"REDUCED_CONTRAST",m_error_narrative:"ARTISAN",n_crystallization:"GROWTH_AND_CONFLICT",o_closing:"BOOK_CLOSE"};
+const DEFAULT_ARCH={seat1:["DECISIVE_SELECTOR","HIGH"],seat2:["SYSTEMS_THINKER","HIGH"],seat3:["STRICT_VERIFIER","MEDIUM"],seat4:["RISK_CALIBRATOR","MEDIUM"],seat5:["OUTCOME_CHAMPION","HIGH"],seat6:["DEVILS_ADVOCATE","MEDIUM"],seat7:["ACCELERATOR","MEDIUM"]};
+
+const state={ seats:Object.fromEntries(SEATS.map(s=>[s[0],{archetype:DEFAULT_ARCH[s[0]][0],intensity:DEFAULT_ARCH[s[0]][1]}])),
+  axes:{...DEFAULT_AX} };
+let BASELINE=null;
+let currentCharacterRevision="1.0.0";
+let currentExport=null;
+
+// ── render seats ──
+function renderSeats(){
+  const c=$("seats"); let html="";
+  for(const [sk,fn,arches] of SEATS){
+    const st=state.seats[sk]; const open = sk==="seat7";
+    html+=`<div class="seat ${open?'open':''}" data-seat="${sk}">
+      <div class="seat-h" data-toggle="${sk}"><span class="seat-n">${sk.replace('seat','0')}</span>
+        <span class="seat-name">${fn} ${helpBtn('seat_archetype')}</span>
+        <span class="seat-val">${st.archetype} (${st.intensity})</span></div>
+      <div class="seat-b">
+        <div><div class="optlabel">Archetype</div>
+          ${arches.map(a=>`<label class="rcard ${st.archetype===a?'sel':''}" data-arch="${sk}|${a}"><span class="t">${a}</span></label>`).join("")}
+        </div>
+        <div><div class="optlabel">Intensity ${helpBtn('seat_intensity')}</div>
+          <div class="inten">${["LOW","MEDIUM","HIGH"].map(l=>`<button class="ibtn ${st.intensity===l?'sel':''}" data-inten="${sk}|${l}">${l}</button>`).join("")}</div>
+        </div></div></div>`;
+  }
+  html+=`<div class="seat"><div class="seat-h"><span class="seat-n">08</span><span class="seat-name">HUMAN — Logical Human Seat</span><span class="seat-val" style="color:var(--muted)">Fixed</span></div></div>`;
+  c.innerHTML=html;
+}
+function helpBtn(key){ return HELP_FIELDS.includes(key)? helpButtonHTML(I18N,key) : ""; }
+function mountHelpAnchors(){ document.querySelectorAll("[data-help-anchor]").forEach(el=>{ const k=el.dataset.helpAnchor; if(HELP_FIELDS.includes(k)&&!el.querySelector(".saku-help-btn")) el.insertAdjacentHTML("beforeend"," "+helpButtonHTML(I18N,k)); }); }
+
+// ── render axes ──
+function renderAxes(){
+  const c=$("axes"); let html="";
+  for(const [g,keys] of AX_GROUPS){
+    html+=`<div class="axgroup"><div class="axgroup-t">${g.toUpperCase()}</div><div class="axgrid">`;
+    for(const k of keys){ const cur=state.axes[k];
+      html+=`<div class="axcard"><div class="axcard-h"><span class="axname">${k}${PRESENTATION_AXES.has(k)?' <span class="axid">(presentation)</span>':''}</span></div>
+        <div class="seg">${AXES[k].map(o=>`<button class="segb ${String(cur)===String(o)?'active':''}" data-ax="${k}|${o}">${o}</button>`).join("")}</div></div>`;
+    }
+    html+=`</div></div>`;
+  }
+  c.innerHTML=html;
+}
+
+function lines(id){ return $(id).value.split("\n").map(s=>s.trim()).filter(Boolean); }
+const LEGACY_SCHEMA_VERSION=["v","next-1.0"].join("");
+
+function collect(){
+  const comp={profile_version:LEGACY_SCHEMA_VERSION};
+  for(const [sk,fn] of SEATS.map(s=>[s[0],s[1]])) comp[sk]={function:fn,archetype:state.seats[sk].archetype,intensity:state.seats[sk].intensity};
+  comp.seat8={function:"HUMAN",archetype:"HUMAN"};
+  comp.front_control={minority_retention:$("fc_minority").value,selection_strength:$("fc_selection").value};
+  const axes={}; for(const k of Object.keys(AXES)){ let v=state.axes[k]; if(["i_thinking_pause_ms","k_whitespace_percent"].includes(k)) v=Number(v); axes[k]=v; }
+  const c={ schema:{schema_id:"saku.character",schema_version:LEGACY_SCHEMA_VERSION},
+    identity:{character_id:$("character_id").value.trim(),character_revision:currentCharacterRevision,display_name:$("display_name").value.trim(),
+      catalog:{catalog_version:LEGACY_SCHEMA_VERSION,catalog_code:$("catalog_code").value.trim(),catalog_group:$("catalog_group").value,role_label:$("role_label").value.trim()}},
+    purpose:{summary:$("purpose_summary").value.trim(),primary_value:$("primary_value").value.trim(),work_modes:[],non_goals:[]},
+    character_core:{role_kind:"CHARACTER_ROLE",character_role:$("character_role").value.trim(),values:lines("values"),
+      hard_invariants:lines("invariants").map((s,i)=>({id:`INV-${i+1}`,statement:s})),
+      human_handoff_conditions:lines("handoff").map((s,i)=>{const[rc,tg]=s.split("|");return{id:`HO-${i+1}`,reason_class:(rc||"OTHER").trim(),trigger:(tg||"").trim(),action:"HANDOFF_TO_HUMAN"};})},
+    assistant_composition:comp,personality_axes:axes,
+    conformance:{expected_strengths:[],expected_failure_tendencies:[],must_preserve:[],prohibited_drift:[]} };
+  if($("pr_on").checked) c.professional_reasoning={profile_id:$("pr_profile").value,profile_version:LEGACY_SCHEMA_VERSION,profile_display_name:$("pr_display").value.trim(),status:"REASONING_PROFILE_ONLY",issue_spotting:lines("pr_issue"),reasoning_tendencies:[],evidence_focus:[],risk_sensitivity:[],communication_tendencies:[],handoff_tendencies:[],prohibited_claims:lines("pr_prohib")};
+  if($("tend_on").checked) c.extensions={ten_d:{extension_version:"0",value_state:"EXPLICIT",values:{}}};
+  return c;
+}
+
+const CODE_RE=/^([CBTHRPG])(\d{2})$/;
+const GROUP_MAP={C:"CORE_CROSS_FUNCTIONAL",B:"BUSINESS",T:"TECHNICAL",H:"HUMAN_SERVICE",R:"RESEARCH_CREATIVE",P:"PROFESSIONAL_REASONING",G:"ORGANIZATIONAL_DYNAMICS"};
+function validate(c){
+  const errs=[],warns=[]; const T=(k)=>I18N.t("validation."+k);
+  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(c.identity.character_id)) errs.push(T("id_ascii"));
+  if(!c.identity.display_name) errs.push(T("display_required"));
+  const m=CODE_RE.exec(c.identity.catalog.catalog_code);
+  if(!m) errs.push(T("code_format"));
+  else if(GROUP_MAP[m[1]]!==c.identity.catalog.catalog_group) errs.push(T("group_mismatch"));
+  if(m && c.identity.character_id.toLowerCase().includes(c.identity.catalog.catalog_code.toLowerCase())) warns.push(T("id_embeds_code"));
+  if(m && m[1]==="P" && !c.professional_reasoning) errs.push(T("p_needs_professional"));
+  if(c.professional_reasoning && !c.professional_reasoning.prohibited_claims?.length) errs.push(T("prohibited_empty"));
+  const intens=SEATS.map(s=>c.assistant_composition[s[0]].intensity);
+  if(intens.every(i=>i==="MEDIUM")) warns.push(T("all_medium"));
+  const arch=Object.fromEntries(SEATS.map(s=>[c.assistant_composition[s[0]].archetype,c.assistant_composition[s[0]].intensity]));
+  if((arch.GUARDIAN==="HIGH"||arch.BOUNDARY_SENTINEL==="HIGH")&&arch.ACCELERATOR==="HIGH") warns.push(T("high_tension"));
+  return {errs,warns};
+}
+
+// ── YAML（簡易・Unified V1 canonical 用）──
+function yaml(o,ind=0){const pad="  ".repeat(ind);
+  if(Array.isArray(o)){if(!o.length)return "[]";return "\n"+o.map(v=>(v&&typeof v==="object")?pad+"- "+yaml(v,ind+1).replace(/^\s+/,""):pad+"- "+fmt(v)).join("\n");}
+  if(o&&typeof o==="object"){return Object.entries(o).map(([k,v])=>{
+    if(v&&typeof v==="object"&&(!Array.isArray(v)||v.length))return pad+k+":"+(Array.isArray(v)?yaml(v,ind+1):"\n"+yaml(v,ind+1));
+    if(Array.isArray(v)&&!v.length)return pad+k+": []"; return pad+k+": "+fmt(v);}).join("\n");}
+  return fmt(o);}
+function fmt(v){if(typeof v==="number")return String(v);if(v==null)return "null";const s=String(v);return /[:#\-{}\[\],&*?|<>=!%@`"']/.test(s)||s===""?JSON.stringify(s):s;}
+
+// ── Derived Profile（現行 engine のみ。Mock 数値・式は使わない）──
+function render(){
+  const c=collect();
+  /* 編集内容を workspace へ反映し、Viewer/Trainer が同じものを見るようにする。 */
+  if(ActiveSaku.getActive()) ActiveSaku.updateDraft(c); const {errs,warns}=validate(c);
+  $("validation").innerHTML=(errs.length?`<div class="warnbox"><b>Errors:</b><br>${errs.join("<br>")}</div>`:`<div class="okbox">${I18N.t("validation.ok")}</div>`)+(warns.length?`<div class="warnbox"><b>Notes:</b><br>${warns.join("<br>")}</div>`:``);
+  $("hdr-name").textContent=c.identity.display_name||"—"; $("hdr-rev").textContent="Rev."+c.identity.character_revision;
+  const p=deriveExpectedProfile(c); const code=compositionCode(c.assistant_composition);
+  $("ccode").textContent=code; $("d-ccode").textContent=code;
+  const styleHtml=p.thinking_style.length?p.thinking_style.map(t=>`<span class="tag">${t}</span>`).join(""):'<span class="sec-desc">—</span>';
+  $("thinking").innerHTML=styleHtml; $("d-thinking").innerHTML=styleHtml;
+  const tHtml=p.internal_tension.length?p.internal_tension.map(t=>`<div class="tension"><b>${t.pair.join(" × ")}</b> (${t.level})<br>${t.description}</div>`).join(""):'<span class="sec-desc">検出なし</span>';
+  $("tension").innerHTML=tHtml; $("d-tension").innerHTML=tHtml;
+  const modeRows=Object.entries(p.work_mode_affinity).sort((a,b)=>b[1].score-a[1].score);
+  $("modes").innerHTML=modeRows.map(([m,o])=>dimRow(m,o.score,o.level,o.why)).join("");
+  $("d-modes").innerHTML=modeRows.slice(0,6).map(([m,o])=>dimRow(m,o.score,o.level,null)).join("");
+  $("expression").innerHTML=p.expression.map(e=>`<div class="dimrow"><span class="dimlabel" style="text-align:right;justify-content:flex-end">${e.left}</span><span class="dimbar"><i style="width:${Math.round(e.value*100)}%"></i></span><span class="dimlabel">${e.right}</span></div>`).join("");
+  $("strengths").innerHTML=`<div class="sec-desc" style="margin:.3rem 0">Strengths</div>${p.expected_strengths.map(s=>`<span class="tag">${s}</span>`).join("")}<div class="sec-desc" style="margin:.6rem 0 .3rem">Failure tendencies</div>${p.expected_failure_tendencies.map(s=>`<span class="tag">${s}</span>`).join("")}`;
+  $("traits").innerHTML=Object.entries(p.traits).map(([t,o])=>`<div style="margin:.3rem 0"><b>${t}</b>: ${o.level} (${o.score}) <span class="sec-desc">← ${o.why.map(w=>w.source).join(", ")||"—"}</span></div>`).join("");
+  $("prof").innerHTML=p.professional_focus?`<div class="notice"><b>Professional focus</b> (${p.professional_focus.profile_display_name}) — ${p.professional_focus.note}</div>`:``;
+  renderConformance(c,errs,warns); renderDiff(c,p);
+}
+function dimRow(label,score,level,why){
+  const w=why&&why.length?` <button class="whybtn" data-why="${label}">Why?</button>`:"";
+  const src=why&&why.length?`<div class="srcbox" id="src-${label}">Source: ${why.join(", ")}</div>`:"";
+  return `<div><div class="dimrow"><span class="dimlabel">${label}${w}</span><span class="dimbar"><i style="width:${Math.round(score*100)}%"></i></span><span class="dimval">${level[0]}</span></div>${src}</div>`;
+}
+function renderConformance(c,errs,warns){
+  const checks=[["Character Core",!!c.character_core.character_role&&c.character_core.values.length],
+    ["Seat Composition",SEATS.every(s=>c.assistant_composition[s[0]].archetype&&c.assistant_composition[s[0]].intensity)],
+    ["Seat8 = HUMAN",c.assistant_composition.seat8.function==="HUMAN"&&c.assistant_composition.seat8.archetype==="HUMAN"],
+    ["15 Axes",Object.keys(AXES).every(k=>c.personality_axes[k]!=null)],
+    ["Professional Boundary",!c.professional_reasoning||(c.professional_reasoning.status==="REASONING_PROFILE_ONLY"&&c.professional_reasoning.prohibited_claims.length)],
+    ["Handoff Conditions",c.character_core.human_handoff_conditions.length>0],
+    ["Identity valid",!errs.length]];
+  $("conf").innerHTML=checks.map(([n,pass])=>`<div class="pass"><span>${n}</span><span class="s ${pass?'ok':'no'}">${pass?'PASS':'CHECK'}</span></div>`).join("")
+    +`<div class="sec-desc" style="margin-top:.8rem">* PASS は構造的妥当性であり能力スコアではない。${errs.length?' Errors: '+errs.join("; "):''}</div>`;
+}
+function renderDiff(c,p){
+  if(!BASELINE){ $("diff").innerHTML='<div class="sec-desc">Baseline 未設定。「Set current as baseline」で現在を基準にすると差分を表示します。</div>'; return; }
+  const b=BASELINE.canonical, bp=BASELINE.profile; const rows=[];
+  for(const [sk,fn] of SEATS.map(s=>[s[0],s[1]])){ const o=b.assistant_composition[sk],n=c.assistant_composition[sk];
+    if(o.archetype!==n.archetype||o.intensity!==n.intensity) rows.push(`<div class="tension"><b>${sk} ${fn}</b><br>archetype: ${o.archetype} → ${n.archetype}<br>intensity: ${o.intensity} → ${n.intensity}</div>`); }
+  for(const k of Object.keys(AXES)) if(String(b.personality_axes[k])!==String(c.personality_axes[k])) rows.push(`<div class="tension"><b>${k}</b><br>${b.personality_axes[k]} → ${c.personality_axes[k]}</div>`);
+  // Expected trait deltas
+  const deltas=[]; for(const t of Object.keys(p.traits)){ const d=+(p.traits[t].score-(bp.traits[t]?.score??p.traits[t].score)).toFixed(3); if(Math.abs(d)>=0.05) deltas.push(`${t} ${d>0?'+':''}${d}`); }
+  $("diff").innerHTML=(rows.length?rows.join(""):'<div class="sec-desc">Canonical 変更なし。</div>')
+    +(deltas.length?`<div class="notice amber" style="margin-top:.8rem"><b>Expected impact:</b> ${deltas.join(" / ")}</div>`:"");
+}
+
+// ── prompt ──
+function genPrompt(c,pf){ return generatePrompt(c,pf); }
+
+// ── apply canonical to form ──
+function applyCharacter(c){
+  const id=c.identity||{},cat=id.catalog||{};
+  currentCharacterRevision=String(id.character_revision||"1.0.0");
+  $("character_id").value=id.character_id||""; $("display_name").value=id.display_name||"";
+  $("catalog_code").value=cat.catalog_code||""; if(cat.catalog_group)$("catalog_group").value=cat.catalog_group; $("role_label").value=cat.role_label||"";
+  $("purpose_summary").value=(c.purpose||{}).summary||""; $("primary_value").value=(c.purpose||{}).primary_value||"";
+  const core=c.character_core||{}; $("character_role").value=core.character_role||"";
+  $("values").value=(core.values||[]).join("\n"); $("invariants").value=(core.hard_invariants||[]).map(i=>i.statement||i).join("\n");
+  $("handoff").value=(core.human_handoff_conditions||[]).map(h=>`${h.reason_class}|${h.trigger}`).join("\n");
+  const comp=c.assistant_composition||{}; for(const [sk] of SEATS){ const s=comp[sk]; if(s) state.seats[sk]={archetype:s.archetype,intensity:s.intensity}; }
+  const fc=comp.front_control||{}; if(fc.minority_retention)$("fc_minority").value=fc.minority_retention; if(fc.selection_strength)$("fc_selection").value=fc.selection_strength;
+  const ax=c.personality_axes||{}; for(const k of Object.keys(AXES)) if(ax[k]!=null) state.axes[k]=ax[k];
+  const pr=c.professional_reasoning; $("pr_on").checked=!!pr; $("pr_fields").style.display=pr?"block":"none";
+  if(pr){ $("pr_profile").value=pr.profile_id||"LEGAL_ANALYSIS"; $("pr_display").value=pr.profile_display_name||""; $("pr_issue").value=(pr.issue_spotting||[]).join("\n"); $("pr_prohib").value=(pr.prohibited_claims||[]).join("\n"); }
+  $("tend_on").checked=!!(c.extensions&&c.extensions.ten_d);
+  renderSeats(); renderAxes(); render();
+}
+
+// ── Catalog ビューア ──
+// 同梱: Built-in Sample Pack（3 Full・利用可）+ Commercial 64 Preview Index（discovery のみ・LOCKED）。
+// 非同梱: Commercial 64 の Full Canonical / Owner Packs。Full は購入後 Pack Import で解放する。
+let MANIFEST=[]; let catFilter="ALL", catView="gallery";
+let BUNDLED_SAMPLE_META={data_license:"NOT_SPECIFIED"};
+async function initCatalog(){
+  MANIFEST=[];
+  // Built-in Sample Pack（Full・unlocked）
+  try{ const r=await fetch("./unified-v1/sample-pack/sample-characters.json"); if(r.ok){ const s=await r.json(); BUNDLED_SAMPLE_META=s._meta||BUNDLED_SAMPLE_META;
+    for(const e of (s.characters||[])) MANIFEST.push(fullEntry(e,"SAMPLE")); } }catch(e){}
+  // Commercial 64 Preview Index（discovery / LOCKED）
+  try{ const r=await fetch("./unified-v1/preview/catalog-preview-index.json"); if(r.ok){ const pv=await r.json();
+    for(const e of (pv.characters||[])) MANIFEST.push({ character_id:e.catalog_code, catalog_code:e.catalog_code, display_name:e.display_name, role_label:e.role_label, catalog_group:e.catalog_group, short_description:e.short_description, preview_tags:e.preview_tags, availability:"LOCKED" }); } }catch(e){}
+  updateCount();
+  const groups=["ALL",...Object.values(GROUP_MAP)];
+  $("cat-chips").innerHTML=groups.map(g=>`<div class="chip ${g==='ALL'?'active':''}" data-cat="${g}">${g==='ALL'?'All':g}</div>`).join("");
+  renderCatalog();
+}
+function fullEntry(e,availability){ const id=e.identity||{}, cat=id.catalog||{};
+  return { character_id:id.character_id, display_name:id.display_name, catalog_code:cat.catalog_code, catalog_group:cat.catalog_group, role_label:cat.role_label, profile_id:(e.professional_reasoning||{}).profile_id, availability:availability||"UNLOCKED", _full:e }; }
+function updateCount(){ const s=MANIFEST.filter(c=>c._full).length, l=MANIFEST.filter(c=>c.availability==="LOCKED").length; $("cat-count").textContent=`${MANIFEST.length}`; }
+function renderCatalog(){
+  const grid=$("cat-grid"); grid.className="grid "+catView;
+  let list=MANIFEST.filter(c=>catFilter==="ALL"||c.catalog_group===catFilter);
+  if(!MANIFEST.length){ grid.className="grid gallery"; grid.innerHTML=`<div class="notice" style="max-width:660px">Catalog データが読み込めません。<b>Import catalog manifest…</b> から manifest / Pack を読み込んでください。</div>`; return; }
+  grid.innerHTML=list.map(c=>{
+    const locked=c.availability==="LOCKED";
+    const badge = locked?`<span class="tag" style="border-color:var(--accent2);color:var(--accent2)">Preview / Locked</span>`
+      : (c.availability==="SAMPLE"?`<span class="tag" style="border-color:var(--accent);color:var(--accent)">Sample</span>`
+      : `<span class="tag" style="border-color:var(--accent);color:var(--accent)">Unlocked</span>`);
+    const tags=`<span class="tag">${c.catalog_code}</span><span class="tag">${c.catalog_group}</span>${badge}`;
+    const sub = c.short_description ? `<div class="mono" style="font-size:.72rem;color:var(--muted);margin-top:.5rem">${c.short_description}</div>` : `<div class="mono" style="font-size:.72rem;color:var(--muted);margin-top:.5rem">${c.character_id}</div>`;
+    if(catView==="table") return `<div class="ccard" data-runtime-value data-open="${c.character_id}"${locked?' style="opacity:.72"':''}><div class="tc cc-name">${c.display_name||c.character_id}</div><div class="tc cc-role">${c.role_label||""}</div><div class="tc">${tags}</div><div class="tc mono" style="font-size:.72rem;color:var(--muted)">${locked?'LOCKED':(c.character_id)}</div></div>`;
+    return `<div class="ccard" data-runtime-value data-open="${c.character_id}"${locked?' style="opacity:.82"':''}><div class="cc-name">${c.display_name||c.character_id}</div><div class="cc-role">${c.role_label||""}</div><div>${tags}</div>${sub}</div>`;
+  }).join("");
+}
+// Import された manifest / pack を正規化。full canonical（assistant_composition を持つ）は _full に保持。
+function normalizePack(m){
+  const arr=Array.isArray(m)?m:(m.characters||[]);
+  return arr.map(e=>{
+    if(e && e.assistant_composition && e.identity) return fullEntry(e,"UNLOCKED");
+    return e; // manifest row（identity レベル）
+  });
+}
+// Import された Pack を既存 MANIFEST へマージ（LOCKED Preview に Full が来たら解放）
+function mergePack(imported){
+  let added=0, unlocked=0;
+  for(const e of imported){
+    const key = e.character_id || (e._full&&e._full.identity&&e._full.identity.character_id);
+    const code = e.catalog_code || (e._full&&e._full.identity&&e._full.identity.catalog&&e._full.identity.catalog.catalog_code);
+    const idx = MANIFEST.findIndex(c=> (key&&c.character_id===key) || (code&&c.catalog_code===code));
+    if(idx>=0){ if(e._full){ MANIFEST[idx]._full=e._full; MANIFEST[idx].availability="UNLOCKED"; unlocked++; } else { Object.assign(MANIFEST[idx],e); } }
+    else { MANIFEST.push(e._full?e:{...e,availability:e.availability||"IMPORTED"}); added++; }
+  }
+  updateCount(); renderCatalog(); return {added,unlocked};
+}
+function openFromCatalog(id){
+  const m=MANIFEST.find(c=>c.character_id===id); if(!m) return;
+  if(m._full){ // Sample / Unlocked / Imported full → 編集可能
+    applyCharacter(m._full); switchView("builder"); switchSection("core");
+    $("validation").insertAdjacentHTML("afterbegin",`<div class="notice">${m.availability==="SAMPLE"?"Built-in Sample":"Full Canonical"} を読み込みました（${m.character_id}）。</div>`);
+    return;
+  }
+  if(m.availability==="LOCKED"){ // Preview のみ → 編集不可
+    switchView("builder"); switchSection("core");
+    $("validation").insertAdjacentHTML("afterbegin",`<div class="warnbox"><b>Character Pack required</b><br>${m.display_name}（${m.catalog_code}）は Preview（LOCKED）です。Full Canonical は本 OSS 配布に含まれません。購入した <b>64 Character Pack</b> を <b>Import catalog manifest…</b> で読み込むと解放され、編集できます。</div>`);
+    return;
+  }
+  // identity のみの manifest 行
+  applyCharacter({ identity:{character_id:m.character_id,character_revision:"1.0.0",display_name:m.display_name,catalog:{catalog_code:m.catalog_code,catalog_group:m.catalog_group,role_label:m.role_label}} });
+  if(m.profile_id){ $("pr_on").checked=true; $("pr_fields").style.display="block"; $("pr_profile").value=m.profile_id; render(); }
+  switchView("builder"); switchSection("core");
+  $("validation").insertAdjacentHTML("afterbegin",`<div class="notice">identity を読み込みました（${m.character_id}）。フル Canonical は Import で解放します。</div>`);
+}
+
+// ── view / section switching ──
+function switchView(v){ document.querySelectorAll(".view").forEach(x=>x.classList.remove("active")); $("view-"+v).classList.add("active"); }
+function switchSection(sec){ document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.sec===sec)); document.querySelectorAll(".section").forEach(s=>s.classList.remove("active")); $("sec-"+sec).classList.add("active"); }
+
+// ── About / structure / labels ──
+function syncLocaleControls(){ document.documentElement.lang=I18N.locale==="ja-JP"?"ja":"en"; document.querySelectorAll("[data-ui-locale]").forEach(control=>{ const active=control.dataset.uiLocale===I18N.locale; control.setAttribute("aria-pressed",String(active)); }); }
+function labelText(key, current){
+  const value = I18N.t(key);
+  return (value === key) ? current : value;
+}
+function desktopHomeAvailable(){
+  return Boolean(window.__TAURI__?.core?.invoke) || Boolean(new URLSearchParams(location.search).get("desktop"));
+}
+function revealDesktopHome(){
+  const available=desktopHomeAvailable();
+  for(const id of ["to-desktop-catalog","to-desktop-builder"]){
+    const el=document.getElementById(id);
+    if(el) el.hidden=!available;
+  }
+}
+function applyStaticText(){
+  for(const el of document.querySelectorAll("[data-i18n]")){
+    const value=labelText(el.dataset.i18n, null);
+    if(value!==null) el.textContent=value;
+  }
+}
+function applyLocaleLabels(){ applyStaticText(); ["lbl_language","lbl_language1"].forEach(i=>{const e=$(i);if(e)e.textContent=labelText("ui.language",e.textContent);}); for(const id of ["btn_about","btn_about2"]){const e=$(id);if(!e)continue;const about=labelText("ui.about",null),license=labelText("ui.license",null);if(about!==null&&license!==null)e.textContent=about+" / "+license;} $("ex_save").textContent=localeText("現在の出力を保存 / ダウンロード","Save / Download current output"); $("ex_import").textContent=localeText("JSONを再読込…","Reopen JSON…"); const n=labelText("ui.design_tendency_note",null); if(n!==null){ $("notcanon").textContent=n; $("notcanon2").textContent=n; } syncLocaleControls(); }
+window.SAKU_UNIFIED_V1_I18N={setLocale:(l)=>setUiLocale(l),getLocale:()=>I18N.locale};
+function setUiLocale(locale){ I18N.setLocale(locale);
+  // Storage can be unavailable (restricted contexts). The language must still switch.
+  try{ localStorage.setItem("saku.ui.locale",I18N.locale); }catch(error){ console.warn("locale not persisted:",error); } applyLocaleLabels(); renderSeats(); renderAxes(); render(); }
+function aboutBody(){ const sampleLicense=BUNDLED_SAMPLE_META.data_license||"NOT_SPECIFIED"; const sampleEvidence=sampleLicense==="CC0-1.0"?"../resources/sample-source-evidence.json":"./unified-v1/DATA-LICENSE-NOTE.md"; return `<p>${I18N.t("ui.design_tendency_note")}</p><ul>
+ <li><b>Code:</b> MPL-2.0 — <a href="../LICENSE" target="_blank" rel="noopener">LICENSE</a></li>
+ <li><b>Docs:</b> CC BY 4.0 — <a href="../LICENSE-DOCS.md" target="_blank" rel="noopener">LICENSE-DOCS.md</a></li>
+ <li><b>${I18N.t("ui.catalog_license")}:</b> <code>NOT_SPECIFIED</code> — <a href="../LICENSING.md" target="_blank" rel="noopener">LICENSING.md</a></li>
+ <li><b>Bundled Sample3</b>: <code>${sampleLicense}</code>・別 scope（MPL ではない）— <a href="${sampleEvidence}" target="_blank" rel="noopener">source/license evidence</a></li>
+ <li><b>Commercial 64 Preview index</b>: <code>NOT_SPECIFIED</code>・Owner Review profile only</li>
+ <li><b>${I18N.t("ui.third_party")}:</b> <a href="../THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener">THIRD_PARTY_NOTICES.md</a></li>
+ <li><b>${I18N.t("ui.trademark")}:</b> <a href="../TRADEMARK.md" target="_blank" rel="noopener">TRADEMARK.md</a></li>
+ <li><a href="../NOTICE" target="_blank" rel="noopener">NOTICE</a> / <a href="../SECURITY.md" target="_blank" rel="noopener">SECURITY.md</a> / <a href="../CONTRIBUTING.md" target="_blank" rel="noopener">CONTRIBUTING.md</a></li></ul>
+ <p class="sec-desc">出力は authoring_export（実行不可）。Locale 切替は Canonical / digest を変えない。</p>`; }
+function structureBody(){ return `<div class="badge">Seat8 HUMAN (Logical Human Seat)</div><div style="margin:.4rem 0;color:var(--muted)">↓ Human Handoff 境界</div>
+  <div class="badge" style="border-color:var(--ink)">Seat1 FRONT_COORDINATOR</div><div style="margin:.4rem 0;color:var(--muted)">↓</div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center">${SEATS.slice(1).map(s=>`<span class="badge">${s[0].replace('seat','S')} ${s[1]}</span>`).join("")}</div>`; }
+
+function bindOnce(){
+  // header / nav
+  $("to-catalog").onclick=()=>{ switchView("catalog"); renderCatalog(); };
+  $("secnav").addEventListener("click",e=>{ const t=e.target.closest(".tab"); if(t) switchSection(t.dataset.sec); });
+  document.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>{ catView=b.dataset.view; document.querySelectorAll(".vbtn").forEach(x=>x.classList.toggle("active",x===b)); renderCatalog(); });
+  $("cat-chips").addEventListener("click",e=>{ const c=e.target.closest(".chip"); if(!c)return; catFilter=c.dataset.cat; document.querySelectorAll(".chip").forEach(x=>x.classList.toggle("active",x===c)); renderCatalog(); });
+  $("cat-grid").addEventListener("click",e=>{ const card=e.target.closest("[data-open]"); if(card) openFromCatalog(card.dataset.open); });
+  $("cat-import").onclick=()=>$("cat-file").click();
+  $("cat-file").onchange=async(e)=>{ const f=e.target.files[0]; if(!f)return; try{ const r=mergePack(normalizePack(JSON.parse(await f.text()))); alert(`Import 完了: 解放 ${r.unlocked} 体 / 追加 ${r.added} 体`); }catch(err){ alert("JSON parse error: "+err.message); } };
+  // seats
+  $("seats").addEventListener("click",e=>{
+    const tog=e.target.closest("[data-toggle]"); if(tog && !e.target.closest(".saku-help-btn")){ $("seats").querySelector(`.seat[data-seat="${tog.dataset.toggle}"]`).classList.toggle("open"); return; }
+    const rc=e.target.closest("[data-arch]"); if(rc){ const [sk,a]=rc.dataset.arch.split("|"); state.seats[sk].archetype=a; renderSeats(); render(); return; }
+    const ib=e.target.closest("[data-inten]"); if(ib){ const [sk,l]=ib.dataset.inten.split("|"); state.seats[sk].intensity=l; renderSeats(); render(); return; }
+  });
+  // axes
+  $("axes").addEventListener("click",e=>{ const b=e.target.closest("[data-ax]"); if(b){ const [k,v]=b.dataset.ax.split("|"); state.axes[k]=v; renderAxes(); render(); } });
+  // why toggles + drawer
+  document.body.addEventListener("click",e=>{ const w=e.target.closest("[data-why]"); if(w){ const el=$("src-"+w.dataset.why); if(el) el.classList.toggle("open"); } });
+  $("btn_profile").onclick=()=>{ $("drawer").classList.add("open"); $("drawer-bg").classList.add("open"); };
+  $("drawer-close").onclick=$("drawer-bg").onclick=()=>{ $("drawer").classList.remove("open"); $("drawer-bg").classList.remove("open"); };
+  // structure modal
+  $("btn-structure").onclick=()=>{ $("structure-body").innerHTML=structureBody(); $("modal-structure").classList.add("open"); };
+  $("structure-close").onclick=()=>$("modal-structure").classList.remove("open");
+  // trainer links
+  const goTrainer=()=>{ const c=collect(); storeHandoff(localStorage,"trainer",c); const id=encodeURIComponent(c.identity.character_id||""); const revision=encodeURIComponent(String(c.identity.character_revision||"UNKNOWN")); window.open(`./saku-trainer.html?desktop=builder&character_id=${id}&character_revision=${revision}&source=builder`,"_blank","noopener"); };
+  $("to-trainer").onclick=goTrainer; $("to-trainer2").onclick=goTrainer;
+  // export
+  const setFlowStatus=(id,kind,message)=>{ const el=$(id); el.hidden=false; el.dataset.kind=kind; el.textContent=message; };
+  const buildExport=kind=>{ const character=collect(); if(kind==="prompt")return {kind,text:genPrompt(character,"generic"),filename:"saku-prompt.txt",mime:"text/plain;charset=utf-8"}; if(kind==="json")return {kind,text:JSON.stringify(character,null,2),filename:"character.json",mime:"application/json;charset=utf-8"}; return {kind:"yaml",text:yaml(character),filename:"character.yaml",mime:"text/yaml;charset=utf-8"}; };
+  const show=kind=>{ currentExport=buildExport(kind); $("ex_out").style.display="block"; $("ex_out").textContent=currentExport.text; setFlowStatus("ex_status","success",localeText(`${currentExport.filename} を生成しました。内容を確認して保存できます。`,`${currentExport.filename} is ready. Review it, then save or download.`)); };
+  $("ex_prompt").onclick=()=>show("prompt");
+  $("ex_json").onclick=()=>show("json");
+  $("ex_yaml").onclick=()=>show("yaml");
+  $("ex_save").onclick=async()=>{
+    if(!currentExport){ setFlowStatus("ex_status","warning",localeText("先にLLM、JSON、またはYAMLの出力を選択してください。","Choose LLM, JSON, or YAML output before saving.")); return; }
+    currentExport=buildExport(currentExport.kind); $("ex_out").textContent=currentExport.text;
+    const invoke=window.__TAURI__?.core?.invoke;
+    if(invoke){
+      try{
+        const result=await invoke("save_builder_file",{filename:currentExport.filename,content:currentExport.text,dialogTitle:localeText("SAKU Builderの出力を保存","Save SAKU Builder output")});
+        if(result.status==="SAVED") setFlowStatus("ex_status","success",localeText(`保存しました\n${result.path}`,`Saved\n${result.path}`));
+        else if(result.status==="CANCELLED") setFlowStatus("ex_status","warning",localeText("保存をキャンセルしました。内容は画面に残っています。","Save cancelled. The output remains available on screen."));
+        else setFlowStatus("ex_status","error",localeText(`保存できませんでした: ${result.reason||"UNKNOWN"}。保存先を確認して再試行してください。`,`Save failed: ${result.reason||"UNKNOWN"}. Check the destination and try again.`));
+      }catch(error){ setFlowStatus("ex_status","error",localeText(`保存できませんでした: ${error.message||error}`,`Save failed: ${error.message||error}`)); }
+      return;
+    }
+    const blob=new Blob([currentExport.text],{type:currentExport.mime}); const url=URL.createObjectURL(blob); const anchor=document.createElement("a"); anchor.href=url; anchor.download=currentExport.filename; document.body.append(anchor); anchor.click(); anchor.remove(); setTimeout(()=>URL.revokeObjectURL(url),0);
+    setFlowStatus("ex_status","success",localeText(`ダウンロードを開始しました: ${currentExport.filename}`,`Download requested: ${currentExport.filename}`));
+  };
+  $("ex_import").onclick=()=>$("file_import").click();
+  $("file_import").onchange=async(e)=>{ const f=e.target.files[0]; if(!f)return; try{ applyCharacter(JSON.parse(await f.text())); currentExport=null; $("ex_out").style.display="none"; setFlowStatus("ex_status","success",localeText(`再読込しました: ${f.name}`,`Reopened: ${f.name}`)); }catch(err){ setFlowStatus("ex_status","error",localeText(`JSONを読み込めません: ${err.message}。SAKU Builderから保存したJSONを選び直してください。`,`Could not reopen JSON: ${err.message}. Choose JSON saved by SAKU Builder and try again.`)); } finally { e.target.value=""; } };
+  $("set-baseline").onclick=()=>{ const c=collect(); BASELINE={canonical:JSON.parse(JSON.stringify(c)),profile:deriveExpectedProfile(c)}; render(); };
+  // about
+  const openAbout=()=>{ $("about_body").innerHTML=aboutBody(); $("about_modal").classList.add("open"); $("about_close").focus(); };
+  $("btn_about").onclick=openAbout; $("btn_about2").onclick=openAbout; $("about_close").onclick=()=>$("about_modal").classList.remove("open");
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ $("about_modal").classList.remove("open"); $("modal-structure").classList.remove("open"); } });
+  // Locale changes only from the four explicit Japanese / English controls.
+  document.querySelectorAll("[data-ui-locale]").forEach(control=>control.addEventListener("click",event=>setUiLocale(event.currentTarget.dataset.uiLocale)));
+  // live update
+  document.querySelectorAll("#sec-core input,#sec-core textarea,#sec-core select,#sec-professional input,#sec-professional textarea,#sec-professional select,#fc_minority,#fc_selection").forEach(el=>{ el.addEventListener("input",()=>{ if(el.id==="pr_on")$("pr_fields").style.display=el.checked?"block":"none"; render(); }); el.addEventListener("change",()=>{ if(el.id==="pr_on")$("pr_fields").style.display=el.checked?"block":"none"; render(); }); });
+}
+
+function intakeDesktopPending(){
+  try{
+    const packed=localStorage.getItem("saku.desktop.pendingPack");
+    if(packed){ mergePack(normalizePack(JSON.parse(packed))); localStorage.removeItem("saku.desktop.pendingPack"); switchView("catalog"); renderCatalog(); }
+    if(requiresCharacterHandoff&&(!requestedCharacterId||!requestedCharacterRevision)){ clearHandoff(localStorage,"character"); $("handoff_status").hidden=false; $("handoff_status").dataset.kind="error"; $("handoff_status").textContent=localeText("Characterの識別情報が不足しています。ViewerまたはReview Resultsへ戻り、Characterを選び直してください。","Character identity or revision is missing. Return to Viewer or Review Results and select the Character again."); return; }
+    const handoff=consumeHandoff(localStorage,"character",{character_id:requestedCharacterId,character_revision:requestedCharacterRevision});
+    if(requiresCharacterHandoff&&handoff.status==="EMPTY"){ $("handoff_status").hidden=false; $("handoff_status").dataset.kind="error"; $("handoff_status").textContent=localeText(`Character引継ぎデータがありません (${requestedCharacterId})。元の画面へ戻り、選び直してください。`,`Character handoff data is missing (${requestedCharacterId}). Return to the source screen and select it again.`); return; }
+    if(handoff.status==="REJECTED"){ $("handoff_status").hidden=false; $("handoff_status").dataset.kind="error"; $("handoff_status").textContent=localeText(`Character引継ぎを拒否しました (${handoff.reason})。元の画面へ戻り、選び直してください。`,`Character handoff rejected (${handoff.reason}). Return to the source screen and select it again.`); return; }
+    if(handoff.status==="ACCEPTED"){
+      const pending=handoff.character; const pendingId=handoff.character_id; const pendingRevision=handoff.character_revision;
+      applyCharacter(pending); ActiveSaku.setActive(pending,{source:desktopRoute||"handoff"}); switchView("builder"); switchSection("core");
+      if(requiresCharacterHandoff){ $("handoff_status").hidden=false; $("handoff_status").dataset.kind="success"; $("handoff_status").textContent=localeText(`編集用Candidateを受け取りました: ${pendingId} / ${pendingRevision}`,`Editable Candidate received: ${pendingId} / ${pendingRevision}`); }
+    }
+    if(handoff.status!=="ACCEPTED"&&!requiresCharacterHandoff){
+      /* 受け渡しが無いときは、いま作業中の SAKU をそのまま続ける。 */
+      const working=ActiveSaku.getWorkingCharacter();
+      if(working){ applyCharacter(working); switchView("builder"); switchSection("core"); }
+    }
+  }catch(error){ console.error("DESKTOP_INTAKE_FAILED",error); $("handoff_status").hidden=false; $("handoff_status").dataset.kind="error"; $("handoff_status").textContent=localeText(`Character引継ぎを読み込めません: ${error.message||error}`,`Could not read Character handoff: ${error.message||error}`); }
+}
+
+(async()=>{
+  await initI18n();
+  bindOnce(); renderSeats(); renderAxes(); mountHelpAnchors(); await initCatalog(); intakeDesktopPending();
+  applyLocaleLabels(); revealDesktopHome(); attachHelp(document.body,I18N); render();
+})();
+
+// smoke-test / regression hooks（既存テスト互換）
+window.__saku_unified_v1={ collect, validate, deriveExpectedProfile, canonicalDigest,
+  setLocale:setUiLocale,
+  get locale(){ return I18N.locale; }, i18n:()=>I18N, switchSection, switchView,
+  importPack:(obj)=>mergePack(normalizePack(obj)), applyCharacter,
+  get currentExport(){ return currentExport?{...currentExport}:null; },
+  openFromCatalog, getManifest:()=>MANIFEST, compositionCode };
+</script>
+</body>
+</html>

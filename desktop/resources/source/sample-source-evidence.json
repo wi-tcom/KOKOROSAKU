@@ -1,0 +1,23 @@
+{
+  "profile": "saku.desktop.sample-source-evidence@1",
+  "source_role": "SAMPLE_CHARACTERS",
+  "repository": "wi-tcom/-SAKU-1-7-Character-System",
+  "revision": "442748f7868c576fc56339add714609662d5ae5e",
+  "artifact_commit": "1747538e268d7752b7f5a03a3bcd6df4a9d90f0e",
+  "path": "samples/oss-launch/unified-v1/sample-characters.json",
+  "git_blob": "21ed585ebeb877aba645b665c20c6da3260ae8e3",
+  "sha256": "2f3985bd6b033a744baffa79ec912c914e327b71dcacf6c7668286248df51005",
+  "bytes": 24945,
+  "license": "CC0-1.0",
+  "license_scope": "EXACT_THREE_SAMPLE_CHARACTER_CANDIDATES_ONLY",
+  "publication_authorization": true,
+  "publication_decision": "D-B3",
+  "publication_authorized_by": "Owner",
+  "publication_authorized_on": "2026-09-14",
+  "intake_authorization": "OWNER_D_B3_PUBLIC_SAMPLE_INTAKE",
+  "authorized_ids": [
+    "sample-general-compass",
+    "sample-erabazu-bridge",
+    "sample-wit-guide"
+  ]
+}

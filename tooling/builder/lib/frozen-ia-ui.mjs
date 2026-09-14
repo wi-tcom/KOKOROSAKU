@@ -647,7 +647,7 @@ function tuningMarkup() {
     <p>${ui("気になる症状から、関係するCharacter設定を確認します。Trainerの観察はCanonicalの真実ではなく、推奨は自動適用されません。", "Start with a symptom and inspect related Character settings. Trainer observations are not Canonical truth, and recommendations are never applied automatically.")}</p>
     <div class="tuning-symptom-grid">${TUNING_ITEMS.map(item => `<button type="button" data-tuning-symptom="${item.id}" aria-label="${esc(localized(item.symptom, locale()))}">${esc(localized(item.symptom, locale()))}</button>`).join("")}</div>
     <div id="tuningRegistryDetail" class="tuning-registry-detail" role="status" aria-live="polite">${ui("症状を選択してください。", "Select a symptom.")}</div>
-    <p><a href="./index.html">${ui("DesktopでCurrent / Expected / Observed / Diff / Recommendationを確認する", "Open Desktop to review Current / Expected / Observed / Diff / Recommendation")}</a></p></section>`;
+    <p><a href="../index.html?stay=1">${ui("DesktopでCurrent / Expected / Observed / Diff / Recommendationを確認する", "Open Desktop to review Current / Expected / Observed / Diff / Recommendation")}</a></p></section>`;
 }
 
 function renderSurface() {
@@ -671,7 +671,7 @@ function renderSurface() {
       <div id="referenceEditors" class="reference-editors"></div>`,
   };
   for (const chapter of CHAPTERS) form.insertAdjacentHTML("beforeend", chapterMarkup(chapter, bodies[chapter.id]));
-  form.insertAdjacentHTML("beforeend", fixedSystemMarkup() + tuningMarkup() + `<details class="advanced-settings"><summary>${ui("詳細設定 — Expert / Advanced", "Expert / Advanced settings")}</summary><p>${ui("現在、通常入力とは別に編集すべきSAKU-owned Expert項目はありません。Runtime、AMU、MACHI、旧legacy schema項目はここへ移していません。", "There are currently no separate SAKU-owned expert fields to edit. Runtime, AMU, MACHI, and legacy legacy schema controls are not moved here.")}</p></details>`);
+  form.insertAdjacentHTML("beforeend", fixedSystemMarkup() + tuningMarkup() + `<details class="advanced-settings"><summary>${ui("詳細設定 — Expert / Advanced", "Expert / Advanced settings")}</summary><p>${ui("現在、通常入力とは別に編集すべきSAKU-owned Expert項目はありません。Runtime、AMU、MACHI、旧Unified V1項目はここへ移していません。", "There are currently no separate SAKU-owned expert fields to edit. Runtime, AMU, MACHI, and legacy Unified V1 controls are not moved here.")}</p></details>`);
 
   window.bindInputs?.();
   window.renderAllLists?.();

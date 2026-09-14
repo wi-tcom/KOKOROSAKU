@@ -194,6 +194,8 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 <link rel="stylesheet" href="./builder.css">
+<link rel="icon" href="./favicon.ico">
+<meta name="saku-character-selection" content="disabled">
 </head>
 <body>
 <header>
@@ -1239,7 +1241,7 @@ document.getElementById("copyBtn").addEventListener("click",async()=>{
    追加層が未適用でもリンクが hidden でも判定が変わらないよう、実行環境だけで決める。 */
 function desktopHomeHref(){
   const home=document.getElementById("openDesktopHome");
-  return (home&&home.getAttribute("href"))||"./index.html";
+  return (home&&home.getAttribute("href"))||"../index.html?stay=1";
 }
 function resetDestination(){
   return window.__TAURI__?.core?.invoke ? desktopHomeHref() : null;

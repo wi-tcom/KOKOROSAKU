@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wi-t.com/schemas/saku/character-extension/1.0.0/schema.json",
+  "title": "SAKU Optional Character Extension Contract",
+  "description": "Normative envelope for optional, namespaced Character semantic extensions. It does not admit runtime, package, catalog, attestation, authority, credential, permission, assignment or Human-binding data into Character Canonical.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_id", "contract_version"],
+  "properties": {
+    "contract_id": {"const": "saku.character-extension"},
+    "contract_version": {"const": "1.0.0"}
+  },
+  "$defs": {
+    "namespacedExtensionId": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 255,
+      "pattern": "^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$"
+    },
+    "jsonValue": {
+      "type": ["object", "array", "string", "number", "boolean", "null"]
+    },
+    "extensionEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["extension_id", "version", "criticality", "semantic_scope", "value"],
+      "properties": {
+        "extension_id": {"$ref": "#/$defs/namespacedExtensionId"},
+        "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"},
+        "criticality": {"enum": ["NONCRITICAL", "CRITICAL"]},
+        "semantic_scope": {"const": "CHARACTER_SEMANTICS_ONLY"},
+        "value": {"$ref": "#/$defs/jsonValue"}
+      }
+    },
+    "namespacedExtensionMap": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"$ref": "#/$defs/namespacedExtensionId"},
+      "additionalProperties": {"$ref": "#/$defs/extensionEntry"}
+    }
+  },
+  "x-wit-semantic-validation": {
+    "map_key_must_equal_entry_extension_id": true,
+    "unknown_confirmed_noncritical": "PRESERVE_STRUCTURALLY_READ_ONLY_NO_RUNTIME_EFFECT",
+    "unknown_critical": "FAIL_CLOSED",
+    "unknown_criticality": "FAIL_CLOSED",
+    "extension_change_requires_character_revision": true,
+    "extension_change_participates_in_character_full_semantics_digest": true,
+    "extension_excluded_from_character_base_semantics_digest": true
+  },
+  "x-wit-boundary": {
+    "namespace_is_identity_not_trust": true,
+    "prohibited_domains": [
+      "AMU_RUNTIME",
+      "MACHI_ORGANIZATION_WORKFLOW",
+      "PACKAGE_METADATA",
+      "CATALOG_METADATA",
+      "ATTESTATION",
+      "CREDENTIAL",
+      "AUTHORITY",
+      "PERMISSION",
+      "MANDATE",
+      "APPROVAL",
+      "HUMAN_BINDING"
+    ],
+    "unbound_presence_permits_inference_or_execution": false
+  },
+  "x-wit-lifecycle": {
+    "status": "ADOPTED_ON_BRANCH",
+    "adoption_lane": "work/saku-64alpha-foundation-adoption",
+    "main_effective_only_after_merge": true
+  }
+}

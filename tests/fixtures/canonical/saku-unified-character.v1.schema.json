@@ -1,0 +1,1083 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wi-t.com/schemas/saku/unified-v1/saku-unified-character.v1.schema.json",
+  "title": "SAKU Unified Character Schema Frozen Candidate",
+  "description": "One active SAKU Character Schema frozen candidate after evidence-bound v1/vNext delta recovery. Candidate only; not Canonical adoption.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "identity",
+    "purpose",
+    "character_core",
+    "assistant_composition",
+    "personality_axes",
+    "conformance_expectations"
+  ],
+  "properties": {
+    "schema": {
+      "$ref": "#/$defs/schemaIdentity"
+    },
+    "identity": {
+      "$ref": "#/$defs/identity"
+    },
+    "purpose": {
+      "$ref": "#/$defs/purpose"
+    },
+    "character_core": {
+      "$ref": "#/$defs/characterCore"
+    },
+    "expression_semantics": {
+      "$ref": "#/$defs/expressionSemantics"
+    },
+    "assistant_composition": {
+      "$ref": "#/$defs/assistantComposition"
+    },
+    "personality_axes": {
+      "$ref": "#/$defs/personalityAxes"
+    },
+    "conformance_expectations": {
+      "$ref": "#/$defs/conformanceExpectations"
+    },
+    "extensions": {
+      "$ref": "https://wi-t.com/schemas/saku/character-extension/1.0.0/schema.json#/$defs/namespacedExtensionMap"
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nonEmptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      }
+    },
+    "requirementId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9._:-]{1,127}$"
+    },
+    "stableRequirementRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requirement_id"
+      ],
+      "properties": {
+        "requirement_id": {
+          "$ref": "#/$defs/requirementId"
+        },
+        "locator": {
+          "type": "string",
+          "pattern": "^(?:/(?:[^~/]|~0|~1)*)*$"
+        }
+      },
+      "x-wit-reference-semantics": "requirement_id is normative identity; locator is optional convenience only. Resolution or locator mismatch fails closed."
+    },
+    "semanticRequirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "statement"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/requirementId"
+        },
+        "statement": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "schemaIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_id",
+        "schema_version"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE"
+        },
+        "schema_version": {
+          "const": "final-delta-recovery-closure-2026-09-04"
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "character_id",
+        "character_revision",
+        "display_name"
+      ],
+      "properties": {
+        "character_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "character_revision": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "display_name": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      },
+      "x-wit-boundary": "Catalog membership, catalog code, catalog group and catalog role label are not Character identity."
+    },
+    "purpose": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary",
+        "primary_value",
+        "work_modes",
+        "non_goals"
+      ],
+      "properties": {
+        "summary": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "primary_value": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "work_modes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "STRATEGY",
+              "ANALYSIS",
+              "PLANNING",
+              "EXECUTION_SUPPORT",
+              "REVIEW",
+              "FACILITATION",
+              "OPERATIONS",
+              "CUSTOMER_INTERACTION",
+              "COACHING",
+              "RESEARCH",
+              "CREATION",
+              "INCIDENT_RESPONSE",
+              "ROUTINE_PROCESSING"
+            ]
+          },
+          "x-wit-boundary": "Work mode is not authority, permission or active assignment."
+        },
+        "non_goals": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        },
+        "target_users": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        }
+      }
+    },
+    "handoffCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "reason_class",
+        "trigger",
+        "boundary_statement",
+        "action"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/requirementId"
+        },
+        "reason_class": {
+          "enum": [
+            "AUTHORITY_REQUIRED",
+            "CREDENTIAL_REQUIRED",
+            "LEGAL_OR_REGULATORY",
+            "SAFETY_CRITICAL",
+            "EXTERNAL_IRREVERSIBLE",
+            "MATERIAL_UNCERTAINTY",
+            "CHARACTER_BOUNDARY",
+            "OTHER"
+          ]
+        },
+        "trigger": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "boundary_statement": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "action": {
+          "const": "HANDOFF_TO_HUMAN"
+        }
+      },
+      "x-wit-boundary": "Logical condition only; real Human identity, binding, endpoint, routing, SLA, approval and authority are external."
+    },
+    "characterCore": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role_kind",
+        "character_role",
+        "values",
+        "hard_invariants",
+        "expressive_range",
+        "human_handoff_conditions"
+      ],
+      "properties": {
+        "role_kind": {
+          "const": "CHARACTER_ROLE",
+          "x-wit-boundary": "Character role is not profession credential, operational assignment, authority or mandate."
+        },
+        "character_role": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "values": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        },
+        "hard_invariants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/semanticRequirement"
+          },
+          "contains": {
+            "type": "object",
+            "required": [
+              "statement"
+            ],
+            "properties": {
+              "statement": {
+                "const": "REQUIRED_INPUT != AI_GENERATED_SUBSTITUTE"
+              }
+            }
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        "expressive_range": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "allowed_variation",
+            "prohibited_drift"
+          ],
+          "properties": {
+            "allowed_variation": {
+              "$ref": "#/$defs/nonEmptyStringArray"
+            },
+            "prohibited_drift": {
+              "$ref": "#/$defs/nonEmptyStringArray"
+            }
+          }
+        },
+        "human_handoff_conditions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/handoffCondition"
+          }
+        }
+      }
+    },
+    "expressionSemantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "first_person": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "address_style": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "age_expression": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "voice": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "preferred_questions": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        },
+        "uncertainty_expression": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "error_correction_rule": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "closing_rule": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "interaction_tendencies": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "encouragement": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "rapport": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "metaphor": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "scaffolding": {
+              "$ref": "#/$defs/nonEmptyString"
+            }
+          }
+        },
+        "presentation_intent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "appearance"
+          ],
+          "properties": {
+            "appearance": {
+              "$ref": "#/$defs/nonEmptyString"
+            }
+          },
+          "x-wit-boundary": "Abstract portrayal constraint only; no avatar, image, CSS, renderer, audio or animation resource."
+        }
+      }
+    },
+    "seat1": {
+      "$ref": "#/$defs/seat1Body"
+    },
+    "seat2": {
+      "$ref": "#/$defs/seat2Body"
+    },
+    "seat3": {
+      "$ref": "#/$defs/seat3Body"
+    },
+    "seat4": {
+      "$ref": "#/$defs/seat4Body"
+    },
+    "seat5": {
+      "$ref": "#/$defs/seat5Body"
+    },
+    "seat6": {
+      "$ref": "#/$defs/seat6Body"
+    },
+    "seat7": {
+      "$ref": "#/$defs/seat7Body"
+    },
+    "seat1Body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "function",
+        "responsibilities"
+      ],
+      "properties": {
+        "function": {
+          "const": "FRONT_CHARACTER"
+        },
+        "responsibilities": {
+          "const": [
+            "QUESTION_FRAMING",
+            "ASSISTANT_ORCHESTRATION",
+            "FINDING_SYNTHESIS",
+            "FINAL_EXPLANATION",
+            "EXTERNAL_RESPONSE"
+          ]
+        }
+      },
+      "x-wit-boundary": "Seat1 is the named Front Character, not an internal assistant, dictator, Policy override, or Human override. Material BLOCK findings may not be silently removed."
+    },
+    "seat2Body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "function"
+      ],
+      "properties": {
+        "function": {
+          "const": "SPECIALIST_ASSISTANT"
+        }
+      },
+      "x-wit-boundary": "Internal AI assistant for specialist analysis; not a credential, qualification, authority, or knowledge guarantee."
+    },
+    "seat3Body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "function"
+      ],
+      "properties": {
+        "function": {
+          "const": "FACT_SOURCE_CHECK_ASSISTANT"
+        }
+      },
+      "x-wit-boundary": "Internal AI assistant for fact, source, contradiction, and uncertainty checks; its finding is not independently verified truth."
+    },
+    "seat4Body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "function"
+      ],
+      "properties": {
+        "function": {
+          "const": "SAFETY_RISK_PRIVACY_ASSISTANT"
+        }
+      },
+      "x-wit-boundary": "Internal AI assistant for safety, risk, and privacy concerns; its state is not Policy DENY, Legal Authority, or Human Approval."
+    },
+    "seat5Body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "function"
+      ],
+      "properties": {
+        "function": {
+          "const": "USER_VIEWPOINT_ASSISTANT"
+        }
+      },
+      "x-wit-boundary": "Internal AI assistant representing user impact; it does not speak as, bind, or approve for a Human."
+    },
+    "seat6Body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "function"
+      ],
+      "properties": {
+        "function": {
+          "const": "RED_TEAM_ASSISTANT"
+        }
+      },
+      "x-wit-boundary": "Internal AI assistant for adversarial challenge and failure modes."
+    },
+    "seat7Body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "function",
+        "responsibilities"
+      ],
+      "properties": {
+        "function": {
+          "const": "PERSONA_BRAND_GUARD_ASSISTANT"
+        },
+        "responsibilities": {
+          "const": [
+            "PERSONA_CONSISTENCY",
+            "VOICE_CONSISTENCY",
+            "VALUE_CONSISTENCY",
+            "ROLE_SCOPE_CONSISTENCY",
+            "PROHIBITED_DRIFT",
+            "QUALIFICATION_AUTHORITY_MISREPRESENTATION_DETECTION",
+            "UNAUTHORIZED_PERSONA_CHANGE_DETECTION"
+          ]
+        }
+      },
+      "x-wit-boundary": "Persona/Brand Guard complements machine Conformance. It does not issue authority, policy, approval, credential, qualification, or mandate."
+    },
+    "assistantComposition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_version",
+        "seat1",
+        "seat2",
+        "seat3",
+        "seat4",
+        "seat5",
+        "seat6",
+        "seat7",
+        "seat8",
+        "one_voice",
+        "deliberation",
+        "front_post_resolution"
+      ],
+      "properties": {
+        "profile_version": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "seat1": {
+          "$ref": "#/$defs/seat1"
+        },
+        "seat2": {
+          "$ref": "#/$defs/seat2"
+        },
+        "seat3": {
+          "$ref": "#/$defs/seat3"
+        },
+        "seat4": {
+          "$ref": "#/$defs/seat4"
+        },
+        "seat5": {
+          "$ref": "#/$defs/seat5"
+        },
+        "seat6": {
+          "$ref": "#/$defs/seat6"
+        },
+        "seat7": {
+          "$ref": "#/$defs/seat7"
+        },
+        "seat8": {
+          "$ref": "#/$defs/seat8Body"
+        },
+        "one_voice": {
+          "$ref": "#/$defs/oneVoiceContract"
+        },
+        "deliberation": {
+          "$ref": "#/$defs/deliberationContract"
+        },
+        "front_post_resolution": {
+          "const": "AFTER_CONSTRAINTS_AND_UNRESOLVED_BLOCKERS_ARE_SETTLED_IDENTIFY_BEST_ALLOWED_NEXT_ACTION",
+          "x-wit-boundary": "Selective intake of useful Forward Driver/PATHFINDER semantics into Front post-resolution behavior; no Forward Driver Seat exists and no blocker, policy, safety, or Human boundary may be overridden."
+        }
+      },
+      "x-wit-topology": {
+        "semantic_invariant": "ONE_NAMED_FRONT_CHARACTER_PLUS_SEVEN_INTERNAL_ASSISTANT_SEATS_EQUALS_ONE_PLUS_SEVEN",
+        "seat1_class": "NAMED_FRONT_CHARACTER",
+        "seat2_through_seat7_class": "INTERNAL_AI_ASSISTANT",
+        "seat8_class": "SINGLE_LOGICAL_HUMAN_ASSISTANT"
+      },
+      "x-wit-delta-dispositions": {
+        "assistant_archetype": "REMOVE",
+        "seat_intensity": "REMOVE",
+        "front_control": "REMOVE",
+        "professional_reasoning": "REMOVE_FROM_ACTIVE_SCHEMA_RESEARCH_OPTIONAL_NOT_ACTIVE",
+        "disposition_basis": "Independent, predictable, reproducible behavioral value was not verified for removed fields; Professional Reasoning remains optional and authority-neutral pending targeted behavioral validation."
+      }
+    },
+    "personalityAxes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "a_motif",
+        "b_companion_domain",
+        "c_intelligence_vector",
+        "d_socratic_angle",
+        "e_vocabulary_tone",
+        "f_acknowledgement",
+        "g_pulse",
+        "h_tactile",
+        "i_thinking_pause_ms",
+        "j_theme_color",
+        "k_whitespace_percent",
+        "l_weathering_presentation",
+        "m_error_narrative",
+        "n_crystallization",
+        "o_closing"
+      ],
+      "properties": {
+        "a_motif": {
+          "enum": [
+            "STUDY_LAMP",
+            "CLOCK_GEARS",
+            "MIDNIGHT_SEA",
+            "QUIET_GARDENER"
+          ],
+          "x-wit-axis-class": "EXPRESSION"
+        },
+        "b_companion_domain": {
+          "enum": [
+            "THOUGHT_SPARRING",
+            "DATA_DECOMPOSITION",
+            "MENTAL_TUNING",
+            "TASK_COMPANION"
+          ],
+          "x-wit-axis-class": "HYBRID"
+        },
+        "c_intelligence_vector": {
+          "enum": [
+            "FACT_CENTERED",
+            "EMOTIONAL_RESOLUTION",
+            "STRUCTURAL_LOGIC",
+            "PHILOSOPHICAL_ABSTRACTION"
+          ],
+          "x-wit-axis-class": "BEHAVIORAL",
+          "x-wit-boundary": "Tendency only; not verified competence."
+        },
+        "d_socratic_angle": {
+          "enum": [
+            "PSYCHOANALYTIC",
+            "FACT_DECONSTRUCTION",
+            "PARADOX",
+            "PERSPECTIVE_SHIFT"
+          ],
+          "x-wit-axis-class": "BEHAVIORAL"
+        },
+        "e_vocabulary_tone": {
+          "enum": [
+            "ACADEMIC_HARD",
+            "WARM_EMBRACING",
+            "SHARP_MINIMAL",
+            "POETIC_METAPHORIC"
+          ],
+          "x-wit-axis-class": "EXPRESSION"
+        },
+        "f_acknowledgement": {
+          "enum": [
+            "SILENT_ACCEPTANCE",
+            "FACT_CONFIRMATION",
+            "CURIOSITY",
+            "MIRRORING"
+          ],
+          "x-wit-axis-class": "HYBRID"
+        },
+        "g_pulse": {
+          "enum": [
+            "DEEP_BREATH",
+            "METRONOME",
+            "WAVE",
+            "CAMPFIRE"
+          ],
+          "x-wit-axis-class": "EXPRESSION",
+          "x-wit-boundary": "Character rhythm, not a physical timing command."
+        },
+        "h_tactile": {
+          "enum": [
+            "HOURGLASS_SAND",
+            "WASHI",
+            "COLD_GLASS",
+            "HEAVY_WOOD"
+          ],
+          "x-wit-axis-class": "EXPRESSION",
+          "x-wit-boundary": "Semantic tactile expression, not a physical haptic resource."
+        },
+        "i_thinking_pause_ms": {
+          "enum": [
+            1500,
+            2000,
+            2500
+          ],
+          "x-wit-axis-class": "HYBRID",
+          "x-wit-boundary": "Lossless vNext pacing hint; not a literal sleep or wait instruction."
+        },
+        "j_theme_color": {
+          "enum": [
+            "INDIGO_IRON_NAVY",
+            "AMBER_KAKISHIBU",
+            "EVERGREEN_MIRUCHA",
+            "DULL_SILVER_GRAY"
+          ],
+          "x-wit-axis-class": "HYBRID",
+          "x-wit-boundary": "Semantic visual tendency; physical color resources are Presentation-owned."
+        },
+        "k_whitespace_percent": {
+          "enum": [
+            40,
+            50,
+            60
+          ],
+          "x-wit-axis-class": "PRESENTATION",
+          "x-wit-boundary": "Character-owned preference; CSS and physical layout are Presentation-owned."
+        },
+        "l_weathering_presentation": {
+          "enum": [
+            "BLURRED_OUTLINE",
+            "REDUCED_CONTRAST",
+            "FADED_FONT",
+            "INK_BLEED"
+          ],
+          "x-wit-axis-class": "HYBRID",
+          "x-wit-boundary": "Never interpreted as memory decay or retention policy."
+        },
+        "m_error_narrative": {
+          "enum": [
+            "ARTISAN",
+            "SCHOLAR",
+            "PHILOSOPHER"
+          ],
+          "x-wit-axis-class": "HYBRID"
+        },
+        "n_crystallization": {
+          "enum": [
+            "GROWTH_AND_CONFLICT",
+            "FACTS_AND_TRUTH",
+            "INVARIANT_ESSENCE"
+          ],
+          "x-wit-axis-class": "HYBRID"
+        },
+        "o_closing": {
+          "enum": [
+            "FADE_OUT",
+            "BOOK_CLOSE",
+            "HOURGLASS",
+            "CANDLE"
+          ],
+          "x-wit-axis-class": "HYBRID",
+          "x-wit-boundary": "Semantic closing expression; physical animation is Presentation-owned."
+        }
+      },
+      "x-wit-normative-owner": "SAKU_CHARACTER",
+      "x-wit-renderer-boundary": "Physical assets, renderer tokens, literal waits, CSS/layout, audio and animation resources are outside Character Canonical."
+    },
+    "conformanceExpectations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "must_preserve_refs",
+        "prohibited_drift_refs",
+        "continuity_refs"
+      ],
+      "properties": {
+        "must_preserve_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/stableRequirementRef"
+          }
+        },
+        "prohibited_drift_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/stableRequirementRef"
+          }
+        },
+        "continuity_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/stableRequirementRef"
+          }
+        }
+      },
+      "x-wit-boundary": "References normative Character requirements without duplicating their prose. Evaluation results, scores, runtime history, approval, policy and Operational Integrity results are outside Character Canonical."
+    },
+    "seat8Body": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "function",
+        "expected_human_contribution",
+        "human_required_condition_refs",
+        "handoff_question_requirements",
+        "handoff_material_requirements"
+      ],
+      "properties": {
+        "function": {
+          "const": "LOGICAL_HUMAN_ASSISTANT"
+        },
+        "expected_human_contribution": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        },
+        "human_required_condition_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/stableRequirementRef"
+          },
+          "x-wit-reference-target": "character_core.human_handoff_conditions[].id"
+        },
+        "handoff_question_requirements": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        },
+        "handoff_material_requirements": {
+          "$ref": "#/$defs/nonEmptyStringArray"
+        }
+      },
+      "x-wit-boundary": "Single Logical Human Seat only. Real identity, credential instance, mandate, endpoint, routing, assignment, approval state, and runtime Human Binding are prohibited and remain external."
+    },
+    "assistantState": {
+      "enum": [
+        "SUPPORT",
+        "ACCEPT",
+        "ABSTAIN",
+        "CONCERN",
+        "BLOCK"
+      ],
+      "x-wit-boundary": "BLOCK is a Character-internal synthesis blocker, not Policy DENY, Legal Authority, or Human Approval."
+    },
+    "deliberationFinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding",
+        "evidence_refs",
+        "uncertainty",
+        "state"
+      ],
+      "properties": {
+        "finding": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "uncertainty": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "state": {
+          "$ref": "#/$defs/assistantState"
+        },
+        "blocking_reason": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "BLOCK"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "required": [
+              "blocking_reason"
+            ]
+          }
+        }
+      ],
+      "x-wit-boundary": "Structured result only. Full internal chain-of-thought is neither required nor a Canonical or Audit payload."
+    },
+    "oneVoiceContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "external_speaker",
+        "internal_assistant_direct_external_speech",
+        "internal_deliberation_exposure",
+        "ai_use_and_operator_misrepresentation"
+      ],
+      "properties": {
+        "external_speaker": {
+          "const": "FRONT_CHARACTER_ONLY"
+        },
+        "internal_assistant_direct_external_speech": {
+          "const": "PROHIBITED"
+        },
+        "internal_deliberation_exposure": {
+          "const": "PROHIBITED"
+        },
+        "ai_use_and_operator_misrepresentation": {
+          "const": "PROHIBITED"
+        }
+      },
+      "x-wit-boundary": "One Voice hides internal composition/discussion/vote/state from direct external response, but never authorizes misrepresentation of AI use or the operating entity."
+    },
+    "deliberationContract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_rounds",
+        "round_sequence",
+        "assistant_state_vocabulary",
+        "stop_can_be_raised_independently",
+        "progress_requires_resolution",
+        "unresolved_is_valid_result",
+        "human_required_cannot_be_filled_by_ai",
+        "unresolved_outcome",
+        "retained_record_schema_ref",
+        "full_chain_of_thought_persistence_required"
+      ],
+      "properties": {
+        "max_rounds": {
+          "const": 3
+        },
+        "round_sequence": {
+          "const": [
+            "INDEPENDENT_ASSISTANT_ANALYSIS",
+            "COMPARE_EVIDENCE_DISAGREEMENT_RISK_ALTERNATIVES",
+            "FINAL_ASSISTANT_STATE"
+          ]
+        },
+        "assistant_state_vocabulary": {
+          "const": [
+            "SUPPORT",
+            "ACCEPT",
+            "ABSTAIN",
+            "CONCERN",
+            "BLOCK"
+          ]
+        },
+        "stop_can_be_raised_independently": {
+          "const": true
+        },
+        "progress_requires_resolution": {
+          "const": true
+        },
+        "unresolved_is_valid_result": {
+          "const": true
+        },
+        "human_required_cannot_be_filled_by_ai": {
+          "const": true
+        },
+        "unresolved_outcome": {
+          "const": "UNRESOLVED"
+        },
+        "retained_record_schema_ref": {
+          "const": "#/$defs/deliberationFinding"
+        },
+        "full_chain_of_thought_persistence_required": {
+          "const": false
+        }
+      }
+    }
+  },
+  "x-wit-semantic-validation": {
+    "requirement_id_unique_within_character_revision": true,
+    "reference_resolution_fail_closed": true,
+    "locator_mismatch_rejected": true,
+    "duplicate_reference_requirement_id_rejected": true,
+    "professional_handoff_refs_target_handoff_ids_only": true,
+    "fixed_one_plus_seven_topology": true,
+    "one_voice_front_character_only": true,
+    "persona_guard_seat7_required": true,
+    "forward_driver_seat_prohibited": true,
+    "assistant_archetype_prohibited": true,
+    "seat_intensity_prohibited": true,
+    "front_control_prohibited": true,
+    "assistant_state_vocabulary_closed": true,
+    "human_required_cannot_be_filled_by_ai": true,
+    "professional_reasoning_prohibited_in_active_schema": true,
+    "input_integrity_hard_invariant_required": true,
+    "internal_consistency_runtime_values_prohibited_in_character": true
+  },
+  "x-wit-persona-guard-closure": {
+    "persona_guard_seat": "SEAT7",
+    "persona_guard_function": "PERSONA_BRAND_GUARD_ASSISTANT",
+    "machine_conformance_also_required": true,
+    "forward_driver_seat": "PROHIBITED",
+    "forward_driver_useful_residual": "FRONT_CHARACTER_POST_RESOLUTION_ONLY",
+    "unrecovered_semantics": "NONE_AT_SCHEMA_CONTRACT_LEVEL",
+    "runtime_output_regression_status": "PASS_30_OF_30_THREE_OPENAI_MODEL_GENERATION_FAMILIES_CRITICAL_MISS_0"
+  },
+  "x-wit-lifecycle": {
+    "status": "FROZEN_CANDIDATE",
+    "canonical": false,
+    "schema_adopted": false,
+    "implementation_authorized": false,
+    "decision_id": "NOT_SPECIFIED"
+  },
+  "x-wit-source-provenance": {
+    "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
+    "adopted_minimum_canonical_revision": "ff901cc38231c80c3abdc3ee18dc5a35b048a888",
+    "recovered_predecessor_path": "artifact:01_saku-unified-character.recovered.candidate.schema.json#sha256=137ffb3cda44ca8a9a89d04e84e425ec46a8cb75e43656eee776e4d0dd7d7670",
+    "recovered_predecessor_sha256": "137ffb3cda44ca8a9a89d04e84e425ec46a8cb75e43656eee776e4d0dd7d7670",
+    "final_delta_closure_directive_sha256": "e3ede3cb32965b5cfd25aaa6429ed7868c8398e3869c644471c7c79ffbe0b51a",
+    "original_crosswalk_sha256": "5bb823f74b8030a1bf1977ba520cfb614b7f3fa4ada3782121b6923fd2423feb",
+    "crosswalk_rows": 109
+  },
+  "x-wit-recovery-status": {
+    "status": "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE",
+    "v1_vnext_delta_recovery_complete": true,
+    "ready_for_unified_schema_candidate_freeze": true,
+    "ready_for_minimal_architecture_review": true,
+    "ready_for_schema_adoption_decision": false,
+    "reason": "CORE_SEMANTIC_DELTA_AUDIT_ZERO; INTERNAL_CONSISTENCY_RUNTIME_ACTIVATION_HELD"
+  },
+  "x-wit-input-integrity": {
+    "placement": "CHARACTER_LEVEL_HARD_INVARIANT",
+    "statement": "REQUIRED_INPUT != AI_GENERATED_SUBSTITUTE",
+    "runtime_evidence": "PASS_54_OF_54",
+    "silent_fabricated_input": 0,
+    "silent_source_substitution": 0,
+    "silent_revision_substitution": 0,
+    "automatic_candidate_promotion": 0,
+    "inference_as_classified_output": "ALLOWED",
+    "inference_masquerading_as_input": "PROHIBITED",
+    "generated_candidate": "OUTPUT_UNTIL_EXPLICIT_REVIEW_ACCEPTANCE_AND_PROMOTION"
+  },
+  "x-wit-internal-consistency-control": {
+    "schema_status": "KEEP",
+    "placement": "DEFINITION_TO_RUNTIME_CONTROL",
+    "execution": "CONDITIONAL_TARGETED_CHALLENGE",
+    "runtime_implementation": "NOT_YET_CONFORMING",
+    "runtime_activation": "HOLD",
+    "blocks_core_freeze": false,
+    "product_activation_before_runtime_conformance_pass": "PROHIBITED",
+    "character_instance_runtime_values": "PROHIBITED",
+    "contract_patch_v2": {
+      "path": "artifact:01_internal-consistency-runtime-contract.patch-v2.candidate.json#sha256=384110be5e7ce66f1a2fb267ad6da79a14f6b2873f61344e528bc4b71b53dc74",
+      "sha256": "384110be5e7ce66f1a2fb267ad6da79a14f6b2873f61344e528bc4b71b53dc74"
+    },
+    "runtime_fail_evidence_manifest_sha256": "78f22e08d8e9195d77e1426b3e067c797275bf3c8d1f8824d78608ceb8251d66"
+  },
+  "x-wit-fifteen-axes": {
+    "disposition": "KEEP",
+    "schema_layer_contract": "15_OF_15_COMPLETE",
+    "runtime_closure": "PASS",
+    "builder_repository": "wi-tcom/-SAKU-builder",
+    "builder_branch": "claude/saku-builder-final-acceptance-closure",
+    "builder_revision": "ed1ec0df0a5cb667afff65459497016ee0a796bf",
+    "schema_coverage": "15/15",
+    "builder_preservation": "15/15",
+    "renderer_reachability": "15/15",
+    "silent_drop_count": 0,
+    "unmapped_axis_count": 0,
+    "wrong_layer_mapping_count": 0
+  },
+  "x-wit-research-and-reserved-dispositions": {
+    "professional_reasoning": "RESEARCH_OPTIONAL_NOT_ACTIVE",
+    "ten_d": "RESEARCH_ONLY_NOT_ACTIVE_FIELD",
+    "opaque_extension": "RESERVED_RESEARCH_EXTENSION_HISTORICAL_CANDIDATE_NOT_ACTIVE",
+    "legacy_extension_points": "HISTORICAL_NOT_ACTIVE",
+    "presence_is_permission_to_infer_or_execute": false
+  },
+  "x-wit-optional-extension-contract": {
+    "status": "ADOPTED_ON_64ALPHA_FOUNDATION_BRANCH",
+    "contract_id": "saku.character-extension",
+    "contract_version": "1.0.0",
+    "root_property": "extensions",
+    "container": "NAMESPACED_OBJECT_MAP",
+    "unknown_noncritical": "PRESERVE_READ_ONLY_NO_RUNTIME_EFFECT",
+    "unknown_critical_or_criticality": "FAIL_CLOSED",
+    "character_revision_and_full_digest_effect": true
+  },
+  "x-wit-runtime-boundaries": {
+    "SAKU": "PORTABLE_CHARACTER_DEFINITION",
+    "AMU": "KNOWLEDGE_MEMORY_WORK_RUNTIME_BINDING_AND_RUNTIME_CONTROLS",
+    "MACHI": "MULTI_CHARACTER_COLLABORATION_SEMANTICS",
+    "ERABAZU": "TECHNICAL_ADAPTER_DETERMINISTIC_VALIDATION_AND_TRANSPORT_SUPPORT",
+    "human": {
+      "SAKU": "LOGICAL_HUMAN_BOUNDARY_AND_HANDOFF_CONDITION",
+      "AMU": "ACTUAL_HUMAN_BINDING_ROUTING_ENDPOINT_AND_RUNTIME_STATE",
+      "external_authority": "CREDENTIAL_MANDATE_APPROVAL_AND_AUTHORITY_ISSUANCE"
+    }
+  },
+  "x-wit-technical-contracts": {
+    "catalog_manifest": "12_saku-catalog-manifest.frozen-source.schema.json",
+    "binding_manifest": "10_saku-binding-manifest.frozen-source.schema.json",
+    "conversion_receipt": "11_saku-legacy-conversion-receipt.frozen-source.schema.json",
+    "digest_profile": "09_saku-digest-profile.frozen-source.schema.json",
+    "digest_canonicalization": "RFC8785_JCS_PROFILE",
+    "unknown_absent_null_default": "DISTINCT",
+    "derived_evaluation": "OUTSIDE_CHARACTER_CANONICAL",
+    "64alpha_foundation": {
+      "extension_contract": "saku-64alpha-foundation/optional-character-extension.v1.schema.json",
+      "package_manifest": "saku-64alpha-foundation/package-manifest.v1.schema.json",
+      "catalog_release": "saku-64alpha-foundation/catalog-release.v1.schema.json",
+      "normative_digest_profile": "saku-64alpha-foundation/digest-profile.v1.schema.json",
+      "overlay_profile": "saku-64alpha-foundation/overlay-profile.v1.json",
+      "eligible_semantic_registry": "saku-64alpha-foundation/eligible-semantic-registry.v1.json"
+    }
+  },
+  "x-wit-final-delta-audit": {
+    "not_mapped_remaining_count": 0,
+    "unresolved_core_semantic_delta_count": 0,
+    "legacy_behavior_loss_count": 0,
+    "unproven_vnext_behavior_retained_count": 0,
+    "wrong_layer_character_semantic_count": 0,
+    "amu_runtime_leak_count": 0,
+    "real_human_binding_leak_count": 0
+  }
+}

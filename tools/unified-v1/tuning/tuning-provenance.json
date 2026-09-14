@@ -1,0 +1,41 @@
+{
+  "provenance_id": "saku.cognitive-tuning-20.provenance",
+  "note": "Versioned Tuning Knowledge carried into the Builder. The authoritative packet is read-only and lives outside this repository. The carried copy preserves the packet semantics except for the explicitly recorded D-13 adopted-schema identity rebind and D-B5 name-only rebind; it is a derivation and never the authority.",
+  "authoritative_source_role": "SAKU_COGNITIVE_TUNING_20_INTEGRATION_REVIEW_PACKET_2026_09_05",
+  "manifest": {
+    "file": "07_artifact-manifest.json",
+    "sha256": "61669bbd8be27771b0395ff9989c43c8c4a73a56c233f8cce4ade1c30a39c050"
+  },
+  "knowledge": {
+    "file": "01_tuning-knowledge-20.candidate.json",
+    "source_sha256": "af440cc11195384951feafb5e7e6e602ca8f6f9bb8825cb29104c1a5457bfac7",
+    "carried_sha256": "a85ea1309690046fe1266ec4d44182702accff3ce16d90ca77970d372c347571",
+    "transformation": "D13_ADOPTED_SCHEMA_IDENTITY_AND_D_B5_NAME_REBIND"
+  },
+  "matrix": {
+    "file": "02_TUNING_MATRIX_20.tsv",
+    "sha256": "1d03e520a901742b068bb2efa04124a117571b0e3621ce2d3c8ed43b59a99b1d"
+  },
+  "occupation_examples": {
+    "file": "03_OCCUPATION_RECOMMENDATION_EXAMPLES.tsv",
+    "sha256": "4c13c51d1e8638f29c85208d81fcc54899bf36523d281d9c8b3da8527c4fd8ec"
+  },
+  "probe_map": {
+    "file": "04_CONFORMANCE_PROBE_MAP.tsv",
+    "sha256": "de9ae62e9991481fe2676f4ab3db603083f9c8ca8bf592bab2bc2df9ef299784"
+  },
+  "validation_report": {
+    "file": "06_validation-report.json",
+    "sha256": "7c00ae9b134f2e7261b5c133e8fdd20e63fd35223f7dd173f4e70b2b4b0b46f2"
+  },
+  "adopted_canonical_schema": {
+    "repository": "wi-tcom/-SAKU-1-7-Character-System",
+    "main_revision": "c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c",
+    "path": "schema/adopted/unified-v1/saku-unified-character.v1.schema.json",
+    "sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817",
+    "decision_id": "D-13",
+    "adoption_record": "governance/canonical-adoptions/SAKU_UNIFIED_SCHEMA_V1.json",
+    "adoption_record_sha256": "15e09ae00dcae3cabf2396465f9fef7b37c09b94ff98cfaac034d28e3363a373",
+    "field_classification_metadata_sha256": "ae505ad0b6dc70c16ea274a13beb19cc55484d4ba96224c74d6bd7ac9e1378fb"
+  }
+}
