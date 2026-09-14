@@ -1,6 +1,8 @@
-# SAKU Unified Schema V1 — Public Candidate Set
+# SAKU Unified Schema V1 — Public Set
 
-> `PUBLICATION_CANDIDATE / NOT_RELEASED / NOT_PUBLISHED`
+> Japanese reference translation: [README.ja.md](./README.ja.md). This English README remains canonical.
+
+> `PUBLIC / v0.1.0-beta.1 (Pre-release) / wi-tcom/KOKOROSAKU`
 
 This directory is the bounded public candidate set for the sole Active SAKU Character Schema.
 
@@ -9,7 +11,7 @@ This directory is the bounded public candidate set for the sole Active SAKU Char
 ```text
 ACTIVE_SCHEMA = SAKU_UNIFIED_SCHEMA_V1
 CANONICAL_SOURCE = wi-tcom/-SAKU-1-7-Character-System
-CANONICAL_CANDIDATE_SOURCE_REVISION = PR21_HEAD_AFTER_P1_COMMITS
+CANONICAL_SOURCE_REVISION = 9ec8ed5f15465c5b3cc59c003f22780310f14ecb
 SCHEMA_PATH = schemas/saku-unified-character.v1.schema.json
 PUBLIC_CANDIDATE_PATH = schema/adopted/unified-v1/saku-unified-character.v1.schema.json
 SCHEMA_SHA256 = 48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817
