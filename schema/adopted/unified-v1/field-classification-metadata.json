@@ -1,0 +1,112 @@
+{
+  "metadata_id": "saku.unified-schema-v1.field-classification",
+  "metadata_version": "1.1.0",
+  "active_schema": {
+    "identity": "SAKU_UNIFIED_SCHEMA_V1",
+    "path": "schemas/saku-unified-character.v1.schema.json",
+    "sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817"
+  },
+  "classification_values": [
+    "CHARACTER_CANONICAL",
+    "DEFINITION_TO_RUNTIME_BINDING",
+    "DEFINITION_TO_RUNTIME_CONTROL",
+    "RESERVED_RESEARCH_EXTENSION"
+  ],
+  "effect_dimensions": [
+    "DEFINED",
+    "PROMPT_EFFECTIVE",
+    "RUNTIME_ENFORCED"
+  ],
+  "family_contracts": {
+    "CHARACTER_CANONICAL": {
+      "DEFINED": true,
+      "PROMPT_EFFECTIVE": true,
+      "RUNTIME_ENFORCED": true,
+      "runtime_inheritance": "REQUIRED_FOR_CONFORMING_RUNTIME",
+      "active_character_value": "ALLOWED"
+    },
+    "DEFINITION_TO_RUNTIME_BINDING": {
+      "DEFINED": true,
+      "PROMPT_EFFECTIVE": false,
+      "RUNTIME_ENFORCED": false,
+      "semantic_definition_owner": "SAKU",
+      "actual_binding_owner": "AMU",
+      "active_character_runtime_value": "NONE"
+    },
+    "DEFINITION_TO_RUNTIME_CONTROL": {
+      "DEFINED": true,
+      "PROMPT_EFFECTIVE": false,
+      "RUNTIME_ENFORCED": false,
+      "semantic_contract_owner": "SAKU",
+      "runtime_value_owner": "AMU",
+      "saku_runtime_value": "NONE"
+    },
+    "RESERVED_RESEARCH_EXTENSION": {
+      "DEFINED": true,
+      "PROMPT_EFFECTIVE": false,
+      "RUNTIME_ENFORCED": false,
+      "active_value": "NONE",
+      "runtime_effect": "NONE",
+      "inference_or_execution_when_unbound": "PROHIBITED"
+    }
+  },
+  "assignments": {
+    "CHARACTER_CANONICAL": {
+      "active_document_paths": [
+        "schema",
+        "identity",
+        "purpose",
+        "character_core",
+        "expression_semantics",
+        "assistant_composition",
+        "personality_axes",
+        "conformance_expectations",
+        "extensions"
+      ]
+    },
+    "DEFINITION_TO_RUNTIME_BINDING": {
+      "semantic_definitions": [
+        "character_core.human_handoff_conditions",
+        "assistant_composition.seat8.logical_human_boundary",
+        "binding_manifest_contract"
+      ],
+      "actual_values_excluded_from_character": [
+        "real_human_identity",
+        "credential",
+        "mandate",
+        "endpoint",
+        "routing",
+        "active_assignment",
+        "approval_state",
+        "human_binding_runtime"
+      ]
+    },
+    "DEFINITION_TO_RUNTIME_CONTROL": {
+      "semantic_definitions": [
+        "internal_consistency_control"
+      ],
+      "runtime_activation": "HOLD",
+      "runtime_status": "HOLD_NOT_CONFORMING",
+      "product_activation_before_conformance_pass": "PROHIBITED"
+    },
+    "RESERVED_RESEARCH_EXTENSION": {
+      "inactive_concepts": [
+        "professional_reasoning",
+        "ten_d",
+        "opaque_extension",
+        "legacy_extensionPoints"
+      ]
+    }
+  },
+  "prohibited_as_active_character_values": [
+    "AMU Parameter",
+    "Reserved"
+  ],
+  "invariants": [
+    "CHARACTER_CANONICAL != DEFINITION_TO_RUNTIME_BINDING",
+    "CHARACTER_CANONICAL != DEFINITION_TO_RUNTIME_CONTROL",
+    "CHARACTER_CANONICAL != RESERVED_RESEARCH_EXTENSION",
+    "SAKU_SEMANTIC_DEFINITION != AMU_RUNTIME_VALUE",
+    "PRESENCE != PERMISSION_TO_INFER_OR_EXECUTE"
+  ]
+}

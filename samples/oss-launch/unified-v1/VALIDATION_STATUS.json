@@ -1,0 +1,40 @@
+{
+  "format": "saku.unified-v1.sample-validation.v1",
+  "status": "PASS",
+  "validator": "scripts/verify_oss_unified_v1_publication_set.py",
+  "validated_date": "2026-09-13",
+  "schema": {
+    "identity": "SAKU_UNIFIED_SCHEMA_V1",
+    "path": "schema/adopted/unified-v1/saku-unified-character.v1.schema.json",
+    "sha256": "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817"
+  },
+  "sample_pack": {
+    "path": "samples/oss-launch/unified-v1/sample-characters.json",
+    "sha256": "2f3985bd6b033a744baffa79ec912c914e327b71dcacf6c7668286248df51005",
+    "count": 3,
+    "character_ids": [
+      "sample-general-compass",
+      "sample-erabazu-bridge",
+      "sample-wit-guide"
+    ],
+    "data_license": "CC0-1.0"
+  },
+  "results": {
+    "structural_validation": "3_OF_3_PASS",
+    "input_integrity_cardinality": "3_OF_3_PASS",
+    "reference_resolution": "PASS",
+    "external_schema_resolver_mapping": "PASS",
+    "locator_match": "PASS",
+    "seat7_function": "PERSONA_BRAND_GUARD_ASSISTANT",
+    "seat7_responsibilities": "7_OF_7_PASS",
+    "forward_driver_active_value_count": 0,
+    "public_path_leak_count": 0,
+    "semantic_diff_count": 0
+  },
+  "boundaries": [
+    "VALIDATION_PASS != CANONICAL_ADOPTION",
+    "VALIDATION_PASS != HUMAN_APPROVAL",
+    "VALIDATION_PASS != RELEASE",
+    "VALIDATION_PASS != PUBLICATION_EXECUTION"
+  ]
+}

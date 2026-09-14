@@ -1,0 +1,520 @@
+/* Additive-only Desktop/Tauri adapters for the Owner Golden Builder UI.
+   Golden presentation remains in the inline style block of saku-builder.html. */
+:root {
+  --serif: "Noto Serif JP", "Yu Mincho", YuMincho, serif;
+  --sans: "Noto Sans JP", "Yu Gothic UI", "Yu Gothic", Meiryo, system-ui, sans-serif;
+}
+
+/* Frozen Unified V1 authoring surface.  The Golden visual language is kept;
+   these rules only support the five-chapter information architecture and its
+   structured Canonical editors. */
+.frozen-chapter .chapter-question{font-size:1rem;font-weight:700;color:#3f3428;margin:.2rem 0 1.4rem;padding:.7rem 1rem;border-left:3px solid #a86f3a;background:#fbf6ed}
+.registry-help{margin:.6rem 0 0;border-top:1px solid rgba(84,65,45,.16);padding-top:.45rem}
+.registry-help summary{cursor:pointer;font-size:.82rem;font-weight:700;color:#765b3f}
+.registry-help h4{font-size:.72rem;letter-spacing:.04em;margin:.75rem 0 .15rem;color:#674b31;text-transform:uppercase}
+.registry-help p,.registry-help li{font-size:.82rem;line-height:1.6;margin:.1rem 0}
+.object-editor,.reference-editors>.object-editor{margin:1.1rem 0;padding:1rem;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.55)}
+.object-editor h3{margin:0 0 .7rem;font-size:1rem}.object-row{display:grid;grid-template-columns:minmax(120px,.65fr) minmax(180px,1.35fr);gap:.65rem;margin:.75rem 0;padding:.75rem;border:1px solid rgba(84,65,45,.18);border-radius:8px}
+.object-row label{display:grid;gap:.28rem;font-size:.78rem;font-weight:700}.object-row .checkbox-label{grid-column:1/-1;display:flex;align-items:center;gap:.5rem}.object-row .danger{justify-self:start}
+.fixed-held{padding:.65rem;background:#f4efe7;border-radius:7px;font-family:ui-monospace,Consolas,monospace;font-size:.78rem}
+.enum-items{display:flex;gap:.4rem;flex-wrap:wrap;margin:.4rem 0}.enum-chip{display:inline-flex;align-items:center;gap:.35rem;padding:.35rem .55rem;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:.8rem}.enum-chip button{border:0;background:transparent;cursor:pointer}
+.fixed-system-info,.tuning-entry,.definition-inspector,.advanced-settings{margin:1.2rem 0;padding:1.25rem;border:1px solid var(--line);border-radius:12px;background:#f9f5ed}
+.fixed-system-info .fixed-badge{display:inline-block;padding:.25rem .55rem;border-radius:999px;background:#553b2b;color:#fff;font-size:.75rem;font-weight:700}.fixed-seat-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem;list-style:none;padding:0}.fixed-seat-list li{padding:.55rem;border:1px solid rgba(84,65,45,.18);background:#fff;border-radius:7px}.fixed-seat-list li span{float:right;font-size:.7rem;color:#6f665e}
+.definition-inspector dl{display:grid;grid-template-columns:max-content 1fr;gap:.45rem 1rem}.definition-inspector dt{font-weight:700}.definition-inspector dd{margin:0;overflow-wrap:anywhere}
+.helper-boundary{padding:.85rem 1rem;background:#fff8e9;border:1px solid #d7b978;border-radius:8px}.helper-boundary p{margin:.35rem 0 0;font-size:.84rem;line-height:1.6}
+.tuning-symptom-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}.tuning-symptom-grid button{text-align:left;padding:.65rem;border:1px solid var(--line);border-radius:7px;background:#fff;cursor:pointer}.tuning-registry-detail{margin-top:.8rem;padding:.8rem;background:#fff;border-radius:7px;min-height:3rem}
+@media(max-width:760px){.object-row,.fixed-seat-list,.tuning-symptom-grid{grid-template-columns:1fr}.axes-grid{grid-template-columns:1fr!important}}
+
+html {
+  color-scheme: light;
+  background: var(--ground);
+}
+
+.desktop-toolbar-additions {
+  position: static;
+  display: flex;
+  flex: 0 1 auto;
+  max-width: none;
+  flex-wrap: nowrap;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
+body > .toolbar {
+  gap: 6px;
+  padding: 10px 20px;
+}
+
+.language-control {
+  display: inline-flex;
+  gap: 3px;
+  align-items: center;
+  color: #4d5049;
+}
+
+.desktop-toolbar-additions .btn-sm {
+  padding: 5px 8px;
+  font-size: 11.5px;
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+}
+
+.language-option {
+  padding-inline: 5px !important;
+  color: #4d5049;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+.language-option[aria-pressed="true"] {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+}
+
+header .charname .ph,
+body > .toolbar > .subtitle {
+  color: #565950;
+}
+
+body > .toolbar > .subtitle {
+  flex: 0 1 auto;
+  font-size: 11.5px;
+}
+
+button.chip {
+  color: var(--ink);
+  font-family: inherit;
+}
+
+button.chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.legacy-link {
+  display: none !important;
+}
+
+#desktopPackageImport:not([hidden]) {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.chapter > h2 {
+  cursor: pointer;
+  user-select: none;
+}
+
+.chapter > h2:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.chapter-sync {
+  display: block;
+  margin: 4px 0 8px auto;
+  padding: 3px 8px;
+  color: #454840;
+  font: 600 11px/1.3 var(--sans);
+  background: transparent;
+  border: 1px solid var(--hair-strong);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.chapter-sync:hover,
+.chapter-sync.is-synced {
+  color: var(--ink);
+  background: var(--surface-2);
+  border-color: var(--accent);
+}
+
+.chapter-sync:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.chapter.is-closed > :not(h2):not(.chapter-sync) {
+  display: none;
+}
+
+.preview-sync-pulse {
+  animation: preview-sync-pulse .7s ease-out;
+}
+
+@keyframes preview-sync-pulse {
+  from { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 85%, white); }
+  to { box-shadow: inset 0 0 0 2px transparent; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-sync-pulse { animation: none; }
+}
+
+.ch-state {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin-left: auto;
+  padding: 3px 7px;
+  color: #454840;
+  font: 600 11px/1.2 var(--sans);
+  white-space: nowrap;
+  background: var(--surface-2);
+  border: 1px solid var(--hair-strong);
+  border-radius: 999px;
+}
+
+.ch-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--faint);
+  border-radius: 50%;
+}
+
+.ch-state.is-done .ch-dot,
+.ch-state.is-na .ch-dot {
+  background: #3e7654;
+}
+
+.ch-state.is-req .ch-dot {
+  background: var(--danger);
+}
+
+.ch-state.is-partial .ch-dot {
+  background: #7c5d18;
+}
+
+.list .row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.field-error {
+  margin: 5px 0 0;
+  color: #7f2f23;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+[aria-invalid="true"] {
+  border-color: var(--danger) !important;
+}
+
+.chapter > .note,
+.hint,
+.empty,
+header .subtitle {
+  color: #62655d;
+}
+
+.export-gate {
+  padding: 9px 16px;
+  color: var(--sumi-faint);
+  font: 12px/1.6 var(--sans);
+  background: #1a1c18;
+  border-bottom: 1px solid #000;
+}
+
+.export-gate label {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.export-gate input {
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+.export-gate.is-warning {
+  color: #f0c2aa;
+  background: #321d19;
+}
+
+input[type="date"] {
+  width: 100%;
+  padding: 9px 11px;
+  color: var(--ink);
+  font: 14px var(--sans);
+  background: var(--surface);
+  border: 1px solid var(--hair-strong);
+  border-radius: 2px;
+}
+
+@media (max-width: 960px) {
+  .desktop-toolbar-additions {
+    position: static;
+    order: -1;
+    width: 100%;
+    flex-wrap: wrap;
+    margin-left: 0;
+  }
+
+  .language-control {
+    width: auto;
+  }
+
+  .toolbar .sp {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Context Help / Save feedback
+   Owner Golden の inline CSS は契約で byte 固定のため、Desktop 追加機能の
+   装いはこの追加層に置く（docs/saku-builder.md 7.1）。Golden の
+   body / header / .toolbar / .wrap / .form / .preview は再定義しない。
+   --------------------------------------------------------------- */
+.context-help {
+  margin: 0;
+  padding: 22px 24px;
+  overflow: auto;
+  flex: 1;
+  color: var(--sumi-text);
+}
+
+.context-help h3 {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 500;
+  margin: 0 0 16px;
+}
+
+.context-help h4 {
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--sumi-faint);
+  margin: 18px 0 5px;
+}
+
+.context-help p {
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.save-feedback {
+  width: 100%;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--sumi-faint);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.save-feedback[data-kind="success"] {
+  color: #8fb9a2;
+}
+
+.save-feedback[data-kind="error"] {
+  color: #e2a18f;
+}
+
+/* ---------------------------------------------------------------
+   Field help
+   項目別ヘルプの「?」。Owner Golden の inline CSS は契約で byte 固定
+   のため、この装いは追加層に置く（docs/saku-builder.md 7.1）。
+   --------------------------------------------------------------- */
+.field-help {
+  appearance: none;
+  margin-left: 6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border: 1px solid var(--hair-strong, #B4B6AB);
+  border-radius: 999px;
+  background: var(--surface-2, #EBEDE6);
+  color: var(--muted, #5C5E56);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.field-help:hover {
+  border-color: var(--accent, #4A5560);
+  color: var(--accent, #4A5560);
+}
+
+.context-help .fh-meta {
+  font-size: 11.5px;
+  color: var(--sumi-faint, #9DA096);
+  margin: 0 0 4px;
+}
+
+.context-help .fh-key {
+  font-family: var(--mono, ui-monospace, Consolas, monospace);
+  font-size: 11px;
+  color: var(--sumi-faint, #9DA096);
+  margin: 0 0 14px;
+}
+
+.context-help .fh-back {
+  margin-top: 20px;
+}
+
+.context-help .fh-back button {
+  appearance: none;
+  background: transparent;
+  border: 1px solid #4a4d45;
+  border-radius: 2px;
+  color: var(--sumi-text, #E7E8E1);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------
+   File purpose
+   どの出力が「次回読み込むファイル」かを、推測させずに示す。
+   Owner Golden の inline CSS は契約で byte 固定のため追加層に置く。
+   --------------------------------------------------------------- */
+.file-purpose {
+  margin: 0;
+  padding: 8px 20px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--sumi-faint, #9DA096);
+  border-bottom: 1px solid #000;
+}
+
+.file-purpose[data-reimport="true"] {
+  color: #8fb9a2;
+  font-weight: 500;
+}
+
+/* The Desktop hands a Character to this surface. The notice states which one
+   and why the fields are not filled from it; it must be readable, not a badge. */
+.desktop-handoff-notice {
+  margin: 8px 0 0;
+  padding: 8px 11px;
+  border: 1px solid #b9a44c;
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: #fdf8e6;
+  color: #4a3f14;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Trainer produces reviewable candidates, never a pre-applied Character. */
+.trainer-candidate-review {
+  margin: 22px 0 30px;
+  padding: 18px;
+  border: 1px solid #8b927d;
+  border-left: 5px solid #5f7055;
+  border-radius: 8px;
+  background: #f5f7f1;
+}
+.trainer-candidate-review.stale,
+.trainer-candidate-review.rejected { border-left-color: #9a4f3f; background: #fcf5f2; }
+.trainer-candidate-review h2 { margin: 0 0 8px; font-size: 22px; }
+.trainer-candidate-source { overflow-wrap: anywhere; font-size: 12px; color: #54594f; }
+.trainer-candidate-list { display: grid; gap: 12px; margin: 16px 0; }
+.trainer-candidate-card { border: 1px solid #c8cec0; border-radius: 7px; background: #fff; padding: 13px; }
+.trainer-candidate-card h3 { margin: 0 0 10px; font: 600 15px var(--sans); overflow-wrap: anywhere; }
+.trainer-candidate-card dl { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0; }
+.trainer-candidate-card dl > div { border: 1px solid #d8dbd2; border-radius: 5px; padding: 8px; min-width: 0; }
+.trainer-candidate-card dt { color: #666b61; font-size: 11px; }
+.trainer-candidate-card dd { margin: 2px 0 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.trainer-candidate-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.trainer-candidate-result { margin: 0; color: #384431; }
+.trainer-candidate-state { border: 1px solid #c99284; border-radius: 6px; padding: 12px; }
+.trainer-candidate-state p { margin: 5px 0 0; }
+@media (max-width: 620px) {
+  .trainer-candidate-card dl { grid-template-columns: 1fr; }
+  .trainer-candidate-actions { display: grid; }
+}
+
+/* 職種情報の受け取り表示。Character とは別のものとして見せる。 */
+.occupation-handoff {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border: 1px solid #6f7d63;
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: #eef2ea;
+  color: #2a3326;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.occupation-handoff p { margin: 0 0 4px; }
+.occupation-handoff-title { font-weight: 600; }
+.occupation-unmapped { color: #6a5a12; }
+
+/* 02 の先頭。フォームの中に置く。.wrap は2カラムのgridなので、その直下に
+   入れると列を1つ食ってレイアウトが崩れる。 */
+.authoring-top {
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  border: 1px solid #c8cec0;
+  border-radius: 8px;
+  background: #f4f6f0;
+}
+.authoring-top-title { margin: 0 0 6px; font-size: 20px; font-weight: 600; }
+.authoring-top-note { margin: 0 0 10px; font-size: 13px; line-height: 1.7; }
+.authoring-top-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.authoring-messages:empty { display: none; }
+.authoring-messages { margin-top: 12px; display: grid; gap: 8px; }
+/* The hint was coloured for the toolbar surface. On the box it needs to carry
+   its own contrast rather than inherit one tuned for a different ground. */
+.authoring-messages .subtitle { margin: 0; color: #43483e; }
+
+/* 言語とホームは画面右上のヘッダーへ。Owner Golden の <header> は byte-locked
+   なので、そこへは入れず、上に重ねる小さなバーとして置く。 */
+.builder-top-nav {
+  position: fixed;
+  top: 10px;
+  right: 14px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--hair, #c8cec0);
+  border-radius: 8px;
+  background: rgba(242, 243, 238, 0.94);
+}
+.builder-top-nav .language-control { margin: 0; }
+@media (max-width: 760px) {
+  .authoring-top-actions { flex-direction: column; align-items: stretch; }
+  .builder-top-nav { position: static; margin: 10px 14px 0; justify-content: flex-end; background: none; border: 0; }
+}
+
+/* 職種情報の受け取り表示。Character とは別のものとして見せる。 */
+.occupation-handoff {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #6f7d63;
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: #eef2ea;
+  color: #2a3326;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.occupation-handoff p { margin: 0 0 4px; }
+.occupation-handoff-title { font-weight: 600; }
+.occupation-unmapped { color: #6a5a12; }
+
+/* Desktop から渡された Character の受け取り表示。 */
+.desktop-handoff-notice {
+  margin: 0;
+  padding: 8px 11px;
+  border: 1px solid #b9a44c;
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: #fdf8e6;
+  color: #4a3f14;
+  font-size: 13px;
+  line-height: 1.6;
+}

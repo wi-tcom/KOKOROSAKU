@@ -1,0 +1,223 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://wi-t.com/schemas/candidate/saku/usb-closure/2026-09-03/digest-profile.schema.json",
+  "title": "SAKU Digest Profile Candidate",
+  "description": "Non-adopted machine contract for domain-separated SAKU SHA-256 digests over RFC 8785/JCS canonicalized I-JSON.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "digest_profile_schema_id",
+    "digest_profile_schema_version",
+    "profile_id",
+    "profile_version",
+    "algorithm",
+    "canonicalization",
+    "input_contract",
+    "encoding",
+    "value_encoding",
+    "digest_domains",
+    "preimage_contract"
+  ],
+  "properties": {
+    "digest_profile_schema_id": {
+      "const": "saku.digest-profile.candidate"
+    },
+    "digest_profile_schema_version": {
+      "const": "0.1.0-candidate"
+    },
+    "profile_id": {
+      "const": "saku.sha256-rfc8785-ijson.candidate"
+    },
+    "profile_version": {
+      "const": "0.1.0-candidate"
+    },
+    "algorithm": {
+      "const": "SHA-256"
+    },
+    "canonicalization": {
+      "const": "RFC8785_JCS"
+    },
+    "input_contract": {
+      "const": "I_JSON"
+    },
+    "encoding": {
+      "const": "UTF-8"
+    },
+    "value_encoding": {
+      "const": "LOWERCASE_HEX"
+    },
+    "digest_domains": {
+      "type": "array",
+      "const": [
+        "SAKU_CHARACTER_CANONICAL",
+        "SAKU_PRESENTATION_PROFILE",
+        "SAKU_OPERATIONAL_INTEGRITY_PROFILE",
+        "SAKU_CONFORMANCE_EVALUATION",
+        "SAKU_PACKAGE_BINDING_MANIFEST",
+        "SAKU_CATALOG_MANIFEST",
+        "SAKU_LEGACY_SOURCE",
+        "SAKU_CONVERSION_RECEIPT"
+      ]
+    },
+    "preimage_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["member_order_independent", "required_members", "excluded_members"],
+      "properties": {
+        "member_order_independent": {
+          "const": true
+        },
+        "required_members": {
+          "type": "array",
+          "const": [
+            "digest_domain",
+            "digest_profile_id",
+            "digest_profile_version",
+            "schema_id",
+            "schema_version",
+            "target_ref",
+            "target_revision",
+            "normative_payload"
+          ]
+        },
+        "excluded_members": {
+          "type": "array",
+          "const": [
+            "digest_value_itself",
+            "transport_metadata",
+            "signature_metadata",
+            "catalog_metadata_from_character_digest",
+            "presentation_data_from_character_digest",
+            "derived_evaluation_from_character_digest"
+          ]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "digestDomain": {
+      "enum": [
+        "SAKU_CHARACTER_CANONICAL",
+        "SAKU_PRESENTATION_PROFILE",
+        "SAKU_OPERATIONAL_INTEGRITY_PROFILE",
+        "SAKU_CONFORMANCE_EVALUATION",
+        "SAKU_PACKAGE_BINDING_MANIFEST",
+        "SAKU_CATALOG_MANIFEST",
+        "SAKU_LEGACY_SOURCE",
+        "SAKU_CONVERSION_RECEIPT"
+      ]
+    },
+    "digestValue": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "digestRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "domain",
+        "profile_id",
+        "profile_version",
+        "algorithm",
+        "canonicalization",
+        "schema_id",
+        "schema_version",
+        "target_ref",
+        "target_revision",
+        "value"
+      ],
+      "properties": {
+        "domain": {
+          "$ref": "#/$defs/digestDomain"
+        },
+        "profile_id": {
+          "const": "saku.sha256-rfc8785-ijson.candidate"
+        },
+        "profile_version": {
+          "const": "0.1.0-candidate"
+        },
+        "algorithm": {
+          "const": "SHA-256"
+        },
+        "canonicalization": {
+          "const": "RFC8785_JCS"
+        },
+        "value": {
+          "$ref": "#/$defs/digestValue"
+        },
+        "schema_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "schema_version": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "target_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "target_revision": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "digestPreimage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "digest_domain",
+        "digest_profile_id",
+        "digest_profile_version",
+        "schema_id",
+        "schema_version",
+        "target_ref",
+        "target_revision",
+        "normative_payload"
+      ],
+      "properties": {
+        "digest_domain": {
+          "$ref": "#/$defs/digestDomain"
+        },
+        "digest_profile_id": {
+          "const": "saku.sha256-rfc8785-ijson.candidate"
+        },
+        "digest_profile_version": {
+          "const": "0.1.0-candidate"
+        },
+        "schema_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "schema_version": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "target_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "target_revision": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "normative_payload": {
+          "type": "object"
+        }
+      }
+    }
+  },
+  "x-wit-preimage-algorithm": "SHA-256(RFC8785_JCS_UTF8(digestPreimage))",
+  "x-wit-absence-semantics": "Absent optional members are omitted and MUST NOT be materialized as null or a default before canonicalization.",
+  "x-wit-same-value-boundary": "The same SHA-256 value in different digest domains does not establish the same semantic identity.",
+  "x-wit-lifecycle": {
+    "status": "CANDIDATE",
+    "canonical": false,
+    "schema_adopted": false,
+    "implementation_authorized": false,
+    "decision_id": "NOT_SPECIFIED"
+  },
+  "x-wit-source-provenance": {
+    "source_repository": "wi-tcom/-SAKU-1-7-Character-System",
+    "source_baseline_revision": "d4708ee5a8b5f1956e083ac4b7068f848a5bba95",
+    "delta_candidate": "SAKU-UNIFIED-DELTA-CANDIDATE.md",
+    "crosswalk": "V1-VNEXT-COMPLETE-CROSSWALK.tsv"
+  }
+}
