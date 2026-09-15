@@ -17,7 +17,31 @@
       "sample-erabazu-bridge",
       "sample-wit-guide"
     ],
-    "data_license": "CC0-1.0"
+    "data_license": "CC0-1.0",
+    "individual_files": {
+      "import_route": "Builder screen 01 -> 個別インポート (single-character JSON, one file per Character)",
+      "derived_from": "sample-characters.json characters[0..2], byte-for-byte JSON re-serialization (indent 2, non-ASCII preserved)",
+      "files": [
+        {
+          "path": "samples/oss-launch/unified-v1/sample-1.json",
+          "character_id": "sample-general-compass",
+          "sha256": "2db2ffc566a00b1a92a3e256a40241929c27f225c0eea6421283033ffaf76a0a",
+          "bytes": 6823
+        },
+        {
+          "path": "samples/oss-launch/unified-v1/sample-2.json",
+          "character_id": "sample-erabazu-bridge",
+          "sha256": "8167579223647180be93158c37c23e4ae119b54688a59567e5c619246d1129b4",
+          "bytes": 6918
+        },
+        {
+          "path": "samples/oss-launch/unified-v1/sample-3.json",
+          "character_id": "sample-wit-guide",
+          "sha256": "cb05098bca89c185e2ff3341bbaa86011452716b7d7d717368cfad586d03a23f",
+          "bytes": 7053
+        }
+      ]
+    }
   },
   "results": {
     "structural_validation": "3_OF_3_PASS",
@@ -36,5 +60,14 @@
     "VALIDATION_PASS != HUMAN_APPROVAL",
     "VALIDATION_PASS != RELEASE",
     "VALIDATION_PASS != PUBLICATION_EXECUTION"
-  ]
+  ],
+  "owner_publication_decision": {
+    "decision": "D-B3",
+    "decided_on": "2026-09-14",
+    "approved_by": "Owner (nakayama)",
+    "scope": "KOKOROSAKU v0.1.0-beta.1 public sample set: the exact three synthetic Unified V1 sample Characters in this directory",
+    "note": "_meta.publication_authorized=true (generation authority OWNER_2026-09-13_WP2) is confirmed by this decision. _meta.status GENERATED_CANDIDATE_NOT_ADOPTED refers to canonical adoption and remains correct: SAMPLE != CANONICAL.",
+    "recorded_on": "2026-09-15",
+    "recorded_by": "Claude (temporary Active Writer, R3-3(b)/R3-4 only)"
+  }
 }

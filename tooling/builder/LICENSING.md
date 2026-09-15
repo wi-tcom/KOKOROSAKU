@@ -16,10 +16,10 @@ components must not be treated as one license scope.
 
 This section is bound to:
 
-- source commit: `b196cca183b246b97f24c8372da58d717c0bd45f`
-- source tree: `1fbccfbe7890b5e939b0401a71e785bc4574e7fd`
+- source commit: `2200704a8b4a7dfe521cda0e42e15cd202ef48cb`
+- source tree: `f2773c3d7eb300c44b39d141352c81a5629f5d93`
 - public installer SHA-256:
-  `3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b`
+  `4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63`
 - resource profile: `public-oss`
 - distribution boundary: `PUBLIC_OSS_CANDIDATE`
 

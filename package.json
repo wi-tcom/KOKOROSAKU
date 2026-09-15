@@ -22,6 +22,7 @@
     "golden-ui:verify": "node scripts/verify_golden_ui.mjs",
     "builder:workflow:verify": "node scripts/verify_builder_workflow.mjs",
     "beta1:verify": "node scripts/verify_beta1_owner_fixes.mjs",
+    "round3:verify": "node scripts/verify_round3_owner_fixes.mjs",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build --bundles nsis"
   },

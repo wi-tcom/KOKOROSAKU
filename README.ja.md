@@ -6,7 +6,7 @@ KOKOROSAKUは、SAKU Builder／Trainerの公開sourceと評価用packageです�
 
 ## インストールして使う
 
-将来の公式GitHub Releaseから `SAKU Builder_0.1.0-beta.1_x64-setup.exe` を取得します。このβ版は未署名のため、Windows SmartScreenが警告を表示することがあります。実行前にSHA-256 `3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b` と一致することを確認してください。installerはgit treeとsource ZIPには含まれません。
+将来の公式GitHub Releaseから `SAKU Builder_0.1.0-beta.1_x64-setup.exe` を取得します。このβ版は未署名のため、Windows SmartScreenが警告を表示することがあります。実行前にSHA-256 `4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63` と一致することを確認してください。installerはgit treeとsource ZIPには含まれません。
 
 ## インストールせず試す
 

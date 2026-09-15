@@ -4,47 +4,56 @@
   "state": "CANDIDATE_NOT_RELEASED",
   "publication_source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "exact_revision": "2b764b83eb62380fd97cb7de6144893b2f09cc5a",
-    "tree": "0da647e179a67f8df6c13d3bf202925586807d19"
+    "exact_revision": "9b0af0e56cb6cd7459e39f6d6e585cb487566c58",
+    "tree": "d8c7f9d44e058379d7f3d8249da62f262587334a"
   },
   "binary_build_source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "exact_revision": "b196cca183b246b97f24c8372da58d717c0bd45f",
-    "tree": "1fbccfbe7890b5e939b0401a71e785bc4574e7fd"
+    "exact_revision": "2200704a8b4a7dfe521cda0e42e15cd202ef48cb",
+    "tree": "f2773c3d7eb300c44b39d141352c81a5629f5d93"
   },
   "build_envelope": {
     "source_repository": "wi-tcom/-SAKU-builder",
-    "source_revision": "2b764b83eb62380fd97cb7de6144893b2f09cc5a",
+    "source_revision": "9b0af0e56cb6cd7459e39f6d6e585cb487566c58",
     "path": "docs/releases/0.1.0-beta.1/BUILD_ENVELOPE.json",
-    "sha256": "5c8769b995b97c454272aa964f5add636863c103d1137430a6ec633d36a2457d"
+    "sha256": "b982144d3e3c2aac26ef80f89802451643f839674aa12f39fa0661d2a870cb4c"
   },
   "assets": [
     {
       "filename": "SAKU Builder_0.1.0-beta.1_x64-setup.exe",
-      "bytes": 1810637,
-      "sha256": "3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b",
+      "bytes": 1812494,
+      "sha256": "4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63",
       "authenticode": "NotSigned",
       "release_asset": true
     }
   ],
   "embedded_application": {
     "filename": "saku-builder-desktop.exe",
-    "bytes": 3927040,
-    "sha256": "a43c100840dfcea60ef5dbc2a0bf6fefc9c27553be81ec5600d620d2fe7ea311",
+    "bytes": 3928576,
+    "sha256": "0ed118b3ae127307ad46f89f83a1646eb08bfc3db190e9180ee79fef7d57c4f2",
     "authenticode": "NotSigned",
     "release_asset": false,
-    "location": "INSIDE_INSTALLER"
+    "location": "INSIDE_INSTALLER",
+    "post_bundle_release_sha256": "cf9949c737ab83f7b12ba225874c6e12a2896df1738e17b598caf9469fdf75fd"
   },
   "superseded_installer": {
-    "bytes": 1810609,
-    "sha256_prefix": "a1016a56",
+    "bytes": 1810637,
+    "sha256": "3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b",
+    "label": "tauri-exact-1.97.1-beta1-public-oss-b196cca-002",
     "staged": false,
-    "prohibited": true
+    "prohibited": true,
+    "reason": "predates PR #23 (R3-1 AI-platform prompt fix); installer-lifecycle evidence only"
   },
   "installer_in_git_tree": false,
   "installer_in_source_archive": false,
   "tag_created": false,
   "release_created": false,
   "publication_executed": false,
-  "release_asset_manifest_id": "sha256:48763345f50f65746f587cd026812e983167f4ac995afea8c9ec5caa4e9033ea"
+  "canonical_schema_source": {
+    "repository": "wi-tcom/-SAKU-1-7-Character-System",
+    "exact_revision": "0f9a0592287a14ea9dd6aa00ae18da8e8e6d3449",
+    "tree": "907a451b07dff9edcce7cf85c01911a1852a3cea"
+  },
+  "generated_by": "Claude (KOKOROSAKU Active Writer) on Owner instruction 2026-09-15, substituting the 02C generator; final-v2-c",
+  "release_asset_manifest_id": "sha256:df8346cfaf9ad96e14a5562d0308deb376f61ef5f2c929e914942bf76de1b2ec"
 }

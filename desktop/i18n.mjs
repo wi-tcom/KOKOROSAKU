@@ -105,6 +105,7 @@ const LONG_EN = new Map(Object.entries({
   "「01 キャラクターを選択する」からキャラクターを選んでください。":"Choose a Character from “01 Choose a Character”.",
   "向いている仕事":"Suitable work",
   "キャラクタープロンプト":"Character prompt",
+  "最新 revision":"Latest revision",
   "3. 貼り付ける文をコピーする":"3. Copy the text to paste",
   "下の全文をコピーします。冒頭の指示と、キャラクター定義が入っています。":"Copy the whole box below. It contains the opening instruction and the Character definition.",
   "コピーする":"Copy",

@@ -5,8 +5,8 @@
     "version": "0.1.0-beta.1",
     "filename": "SAKU Builder_0.1.0-beta.1_x64-setup.exe",
     "relative_path": "release/bundle/nsis/SAKU Builder_0.1.0-beta.1_x64-setup.exe",
-    "sha256": "3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b",
-    "bytes": 1810637,
+    "sha256": "4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63",
+    "bytes": 1812494,
     "code_signing": "UNSIGNED"
   },
   "application_artifact": {
@@ -14,14 +14,17 @@
     "version": "0.1.0-beta.1",
     "filename": "saku-builder-desktop.exe",
     "relative_path": "release/saku-builder-desktop.exe",
-    "sha256": "a43c100840dfcea60ef5dbc2a0bf6fefc9c27553be81ec5600d620d2fe7ea311",
-    "bytes": 3927040,
+    "sha256": "0ed118b3ae127307ad46f89f83a1646eb08bfc3db190e9180ee79fef7d57c4f2",
+    "embedded_sha256": "0ed118b3ae127307ad46f89f83a1646eb08bfc3db190e9180ee79fef7d57c4f2",
+    "post_bundle_release_sha256": "cf9949c737ab83f7b12ba225874c6e12a2896df1738e17b598caf9469fdf75fd",
+    "bundle_type_stamp_note": "The installer-embedded application and post-bundle release executable differ only at the three-byte Tauri bundle-type stamp (__TAURI_BUNDLE_TYPE_VAR_NSS versus UNK) at offsets 3,701,970-3,701,972. sha256 is the installer-embedded identity (what an installed system carries).",
+    "bytes": 3928576,
     "code_signing": "UNSIGNED"
   },
   "source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "commit": "b196cca183b246b97f24c8372da58d717c0bd45f",
-    "tree": "1fbccfbe7890b5e939b0401a71e785bc4574e7fd"
+    "commit": "2200704a8b4a7dfe521cda0e42e15cd202ef48cb",
+    "tree": "f2773c3d7eb300c44b39d141352c81a5629f5d93"
   },
   "resource_profile": {
     "name": "public-oss",
@@ -32,14 +35,14 @@
   },
   "build_metadata": {
     "file": "build-metadata.json",
-    "sha256": "026794c528d33bfa8f0e1d9a551a0c2fa81b6cde02a25710322108565bfd65b9"
+    "sha256": "c70725fd40e2f5c6c6e409f4b22a81ccee5a7879740565fde2ab4e89de5496b3"
   },
   "bundled_notice_binding": {
     "mode": "SHA_INDEPENDENT_EXTERNAL_RELEASE_ASSET_MANIFEST",
     "files": {
-      "LICENSING.md": "f6d530e8a390b445b55b2afc1eb9217556edf64def9cdeb770437849c7ace1bf",
-      "THIRD_PARTY_NOTICES.md": "2a500a50fa2956896a914940185024ebef91f16e3e375fb54b966f7643b2c66e",
-      "third-party/THIRD_PARTY_LICENSE_MANIFEST.json": "e6ccb600951ca6f8d8ac00b2c08c3639e68b02a3408ac3a22b9255ca6713a8dd"
+      "LICENSING.md": "c0cdda3157f74c8acc611d532f93ed256a0f5e71432396f9aa6539841e24825a",
+      "THIRD_PARTY_NOTICES.md": "2ed1ad46b5f743baffa10f95e47af10405f62baef4267bf8c423e7905f448fc8",
+      "third-party/THIRD_PARTY_LICENSE_MANIFEST.json": "87d3553d570745bf7f3b5153e573b014559b4cfd35a5d59f9519fe55c379432c"
     },
     "embedded_installer_sha256_reference_count": 0
   },
@@ -67,16 +70,16 @@
   },
   "target": {
     "triple": "x86_64-pc-windows-msvc",
-    "cargo_target_label": "tauri-exact-1.97.1-beta1-public-oss-b196cca-002"
+    "cargo_target_label": "tauri-exact-1.97.1-beta1-public-oss-2200704-003"
   },
   "build_revision": {
-    "full": "b196cca183b246b97f24c8372da58d717c0bd45f",
-    "display": "b196cca183b2",
-    "stamped_index_sha256": "d3fa4bb221e9e755664236d671fb20b26191acefd9ba7fcd30c87bd1e426f7f1"
+    "full": "2200704a8b4a7dfe521cda0e42e15cd202ef48cb",
+    "display": "2200704a8b4a",
+    "stamped_index_sha256": "a75de8a8ce211d83ac06919c6f56534c9d60f202d7821a04b1193ef62608dd88"
   },
   "tools": {
-    "node": "24.19.0",
-    "npm": "11.17.0",
+    "node": "24.21.0",
+    "npm": "11.19.0",
     "rustc": "1.97.1 (8bab26f4f 2026-07-14)",
     "cargo": "1.97.1 (c980f4866 2026-06-30)",
     "llvm": "22.1.6",
@@ -85,31 +88,41 @@
     "tauri_build_crate": "2.6.3",
     "nsis": "3.11",
     "visual_studio_build_tools": "18.7.1 (18.7.11911.148)",
-    "msvc": "14.51.36231"
+    "msvc": "14.51.36231",
+    "deviation_note": "Node/npm differ from the -002 record (24.19.0/11.17.0): they only drive the Tauri CLI and resource staging; the executable bytes are produced by the pinned rustc/cargo 1.97.1 toolchain (D-B4: asset SHA binding)."
   },
   "build": {
     "cwd": "<REPOSITORY_ROOT>",
     "environment": {
-      "CARGO_TARGET_DIR": "<REPOSITORY_ROOT>/src-tauri/target/tauri-exact-1.97.1-beta1-public-oss-b196cca-002",
+      "CARGO_TARGET_DIR": "<REPOSITORY_ROOT>/src-tauri/target/tauri-exact-1.97.1-beta1-public-oss-2200704-003",
       "CARGO_ENCODED_RUSTFLAGS": "construct from rust_flags.CARGO_ENCODED_RUSTFLAGS.arguments using U+001F",
       "CARGO_NET_OFFLINE": "true",
       "CARGO_BUILD_JOBS": "1",
       "CARGO_INCREMENTAL": "0",
       "RUSTUP_TOOLCHAIN": "1.97.1"
     },
-    "command": "<NODE_24_19_0>/node.exe node_modules/@tauri-apps/cli/tauri.js build --bundles nsis --config <PUBLIC_BUILD_INPUTS>/tauri.public.override.json -- --locked",
+    "command": "<NODE_24_21_0>/node.exe node_modules/@tauri-apps/cli/tauri.js build --bundles nsis --config <PUBLIC_BUILD_INPUTS>/tauri.public.override.json -- --locked",
     "bundles": [
       "nsis"
     ],
     "offline": true,
     "locked": true,
     "jobs": 1,
-    "source_mutation": 0
+    "source_mutation": 0,
+    "duration": "7m 07s (cargo release profile) / 7m 12s total",
+    "builder": "Claude (temporary Active Writer, Owner assignment 2026-09-15: -003 envelope/notice rebind only)"
   },
   "webview2": {
     "install_mode": "downloadBootstrapper",
     "bootstrapper_url": "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
     "bootstrapper_bundled": false,
     "runtime_bundled": false
+  },
+  "superseded": {
+    "target_label": "tauri-exact-1.97.1-beta1-public-oss-b196cca-002",
+    "installer_sha256": "3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b",
+    "embedded_sha256": "4c235057d7b762f72d2f1d51373ce7474e90fd4fa5ac76e3ce5e01f7a88b7d98",
+    "post_bundle_release_sha256": "a43c100840dfcea60ef5dbc2a0bf6fefc9c27553be81ec5600d620d2fe7ea311",
+    "reason": "R3-1 (AI-platform prompt formatter) fixed in PR #23; -002 remains the artifact verified for the installer lifecycle (M5/Q10) in the saku-verify run; not accepted as the release candidate."
   }
 }
