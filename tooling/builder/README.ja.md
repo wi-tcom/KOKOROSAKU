@@ -9,4 +9,11 @@ repository rootをHTTPで配信し、`/tooling/builder/index.html` を開きま�
 - 候補状態とlicense: `about.html`
 - 手順: [Builderクイックスタート](../../docs/getting-started/builder-quickstart.ja.md)
 
+## 3体のサンプルCharacterを個別に読み込む
+
+3体のサンプルCharacterはbeta.1 installerには同梱されません。source ZIPまたは
+repositoryの `samples/oss-launch/unified-v1/` にあります。Desktopで
+**01 キャラクターを選択する**を開き、**個別インポート**から1体単位のJSONを
+1本ずつ選択してください。これらの個別JSONにはPackageインポートを使用しません。
+
 このdirectoryは `npm run public:tooling` で生成されます。Character Catalog、Occupation Pack、AMU runtime state、MACHI assignment、credential、permission、Human Apply実行は含みません。

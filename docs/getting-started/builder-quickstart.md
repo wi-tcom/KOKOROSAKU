@@ -44,6 +44,13 @@ The page should show the five authoring chapters:
 
 The fixed 1+7 structure is read-only. Runtime configuration, AMU state, MACHI assignment, credentials, permissions, and real Human routing are not Character fields.
 
+### Import the three public samples
+
+The beta.1 installer does not bundle the three sample Characters. In the source
+ZIP or repository, open `samples/oss-launch/unified-v1/`. In the Desktop app,
+open **01 Choose a Character**, select **Individual import**, and choose each
+one-Character JSON file separately. Do not use Package import for these files.
+
 ## 4. Save or export
 
 - `この内容で保存する` / `Save this Character` stores a new Character revision in the browser-side working library.

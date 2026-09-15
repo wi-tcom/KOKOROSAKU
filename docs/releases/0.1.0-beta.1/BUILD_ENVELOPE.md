@@ -9,10 +9,22 @@ The exact public input bytes are included beside it as
 `build-metadata.json`, `resource-profile.json`, and
 `tauri.public.override.json`.
 
+The application has two measured post-bundle identities. The NSIS
+installer-embedded executable is `0ed118b3ae127307ad46f89f83a1646eb08bfc3db190e9180ee79fef7d57c4f2`
+(`embedded_sha256`), while the executable left in `release/` after bundling is
+`cf9949c737ab83f7b12ba225874c6e12a2896df1738e17b598caf9469fdf75fd`
+(`post_bundle_release_sha256`). They differ only at the three-byte Tauri
+bundle-type stamp (`__TAURI_BUNDLE_TYPE_VAR_NSS` versus `UNK`) at offsets
+3,701,970–3,701,972.
+
+Build `-003` (source `2200704a`, installer SHA-256 `4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63`, 1,812,494 bytes) supersedes
+`-002` (installer `3cf5973dc7d795c2…`). Node/npm on the build host were 24.21.0/11.19.0; the
+pinned rustc/cargo 1.97.1 toolchain produced the executable bytes.
+
 ## Reproduction model
 
-1. Check out source commit `b196cca183b246b97f24c8372da58d717c0bd45f`
-   and verify tree `1fbccfbe7890b5e939b0401a71e785bc4574e7fd`.
+1. Check out source commit `2200704a8b4a7dfe521cda0e42e15cd202ef48cb`
+   and verify tree `f2773c3d7eb300c44b39d141352c81a5629f5d93`.
 2. Stage only the source-tree resources selected by the included
    `public-oss` profile. Include only the D-B3-authorized Sample3; do not stage
    the 64 Preview Index, commercial-preview, Owner Review resources, or other

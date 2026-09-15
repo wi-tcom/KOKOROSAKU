@@ -18,6 +18,7 @@ let currentImportResult = null;
 let catalogView = "gallery";
 const compareSelection = new Set();
 let currentRecovery = null;
+let latestRevisionEntryIds = new Set();
 
 function storeBoundCharacter(payloadKey, characterOrPayload) {
   const payload = typeof characterOrPayload === "string" ? characterOrPayload : JSON.stringify(structuredClone(characterOrPayload));
@@ -292,9 +293,14 @@ function createCatalogCard(record) {
   card.dataset.schemaKind = record.schema_kind || "UNKNOWN_CHARACTER";
   open.append(title, role, summary, meta, schema);
   card.append(open, createCompareToggle(record));
-  if (latestBatch && record.batch === latestBatch && !record.deleted) {
-    const badge = document.createElement("span"); badge.className = "catalog-badge"; badge.textContent = "新規追加"; card.append(badge);
+  const badges = document.createElement("span"); badges.className = "catalog-badges";
+  if (record.latest_revision && !record.deleted) {
+    const badge = document.createElement("span"); badge.className = "catalog-badge catalog-latest-badge"; badge.textContent = "最新 revision"; badges.append(badge);
   }
+  if (latestBatch && record.batch === latestBatch && !record.deleted) {
+    const badge = document.createElement("span"); badge.className = "catalog-badge"; badge.textContent = "新規追加"; badges.append(badge);
+  }
+  if (badges.children.length) card.append(badges);
   return card;
 }
 
@@ -495,7 +501,21 @@ function renderLibraryCount() {
 function renderLibrary() {
   libraryEntries = Library.list({ includeDeleted: true });
   latestBatch = Library.latestBatch();
-  viewerRecords = recordsFromLibrary(libraryEntries);
+  // Saving creates another revision instead of overwriting the source. Mark
+  // the newest live entry only when the same character_id has multiple live
+  // rows. This is presentation derived from existing timestamps; the Library
+  // data model and revision values remain unchanged.
+  const revisionGroups = new Map();
+  libraryEntries.forEach((entry, index) => {
+    if (entry.deleted) return;
+    const characterId = String(entry.character?.identity?.character_id || "").trim();
+    if (!characterId) return;
+    if (!revisionGroups.has(characterId)) revisionGroups.set(characterId, []);
+    revisionGroups.get(characterId).push({ entry, index, at: entry.updated_at || entry.added_at || entry.batch || "" });
+  });
+  latestRevisionEntryIds = new Set([...revisionGroups.values()].filter(group => group.length > 1).map(group =>
+    [...group].sort((a, b) => a.at.localeCompare(b.at) || a.index - b.index).at(-1).entry.entry_id));
+  viewerRecords = recordsFromLibrary(libraryEntries).map(record => ({ ...record, latest_revision: latestRevisionEntryIds.has(record.entry_id) }));
   for (const id of [...compareSelection]) if (!viewerRecords.some(record => record.id === id)) compareSelection.delete(id);
   if (!viewerRecords.some(record => record.id === selectedViewerId)) selectedViewerId = viewerRecords[0]?.id || "";
   packageFields(packageSummary(currentImportResult || {}));
@@ -773,13 +793,25 @@ function renderImportHistory() {
     path.dataset.runtimeValue = "";
     const when = document.createElement("span");
     when.className = "import-history-when";
-    when.textContent = entry.at ? entry.at.replace("T", " ").slice(0, 19) : "";
+    when.textContent = formatLocalTimestamp(entry.at);
     when.dataset.runtimeValue = "";
     button.append(kind, path, when);
     item.append(button);
     list.append(item);
   });
   host.append(list);
+}
+
+function formatLocalTimestamp(value) {
+  if (!value) return "";
+  const instant = new Date(value);
+  if (Number.isNaN(instant.getTime())) return String(value);
+  const targetLocale = locale() === "en-US" ? "en-US" : "ja-JP";
+  return new Intl.DateTimeFormat(targetLocale, {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    timeZoneName: "short",
+  }).format(instant);
 }
 
 function showImportHistoryEntry(index) {
@@ -978,7 +1010,11 @@ let platformFormat = "prompt";
 
 function activeCharacterForPlatform() {
   const active = ActiveSaku.getActive();
-  return active && typeof active === "object" ? active : null;
+  // getActive() returns the session envelope. The prompt and JSON/YAML choices
+  // must receive its Character payload, not the envelope itself. Passing the
+  // envelope exposed only envelope.identity to the prompt formatter and left
+  // purpose/core/expression nested under envelope.character.
+  return active?.character && typeof active.character === "object" ? active.character : null;
 }
 
 function platformLaunchText(character, format) {
@@ -1027,27 +1063,41 @@ function characterPromptText(character) {
   const purpose = character?.purpose || {};
   const core = character?.character_core || {};
   const expression = character?.expression_semantics || {};
+  const seat7 = character?.assistant_composition?.seat7 || {};
   const seat8 = character?.assistant_composition?.seat8 || {};
   const lines = [];
   const add = (label, value) => { if (value !== undefined && value !== null && String(value).trim()) lines.push(`${label}: ${value}`); };
   const addList = (label, list) => { if (Array.isArray(list) && list.length) lines.push(`${label}: ${list.join(" / ")}`); };
+  const required = (label, value) => lines.push(`${label}: ${value !== undefined && value !== null && String(value).trim() ? value : "未設定（推測しない）"}`);
+  lines.push("【Identity】");
   add("名前", identity.display_name);
-  add("役割", core.character_role);
-  add("目的", purpose.summary);
-  add("提供価値", purpose.primary_value);
+  add("Character ID", identity.character_id);
+  add("Revision", identity.character_revision);
+  required("役割", core.character_role);
+  lines.push("");
+  lines.push("【Purpose / Values】");
+  required("目的", purpose.summary);
+  required("提供価値", purpose.primary_value);
   addList("対象", purpose.target_users);
   addList("対応しない領域", purpose.non_goals);
-  addList("価値観", core.values);
+  required("価値観", Array.isArray(core.values) && core.values.length ? core.values.join(" / ") : "");
   for (const invariant of core.hard_invariants || []) add("守ること", invariant.statement);
   addList("ゆらいでよい範囲", core.expressive_range?.allowed_variation);
   addList("ゆらいではいけない範囲", core.expressive_range?.prohibited_drift);
+  lines.push("");
+  lines.push("【Voice / Expression】");
   add("一人称", expression.first_person);
   add("口調", expression.address_style);
-  add("声", expression.voice);
+  required("話し方（voice）", expression.voice);
   add("不確実性の表し方", expression.uncertainty_expression);
   add("誤りの正し方", expression.error_correction_rule);
   add("会話の閉じ方", expression.closing_rule);
   addList("好む問い方", expression.preferred_questions);
+  lines.push("");
+  lines.push("【席7・席8の境界】");
+  required("席7の機能", seat7.function);
+  addList("席7の責務", seat7.responsibilities);
+  lines.push("席7はCharacterの人格・価値観・話し方・役割境界の一貫性を確認するAI側の席であり、席8の人間判断を代行しません。");
   for (const condition of core.human_handoff_conditions || []) add("人間へ渡す条件", `${condition.trigger} → ${condition.boundary_statement}`);
   addList("人間に期待する寄与", seat8.expected_human_contribution);
   lines.push("席8は人間です。AIがこの席を埋めることはできません。");
@@ -1347,7 +1397,7 @@ $("viewer-panel").addEventListener("click", event => {
 $("compare-open").addEventListener("click", () => { renderComparison(); $("compare-panel").hidden = false; $("compare-close").focus(); });
 $("compare-close").addEventListener("click", () => { $("compare-panel").hidden = true; $("compare-open").focus(); });
 $("compare-clear").addEventListener("click", () => { compareSelection.clear(); $("compare-panel").hidden = true; renderCatalog(); });
-window.addEventListener("saku-ui-locale-changed", () => { localizePlaceholders(); renderRecovery(); packageFields(packageSummary(currentImportResult || {})); updateFacets(); renderCatalog(); renderLibraryCount(); if (!$("compare-panel").hidden) renderComparison(); });
+window.addEventListener("saku-ui-locale-changed", () => { localizePlaceholders(); renderRecovery(); packageFields(packageSummary(currentImportResult || {})); updateFacets(); renderCatalog(); renderLibraryCount(); renderImportHistory(); if (!$("compare-panel").hidden) renderComparison(); });
 
 const dropZone = $("drop-zone");
 for (const name of ["dragenter", "dragover"]) dropZone.addEventListener(name, event => { event.preventDefault(); dropZone.classList.add("active"); });
@@ -1364,7 +1414,7 @@ if (new URLSearchParams(location.search).get("open") === "select") showViewer();
 // native host reporting a Workspace, which a browser harness cannot provide.
 // Exposing the render entry point lets the states be exercised for real rather
 // than asserted from the source text.
-if (typeof window !== "undefined") window.__saku_home = { renderState, renderActiveSaku, renderHomeGuidance, importCharacterFiles, renderLibrary, loadOccupationFile, handOffCharacterAndOccupation, occupationMapping, parseOccupationCsv };
+if (typeof window !== "undefined") window.__saku_home = { renderState, renderActiveSaku, renderHomeGuidance, importCharacterFiles, renderLibrary, loadOccupationFile, handOffCharacterAndOccupation, occupationMapping, parseOccupationCsv, platformLaunchText, characterPromptText, formatLocalTimestamp };
 
 // Build provenance, shown so the Owner can confirm which Candidate is installed.
 // Technical identity only: not a version, not Canonical, not a Release.

@@ -12,7 +12,7 @@ Download the Release asset `SAKU Builder_0.1.0-beta.1_x64-setup.exe` only from t
 (Get-FileHash -Algorithm SHA256 -LiteralPath '.\SAKU Builder_0.1.0-beta.1_x64-setup.exe').Hash.ToLower()
 ```
 
-Expected SHA-256: `3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b`. The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
+Expected SHA-256: `4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63`. The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
 
 ## Try without installing
 

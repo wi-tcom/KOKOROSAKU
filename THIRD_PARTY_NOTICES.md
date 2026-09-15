@@ -1,7 +1,7 @@
 # Third-Party Notices — SAKU Builder 0.1.0-beta.1 Public Preview
 
 This inventory is bound to the public Windows installer whose SHA-256 is
-`3cf5973dc7d795c28cd6ecb6ef1350022b4e7785c8bf13dbe525a52e132e0c4b`.
+`4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63`.
 It corrects the earlier statement that the desktop artifact had no third-party runtime dependencies.
 
 ## Distribution classifications
@@ -39,7 +39,7 @@ distributed as identified above. WiX is not used by this NSIS-only artifact.
 
 ## Cargo inventory method and result
 
-- Lockfile: `src-tauri/Cargo.lock` at source commit `b196cca183b246b97f24c8372da58d717c0bd45f`.
+- Lockfile: `src-tauri/Cargo.lock` at source commit `2200704a8b4a7dfe521cda0e42e15cd202ef48cb`.
 - Lockfile package entries: 450, including the first-party application package.
 - Active third-party packages for `x86_64-pc-windows-msvc`: 264.
 - Linked third-party packages: 222.
