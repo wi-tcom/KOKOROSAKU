@@ -10,11 +10,26 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
-const APP_VERSION: &str = "0.1.0-beta.1";
+mod character_pack;
+use character_pack::{CharacterPackImport, looks_like_character_pack, parse_character_pack};
+
+const APP_VERSION: &str = "0.1.0-beta.2";
 const CONFIG_FILE: &str = "desktop-host.json";
 const MAX_PACKAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_ARCHIVE_ENTRY_BYTES: usize = 32 * 1024 * 1024;
-const MAX_ARCHIVE_ENTRIES: usize = 16;
+// A Builder package (.witpkg) is two files; a sold SAKU Character Pack is a
+// folder of 20-30 files with one archive per Character.  Each shape has its
+// own entry ceiling and a total uncompressed budget, so a pack cannot be used
+// to expand more than the package intake limit.
+const MAX_WITPKG_ENTRIES: usize = 16;
+const MAX_PACK_ENTRIES: usize = 512;
+const MAX_ARCHIVE_TOTAL_BYTES: usize = 64 * 1024 * 1024;
+
+pub(crate) struct ArchiveShape {
+    pub max_entries: usize,
+    pub max_total_bytes: usize,
+    pub allow_directory_prefix: bool,
+}
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 struct HostConfig {
@@ -67,6 +82,8 @@ struct ImportResult {
     imported_path: Option<String>,
     payload_json: Option<String>,
     manifest: Option<PackageManifest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pack: Option<CharacterPackImport>,
 }
 
 #[derive(Debug, Serialize)]
@@ -457,6 +474,7 @@ fn invalid(reason: impl Into<String>, source_path: Option<String>) -> ImportResu
         imported_path: None,
         payload_json: None,
         manifest: None,
+        pack: None,
     }
 }
 
@@ -570,6 +588,7 @@ fn failure_result(failure: PackageValidationFailure, source_path: Option<String>
         imported_path: None,
         payload_json: None,
         manifest: None,
+        pack: None,
     }
 }
 
@@ -600,6 +619,16 @@ fn invalid_archive(reason: impl Into<String>) -> PackageValidationFailure {
 }
 
 fn archive_entries(bytes: &[u8]) -> Result<HashMap<String, Vec<u8>>, PackageValidationFailure> {
+    archive_entries_with(
+        bytes,
+        &ArchiveShape { max_entries: MAX_WITPKG_ENTRIES, max_total_bytes: MAX_ARCHIVE_TOTAL_BYTES, allow_directory_prefix: false },
+    )
+}
+
+pub(crate) fn archive_entries_with(
+    bytes: &[u8],
+    shape: &ArchiveShape,
+) -> Result<HashMap<String, Vec<u8>>, PackageValidationFailure> {
     const EOCD: u32 = 0x0605_4b50;
     const CENTRAL: u32 = 0x0201_4b50;
     const LOCAL: u32 = 0x0403_4b50;
@@ -634,10 +663,11 @@ fn archive_entries(bytes: &[u8]) -> Result<HashMap<String, Vec<u8>>, PackageVali
         ));
     }
     let entry_count = usize::from(total_entries);
-    if entry_count == 0 || entry_count > MAX_ARCHIVE_ENTRIES {
-        return Err(invalid_archive(
-            "ZIP entry count is outside the supported limit.",
-        ));
+    if entry_count == 0 || entry_count > shape.max_entries {
+        return Err(invalid_archive(format!(
+            "ZIP entry count {entry_count} is outside the supported limit (1..{}).",
+            shape.max_entries
+        )));
     }
     let central_size = usize::try_from(le_u32(bytes, eocd + 12).unwrap_or(u32::MAX))
         .map_err(|_| invalid_archive("ZIP central directory size is invalid."))?;
@@ -652,6 +682,10 @@ fn archive_entries(bytes: &[u8]) -> Result<HashMap<String, Vec<u8>>, PackageVali
 
     let mut cursor = central_offset;
     let mut entries = HashMap::new();
+    let mut total_bytes: usize = 0;
+    // With a directory prefix allowed, every file must sit under the same
+    // single folder (or none at all); deeper paths are refused either way.
+    let mut prefix: Option<String> = None;
     for _ in 0..entry_count {
         if le_u32(bytes, cursor) != Some(CENTRAL) {
             return Err(invalid_archive("ZIP central entry signature is invalid."));
@@ -718,14 +752,47 @@ fn archive_entries(bytes: &[u8]) -> Result<HashMap<String, Vec<u8>>, PackageVali
         let name = std::str::from_utf8(name_bytes)
             .map_err(|_| invalid_archive("ZIP filenames must be UTF-8 or ASCII."))?
             .to_string();
-        if name.contains('/') || name.contains('\\') || name == "." || name == ".." {
-            return Err(invalid_archive(
-                "ZIP package files must be at the archive root.",
-            ));
+        if name.contains('\\') || name == "." || name == ".." || name.split('/').any(|segment| segment == "..") {
+            return Err(invalid_archive("ZIP package files must be at the archive root."));
         }
-        if entries.contains_key(&name) {
+        let mut is_directory_entry = false;
+        let stored_name = if shape.allow_directory_prefix {
+            if name.ends_with('/') && uncompressed_size == 0 {
+                // A folder entry carries no bytes; it is skipped after the
+                // structural checks below.
+                is_directory_entry = true;
+                name.clone()
+            } else if let Some((folder, rest)) = name.split_once('/') {
+                if rest.contains('/') || rest.is_empty() || folder.is_empty() {
+                    return Err(invalid_archive("ZIP package files may sit at most one folder deep."));
+                }
+                match &prefix {
+                    None => prefix = Some(folder.to_string()),
+                    Some(existing) if existing == folder => {}
+                    Some(_) => return Err(invalid_archive("ZIP package files must share one folder.")),
+                }
+                rest.to_string()
+            } else {
+                if prefix.is_some() {
+                    return Err(invalid_archive("ZIP package files must share one folder."));
+                }
+                name.clone()
+            }
+        } else {
+            if name.contains('/') {
+                return Err(invalid_archive(
+                    "ZIP package files must be at the archive root.",
+                ));
+            }
+            name.clone()
+        };
+        if !is_directory_entry && entries.contains_key(&stored_name) {
             return Err(invalid_archive("ZIP contains a duplicate filename."));
         }
+        total_bytes = total_bytes
+            .checked_add(uncompressed_size)
+            .filter(|total| *total <= shape.max_total_bytes)
+            .ok_or_else(|| invalid_archive("ZIP exceeds the total uncompressed size limit."))?;
 
         if le_u32(bytes, local_offset) != Some(LOCAL) {
             return Err(invalid_archive("ZIP local entry signature is invalid."));
@@ -778,7 +845,9 @@ fn archive_entries(bytes: &[u8]) -> Result<HashMap<String, Vec<u8>>, PackageVali
         if crc32(&output) != expected_crc {
             return Err(invalid_archive("ZIP CRC does not match."));
         }
-        entries.insert(name, output);
+        if !is_directory_entry {
+            entries.insert(stored_name, output);
+        }
         cursor = name_end
             .checked_add(extra_length)
             .and_then(|value| value.checked_add(comment_length))
@@ -815,28 +884,71 @@ fn parse_zip_package(bytes: &[u8]) -> Result<PackageEnvelope, PackageValidationF
     })
 }
 
+pub(crate) const ACCEPTED_FORMATS_JA: &str = "受け付ける形式: SAKU Character Pack（character-pack.json を含む ZIP）／Builder パッケージ（.witpkg: wit-package.json と payload.json）／Character JSON。";
+
+fn unrecognized_format(detail: impl Into<String>) -> PackageValidationFailure {
+    package_failure(
+        "INVALID",
+        "PACKAGE_FORMAT_UNRECOGNIZED",
+        format!("{ACCEPTED_FORMATS_JA} このファイルはどれにも当てはまりません（{}）。", detail.into()),
+    )
+}
+
+#[derive(Debug)]
+enum ParsedPackage {
+    Envelope(PackageEnvelope),
+    CharacterPack(CharacterPackImport),
+}
+
+#[cfg(test)]
 fn parse_package_envelope(
     path: &Path,
     bytes: &[u8],
 ) -> Result<PackageEnvelope, PackageValidationFailure> {
+    match parse_package(path, bytes)? {
+        ParsedPackage::Envelope(envelope) => Ok(envelope),
+        ParsedPackage::CharacterPack(_) => Err(invalid_archive(
+            "A Character Pack is imported through the pack path, not as a Builder package.",
+        )),
+    }
+}
+
+fn parse_package(path: &Path, bytes: &[u8]) -> Result<ParsedPackage, PackageValidationFailure> {
     let has_zip_magic = bytes.starts_with(b"PK\x03\x04");
     let zip_extension = path
         .extension()
         .and_then(|extension| extension.to_str())
         .is_some_and(|extension| extension.eq_ignore_ascii_case("zip"));
     if has_zip_magic {
-        return parse_zip_package(bytes);
+        // Read once with the wider pack shape: a two-file Builder package is a
+        // subset of it, and the pack marker decides the path.
+        let entries = archive_entries_with(
+            bytes,
+            &ArchiveShape { max_entries: MAX_PACK_ENTRIES, max_total_bytes: MAX_ARCHIVE_TOTAL_BYTES, allow_directory_prefix: true },
+        )?;
+        if looks_like_character_pack(&entries) {
+            return parse_character_pack(entries).map(ParsedPackage::CharacterPack);
+        }
+        if entries.contains_key("wit-package.json") || entries.contains_key("payload.json") {
+            return parse_zip_package(bytes).map(ParsedPackage::Envelope);
+        }
+        let mut names: Vec<&String> = entries.keys().collect();
+        names.sort();
+        let shown: Vec<&str> = names.iter().take(5).map(|name| name.as_str()).collect();
+        return Err(unrecognized_format(format!(
+            "ZIP に character-pack.json も wit-package.json もありません: {}{}",
+            shown.join(", "),
+            if names.len() > 5 { " …" } else { "" }
+        )));
     }
     if zip_extension {
-        return Err(invalid_archive(
-            "The .zip file does not contain a ZIP local header.",
-        ));
+        return Err(unrecognized_format("拡張子は .zip ですが ZIP のヘッダーがありません"));
     }
-    serde_json::from_slice(bytes).map_err(|error| {
+    serde_json::from_slice(bytes).map(ParsedPackage::Envelope).map_err(|error| {
         package_failure(
             "INVALID",
             "PACKAGE_JSON_INVALID",
-            format!("Package JSON is invalid: {error}"),
+            format!("{ACCEPTED_FORMATS_JA} JSON として読めません: {error}"),
         )
     })
 }
@@ -861,8 +973,9 @@ fn import_package(app: &AppHandle, path: &Path) -> ImportResult {
         Ok(bytes) => bytes,
         Err(error) => return invalid(format!("PACKAGE_READ_FAILED: {error}"), source_path),
     };
-    let envelope = match parse_package_envelope(path, &bytes) {
-        Ok(value) => value,
+    let envelope = match parse_package(path, &bytes) {
+        Ok(ParsedPackage::Envelope(value)) => value,
+        Ok(ParsedPackage::CharacterPack(pack)) => return import_character_pack(app, pack, source_path),
         Err(failure) => return failure_result(failure, source_path),
     };
     let manifest = envelope.wit_package;
@@ -881,6 +994,7 @@ fn import_package(app: &AppHandle, path: &Path) -> ImportResult {
                 imported_path: None,
                 payload_json: None,
                 manifest: Some(manifest),
+                pack: None,
             };
         }
     };
@@ -899,6 +1013,7 @@ fn import_package(app: &AppHandle, path: &Path) -> ImportResult {
                 imported_path: None,
                 payload_json: None,
                 manifest: Some(manifest),
+                pack: None,
             };
         }
     };
@@ -949,14 +1064,117 @@ fn import_package(app: &AppHandle, path: &Path) -> ImportResult {
         imported_path: Some(path_string(&import_dir)),
         payload_json: Some(envelope.payload_json),
         manifest: Some(manifest),
+        pack: None,
+    }
+}
+
+/// Import a verified SAKU Character Pack: the Characters go to the caller as
+/// one `{ characters: [...] }` payload (the same shape a Builder package
+/// carries), the pack files are kept in the workspace for provenance, and the
+/// synthesized manifest lets the durable-store scan pick the import up again.
+fn import_character_pack(app: &AppHandle, pack: CharacterPackImport, source_path: Option<String>) -> ImportResult {
+    let characters: Vec<Value> = match pack
+        .entries
+        .iter()
+        .map(|entry| serde_json::from_str::<Value>(&entry.character_json))
+        .collect::<Result<Vec<Value>, _>>()
+    {
+        Ok(values) => values,
+        Err(error) => return invalid(format!("CHARACTER_PACK_CHARACTER_INVALID: {error}"), source_path),
+    };
+    let payload_json = match serde_json::to_string(&serde_json::json!({ "characters": characters })) {
+        Ok(text) => text,
+        Err(error) => return invalid(format!("CHARACTER_PACK_PAYLOAD_SERIALIZE_FAILED: {error}"), source_path),
+    };
+    let payload_hash = sha256_hex(payload_json.as_bytes());
+    let manifest = PackageManifest {
+        package_type: "kokorosaku-character-pack".to_string(),
+        product: pack.pack_id.clone(),
+        package_version: pack.pack_version.clone(),
+        schema_id: pack.schema_id.clone(),
+        schema_version: pack.schema_version.clone(),
+        minimum_app_version: APP_VERSION.to_string(),
+        content_type: "CHARACTER_PACK".to_string(),
+        distribution_channel: "STORE".to_string(),
+        license_state: "BUNDLED_LICENSE_MD".to_string(),
+        payload_hash: payload_hash.clone(),
+    };
+    let config = match read_config(app) {
+        Ok(config) => config,
+        Err(error) => return invalid(error, source_path),
+    };
+    let workspace = match config.workspace {
+        Some(path) => path,
+        None => {
+            return ImportResult {
+                status: "NOT_CONFIGURED",
+                code: "WORKSPACE_REQUIRED",
+                reason: "Select or create a workspace before importing a package.".to_string(),
+                source_path,
+                imported_path: None,
+                payload_json: None,
+                manifest: Some(manifest),
+                pack: Some(pack),
+            };
+        }
+    };
+    let import_dir = workspace.join("imports").join(format!(
+        "{}-{}-{}",
+        safe_path_segment(&pack.pack_id),
+        safe_path_segment(&pack.pack_version),
+        &payload_hash[..12]
+    ));
+    if let Err(error) = fs::create_dir_all(import_dir.join("characters")) {
+        return invalid(format!("IMPORT_DIRECTORY_CREATE_FAILED: {error}"), source_path);
+    }
+    let mut writes: Vec<(PathBuf, Vec<u8>)> = vec![(import_dir.join("payload.json"), payload_json.clone().into_bytes())];
+    match serde_json::to_vec_pretty(&manifest) {
+        Ok(bytes) => writes.push((import_dir.join("wit-package.json"), bytes)),
+        Err(error) => return invalid(format!("MANIFEST_SERIALIZE_FAILED: {error}"), source_path),
+    }
+    match serde_json::to_vec_pretty(&pack) {
+        Ok(bytes) => writes.push((import_dir.join("pack-import.json"), bytes)),
+        Err(error) => return invalid(format!("PACK_SUMMARY_SERIALIZE_FAILED: {error}"), source_path),
+    }
+    for (name, bytes) in &pack.files {
+        // Names were validated as flat, separator-free archive members.
+        if name.contains('/') || name.contains(char::from(92)) || name == ".." || name == "." {
+            return invalid(format!("CHARACTER_PACK_FILE_NAME_INVALID: {name}"), source_path);
+        }
+        writes.push((import_dir.join(name), bytes.clone()));
+    }
+    for entry in &pack.entries {
+        writes.push((
+            import_dir.join("characters").join(format!("{}.character.json", safe_path_segment(&entry.slug))),
+            entry.character_json.clone().into_bytes(),
+        ));
+    }
+    for (target, bytes) in writes {
+        if let Err(error) = fs::write(&target, bytes) {
+            return invalid(format!("IMPORT_WRITE_FAILED: {}: {error}", path_string(&target)), source_path);
+        }
+    }
+    let count = pack.character_count;
+    ImportResult {
+        status: "IMPORTED",
+        code: "CHARACTER_PACK_IMPORTED",
+        reason: format!(
+            "SAKU Character Pack {} {}: {count} 体の digest 整合（SHA256SUMS・archive・files・catalog release・manifest digest）を確認しました。署名（Ed25519）はこのホストでは未検証です。",
+            pack.pack_id, pack.pack_version
+        ),
+        source_path,
+        imported_path: Some(path_string(&import_dir)),
+        payload_json: Some(payload_json),
+        manifest: Some(manifest),
+        pack: Some(pack),
     }
 }
 
 #[tauri::command]
 fn choose_and_import_package(app: AppHandle) -> Result<ImportResult, String> {
     let selection = rfd::FileDialog::new()
-        .set_title("WIT packageを選択")
-        .add_filter("WIT package", &["zip", "witpkg", "json"])
+        .set_title("SAKU Character Pack / Builder パッケージを選択")
+        .add_filter("SAKU Character Pack / Builder package", &["zip", "witpkg", "json"])
         .pick_file()
         .ok_or_else(|| "PACKAGE_SELECTION_CANCELLED".to_string())?;
     Ok(import_package(&app, &selection))
@@ -1159,7 +1377,7 @@ mod tests {
     use flate2::{Compression, write::DeflateEncoder};
     use std::fs;
     use std::io::Write;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     fn manifest(payload_hash: String) -> PackageManifest {
         PackageManifest {
@@ -1711,5 +1929,258 @@ mod tests {
             "a missing workspace yields nothing, not an error"
         );
         assert!(unreadable.is_empty());
+    }
+
+    // ── SAKU Character Pack intake ─────────────────────────────────────────
+    //
+    // A synthetic pack with every digest computed the way the publisher does
+    // (SHA256SUMS, archive digest, files[].digest, catalog membership, signed
+    // manifest digest over canonical JSON).  Only the Ed25519 signature bytes
+    // are placeholders, which is exactly what the host does not verify.
+    use super::character_pack::{canonical_json, signed_manifest_digest};
+    use super::{ParsedPackage, parse_package};
+    use serde_json::{Value, json};
+
+    fn character_json(slug: &str, name: &str) -> String {
+        json!({
+            "schema": { "schema_id": "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE", "schema_version": "final-delta-recovery-closure-2026-09-04" },
+            "identity": { "character_id": slug, "character_revision": "1.0.0", "display_name": name },
+            "purpose": { "summary": format!("{name} summary") }
+        })
+        .to_string()
+    }
+
+    fn signed(mut manifest: Value, key_id: &str) -> Value {
+        manifest["package"] = json!({ "algorithm": "Ed25519", "publisherKeyId": key_id });
+        let digest = signed_manifest_digest(&manifest).unwrap();
+        manifest["package"]["digest"] = Value::String(digest);
+        manifest["package"]["signature"] = Value::String("c2lnbmF0dXJlLXBsYWNlaG9sZGVy".to_string());
+        manifest
+    }
+
+    struct SyntheticPack {
+        bytes: Vec<u8>,
+        slugs: Vec<&'static str>,
+    }
+
+    fn synthetic_pack(slugs: &[&'static str], prefix: &str, tamper: Option<&str>) -> SyntheticPack {
+        let mut inner_archives: Vec<(String, Vec<u8>, Value, String)> = Vec::new();
+        let mut membership = Vec::new();
+        for slug in slugs {
+            let character = character_json(slug, &format!("名前 {slug}"));
+            let character_digest = sha256_hex(character.as_bytes());
+            let manifest = signed(
+                json!({
+                    "format": "kokorosaku-portable-package", "schemaVersion": "3.0.0", "profile": "saku-unified-v1",
+                    "source": { "provider": "kokorosaku", "characterId": format!("id-{slug}"), "sourceSlug": slug, "sourceVersion": "1.0.0",
+                        "schema": { "schemaId": "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE", "schemaVersion": "final-delta-recovery-closure-2026-09-04" },
+                        "characterDigest": { "domain": "CHARACTER_FULL_SEMANTICS", "profile": "saku.sha256-rfc8785-ijson@1.0.0", "value": character_digest } },
+                    "summary": { "displayName": format!("名前 {slug}"), "seat8": "human" },
+                    "files": [{ "path": "character.json", "size": character.len(), "digest": format!("sha-256:{}", sha256_hex(character.as_bytes())) }]
+                }),
+                "saku-character-publisher-ed25519.v1",
+            );
+            let mut character_bytes = character.clone().into_bytes();
+            if tamper == Some("character") && *slug == slugs[0] {
+                character_bytes = character.replace("summary", "sumary").into_bytes();
+            }
+            let manifest_text = if tamper == Some("manifest") && *slug == slugs[0] {
+                let mut tampered = manifest.clone();
+                tampered["summary"]["displayName"] = Value::String("別名".to_string());
+                tampered.to_string()
+            } else {
+                manifest.to_string()
+            };
+            let mut members: Vec<(&str, Vec<u8>)> = vec![("portable-manifest.json", manifest_text.into_bytes()), ("character.json", character_bytes)];
+            if tamper == Some("nested") && *slug == slugs[0] {
+                members.push(("extra.zip", test_zip(&[("x.txt", b"x".to_vec())])));
+            }
+            let archive = test_zip(&members);
+            membership.push(json!({ "character_id": slug, "character_revision": "1.0.0", "character_digest": character_digest }));
+            inner_archives.push((format!("{slug}.kokorosaku.zip"), archive, manifest, character_digest));
+        }
+        let catalog_release = json!({ "catalog_schema_id": "saku.catalog-release", "catalog_schema_version": "1.0.0", "catalog_id": "saku-character-catalog",
+            "release_version": "1.0.0-test", "immutable_published_revision": true, "membership": membership })
+        .to_string();
+        let catalog_digest = sha256_hex(catalog_release.as_bytes());
+        let entries: Vec<Value> = inner_archives
+            .iter()
+            .map(|(file, archive, manifest, character_digest)| {
+                json!({ "slug": manifest["source"]["sourceSlug"], "characterId": manifest["source"]["characterId"], "displayName": manifest["summary"]["displayName"],
+                    "sourceVersion": "1.0.0", "file": file, "archiveDigest": format!("sha-256:{}", sha256_hex(archive)),
+                    "packageDigest": manifest["package"]["digest"], "seat8": "human", "profile": "saku-unified-v1",
+                    "characterDigest": character_digest, "operationClass": if file.starts_with("c") { "C" } else { "A" } })
+            })
+            .collect();
+        let pack_json = signed(
+            json!({ "format": "kokorosaku-character-pack", "schemaVersion": "1.0.0",
+                "pack": { "id": "saku-pack-test", "version": "1.0.0", "createdAt": "2026-09-20T00:00:00.000Z", "characterCount": slugs.len() },
+                "entries": entries,
+                "catalogRelease": { "file": "catalog-release.v1.json", "digest": format!("sha-256:{catalog_digest}"), "catalogId": "saku-character-catalog", "releaseVersion": "1.0.0-test" } }),
+            "saku-pack-publisher-ed25519.v1",
+        )
+        .to_string();
+        let license = b"LICENSE v1.0 (test)".to_vec();
+        let readme = b"README (test)".to_vec();
+        let mut files: Vec<(String, Vec<u8>)> = vec![
+            ("LICENSE.md".to_string(), license),
+            ("README.md".to_string(), readme),
+            ("catalog-release.v1.json".to_string(), catalog_release.into_bytes()),
+            ("character-pack.json".to_string(), pack_json.into_bytes()),
+        ];
+        for (file, archive, _, _) in &inner_archives {
+            files.push((file.clone(), archive.clone()));
+        }
+        if tamper == Some("stowaway") {
+            files.push(("stowaway.kokorosaku.zip".to_string(), test_zip(&[("x.txt", b"x".to_vec())])));
+        }
+        let mut sums = String::new();
+        for (name, bytes) in &files {
+            if tamper == Some("stowaway") && name == "stowaway.kokorosaku.zip" {
+                continue;
+            }
+            let mut digest = sha256_hex(bytes);
+            if tamper == Some("sums") && name == "README.md" {
+                digest = digest.chars().rev().collect();
+            }
+            sums.push_str(&format!("{digest}  {name}\n"));
+        }
+        files.push(("SHA256SUMS".to_string(), sums.into_bytes()));
+        let named: Vec<(String, Vec<u8>)> = files.into_iter().map(|(name, bytes)| (format!("{prefix}{name}"), bytes)).collect();
+        let borrowed: Vec<(&str, Vec<u8>)> = named.iter().map(|(name, bytes)| (name.as_str(), bytes.clone())).collect();
+        SyntheticPack { bytes: test_zip(&borrowed), slugs: slugs.to_vec() }
+    }
+
+    fn parse_pack(bytes: &[u8]) -> Result<super::character_pack::CharacterPackImport, super::PackageValidationFailure> {
+        match parse_package(Path::new("saku-pack-test-1.0.0-beta.zip"), bytes)? {
+            ParsedPackage::CharacterPack(pack) => Ok(pack),
+            ParsedPackage::Envelope(_) => panic!("a pack must not parse as a Builder package"),
+        }
+    }
+
+    #[test]
+    fn character_pack_in_one_folder_is_read_and_every_binding_is_checked() {
+        let pack = synthetic_pack(&["aoi-one", "beni-two", "cho-three"], "saku-pack-test-1.0.0/", None);
+        let parsed = parse_pack(&pack.bytes).expect("pack parses");
+        assert_eq!(parsed.pack_id, "saku-pack-test");
+        assert_eq!(parsed.character_count, 3);
+        assert_eq!(parsed.entries.iter().map(|entry| entry.slug.as_str()).collect::<Vec<_>>(), pack.slugs);
+        assert_eq!(parsed.entries[2].operation_class, "C", "class C is imported and labelled, not dropped");
+        assert!(parsed.entries.iter().all(|entry| entry.manifest_digest_recomputed));
+        assert!(parsed.pack_manifest_digest_recomputed);
+        assert_eq!(parsed.signature_state, "NOT_VERIFIED_BY_HOST", "the host never claims a signature it did not verify");
+        assert_eq!(parsed.sha256sums_verified, 7);
+        assert_eq!(parsed.schema_id, "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE");
+        assert!(parsed.entries[0].character_json.contains("\"character_id\":\"aoi-one\""));
+        // the same pack without a folder prefix is equally acceptable
+        let flat = synthetic_pack(&["aoi-one"], "", None);
+        assert_eq!(parse_pack(&flat.bytes).unwrap().character_count, 1);
+    }
+
+    #[test]
+    fn character_pack_digest_mismatches_are_refused_as_a_whole() {
+        for (tamper, expected_code) in [
+            ("sums", "CHARACTER_PACK_DIGEST_MISMATCH"),
+            ("character", "CHARACTER_PACK_DIGEST_MISMATCH"),
+            ("manifest", "CHARACTER_PACK_DIGEST_MISMATCH"),
+            ("stowaway", "CHARACTER_PACK_INVALID"),
+            ("nested", "CHARACTER_PACK_INVALID"),
+        ] {
+            let pack = synthetic_pack(&["aoi-one", "beni-two"], "saku-pack-test-1.0.0/", Some(tamper));
+            let failure = parse_pack(&pack.bytes).expect_err(tamper);
+            assert_eq!(failure.status, "INVALID", "{tamper}");
+            assert_eq!(failure.code, expected_code, "{tamper}: {}", failure.reason);
+        }
+    }
+
+    #[test]
+    fn character_pack_catalog_membership_is_required() {
+        let pack = synthetic_pack(&["aoi-one"], "saku-pack-test-1.0.0/", None);
+        // Rewrite the catalog release with a different digest for the member and re-sign nothing:
+        // SHA256SUMS then fails first — so rebuild SHA256SUMS honestly to reach the catalog check.
+        let entries = super::archive_entries_with(&pack.bytes, &super::ArchiveShape { max_entries: 512, max_total_bytes: 64 << 20, allow_directory_prefix: true }).unwrap();
+        let mut catalog: Value = serde_json::from_slice(&entries["catalog-release.v1.json"]).unwrap();
+        catalog["membership"][0]["character_digest"] = Value::String("0".repeat(64));
+        let catalog_text = catalog.to_string();
+        let mut pack_json: Value = serde_json::from_slice(&entries["character-pack.json"]).unwrap();
+        pack_json["catalogRelease"]["digest"] = Value::String(format!("sha-256:{}", sha256_hex(catalog_text.as_bytes())));
+        // keep the pack manifest digest honest for the changed catalogRelease block
+        let mut unsigned = pack_json.clone();
+        unsigned["package"].as_object_mut().unwrap().remove("digest");
+        unsigned["package"].as_object_mut().unwrap().remove("signature");
+        pack_json["package"]["digest"] = Value::String(format!("sha-256:{}", sha256_hex(canonical_json(&unsigned).as_bytes())));
+        let pack_text = pack_json.to_string();
+        let mut files: Vec<(String, Vec<u8>)> = entries
+            .iter()
+            .filter(|(name, _)| *name != "SHA256SUMS" && *name != "catalog-release.v1.json" && *name != "character-pack.json")
+            .map(|(name, bytes)| (name.clone(), bytes.clone()))
+            .collect();
+        files.push(("catalog-release.v1.json".to_string(), catalog_text.into_bytes()));
+        files.push(("character-pack.json".to_string(), pack_text.into_bytes()));
+        files.sort();
+        let sums: String = files.iter().map(|(name, bytes)| format!("{}  {name}\n", sha256_hex(bytes))).collect();
+        files.push(("SHA256SUMS".to_string(), sums.into_bytes()));
+        let borrowed: Vec<(&str, Vec<u8>)> = files.iter().map(|(name, bytes)| (name.as_str(), bytes.clone())).collect();
+        let failure = parse_pack(&test_zip(&borrowed)).expect_err("catalog mismatch");
+        assert_eq!(failure.code, "CHARACTER_PACK_CATALOG_MISMATCH", "{}", failure.reason);
+    }
+
+    #[test]
+    fn archive_shape_limits_hold_for_packs_and_builder_packages() {
+        // 513 root files: over the pack ceiling → refused before any parsing.
+        let many: Vec<(String, Vec<u8>)> = (0..513).map(|index| (format!("f{index}.txt"), b"x".to_vec())).collect();
+        let borrowed: Vec<(&str, Vec<u8>)> = many.iter().map(|(name, bytes)| (name.as_str(), bytes.clone())).collect();
+        let failure = parse_package(Path::new("many.zip"), &test_zip(&borrowed)).unwrap_err();
+        assert_eq!(failure.code, "PACKAGE_ARCHIVE_INVALID");
+        assert!(failure.reason.contains("513"), "{}", failure.reason);
+        // two folders deep is never accepted
+        let deep = test_zip(&[("a/b/character-pack.json", b"{}".to_vec())]);
+        assert_eq!(parse_package(Path::new("deep.zip"), &deep).unwrap_err().code, "PACKAGE_ARCHIVE_INVALID");
+        // two different folders are never accepted
+        let two = test_zip(&[("a/character-pack.json", b"{}".to_vec()), ("b/x.txt", b"x".to_vec())]);
+        assert_eq!(parse_package(Path::new("two.zip"), &two).unwrap_err().code, "PACKAGE_ARCHIVE_INVALID");
+        // the Builder package path keeps its own 16-entry ceiling
+        let mut witpkg: Vec<(String, Vec<u8>)> = vec![("wit-package.json".to_string(), b"{}".to_vec()), ("payload.json".to_string(), b"{}".to_vec())];
+        for index in 0..15 {
+            witpkg.push((format!("extra{index}.txt"), b"x".to_vec()));
+        }
+        let borrowed: Vec<(&str, Vec<u8>)> = witpkg.iter().map(|(name, bytes)| (name.as_str(), bytes.clone())).collect();
+        let failure = parse_package(Path::new("wide.zip"), &test_zip(&borrowed)).unwrap_err();
+        assert_eq!(failure.code, "PACKAGE_ARCHIVE_INVALID");
+        assert!(failure.reason.contains("17"), "{}", failure.reason);
+        // an unknown ZIP names the accepted formats in Japanese, not just a code
+        let unknown = test_zip(&[("notes.txt", b"hello".to_vec())]);
+        let failure = parse_package(Path::new("unknown.zip"), &unknown).unwrap_err();
+        assert_eq!(failure.code, "PACKAGE_FORMAT_UNRECOGNIZED");
+        assert!(failure.reason.contains("受け付ける形式"), "{}", failure.reason);
+        assert!(failure.reason.contains("character-pack.json"));
+    }
+
+    #[test]
+    fn canonical_json_matches_the_producer_rules() {
+        let value = json!({ "b": [1, { "z": "\u{3042}", "a": null }], "a": "quote\"and\\slash", "n": 5947, "t": true });
+        assert_eq!(canonical_json(&value), "{\"a\":\"quote\\\"and\\\\slash\",\"b\":[1,{\"a\":null,\"z\":\"\u{3042}\"}],\"n\":5947,\"t\":true}");
+    }
+
+    // The sold packs, when the sibling KOKOROAMU-STUDIO clone (or SAKU_PACK_FIXTURES) is present.
+    // Skipped, and said so, when they are not: the synthetic pack covers the logic either way.
+    #[test]
+    fn production_packs_import_when_available() {
+        let root = std::env::var("SAKU_PACK_FIXTURES").map(PathBuf::from).unwrap_or_else(|_| {
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../KOKOROAMU-STUDIO/tests/adapters-character-package/fixtures")
+        });
+        let expected = [("saku-pack-support-1.0.0-beta.zip", 15usize), ("saku-pack-business-1.0.0-beta.zip", 19), ("saku-pack-technical-1.0.0-beta.zip", 20)];
+        if !root.join(expected[0].0).is_file() {
+            eprintln!("production pack fixtures not present under {}; skipped", root.display());
+            return;
+        }
+        for (name, count) in expected {
+            let bytes = fs::read(root.join(name)).expect(name);
+            let parsed = parse_pack(&bytes).unwrap_or_else(|failure| panic!("{name}: {} {}", failure.code, failure.reason));
+            assert_eq!(parsed.character_count, count, "{name}");
+            assert!(parsed.pack_manifest_digest_recomputed && parsed.entries.iter().all(|entry| entry.manifest_digest_recomputed), "{name}: manifest digests recompute");
+            assert_eq!(parsed.schema_id, "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE");
+            assert!(parsed.entries.iter().all(|entry| ["A", "B", "C"].contains(&entry.operation_class.as_str())));
+        }
     }
 }

@@ -134,7 +134,9 @@ for (const forbidden of ["fixed64-full", "erabazu5", "wit3", "commercial-preview
 const builderSource = await read("tools/saku-builder.html");
 ok(/builder-golden-ui\.mjs/.test(builderSource) && /frozen-ia-ui\.mjs/.test(builderSource), "Builder preserves Golden presentation with Frozen IA authoring");
 check(sha256(await read("tools/unified-v1/derived-profile-engine.mjs")), "1f4ff549a3170d2b603fc15206b631dfb47e818ac5f01ef040bc34c266a9d225", "Trainer engine changed");
-check(sha256(await read("src-tauri/src/main.rs")), "1c5ecfae57a3a4c8aa56149b07a36bed2c49e2bbdc4ae13c7cb0487188c19ccf", "Package Import implementation changed outside the reviewed Unified-schema intake and durable Character store");
+// Pin advanced 2026-09-20 with the reviewed Character Pack intake (Owner defect: sold packs refused by β.1;
+// pack path, archive shape limits, Japanese format guidance, 0.1.0-beta.2). Any later unreviewed edit trips it again.
+check(sha256(await read("src-tauri/src/main.rs")), "e0cbb4f9a7e9ebd0af6ba8e24b7558ee476993ea9488d418b5ecdf91cc0efdf1", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
 ok(/SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE/.test(await read("src-tauri/src/main.rs")), "Package Import host does not recognise the active Unified schema");
 check(sha256(await read("desktop/resources/profiles/public-oss.json")), "6a3ae8a7faeaa719d24f0aff70d816fb8a27d99c03b47bbd4a31f2ad7a0984a4", "Public profile changed");
 

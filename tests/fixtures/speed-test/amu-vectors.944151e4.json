@@ -1,0 +1,1633 @@
+{
+ "schema": "saku.speed-test.amu-vectors/1",
+ "source": {
+  "repository": "wi-tcom/KOKOROAMU-STUDIO",
+  "main_revision": "944151e4",
+  "path": "core/diagnostics/speed-test.js",
+  "sha256": "b54e17e0efd843c16eb6af9a40cf07f7c185b643cebfb044d3c18225d13555ca"
+ },
+ "pack": {
+  "schema": "amu.ai-speed-test-probe-pack/1",
+  "pack_id": "amu-speed-test-default",
+  "probes": [
+   {
+    "id": "echo-1",
+    "title": "往復",
+    "text": "次の 1 語だけを返してください: 了解",
+    "digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+    "expect": {
+     "kind": "exact",
+     "value": "了解"
+    }
+   },
+   {
+    "id": "count-1",
+    "title": "数える",
+    "text": "1 から 12 までの整数をカンマ区切りで、他の文字を含めずに返してください。",
+    "digest": "sha-256:4952832614fdcd83433bbeb711db7168fe0244897517915ea03a1f782e89ce16",
+    "expect": {
+     "kind": "exact",
+     "value": "1,2,3,4,5,6,7,8,9,10,11,12"
+    }
+   },
+   {
+    "id": "reason-1",
+    "title": "短い推論",
+    "text": "「東京は日本の首都である。大阪は東京より西にある。」この 2 文から確実に言えることを 1 文、20 字以内で書いてください。",
+    "digest": "sha-256:8de9d5ea5dd767f15b6f325b070c3e09397ee68d7890e9914aae9456094675dd",
+    "expect": {
+     "kind": "length",
+     "max": 40
+    }
+   },
+   {
+    "id": "format-1",
+    "title": "形式遵守",
+    "text": "次の JSON だけを返してください（前後に文字を付けない）: {\"ok\":true,\"n\":3}",
+    "digest": "sha-256:6b6f6755b25632acbf540ecedff07deb3046c32d8baa239fcabff6f3f9c342e8",
+    "expect": {
+     "kind": "json",
+     "value": {
+      "ok": true,
+      "n": 3
+     }
+    }
+   }
+  ],
+  "meaning": "Fixed probe texts; what will be sent is exactly this and is shown to the human before any run."
+ },
+ "facts": [
+  {
+   "text": "了解",
+   "expect": {
+    "kind": "exact",
+    "value": "了解"
+   },
+   "out": {
+    "chars": 2,
+    "lines": 1,
+    "conformance": "CONFORMS"
+   }
+  },
+  {
+   "text": "了解しました",
+   "expect": {
+    "kind": "exact",
+    "value": "了解"
+   },
+   "out": {
+    "chars": 6,
+    "lines": 1,
+    "conformance": "DEVIATES"
+   }
+  },
+  {
+   "text": "1,2,3,4,5,6,7,8,9,10,11,12",
+   "expect": {
+    "kind": "exact",
+    "value": "1,2,3,4,5,6,7,8,9,10,11,12"
+   },
+   "out": {
+    "chars": 26,
+    "lines": 1,
+    "conformance": "CONFORMS"
+   }
+  },
+  {
+   "text": "1, 2, 3",
+   "expect": {
+    "kind": "exact",
+    "value": "1,2,3,4,5,6,7,8,9,10,11,12"
+   },
+   "out": {
+    "chars": 7,
+    "lines": 1,
+    "conformance": "DEVIATES"
+   }
+  },
+  {
+   "text": "大阪は首都ではない。",
+   "expect": {
+    "kind": "length",
+    "max": 40
+   },
+   "out": {
+    "chars": 10,
+    "lines": 1,
+    "conformance": "CONFORMS"
+   }
+  },
+  {
+   "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+   "expect": {
+    "kind": "length",
+    "max": 40
+   },
+   "out": {
+    "chars": 41,
+    "lines": 1,
+    "conformance": "DEVIATES"
+   }
+  },
+  {
+   "text": "",
+   "expect": {
+    "kind": "length",
+    "max": 40
+   },
+   "out": {
+    "chars": 0,
+    "lines": 0,
+    "conformance": "DEVIATES"
+   }
+  },
+  {
+   "text": "{\"n\":3,\"ok\":true}",
+   "expect": {
+    "kind": "json",
+    "value": {
+     "ok": true,
+     "n": 3
+    }
+   },
+   "out": {
+    "chars": 17,
+    "lines": 1,
+    "conformance": "CONFORMS"
+   }
+  },
+  {
+   "text": "```json\n{\"ok\":true,\"n\":3}\n```",
+   "expect": {
+    "kind": "json",
+    "value": {
+     "ok": true,
+     "n": 3
+    }
+   },
+   "out": {
+    "chars": 29,
+    "lines": 3,
+    "conformance": "DEVIATES"
+   }
+  },
+  {
+   "text": "{\"ok\":true,\"n\":4}",
+   "expect": {
+    "kind": "json",
+    "value": {
+     "ok": true,
+     "n": 3
+    }
+   },
+   "out": {
+    "chars": 17,
+    "lines": 1,
+    "conformance": "DEVIATES"
+   }
+  },
+  {
+   "text": "anything",
+   "expect": null,
+   "out": {
+    "chars": 8,
+    "lines": 1,
+    "conformance": "NOT_ASSESSED"
+   }
+  },
+  {
+   "text": "  了解  \r\n",
+   "expect": {
+    "kind": "exact",
+    "value": "了解"
+   },
+   "out": {
+    "chars": 2,
+    "lines": 1,
+    "conformance": "CONFORMS"
+   }
+  },
+  {
+   "text": "a \nb\t\n\nc",
+   "expect": null,
+   "out": {
+    "chars": 6,
+    "lines": 4,
+    "conformance": "NOT_ASSESSED"
+   }
+  }
+ ],
+ "paste_runs": [
+  {
+   "input": {
+    "probe": {
+     "id": "echo-1",
+     "title": "往復",
+     "text": "次の 1 語だけを返してください: 了解",
+     "digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "expect": {
+      "kind": "exact",
+      "value": "了解"
+     }
+    },
+    "provider_ref": "external/chat-ui",
+    "model_ref": "unknown",
+    "measurement": {
+     "total_ms": 6500
+    },
+    "answerText": "了解",
+    "at": "2026-09-19T10:05:00Z",
+    "keepText": true
+   },
+   "out": {
+    "schema": "amu.ai-speed-test-run/1",
+    "mode": "paste",
+    "at": "2026-09-19T10:05:00Z",
+    "probe_id": "echo-1",
+    "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+    "provider_ref": "external/chat-ui",
+    "model_ref": "unknown",
+    "model_observed": null,
+    "reachable": true,
+    "first_byte_ms": null,
+    "total_ms": 6500,
+    "request_bytes": null,
+    "response_bytes": null,
+    "usage": null,
+    "tokens_per_s": null,
+    "answer": {
+     "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+     "chars": 2,
+     "lines": 1,
+     "conformance": "CONFORMS",
+     "text": "了解"
+    },
+    "note": "",
+    "meaning": "Manual measurement: times include the human copy/paste; compare only against other paste runs."
+   }
+  },
+  {
+   "input": {
+    "probe": {
+     "id": "echo-1",
+     "title": "往復",
+     "text": "次の 1 語だけを返してください: 了解",
+     "digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "expect": {
+      "kind": "exact",
+      "value": "了解"
+     }
+    },
+    "provider_ref": "external/chat-ui",
+    "model_ref": "unknown",
+    "measurement": {
+     "total_ms": 7200
+    },
+    "answerText": "了解\n",
+    "at": "2026-09-19T10:06:00Z",
+    "keepText": false,
+    "note": "second"
+   },
+   "out": {
+    "schema": "amu.ai-speed-test-run/1",
+    "mode": "paste",
+    "at": "2026-09-19T10:06:00Z",
+    "probe_id": "echo-1",
+    "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+    "provider_ref": "external/chat-ui",
+    "model_ref": "unknown",
+    "model_observed": null,
+    "reachable": true,
+    "first_byte_ms": null,
+    "total_ms": 7200,
+    "request_bytes": null,
+    "response_bytes": null,
+    "usage": null,
+    "tokens_per_s": null,
+    "answer": {
+     "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+     "chars": 2,
+     "lines": 1,
+     "conformance": "CONFORMS"
+    },
+    "note": "second",
+    "meaning": "Manual measurement: times include the human copy/paste; compare only against other paste runs."
+   }
+  },
+  {
+   "input": {
+    "probe": {
+     "id": "format-1",
+     "title": "形式遵守",
+     "text": "次の JSON だけを返してください（前後に文字を付けない）: {\"ok\":true,\"n\":3}",
+     "digest": "sha-256:6b6f6755b25632acbf540ecedff07deb3046c32d8baa239fcabff6f3f9c342e8",
+     "expect": {
+      "kind": "json",
+      "value": {
+       "ok": true,
+       "n": 3
+      }
+     }
+    },
+    "provider_ref": "external/chat-ui",
+    "model_ref": "model-x",
+    "measurement": {
+     "total_ms": 12000
+    },
+    "answerText": "{\"n\":3,\"ok\":true}",
+    "at": "2026-09-19T10:07:00Z"
+   },
+   "out": {
+    "schema": "amu.ai-speed-test-run/1",
+    "mode": "paste",
+    "at": "2026-09-19T10:07:00Z",
+    "probe_id": "format-1",
+    "probe_digest": "sha-256:6b6f6755b25632acbf540ecedff07deb3046c32d8baa239fcabff6f3f9c342e8",
+    "provider_ref": "external/chat-ui",
+    "model_ref": "model-x",
+    "model_observed": null,
+    "reachable": true,
+    "first_byte_ms": null,
+    "total_ms": 12000,
+    "request_bytes": null,
+    "response_bytes": null,
+    "usage": null,
+    "tokens_per_s": null,
+    "answer": {
+     "digest": "sha-256:256fc700a12c66b29ac71504508eff0b92f854057cd8b9548b1a42e87e0d57b4",
+     "chars": 17,
+     "lines": 1,
+     "conformance": "CONFORMS"
+    },
+    "note": "",
+    "meaning": "Manual measurement: times include the human copy/paste; compare only against other paste runs."
+   }
+  },
+  {
+   "input": {
+    "probe": {
+     "id": "count-1",
+     "title": "数える",
+     "text": "1 から 12 までの整数をカンマ区切りで、他の文字を含めずに返してください。",
+     "digest": "sha-256:4952832614fdcd83433bbeb711db7168fe0244897517915ea03a1f782e89ce16",
+     "expect": {
+      "kind": "exact",
+      "value": "1,2,3,4,5,6,7,8,9,10,11,12"
+     }
+    },
+    "provider_ref": "external/chat-ui",
+    "model_ref": "model-x",
+    "measurement": {
+     "reachable": false
+    },
+    "answerText": "",
+    "at": "2026-09-19T10:08:00Z"
+   },
+   "out": {
+    "schema": "amu.ai-speed-test-run/1",
+    "mode": "paste",
+    "at": "2026-09-19T10:08:00Z",
+    "probe_id": "count-1",
+    "probe_digest": "sha-256:4952832614fdcd83433bbeb711db7168fe0244897517915ea03a1f782e89ce16",
+    "provider_ref": "external/chat-ui",
+    "model_ref": "model-x",
+    "model_observed": null,
+    "reachable": false,
+    "first_byte_ms": null,
+    "total_ms": null,
+    "request_bytes": null,
+    "response_bytes": null,
+    "usage": null,
+    "tokens_per_s": null,
+    "answer": {
+     "digest": null,
+     "chars": 0,
+     "lines": 0,
+     "conformance": "DEVIATES"
+    },
+    "note": "",
+    "meaning": "Manual measurement: times include the human copy/paste; compare only against other paste runs."
+   }
+  },
+  {
+   "input": {
+    "probe": {
+     "id": "reason-1",
+     "title": "短い推論",
+     "text": "「東京は日本の首都である。大阪は東京より西にある。」この 2 文から確実に言えることを 1 文、20 字以内で書いてください。",
+     "digest": "sha-256:8de9d5ea5dd767f15b6f325b070c3e09397ee68d7890e9914aae9456094675dd",
+     "expect": {
+      "kind": "length",
+      "max": 40
+     }
+    },
+    "provider_ref": "external/chat-ui",
+    "model_ref": "model-x",
+    "measurement": {
+     "total_ms": 3000.7
+    },
+    "answerText": "  大阪は首都ではない。 \r\n\r\n",
+    "at": "2026-09-19T10:09:00Z",
+    "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   },
+   "out": {
+    "schema": "amu.ai-speed-test-run/1",
+    "mode": "paste",
+    "at": "2026-09-19T10:09:00Z",
+    "probe_id": "reason-1",
+    "probe_digest": "sha-256:8de9d5ea5dd767f15b6f325b070c3e09397ee68d7890e9914aae9456094675dd",
+    "provider_ref": "external/chat-ui",
+    "model_ref": "model-x",
+    "model_observed": null,
+    "reachable": true,
+    "first_byte_ms": null,
+    "total_ms": 3000.7,
+    "request_bytes": null,
+    "response_bytes": null,
+    "usage": null,
+    "tokens_per_s": null,
+    "answer": {
+     "digest": "sha-256:e1ec849af7f1fb714a55fb8b65582ed1f9968b030af967f06b6d45fef79124ae",
+     "chars": 10,
+     "lines": 1,
+     "conformance": "CONFORMS"
+    },
+    "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "meaning": "Manual measurement: times include the human copy/paste; compare only against other paste runs."
+   }
+  }
+ ],
+ "aggregates": [
+  {
+   "label": "auto-intermittent",
+   "runs": [
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 450,
+     "total_ms": 900,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 3.3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 550,
+     "total_ms": 1100,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 2.7,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 500,
+     "total_ms": 1000,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": false,
+     "first_byte_ms": null,
+     "total_ms": null,
+     "request_bytes": null,
+     "response_bytes": null,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": null,
+     "answer": {
+      "digest": null,
+      "chars": 0,
+      "lines": 0,
+      "conformance": "DEVIATES"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    }
+   ],
+   "options": {},
+   "out": {
+    "runs": 4,
+    "reachable_runs": 3,
+    "unreachable_runs": 1,
+    "reachability": "INTERMITTENT",
+    "median_ms": 1000,
+    "p95_ms": 1100,
+    "min_ms": 900,
+    "max_ms": 1100,
+    "spread_ratio": 0.2,
+    "speed": "FAST",
+    "thresholds": {
+     "fastMs": 2000,
+     "slowMs": 8000,
+     "minRuns": 3
+    },
+    "answer_variants": 1,
+    "conformance": 100,
+    "models_observed": [
+     "gpt-5-2026-09"
+    ],
+    "stability": "STABLE"
+   }
+  },
+  {
+   "label": "below-minRuns",
+   "runs": [
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 450,
+     "total_ms": 900,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 3.3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 550,
+     "total_ms": 1100,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 2.7,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    }
+   ],
+   "options": {},
+   "out": {
+    "runs": 2,
+    "reachable_runs": 2,
+    "unreachable_runs": 0,
+    "reachability": "REACHABLE",
+    "median_ms": 1100,
+    "p95_ms": 1100,
+    "min_ms": 900,
+    "max_ms": 1100,
+    "spread_ratio": 0.18,
+    "speed": "NOT_ASSESSED",
+    "thresholds": {
+     "fastMs": 2000,
+     "slowMs": 8000,
+     "minRuns": 3
+    },
+    "answer_variants": 1,
+    "conformance": 100,
+    "models_observed": [
+     "gpt-5-2026-09"
+    ],
+    "stability": "STABLE"
+   }
+  },
+  {
+   "label": "slow",
+   "runs": [
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 4500,
+     "total_ms": 9000,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 0.3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 4750,
+     "total_ms": 9500,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 0.3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 4400,
+     "total_ms": 8800,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 0.3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    }
+   ],
+   "options": {},
+   "out": {
+    "runs": 3,
+    "reachable_runs": 3,
+    "unreachable_runs": 0,
+    "reachability": "REACHABLE",
+    "median_ms": 9000,
+    "p95_ms": 9500,
+    "min_ms": 8800,
+    "max_ms": 9500,
+    "spread_ratio": 0.08,
+    "speed": "SLOW",
+    "thresholds": {
+     "fastMs": 2000,
+     "slowMs": 8000,
+     "minRuns": 3
+    },
+    "answer_variants": 1,
+    "conformance": 100,
+    "models_observed": [
+     "gpt-5-2026-09"
+    ],
+    "stability": "STABLE"
+   }
+  },
+  {
+   "label": "drift",
+   "runs": [
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 500,
+     "total_ms": 1000,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 500,
+     "total_ms": 1000,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 3,
+     "answer": {
+      "digest": "sha-256:0157e6aed55c5c02d6a5db10de6381ff48cf5d42afdf83c802629cb18e71b92a",
+      "chars": 3,
+      "lines": 1,
+      "conformance": "DEVIATES"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 500,
+     "total_ms": 1000,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    }
+   ],
+   "options": {},
+   "out": {
+    "runs": 3,
+    "reachable_runs": 3,
+    "unreachable_runs": 0,
+    "reachability": "REACHABLE",
+    "median_ms": 1000,
+    "p95_ms": 1000,
+    "min_ms": 1000,
+    "max_ms": 1000,
+    "spread_ratio": 0,
+    "speed": "FAST",
+    "thresholds": {
+     "fastMs": 2000,
+     "slowMs": 8000,
+     "minRuns": 3
+    },
+    "answer_variants": 2,
+    "conformance": 67,
+    "models_observed": [
+     "gpt-5-2026-09"
+    ],
+    "stability": "DRIFTED"
+   }
+  },
+  {
+   "label": "empty",
+   "runs": [],
+   "options": {},
+   "out": {
+    "runs": 0,
+    "reachable_runs": 0,
+    "unreachable_runs": 0,
+    "reachability": "NOT_ASSESSED",
+    "median_ms": null,
+    "p95_ms": null,
+    "min_ms": null,
+    "max_ms": null,
+    "spread_ratio": null,
+    "speed": "NOT_ASSESSED",
+    "thresholds": {
+     "fastMs": 2000,
+     "slowMs": 8000,
+     "minRuns": 3
+    },
+    "answer_variants": 0,
+    "conformance": null,
+    "models_observed": [],
+    "stability": "NOT_COMPARABLE"
+   }
+  },
+  {
+   "label": "paste-mixed",
+   "runs": [
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "paste",
+     "at": "2026-09-19T10:05:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "external/chat-ui",
+     "model_ref": "unknown",
+     "model_observed": null,
+     "reachable": true,
+     "first_byte_ms": null,
+     "total_ms": 6500,
+     "request_bytes": null,
+     "response_bytes": null,
+     "usage": null,
+     "tokens_per_s": null,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS",
+      "text": "了解"
+     },
+     "note": "",
+     "meaning": "Manual measurement: times include the human copy/paste; compare only against other paste runs."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "paste",
+     "at": "2026-09-19T10:06:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "external/chat-ui",
+     "model_ref": "unknown",
+     "model_observed": null,
+     "reachable": true,
+     "first_byte_ms": null,
+     "total_ms": 7200,
+     "request_bytes": null,
+     "response_bytes": null,
+     "usage": null,
+     "tokens_per_s": null,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "second",
+     "meaning": "Manual measurement: times include the human copy/paste; compare only against other paste runs."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "paste",
+     "at": "2026-09-19T10:07:00Z",
+     "probe_id": "format-1",
+     "probe_digest": "sha-256:6b6f6755b25632acbf540ecedff07deb3046c32d8baa239fcabff6f3f9c342e8",
+     "provider_ref": "external/chat-ui",
+     "model_ref": "model-x",
+     "model_observed": null,
+     "reachable": true,
+     "first_byte_ms": null,
+     "total_ms": 12000,
+     "request_bytes": null,
+     "response_bytes": null,
+     "usage": null,
+     "tokens_per_s": null,
+     "answer": {
+      "digest": "sha-256:256fc700a12c66b29ac71504508eff0b92f854057cd8b9548b1a42e87e0d57b4",
+      "chars": 17,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Manual measurement: times include the human copy/paste; compare only against other paste runs."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "paste",
+     "at": "2026-09-19T10:08:00Z",
+     "probe_id": "count-1",
+     "probe_digest": "sha-256:4952832614fdcd83433bbeb711db7168fe0244897517915ea03a1f782e89ce16",
+     "provider_ref": "external/chat-ui",
+     "model_ref": "model-x",
+     "model_observed": null,
+     "reachable": false,
+     "first_byte_ms": null,
+     "total_ms": null,
+     "request_bytes": null,
+     "response_bytes": null,
+     "usage": null,
+     "tokens_per_s": null,
+     "answer": {
+      "digest": null,
+      "chars": 0,
+      "lines": 0,
+      "conformance": "DEVIATES"
+     },
+     "note": "",
+     "meaning": "Manual measurement: times include the human copy/paste; compare only against other paste runs."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "paste",
+     "at": "2026-09-19T10:09:00Z",
+     "probe_id": "reason-1",
+     "probe_digest": "sha-256:8de9d5ea5dd767f15b6f325b070c3e09397ee68d7890e9914aae9456094675dd",
+     "provider_ref": "external/chat-ui",
+     "model_ref": "model-x",
+     "model_observed": null,
+     "reachable": true,
+     "first_byte_ms": null,
+     "total_ms": 3000.7,
+     "request_bytes": null,
+     "response_bytes": null,
+     "usage": null,
+     "tokens_per_s": null,
+     "answer": {
+      "digest": "sha-256:e1ec849af7f1fb714a55fb8b65582ed1f9968b030af967f06b6d45fef79124ae",
+      "chars": 10,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+     "meaning": "Manual measurement: times include the human copy/paste; compare only against other paste runs."
+    }
+   ],
+   "options": {},
+   "out": {
+    "runs": 5,
+    "reachable_runs": 4,
+    "unreachable_runs": 1,
+    "reachability": "INTERMITTENT",
+    "median_ms": 7200,
+    "p95_ms": 12000,
+    "min_ms": 3000.7,
+    "max_ms": 12000,
+    "spread_ratio": 1.25,
+    "speed": "NORMAL",
+    "thresholds": {
+     "fastMs": 2000,
+     "slowMs": 8000,
+     "minRuns": 3
+    },
+    "answer_variants": 3,
+    "conformance": 100,
+    "models_observed": [],
+    "stability": "DRIFTED"
+   }
+  },
+  {
+   "label": "custom-thresholds",
+   "runs": [
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 4500,
+     "total_ms": 9000,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 0.3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 4750,
+     "total_ms": 9500,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 0.3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    },
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": true,
+     "first_byte_ms": 4400,
+     "total_ms": 8800,
+     "request_bytes": 100,
+     "response_bytes": 50,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": 0.3,
+     "answer": {
+      "digest": "sha-256:aecbe4cbd4449c9ad081a8fff7e0f76689275e88191a3718ac7bb94e1e8e59c6",
+      "chars": 2,
+      "lines": 1,
+      "conformance": "CONFORMS"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    }
+   ],
+   "options": {
+    "fastMs": 10000,
+    "slowMs": 20000,
+    "minRuns": 2
+   },
+   "out": {
+    "runs": 3,
+    "reachable_runs": 3,
+    "unreachable_runs": 0,
+    "reachability": "REACHABLE",
+    "median_ms": 9000,
+    "p95_ms": 9500,
+    "min_ms": 8800,
+    "max_ms": 9500,
+    "spread_ratio": 0.08,
+    "speed": "FAST",
+    "thresholds": {
+     "fastMs": 10000,
+     "slowMs": 20000,
+     "minRuns": 2
+    },
+    "answer_variants": 1,
+    "conformance": 100,
+    "models_observed": [
+     "gpt-5-2026-09"
+    ],
+    "stability": "STABLE"
+   }
+  },
+  {
+   "label": "unreachable-only",
+   "runs": [
+    {
+     "schema": "amu.ai-speed-test-run/1",
+     "mode": "automatic",
+     "at": "2026-09-19T10:00:00Z",
+     "probe_id": "echo-1",
+     "probe_digest": "sha-256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+     "provider_ref": "hosted/openai-responses",
+     "model_ref": "gpt-5",
+     "model_observed": {
+      "model_id": "gpt-5-2026-09"
+     },
+     "reachable": false,
+     "first_byte_ms": null,
+     "total_ms": null,
+     "request_bytes": null,
+     "response_bytes": null,
+     "usage": {
+      "input_tokens": 12,
+      "output_tokens": 3
+     },
+     "tokens_per_s": null,
+     "answer": {
+      "digest": null,
+      "chars": 0,
+      "lines": 0,
+      "conformance": "DEVIATES"
+     },
+     "note": "",
+     "meaning": "Client-side measurement: includes network and provider time; not a provider SLA."
+    }
+   ],
+   "options": {},
+   "out": {
+    "runs": 1,
+    "reachable_runs": 0,
+    "unreachable_runs": 1,
+    "reachability": "UNREACHABLE",
+    "median_ms": null,
+    "p95_ms": null,
+    "min_ms": null,
+    "max_ms": null,
+    "spread_ratio": null,
+    "speed": "NOT_ASSESSED",
+    "thresholds": {
+     "fastMs": 2000,
+     "slowMs": 8000,
+     "minRuns": 3
+    },
+    "answer_variants": 0,
+    "conformance": null,
+    "models_observed": [],
+    "stability": "NOT_COMPARABLE"
+   }
+  }
+ ],
+ "diffs": [
+  {
+   "a": "a\nb\nc",
+   "b": "a\nx\nc\nd",
+   "out": {
+    "identical": false,
+    "similarity": 0.571,
+    "added": 2,
+    "removed": 1,
+    "ops": [
+     {
+      "op": "=",
+      "text": "a"
+     },
+     {
+      "op": "-",
+      "text": "b"
+     },
+     {
+      "op": "+",
+      "text": "x"
+     },
+     {
+      "op": "=",
+      "text": "c"
+     },
+     {
+      "op": "+",
+      "text": "d"
+     }
+    ]
+   }
+  },
+  {
+   "a": "same\r\n",
+   "b": "same",
+   "out": {
+    "identical": true,
+    "similarity": 1,
+    "added": 0,
+    "removed": 0,
+    "ops": [
+     {
+      "op": "=",
+      "text": "same"
+     }
+    ]
+   }
+  },
+  {
+   "a": "",
+   "b": "",
+   "out": {
+    "identical": true,
+    "similarity": 1,
+    "added": 0,
+    "removed": 0,
+    "ops": []
+   }
+  },
+  {
+   "a": "",
+   "b": "a",
+   "out": {
+    "identical": false,
+    "similarity": 0,
+    "added": 1,
+    "removed": 0,
+    "ops": [
+     {
+      "op": "+",
+      "text": "a"
+     }
+    ]
+   }
+  },
+  {
+   "a": "a\n\n",
+   "b": "",
+   "out": {
+    "identical": false,
+    "similarity": 0,
+    "added": 0,
+    "removed": 1,
+    "ops": [
+     {
+      "op": "-",
+      "text": "a"
+     }
+    ]
+   }
+  },
+  {
+   "a": "了解",
+   "b": "了解。",
+   "out": {
+    "identical": false,
+    "similarity": 0,
+    "added": 1,
+    "removed": 1,
+    "ops": [
+     {
+      "op": "-",
+      "text": "了解"
+     },
+     {
+      "op": "+",
+      "text": "了解。"
+     }
+    ]
+   }
+  },
+  {
+   "a": "1\n2\n3",
+   "b": "3\n2\n1",
+   "out": {
+    "identical": false,
+    "similarity": 0.333,
+    "added": 2,
+    "removed": 2,
+    "ops": [
+     {
+      "op": "-",
+      "text": "1"
+     },
+     {
+      "op": "-",
+      "text": "2"
+     },
+     {
+      "op": "=",
+      "text": "3"
+     },
+     {
+      "op": "+",
+      "text": "2"
+     },
+     {
+      "op": "+",
+      "text": "1"
+     }
+    ]
+   }
+  },
+  {
+   "a": "x",
+   "b": "x",
+   "out": {
+    "identical": true,
+    "similarity": 1,
+    "added": 0,
+    "removed": 0,
+    "ops": [
+     {
+      "op": "=",
+      "text": "x"
+     }
+    ]
+   }
+  }
+ ],
+ "compares": [
+  {
+   "before": {
+    "median_ms": 1000,
+    "answer_variants": 1,
+    "models_observed": [
+     "m1"
+    ]
+   },
+   "after": {
+    "median_ms": 1800,
+    "answer_variants": 1,
+    "models_observed": [
+     "m2"
+    ]
+   },
+   "options": {},
+   "out": {
+    "speed_change": "SLOWER",
+    "ratio": 1.8,
+    "model_changed": true,
+    "answer_change": "COMPARE_BY_DIFF"
+   }
+  },
+  {
+   "before": {
+    "median_ms": 1000,
+    "answer_variants": 1,
+    "models_observed": [
+     "m1"
+    ]
+   },
+   "after": {
+    "median_ms": 1200,
+    "answer_variants": 1,
+    "models_observed": [
+     "m2"
+    ]
+   },
+   "options": {},
+   "out": {
+    "speed_change": "SIMILAR",
+    "ratio": 1.2,
+    "model_changed": true,
+    "answer_change": "COMPARE_BY_DIFF"
+   }
+  },
+  {
+   "before": {
+    "median_ms": 1000,
+    "answer_variants": 1,
+    "models_observed": [
+     "m1"
+    ]
+   },
+   "after": {
+    "median_ms": 500,
+    "answer_variants": 1,
+    "models_observed": [
+     "m2"
+    ]
+   },
+   "options": {},
+   "out": {
+    "speed_change": "FASTER",
+    "ratio": 0.5,
+    "model_changed": true,
+    "answer_change": "COMPARE_BY_DIFF"
+   }
+  },
+  {
+   "before": {
+    "median_ms": 1000,
+    "answer_variants": 1,
+    "models_observed": [
+     "m1"
+    ]
+   },
+   "after": {
+    "median_ms": null
+   },
+   "options": {},
+   "out": {
+    "speed_change": "NOT_COMPARABLE",
+    "answer_change": "NOT_COMPARABLE"
+   }
+  },
+  {
+   "before": null,
+   "after": {
+    "median_ms": 1800,
+    "answer_variants": 1,
+    "models_observed": [
+     "m2"
+    ]
+   },
+   "options": {},
+   "out": {
+    "speed_change": "NOT_COMPARABLE",
+    "answer_change": "NOT_COMPARABLE"
+   }
+  },
+  {
+   "before": {
+    "median_ms": 1000,
+    "answer_variants": 1,
+    "models_observed": [
+     "m1"
+    ]
+   },
+   "after": {
+    "median_ms": 1800,
+    "answer_variants": 2,
+    "models_observed": [
+     "m2"
+    ]
+   },
+   "options": {},
+   "out": {
+    "speed_change": "SLOWER",
+    "ratio": 1.8,
+    "model_changed": true,
+    "answer_change": "VARIES_WITHIN_SESSION"
+   }
+  },
+  {
+   "before": {
+    "median_ms": 1000,
+    "answer_variants": 1,
+    "models_observed": [
+     "m1"
+    ]
+   },
+   "after": {
+    "median_ms": 1800,
+    "answer_variants": 1,
+    "models_observed": [
+     "m2"
+    ]
+   },
+   "options": {
+    "slowdownRatio": 2
+   },
+   "out": {
+    "speed_change": "SIMILAR",
+    "ratio": 1.8,
+    "model_changed": true,
+    "answer_change": "COMPARE_BY_DIFF"
+   }
+  },
+  {
+   "before": {
+    "median_ms": 1000,
+    "answer_variants": 1,
+    "models_observed": [
+     "m2"
+    ]
+   },
+   "after": {
+    "median_ms": 1800,
+    "answer_variants": 1,
+    "models_observed": [
+     "m2"
+    ]
+   },
+   "options": {},
+   "out": {
+    "speed_change": "SLOWER",
+    "ratio": 1.8,
+    "model_changed": false,
+    "answer_change": "COMPARE_BY_DIFF"
+   }
+  }
+ ],
+ "note": "Outputs produced by the AMU core at the named revision. Builder tools/v1/speed-test.mjs must reproduce every out (paste runs: minus answer.line_digests, a Builder addition)."
+}

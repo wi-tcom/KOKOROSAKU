@@ -3,6 +3,7 @@ import * as ActiveSaku from "../tools/unified-v1/active-saku.mjs";
 import * as Library from "../tools/unified-v1/character-library.mjs";
 import { parseCharacterText, YamlLiteError } from "../tools/unified-v1/yaml-lite.mjs";
 import { admit, checkManifestBinding, classify, labelFor, UNKNOWN } from "../tools/unified-v1/character-schema.mjs";
+import { OPERATION_CLASS_TEXT, assessPackSignatures, packEntryMeta, packVerification, signatureStateText } from "../tools/unified-v1/character-pack-intake.mjs";
 import { presentationTokens, absentAxes } from "../tools/unified-v1/axis-renderer.mjs";
 import * as TuningUI from "./tuning-ui.mjs";
 import * as Tuning from "../tools/unified-v1/tuning/tuning-projection.mjs";
@@ -165,6 +166,10 @@ function importRecovery(code, reason) {
   if (code === "PAYLOAD_SCHEMA_NOT_DECLARED" || code === "SCHEMA_NOT_DECLARED") {
     return `${reason} Schema未宣言のCharacterを直接Unified Characterとして扱いません。Legacy Characterの場合はSAKU ConverterとConversion Receiptを経由してください。`;
   }
+  if (code === "PACKAGE_FORMAT_UNRECOGNIZED" || code === "PACKAGE_JSON_INVALID") return reason;
+  if (String(code || "").startsWith("CHARACTER_PACK_")) {
+    return `${reason} SAKU Character Pack は ZIP のまま（解凍せずに）選んでください。ファイルが配布元のものと同じかは SHA256SUMS で確認できます。`;
+  }
   return reason;
 }
 
@@ -215,6 +220,13 @@ function renderDetail(record) {
   const dl = document.createElement("dl");
   addDetailRow(dl, labels.role, record.role); addDetailRow(dl, labels.category, record.category); addDetailRow(dl, labels.revision, record.revision);
   addDetailRow(dl, labels.availability, availabilityLabel(record.availability), false); addDetailRow(dl, labels.packageState, record.package_state, false);
+  if (record.provenance) {
+    const lang = locale() === "en-US" ? "en" : "ja";
+    const classText = OPERATION_CLASS_TEXT[record.provenance.operation_class];
+    addDetailRow(dl, lang === "en" ? "Operation class" : "運用区分", classText ? classText[lang] : String(record.provenance.operation_class || "UNKNOWN"), false);
+    addDetailRow(dl, "Character Pack", `${record.provenance.pack_id} ${record.provenance.pack_version}${record.provenance.catalog_release_version ? ` · ${record.provenance.catalog_release_version}` : ""}`, false);
+    addDetailRow(dl, lang === "en" ? "Signature" : "署名", signatureStateText(record.provenance.signature_state, lang, record.provenance.publisher_fingerprint), false);
+  }
   addDetailRow(dl, labels.composition, record.one_plus_seven); addDetailRow(dl, labels.expertise, record.expertise); addDetailRow(dl, labels.expected, record.expected_profile);
   const technical = document.createElement("details"); const technicalTitle = document.createElement("summary"); technicalTitle.textContent = labels.technical; const technicalList = document.createElement("dl");
   addDetailRow(technicalList, labels.schema, `${record.technical.schema_id} @ ${record.technical.schema_version}`);
@@ -488,6 +500,8 @@ function recordsFromLibrary(entries) {
       id: entry.entry_id, entry_id: entry.entry_id, character_id: base.id,
       deleted: Boolean(entry.deleted), draft: Boolean(entry.draft),
       batch: entry.batch || "", source: entry.source || "", ...state,
+      provenance: entry.provenance || null,
+      pack: entry.verification?.pack || null,
     };
   }).filter(Boolean);
 }
@@ -629,14 +643,14 @@ async function reconstructFromWorkspace() {
   return { status: recovered ? "RECOVERED" : "NOTHING_RECOVERED", recovered, workspace: durable.workspace };
 }
 
-function addToLibrary(characters, source, verification) {
+function addToLibrary(characters, source, verification, entryMeta = null) {
   if (!characters.length) { showViewerStatus("NOTHING_TO_IMPORT", "読み込めるCharacterがファイルに含まれていません。", "warning"); return null; }
   const { accepted, refused } = admitCharacters(characters);
   let added = 0, replaced = 0, failure = "";
   for (const [key, group] of accepted) {
     const schema = JSON.parse(key);
     const { onConflict } = resolveConflicts(group);
-    const outcome = Library.importCharacters(group, source, { onConflict, verification, schema });
+    const outcome = Library.importCharacters(group, source, { onConflict, verification, schema, entryMeta });
     if (!outcome.saved) { failure = outcome.reason; continue; }
     added += outcome.added; replaced += outcome.replaced;
   }
@@ -1163,10 +1177,35 @@ function handOffImport(result) {
     showRecovery("package", binding.code);
     return;
   }
+  if (result.pack) { handOffCharacterPack(result, characters, binding); return; }
   const key = result.manifest?.content_type === "CHARACTER" ? "saku.desktop.pendingCharacter" : "saku.desktop.pendingPack";
   if (key === "saku.desktop.pendingCharacter") storeBoundCharacter(key, result.payload_json); else localStorage.setItem(key, result.payload_json);
   clearRecovery(); showStatus("PACKAGE_IMPORTED", `${result.reason} 保存先: ${result.imported_path}`, "success");
   addToLibrary(characters, "PACKAGE", { status: result.status, code: result.code, product: result.manifest?.product || "", schema_id: binding.schema_id, schema_version: binding.schema_version });
+}
+
+// A sold SAKU Character Pack. The host recomputed every digest; the signatures
+// are checked here with the pinned publisher keys. FAIL refuses the whole pack.
+// DIGEST_ONLY (no Ed25519 in this WebView) imports, but the label says so.
+async function handOffCharacterPack(result, characters, binding) {
+  const pack = result.pack;
+  const signatures = await assessPackSignatures(pack);
+  if (signatures.signature_state === "FAIL") {
+    const reason = `署名検証に失敗したため取り込みませんでした: ${signatures.detail}`;
+    showStatus("CHARACTER_PACK_SIGNATURE_INVALID", reason, "error");
+    showViewerStatus("CHARACTER_PACK_SIGNATURE_INVALID", `${reason} 配布元から入手し直してください。`, "error");
+    showRecovery("package", "CHARACTER_PACK_SIGNATURE_INVALID");
+    recordImport({ kind: "PACKAGE", source_path: result.source_path || "", status: "REFUSED", code: "CHARACTER_PACK_SIGNATURE_INVALID", fields: [] });
+    return;
+  }
+  const verification = packVerification(result, signatures);
+  const meta = packEntryMeta(pack, signatures);
+  const classes = [...meta.values()].reduce((acc, item) => { acc[item.operation_class] = (acc[item.operation_class] || 0) + 1; return acc; }, {});
+  const classText = Object.entries(classes).sort().map(([cls, count]) => `${cls}:${count}`).join(" / ");
+  clearRecovery();
+  showStatus("CHARACTER_PACK_IMPORTED", `${pack.pack_id} ${pack.pack_version}: ${pack.character_count}体（運用区分 ${classText}）。${signatureStateText(signatures.signature_state, "ja", signatures.fingerprints?.[pack.pack_publisher_key_id] || null)}。保存先: ${result.imported_path}`, signatures.signature_state === "PASS" ? "success" : "warning");
+  addToLibrary(characters, "PACKAGE", verification, character => meta.get(String(character?.identity?.character_id || "")) || null);
+  void binding;
 }
 
 // Individual import: a Character authored as JSON or YAML, with no package

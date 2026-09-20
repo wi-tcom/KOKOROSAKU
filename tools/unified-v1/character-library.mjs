@@ -97,7 +97,7 @@ export function nameConflicts(characters, { includeDeleted = false } = {}) {
  * caller that does not say which schema a Character is written in is refused,
  * because the alternative is a row nothing downstream knows how to render.
  */
-export function importCharacters(characters, source = "IMPORT", { onConflict = "KEEP_BOTH", verification = null, schema = null } = {}) {
+export function importCharacters(characters, source = "IMPORT", { onConflict = "KEEP_BOTH", verification = null, schema = null, entryMeta = null } = {}) {
   if (!schema || !schema.kind || schema.kind === "UNKNOWN_CHARACTER") {
     return { added: 0, replaced: 0, saved: false, reason: "SCHEMA_KIND_REQUIRED", rejected: characters.length };
   }
@@ -114,10 +114,15 @@ export function importCharacters(characters, source = "IMPORT", { onConflict = "
     if (!character || typeof character !== "object") continue;
     const name = displayNameOf(character);
     const existing = name ? byName.get(name) : null;
+    // Provenance the intake established for this one Character (a pack entry's
+    // operation class, digests, signature state).  Stored beside the Character,
+    // never written into it.
+    const provenance = typeof entryMeta === "function" ? (entryMeta(character) || null) : null;
     if (existing && onConflict === "REPLACE") {
       existing.character = character;
       existing.source = source;
       existing.verification = verification;
+      existing.provenance = provenance;
       existing.schema = schema;
       existing.updated_at = at;
       existing.batch = at;
@@ -125,7 +130,7 @@ export function importCharacters(characters, source = "IMPORT", { onConflict = "
       replaced += 1;
       continue;
     }
-    const entry = { entry_id: newId(), character, source, verification, schema, added_at: at, batch: at, deleted: false };
+    const entry = { entry_id: newId(), character, source, verification, provenance, schema, added_at: at, batch: at, deleted: false };
     state.entries.push(entry);
     if (name && !byName.has(name)) byName.set(name, entry);
     added += 1;

@@ -142,7 +142,7 @@ const report = JSON.parse(body || '{"status":"FAIL","error":"NO_BROWSER_REPORT"}
 if (report.status !== "PASS") throw new Error(`${report.error || "PUBLIC_BROWSER_SMOKE_FAILED"}\n${browserErrors}`.trim());
 checks.push(...report.checks);
 
-const PACKAGE_PREFIX = "KOKOROSAKU-v0.1.0-beta.1";
+const PACKAGE_PREFIX = "KOKOROSAKU-v0.1.0-beta.2";
 const zipWorkspace = await mkdtemp(path.join(tmpdir(), "saku-public-zip-"));
 const zipSource = path.join(zipWorkspace, "source", PACKAGE_PREFIX);
 const zipArchive = path.join(zipWorkspace, `${PACKAGE_PREFIX}.zip`);

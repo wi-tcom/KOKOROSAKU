@@ -1,0 +1,19 @@
+.xr-state { display:inline-block; padding:3px 10px; border-radius:999px; font-weight:750; font-size:14px; background:#e7eee7; }
+.xr-state[data-state="REVIEW_ONLY_STORED"] { background:#dcefe1; color:var(--green); }
+.xr-state[data-state="STALE_READ_ONLY"] { background:#fff1cf; color:#664b17; }
+.xr-state[data-state="ARCHIVED"] { background:#e4e4e0; color:var(--muted); }
+.xr-intake-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(16rem,22rem); gap:18px; align-items:start; }
+.xr-intake-grid > * { min-width:0; }
+#xr-detail { overflow-x:auto; }
+.xr-list { display:grid; gap:8px; }
+.xr-list button { text-align:left; width:100%; display:flex; justify-content:space-between; gap:10px; align-items:center; }
+.xr-list button[aria-pressed="true"] { border-width:2px; box-shadow:0 0 0 2px #315f4822; }
+.xr-digests { display:grid; grid-template-columns:minmax(10rem,14rem) minmax(0,1fr); gap:8px 14px; margin:0; }
+.xr-digests dt { font-weight:700; } .xr-digests dd { margin:0; overflow-wrap:anywhere; font-family:ui-monospace,Consolas,monospace; font-size:14px; }
+.xr-items { border-collapse:collapse; width:100%; font-size:14px; }
+.xr-items th,.xr-items td { text-align:left; padding:8px; border-bottom:1px solid var(--line); vertical-align:top; }
+.xr-items td[data-state="NOT_ASSESSED"],.xr-items td[data-diff="NOT_COMPARABLE"] { color:var(--muted); font-style:italic; }
+.xr-items td[data-diff="AT_RISK"],.xr-items td[data-diff="VIOLATION"],.xr-items td[data-diff="FLATTENED"],.xr-items td[data-diff="BELOW_EXPECTED"],.xr-items td[data-diff="ABOVE_EXPECTED"] { font-weight:700; }
+.xr-missing { display:block; color:var(--muted); font-size:12.5px; overflow-wrap:anywhere; }
+.xr-boundary { border-left:4px solid var(--green); }
+@media(max-width:760px) { .xr-intake-grid,.xr-digests { grid-template-columns:1fr; } .xr-items { display:block; overflow-x:auto; } }

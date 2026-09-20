@@ -1,4 +1,4 @@
-# Third-Party Notices — SAKU Builder 0.1.0-beta.1 Public Preview
+# Third-Party Notices — SAKU Builder 0.1.0-beta.2 Public Preview
 
 This inventory is bound to the public Windows installer whose SHA-256 is
 `4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63`.
