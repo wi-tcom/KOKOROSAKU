@@ -1,0 +1,132 @@
+{
+  "schema": "amu.trainer-return-negatives/1",
+  "positive": "amu-trainer-return.sample.json",
+  "note": "Each file is the positive sample with exactly one defect. A conforming receiver refuses every file; the code is the AMU reference code (a receiver may use its own names but must refuse for the same reason).",
+  "cases": [
+    {
+      "file": "wrong-packet-schema.json",
+      "expected_code": "PACKET_SCHEMA_INVALID",
+      "note": "schema string differs"
+    },
+    {
+      "file": "wrong-candidate-schema.json",
+      "expected_code": "PACKET_SCHEMA_INVALID",
+      "note": "candidate schema differs"
+    },
+    {
+      "file": "wrong-destination.json",
+      "expected_code": "PACKET_SCHEMA_INVALID",
+      "note": "not addressed to SAKU_BUILDER"
+    },
+    {
+      "file": "candidate-digest-mismatch.json",
+      "expected_code": "CANDIDATE_DIGEST_MISMATCH",
+      "note": "content changed after digest (may also fail vocabulary first; digest must never verify)"
+    },
+    {
+      "file": "candidate-digest-tampered.json",
+      "expected_code": "CANDIDATE_DIGEST_MISMATCH",
+      "note": "digest value replaced"
+    },
+    {
+      "file": "automatic-apply-true-packet.json",
+      "expected_code": "AUTOMATIC_APPLY_FORBIDDEN",
+      "note": "packet-level automatic_apply"
+    },
+    {
+      "file": "automatic-apply-true-candidate.json",
+      "expected_code": "AUTOMATIC_APPLY_FORBIDDEN",
+      "note": "candidate-level automatic_apply (digest also breaks; apply flag must be checked first)"
+    },
+    {
+      "file": "automatic-apply-string-false.json",
+      "expected_code": "AUTOMATIC_APPLY_FORBIDDEN",
+      "note": "type-strict: the string \"false\" is not false"
+    },
+    {
+      "file": "canonical-fields-added.json",
+      "expected_code": "CANONICAL_FIELDS_FORBIDDEN",
+      "note": "claims a canonical field was added"
+    },
+    {
+      "file": "wrong-confirmation-subject.json",
+      "expected_code": "RETURN_SUBJECT_MISMATCH",
+      "note": "a handoff confirmation is not a return confirmation"
+    },
+    {
+      "file": "missing-confirmation.json",
+      "expected_code": "RETURN_SUBJECT_MISMATCH",
+      "note": "no confirmation reference"
+    },
+    {
+      "file": "edit-proposal-included.json",
+      "expected_code": "EDIT_PROPOSAL_IN_REVIEW_PACKET",
+      "note": "Diff smuggled as a change proposal"
+    },
+    {
+      "file": "replace-exact-value-included.json",
+      "expected_code": "EDIT_PROPOSAL_IN_REVIEW_PACKET",
+      "note": "edit operation member"
+    },
+    {
+      "file": "selected-by-human-included.json",
+      "expected_code": "EDIT_PROPOSAL_IN_REVIEW_PACKET",
+      "note": "return confirmation dressed as Builder selection"
+    },
+    {
+      "file": "legacy-field-included.json",
+      "expected_code": "LEGACY_SCHEMA_TARGET_PROHIBITED",
+      "note": "vNext/legacy field revived"
+    },
+    {
+      "file": "items-21.json",
+      "expected_code": "ITEM_SET_INVALID",
+      "note": "21 items (duplicate id)"
+    },
+    {
+      "file": "items-19.json",
+      "expected_code": "ITEM_SET_INVALID",
+      "note": "19 items"
+    },
+    {
+      "file": "item-id-out-of-range.json",
+      "expected_code": "ITEM_SET_INVALID",
+      "note": "unknown item id"
+    },
+    {
+      "file": "item-state-model-swapped.json",
+      "expected_code": "ITEM_SET_INVALID",
+      "note": "T01 is BAND in the knowledge"
+    },
+    {
+      "file": "state-vocabulary-invalid.json",
+      "expected_code": "STATE_VOCABULARY_INVALID",
+      "note": "state outside the BAND model"
+    },
+    {
+      "file": "diff-vocabulary-invalid.json",
+      "expected_code": "STATE_VOCABULARY_INVALID",
+      "note": "diff outside the model"
+    },
+    {
+      "file": "not-assessed-coerced.json",
+      "expected_code": "STATE_VOCABULARY_INVALID",
+      "note": "NOT_ASSESSED side but a comparable diff (default filled in)"
+    },
+    {
+      "file": "knowledge-provenance-mismatch.json",
+      "expected_code": "KNOWLEDGE_PROVENANCE_MISMATCH",
+      "note": "claims another SAKU packet"
+    },
+    {
+      "file": "knowledge-revision-mismatch.json",
+      "expected_code": "KNOWLEDGE_PROVENANCE_MISMATCH",
+      "note": "carried from a different Builder revision"
+    },
+    {
+      "file": "character-identity-missing.json",
+      "expected_code": "CHARACTER_IDENTITY_INVALID",
+      "note": "no revision to bind to"
+    }
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "profile": "saku.desktop.public-build-envelope@1",
+  "artifact": {
+    "product": "SAKU Builder",
+    "version": "0.1.0-beta.2",
+    "filename": "SAKU Builder_0.1.0-beta.2_x64-setup.exe",
+    "relative_path": "release/bundle/nsis/SAKU Builder_0.1.0-beta.2_x64-setup.exe",
+    "sha256": "7d357f41a59d923f940acc2fd7f7d65a3aee5ee0840f06a8e8def9fd83fcb572",
+    "bytes": 1875865,
+    "code_signing": "UNSIGNED"
+  },
+  "application_artifact": {
+    "product": "SAKU Builder",
+    "version": "0.1.0-beta.2",
+    "filename": "saku-builder-desktop.exe",
+    "relative_path": "release/saku-builder-desktop.exe",
+    "sha256": "106aa0503e2c5b736f328e9820b45c87a57eb36b783d86bf8f90201693873989",
+    "embedded_sha256": "106aa0503e2c5b736f328e9820b45c87a57eb36b783d86bf8f90201693873989",
+    "post_bundle_release_sha256": "41b29dccfb1fd37e9ee1f01d5fd9c5795f43bbcf0fffbaa51e1bd986543b0d9b",
+    "bundle_type_stamp_note": "The installer-embedded application and post-bundle release executable differ at 3 byte(s) (offsets 3812866–3812868, the Tauri bundle-type stamp). sha256 is the installer-embedded identity.",
+    "bytes": 4040704,
+    "code_signing": "UNSIGNED",
+    "host_path_scan": {
+      "user_profile_root_backslash": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "user_profile_root_slash": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "build_user_name": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "cloud_sync_folder_name": {
+        "utf8": false,
+        "utf16le": false
+      }
+    },
+    "host_path_scan_note": "Needles were the build host's user-profile roots, user name and cloud-sync folder name; labels are generic in this public copy."
+  },
+  "source": {
+    "repository": "wi-tcom/-SAKU-builder",
+    "commit": "20663d6078675df64f2fe4a9640ac3c1313bbaa7",
+    "tree": "8e1bd558bfe4be8e1bcb22cc92ec33dd201cb290",
+    "branch": "claude/saku-pack-import-fix-20260920",
+    "note": "Candidate built from the fix branch before merge; the merge into main is a fast-forward-equivalent content match only if main is merged without further changes — re-measure if the merged tree differs."
+  },
+  "resource_profile": {
+    "name": "public-oss",
+    "file": "resource-profile.json",
+    "sha256": "6a3ae8a7faeaa719d24f0aff70d816fb8a27d99c03b47bbd4a31f2ad7a0984a4",
+    "distribution_boundary": "PUBLIC_OSS_CANDIDATE",
+    "internal_content_count": 0
+  },
+  "build_metadata": {
+    "file": "build-metadata.json",
+    "sha256": "935dff79686c4a02286f8736b4b66b3eebdccb9c4763e1a218d0ca417d0107bc"
+  },
+  "bundled_notice_binding": {
+    "mode": "SHA_INDEPENDENT_EXTERNAL_RELEASE_ASSET_MANIFEST",
+    "files": {
+      "LICENSING.md": "a6458500644dad679886adde96958cb1b74ca169912eb95c35b0e44cffa0a4db",
+      "THIRD_PARTY_NOTICES.md": "855ab34e5da9c1c6c0975445acb3ae6589ad257db34d5bf9822c05fcf7c91b7c",
+      "third-party/THIRD_PARTY_LICENSE_MANIFEST.json": "5a58382f4f53f775ea1e82ed29525a939b9f189093d1911ffb43c6046e3e773f"
+    },
+    "embedded_installer_sha256_reference_count": 0
+  },
+  "tauri_public_override": {
+    "file": "tauri.public.override.json",
+    "sha256": "fbfdc5edb130c3a82558ca55e77ae8a2844d5f1a3c97b7f661f69c613389a85a",
+    "purpose": "preserve the prepared public resource projection by disabling the default owner-internal beforeBuildCommand"
+  },
+  "rust_flags": {
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": {
+      "encoding": "U+001F-separated argv",
+      "arguments": [
+        "--remap-path-prefix=<BUILD_USER_HOME>\\\\=/host/",
+        "--remap-path-prefix=<BUILD_USER_HOME>/=/host/",
+        "--remap-path-prefix=<CARGO_REGISTRY_SRC>\\\\=/cargo/registry/src/",
+        "--remap-path-prefix=<CARGO_REGISTRY_SRC>/=/cargo/registry/src/"
+      ],
+      "parameters": {
+        "BUILD_USER_HOME": "absolute build-user home on the reproducing host; not published",
+        "CARGO_REGISTRY_SRC": "absolute Cargo registry source root on the reproducing host; not published"
+      },
+      "result_contract": "no build-host absolute path remains in the public application executable"
+    }
+  },
+  "target": {
+    "triple": "x86_64-pc-windows-msvc",
+    "cargo_target_label": "tauri-exact-1.97.1-beta2-public-oss-20663d6-001"
+  },
+  "build_revision": {
+    "full": "20663d6078675df64f2fe4a9640ac3c1313bbaa7",
+    "display": "20663d607867",
+    "stamped_index_sha256": "6d866900fbd41f7a78aa66e88cee88c102a73e04bad32d3fb353bdb4a532c6bd"
+  },
+  "tools": {
+    "node": "24.21.0",
+    "npm": "11.19.0",
+    "rustc": "1.97.1 (8bab26f4f 2026-07-14)",
+    "cargo": "1.97.1 (c980f4866 2026-06-30)",
+    "llvm": "22.1.6",
+    "tauri_cli": "2.11.4",
+    "tauri_runtime_crate": "2.11.5",
+    "tauri_build_crate": "2.6.3",
+    "nsis": "3.11",
+    "visual_studio_build_tools": "18.7.1 (18.7.11911.148)",
+    "msvc": "14.51.36231",
+    "deviation_note": "Same host toolchain as -003 (rustc/cargo 1.97.1, Tauri CLI 2.11.4, Node 24.21.0 / npm 11.19.0)."
+  },
+  "build": {
+    "cwd": "<REPOSITORY_ROOT>",
+    "environment": {
+      "CARGO_TARGET_DIR": "<REPOSITORY_ROOT>/src-tauri/target/tauri-exact-1.97.1-beta2-public-oss-20663d6-001",
+      "CARGO_ENCODED_RUSTFLAGS": "construct from rust_flags.CARGO_ENCODED_RUSTFLAGS.arguments using U+001F",
+      "CARGO_NET_OFFLINE": "true",
+      "CARGO_BUILD_JOBS": "1",
+      "CARGO_INCREMENTAL": "0",
+      "RUSTUP_TOOLCHAIN": "1.97.1"
+    },
+    "command": "<NODE_24_21_0>/node.exe node_modules/@tauri-apps/cli/tauri.js build --bundles nsis --config docs/releases/0.1.0-beta.2/tauri.public.override.json -- --locked",
+    "bundles": [
+      "nsis"
+    ],
+    "offline": true,
+    "locked": true,
+    "jobs": 1,
+    "source_mutation": 0,
+    "duration": "7m 07s (cargo release profile) / 7m 12s total",
+    "builder": "Claude (temporary Active Writer, Owner assignment 2026-09-15: -003 envelope/notice rebind only)"
+  },
+  "webview2": {
+    "install_mode": "downloadBootstrapper",
+    "bootstrapper_url": "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+    "bootstrapper_bundled": false,
+    "runtime_bundled": false
+  },
+  "contents_since_beta1": [
+    "PR #25 external review-only Trainer intake (saku.trainer.external-review-intake@1)",
+    "PR #26 AI speed test paste mode",
+    "Character Pack import fix (this branch): Package import reads Package 3.0.0 saku-unified-v1 packs; digest bindings verified by the host; Ed25519 signatures verified in the page with pinned publisher keys; operation class provenance"
+  ],
+  "superseded": {
+    "version": "0.1.0-beta.1",
+    "target_label": "tauri-exact-1.97.1-beta1-public-oss-2200704-003",
+    "installer_sha256": "4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63",
+    "embedded_sha256": "0ed118b3ae127307ad46f89f83a1646eb08bfc3db190e9180ee79fef7d57c4f2",
+    "reason": "β.1 Package import refused the sold SAKU Character Packs (Owner defect 2026-09-20)."
+  }
+}

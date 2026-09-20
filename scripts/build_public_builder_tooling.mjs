@@ -33,6 +33,18 @@ function project(text, source) {
     ["./v1/frozen-ia-ui.mjs", "./lib/frozen-ia-ui.mjs"],
     ["./unified-v1/trainer-ux4.css", "./trainer.css"],
     ["./unified-v1/trainer-ux4-ui.mjs", "./lib/trainer-ui.mjs"],
+    ["./unified-v1/external-review-ui.mjs", "./lib/external-review-ui.mjs"],
+    ["./unified-v1/external-review.css", "./external-review.css"],
+    ["../v1/external-review-intake.mjs", "./external-review-intake.mjs"],
+    ["./tuning/tuning-projection.mjs", "./tuning-projection.mjs"],
+    ["./saku-external-review.html", "./external-review.html"],
+    ["./unified-v1/speed-test-ui.mjs", "./lib/speed-test-ui.mjs"],
+    ["./unified-v1/speed-test.css", "./speed-test.css"],
+    ["../v1/speed-test-store.mjs", "./speed-test-store.mjs"],
+    ["../v1/speed-test.mjs", "./speed-test.mjs"],
+    ["./external-review-intake.mjs", "./external-review-intake.mjs"],
+    ["./saku-speed-test.html", "./speed-test.html"],
+    ["./saku-trainer.html", "./trainer.html"],
     ["../unified-v1/unified-schema-v1.mjs", "./unified-schema.mjs"],
     ["../unified-schema-v1.mjs", "./unified-schema.mjs"],
     ["./unified-schema-v1.mjs", "./unified-schema.mjs"],
@@ -66,6 +78,12 @@ function project(text, source) {
     output = output.replace("</head>", '<meta name="saku-character-selection" content="disabled">\n</head>');
     output = output.replace(/\s*<a class="btn-sm unified-v1-link"[^>]*>Unified V1<\/a>/, "\n    <a class=\"btn-sm trainer-link\" id=\"openTrainer\" href=\"./trainer.html\">Trainer</a>");
     output = output.replace("</nav>", "<a class=\"btn-sm\" href=\"./about.html\">About</a></nav>");
+  }
+  if (source === "tools/saku-speed-test.html") {
+    output = output.replace("</head>", '<link rel="icon" href="./favicon.ico">\n</head>');
+  }
+  if (source === "tools/saku-external-review.html") {
+    output = output.replace("</head>", '<link rel="icon" href="./favicon.ico">\n</head>');
   }
   if (source === "tools/saku-trainer.html") {
     output = output.replace("</head>", '<link rel="icon" href="./favicon.ico">\n</head>');

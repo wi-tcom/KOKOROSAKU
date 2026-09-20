@@ -12,7 +12,7 @@ components must not be treated as one license scope.
 | Third-party components | Per-component licenses | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) |
 | SAKU/KOKOROSAKU/KOKOROAMU/WI-T names and marks | Not licensed by the code/document licenses | [TRADEMARK.md](TRADEMARK.md) |
 
-## SAKU Builder 0.1.0-beta.1 Public Preview scope
+## SAKU Builder 0.1.0-beta.2 Public Preview scope
 
 This section is bound to:
 

@@ -1,0 +1,14 @@
+{
+  "profile": "saku.desktop.build-metadata@1",
+  "resource_profile": "public-oss",
+  "distribution_boundary": "PUBLIC_OSS_CANDIDATE",
+  "internal_content_count": 0,
+  "source_commit": "20663d6078675df64f2fe4a9640ac3c1313bbaa7",
+  "source_tree": "8e1bd558bfe4be8e1bcb22cc92ec33dd201cb290",
+  "build_revision_display": "20663d607867",
+  "local_server": false,
+  "one_drive_runtime_dependency": false,
+  "approved_checkout_build_source_only": true,
+  "code_signing": "UNSIGNED",
+  "publication": false
+}

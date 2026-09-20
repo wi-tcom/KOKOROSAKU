@@ -1,0 +1,19 @@
+.st-manual { display:block; margin:6px 0 10px; padding:6px 10px; border-left:4px solid var(--amber); background:#fff7e0; color:#664b17; font-weight:650; font-size:14px; }
+.st-setup { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.st-thresholds { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-top:8px; }
+.st-thresholds input,.st-setup input[type=text] { width:100%; padding:10px; border:1px solid #8d9e91; border-radius:5px; background:white; color:var(--ink); }
+.st-probe { padding:18px; margin:14px 0; border:1px solid var(--line); border-radius:10px; background:var(--paper); }
+.st-probe[data-running="true"] { border-color:var(--green); box-shadow:0 0 0 2px #315f4822; }
+.st-probe-text { width:100%; min-height:64px; font-family:ui-monospace,Consolas,monospace; }
+.st-clock { font-variant-numeric:tabular-nums; font-size:28px; font-weight:800; min-width:7ch; display:inline-block; }
+.st-runs { border-collapse:collapse; width:100%; font-size:14px; }
+.st-runs th,.st-runs td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; overflow-wrap:anywhere; }
+.st-agg { display:grid; grid-template-columns:repeat(auto-fit,minmax(9rem,1fr)); gap:8px 14px; margin:10px 0; }
+.st-agg div { padding:6px 0; } .st-agg dt { font-size:12.5px; color:var(--muted); } .st-agg dd { margin:0; font-weight:700; }
+.st-verdict[data-v="NOT_ASSESSED"],.st-verdict[data-v="NOT_COMPARABLE"] { color:var(--muted); font-style:italic; font-weight:500; }
+.st-verdict[data-v="SLOW"],.st-verdict[data-v="DRIFTED"],.st-verdict[data-v="SLOWER"],.st-verdict[data-v="DEVIATES"] { color:#853521; }
+.st-verdict[data-v="FAST"],.st-verdict[data-v="STABLE"],.st-verdict[data-v="CONFORMS"],.st-verdict[data-v="FASTER"] { color:var(--green); }
+.st-group { margin:16px 0; }
+.st-small-mono { font-family:ui-monospace,Consolas,monospace; font-size:12.5px; }
+.st-layout > * { min-width:0; } .st-group,.st-probe { overflow-x:auto; }
+@media(max-width:760px) { .st-setup,.st-thresholds { grid-template-columns:1fr; } .st-runs { display:block; overflow-x:auto; } }

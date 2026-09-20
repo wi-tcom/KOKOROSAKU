@@ -1,0 +1,54 @@
+{
+  "schema": "erabazu.candidate/speed-test-probe-pack/v1",
+  "pack_id": "erabazu/speed-test-probe-pack/default",
+  "pack_revision": "candidate-1",
+  "text_encoding": "UTF-8",
+  "line_ending": "LF",
+  "unicode_normalization": "NONE",
+  "digest_format": "sha256:<hex64>",
+  "probes": [
+    {
+      "id": "echo-1",
+      "title": "往復",
+      "text": "次の 1 語だけを返してください: 了解",
+      "digest": "sha256:1024c08de9bdd224fdac12223c9c8118388b165f19d0741f6a97669763a7cd3d",
+      "expect": {
+        "kind": "exact",
+        "value": "了解"
+      }
+    },
+    {
+      "id": "count-1",
+      "title": "数える",
+      "text": "1 から 12 までの整数をカンマ区切りで、他の文字を含めずに返してください。",
+      "digest": "sha256:4952832614fdcd83433bbeb711db7168fe0244897517915ea03a1f782e89ce16",
+      "expect": {
+        "kind": "exact",
+        "value": "1,2,3,4,5,6,7,8,9,10,11,12"
+      }
+    },
+    {
+      "id": "reason-1",
+      "title": "短い推論",
+      "text": "「東京は日本の首都である。大阪は東京より西にある。」この 2 文から確実に言えることを 1 文、20 字以内で書いてください。",
+      "digest": "sha256:8de9d5ea5dd767f15b6f325b070c3e09397ee68d7890e9914aae9456094675dd",
+      "expect": {
+        "kind": "length",
+        "max": 40
+      }
+    },
+    {
+      "id": "format-1",
+      "title": "形式遵守",
+      "text": "次の JSON だけを返してください（前後に文字を付けない）: {\"ok\":true,\"n\":3}",
+      "digest": "sha256:6b6f6755b25632acbf540ecedff07deb3046c32d8baa239fcabff6f3f9c342e8",
+      "expect": {
+        "kind": "json",
+        "value": {
+          "ok": true,
+          "n": 3
+        }
+      }
+    }
+  ]
+}
