@@ -5,8 +5,8 @@
     "version": "0.1.0-beta.8",
     "filename": "SAKU Builder_0.1.0-beta.8_x64-setup.exe",
     "relative_path": "release/bundle/nsis/SAKU Builder_0.1.0-beta.8_x64-setup.exe",
-    "sha256": "66b8c28d537f8387f2df511ee61f709959d95ea4f9f98958ddf812c68411b0c6",
-    "bytes": 2169165,
+    "sha256": "db0f544dcab30d7dd4517bc0a77f6e98ec12579a65dad2932d0ce8def8a314c9",
+    "bytes": 2169969,
     "code_signing": "UNSIGNED"
   },
   "application_artifact": {
@@ -14,11 +14,11 @@
     "version": "0.1.0-beta.8",
     "filename": "saku-builder-desktop.exe",
     "relative_path": "release/saku-builder-desktop.exe",
-    "sha256": "1119108e859c22618c277e037685ba9f8c1ac2a1c310283042cc35e227ff3812",
-    "embedded_sha256": "1119108e859c22618c277e037685ba9f8c1ac2a1c310283042cc35e227ff3812",
-    "post_bundle_release_sha256": "6e44c2c9914c5772fa2ca615ab397ed222f6e92d76d14050c73a1c0024371ed1",
-    "bundle_type_stamp_note": "The installer-embedded application and the post-bundle release executable differ at 3 byte(s) (offsets 3969594–3969596, the Tauri bundle-type stamp: \"NSIS\" against \"UNKNOWN\"). sha256 is the installer-embedded identity.",
-    "bytes": 4270080,
+    "sha256": "02d5615caaf79bb81573fa2c35a00e00ad5516a6e185d445023a0261e37df2ee",
+    "embedded_sha256": "02d5615caaf79bb81573fa2c35a00e00ad5516a6e185d445023a0261e37df2ee",
+    "post_bundle_release_sha256": "98c5f4646666e2daaa37a4c10dfecea65dd21eb8148183dc890d78aae296dc0f",
+    "bundle_type_stamp_note": "The installer-embedded application and the post-bundle release executable differ at 3 byte(s) (offsets 3970514–3970516, the Tauri bundle-type stamp: \"NSIS\" against \"UNKNOWN\"). sha256 is the installer-embedded identity.",
+    "bytes": 4271104,
     "code_signing": "UNSIGNED",
     "host_path_scan": {
       "user_profile_root_backslash": {
@@ -41,16 +41,16 @@
   },
   "source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "commit": "16a79a719a10b55b47ddffde6568d74b77ee2c34",
-    "tree": "eb3895ceac8a256df13ddb4df0a371807f98abd5",
-    "branch": "claude/saku-beta8-20260924",
+    "commit": "6e5112a0f9b849b2d5dc934c6f849f617f203cbc",
+    "tree": "9527b5c3aeb10cd8d88b23192d7b614e312ffa55",
+    "branch": "claude/saku-beta8-help-20260924",
     "note": "the version bump is committed before the build, so this commit and tree are the ones the binary was made from",
     "base": {
-      "commit": "6cc904f2bb503a02aceceb2c230cd3f287afad28",
+      "commit": "368ab8dc35d32e019ae5e785687545c34c38412e",
       "branch": "main",
-      "note": "main after PR #78 merged"
+      "note": "main after PR #79 merged (the first β.8 candidate)"
     },
-    "revision": "16a79a7"
+    "revision": "6e5112a"
   },
   "resource_profile": {
     "name": "public-oss",
@@ -97,9 +97,9 @@
   "target": {
     "triple": "x86_64-pc-windows-msvc",
     "cargo_target_label": "tauri-exact-1.97.1-beta7-public-oss-4fcd5dd-001",
-    "label": "tauri-exact-1.97.1-beta8-public-oss-16a79a7-001"
+    "label": "tauri-exact-1.97.1-beta8-public-oss-6e5112a-001"
   },
-  "build_revision": "16a79a7",
+  "build_revision": "6e5112a",
   "tools": {
     "node": "24.21.0",
     "npm": "11.19.0",
@@ -117,7 +117,7 @@
   "build": {
     "cwd": "<REPOSITORY_ROOT>",
     "environment": {
-      "CARGO_TARGET_DIR": "<REPOSITORY_ROOT>/src-tauri/target/tauri-exact-1.97.1-beta8-public-oss-16a79a7-001",
+      "CARGO_TARGET_DIR": "<REPOSITORY_ROOT>/src-tauri/target/tauri-exact-1.97.1-beta8-public-oss-6e5112a-001",
       "CARGO_ENCODED_RUSTFLAGS": "construct from rust_flags.CARGO_ENCODED_RUSTFLAGS.arguments using U+001F",
       "CARGO_NET_OFFLINE": "true",
       "CARGO_BUILD_JOBS": "1",
@@ -132,8 +132,8 @@
     "locked": true,
     "jobs": 1,
     "source_mutation": 0,
-    "duration": "7m 45s total",
-    "builder": "Claude Code (SAKU Builder Active Writer). Owner 2026-09-24: 見つかった所見は修正してください。／進めてください"
+    "duration": "7m 43s total",
+    "builder": "Claude Code (SAKU Builder Active Writer). Owner 2026-09-24: ヘルプの変更は「β.8 に入れて焼き直す」"
   },
   "webview2": {
     "install_mode": "downloadBootstrapper",
@@ -162,8 +162,8 @@
     "first_bundled_in": "0.1.0-beta.4"
   },
   "superseded": {
-    "supersedes": "0.1.0-beta.7",
-    "note": "β.7 (b7787034…) predates PR #78, the seven findings from its own hands-on and Chrome check."
+    "supersedes": "0.1.0-beta.8 first candidate (installer 66b8c28d…, embedded 1119108e…; never published) and 0.1.0-beta.7",
+    "note": "The first β.8 candidate (PR #79) lacks the help changes the Owner decided on 2026-09-24 (last-checked date on the manual badge, known issues first on 困ったとき). Same version number; the first candidate is void."
   },
   "contents_since_beta7": [
     "F1 the help says the list lives in the Workspace's .saku-builder folder and comes back after an uninstall (#78)",
@@ -172,7 +172,9 @@
     "F4 verdicts have Japanese and English names, the code stays in the title, and the run count reads （N 回） / (n = N) (#78)",
     "F5 an empty import state says so instead of UNKNOWN ×6 (#78)",
     "F6 the Trainer names the refusal of an inadmissible Character (#78)",
-    "F7 speed-test notices follow the language (#78)"
+    "F7 speed-test notices follow the language (#78)",
+    "help ①: the manual badge shows the version, the day it was last checked on the installed window and the environment (this rebuild)",
+    "help ②: 困ったとき opens with the three known issues of this version (this rebuild)"
   ],
   "provisional_wording": {
     "state": "NONE",

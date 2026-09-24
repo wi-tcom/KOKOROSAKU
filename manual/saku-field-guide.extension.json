@@ -1819,5 +1819,88 @@
       "the person": "the human at Seat 8 who confirms or decides (handoff and operation contexts)",
       "the customer": "the external party the user is serving (CUSTOMER_INTERACTION only)"
     }
+  },
+  "last_checked": {
+    "date": "2026-09-24",
+    "environment_ja": "Windows 11 Home 10.0.26200・WebView2 Runtime 153.0.4234.48",
+    "environment_en": "Windows 11 Home 10.0.26200, WebView2 Runtime 153.0.4234.48",
+    "source": "SAKU Builder(4) hands-on on the installed window of the rebuilt 0.1.0-beta.8 (record: docs/releases/0.1.0-beta.8); wording approved by ライター&SNS 9be2c32 (JA) and 英語翻訳チーム 6a28224 (EN Q4)"
+  },
+  "known_issues": {
+    "note": "「困ったとき」の先頭に置く、この版で分かっている問題（Owner 2026-09-24 承認、ライター&SNS 9be2c32、英語翻訳チーム Q1–Q3 6a28224）。見出しと 2 つのラベルの英語は英語翻訳チーム Q6–Q8（Wi-t_Site f1440dd／632021e）。 Markdown の書式（** と `）は画面に出さない。文字は承認文のまま。",
+    "heading": {
+      "ja": "この版で分かっている問題",
+      "en": "Known issues in this version"
+    },
+    "labels": {
+      "symptom": {
+        "ja": "症状",
+        "en": "Symptom"
+      },
+      "now": {
+        "ja": "いまどうなるか",
+        "en": "Impact"
+      },
+      "todo": {
+        "ja": "どうすればよいか",
+        "en": "What to do"
+      }
+    },
+    "items": [
+      {
+        "title": {
+          "ja": "英語表示で、括弧が全角のまま出ることがあります",
+          "en": "Full-width parentheses can appear in the English display"
+        },
+        "symptom": {
+          "ja": "英語表示にしたとき、一部の知らせで括弧が全角で出ます（例 AI-reported 6.0 s（unverifiable））。",
+          "en": "When the display is set to English, some notices show full-width parentheses (for example AI-reported 6.0 s（unverifiable）)."
+        },
+        "now": {
+          "ja": "表示だけの問題で、記録した値や計測の結果は変わりません。",
+          "en": "This affects the display only. The values recorded and the results of a measurement do not change."
+        },
+        "todo": {
+          "ja": "そのままお使いいただけます。次の版で直します。",
+          "en": "You can keep using it as it is. This will be fixed in the next version."
+        }
+      },
+      {
+        "title": {
+          "ja": "モデル欄が 1 回目のクリックで入力できないことがあります",
+          "en": "The model field may not take the first click"
+        },
+        "symptom": {
+          "ja": "AI スピードテストで、プロバイダ欄に入力した直後にモデル欄をクリックしても、入力できないことがあります。",
+          "en": "In the AI speed test, clicking the model field right after typing in the provider field sometimes does not start input."
+        },
+        "now": {
+          "ja": "入力が始まらないだけで、ほかの操作には影響しません。",
+          "en": "Only the input does not start; nothing else is affected."
+        },
+        "todo": {
+          "ja": "もう一度クリックすると入力できます。",
+          "en": "Click once more and you can type."
+        }
+      },
+      {
+        "title": {
+          "ja": "英語表示で、記録の表が途中で折り返します",
+          "en": "The records table wraps in the English display"
+        },
+        "symptom": {
+          "ja": "英語表示のスピードテストの記録の表で、「Delete」ボタンと一部の列名が途中で折り返します。",
+          "en": "In the English display of the speed-test records table, the \"Delete\" button and some column names wrap."
+        },
+        "now": {
+          "ja": "見た目だけの問題で、記録の内容と操作は変わりません。",
+          "en": "This affects the appearance only. The contents of the records and what you can do with them do not change."
+        },
+        "todo": {
+          "ja": "ウィンドウの幅を広げると読みやすくなります。次の版で直します。",
+          "en": "Widening the window makes it easier to read. This will be fixed in the next version."
+        }
+      }
+    ]
   }
 }
