@@ -4,8 +4,6 @@
 //   node scripts/verify_saku_builder.mjs example    # EXAMPLE の character.yaml を標準出力へ
 //   node scripts/verify_saku_builder.mjs blank      # 空データの YAML
 //   node scripts/verify_saku_builder.mjs json       # EXAMPLE の SAKU-CHARACTER JSON
-//   node scripts/verify_saku_builder.mjs prompt     # EXAMPLE の外部AIプロンプト
-//   node scripts/verify_saku_builder.mjs guild      # EXAMPLE の Guild 概要 JSON
 //   node scripts/verify_saku_builder.mjs tpl <key>  # テンプレートの YAML（例: pm-support）
 //   node scripts/verify_saku_builder.mjs selftest   # 全自己検査（exit 0/1）
 //
@@ -56,7 +54,7 @@ const windowStub = new Proxy(windowTarget, {
 
 const runner = new Function("document", "window",
   scriptText +
-  "\n;return { toYaml, EXAMPLE, blank, toSakuJson, toPrompt, toGuildJson, toTestLog," +
+  "\n;return { toYaml, EXAMPLE, blank, toSakuJson, toTestLog," +
   " parseBuilderYaml, TEMPLATES, validate, buildTestItems, testSummary, contactGuard," +
   " normalizedOrganizationParticipation, validateOrganizationParticipation,"
   + " normalizeForGuard, approvalMatches, isExternalOutput, payloadFor, highlight," +
@@ -64,7 +62,7 @@ const runner = new Function("document", "window",
   // 後から足した輸出は存在確認してから返す。無ければ undefined を返し、
   // それを使う検査だけが落ちるようにする（全モードが道連れにならないように）。
   "\n  ...(function(){const o={};" +
-  "['chapterState','CHAPTER_ITEMS','BOUNDARY_QS','AI_SEATS','L0_SKILLS']" +
+  "['chapterState','CHAPTER_ITEMS','BOUNDARY_QS','AI_SEATS','L0_SKILLS','TABS','TAB_PURPOSE','toPrompt','toGuildJson']" +
   ".forEach(n=>{try{o[n]=eval(n);}catch(e){o[n]=undefined;}});return o;})() };");
 const api = runner(documentStub, windowStub);
 
@@ -73,8 +71,6 @@ const mode = process.argv[2] || "example";
 if (mode === "example") { process.stdout.write(api.toYaml(api.EXAMPLE())); process.exit(0); }
 if (mode === "blank")   { process.stdout.write(api.toYaml(api.blank()));   process.exit(0); }
 if (mode === "json")    { process.stdout.write(api.toSakuJson(api.EXAMPLE())); process.exit(0); }
-if (mode === "prompt")  { process.stdout.write(api.toPrompt(api.EXAMPLE()));   process.exit(0); }
-if (mode === "guild")   { process.stdout.write(api.toGuildJson(api.EXAMPLE())); process.exit(0); }
 if (mode === "tpl") {
   const k = process.argv[3];
   if (!api.TEMPLATES[k]) { console.error("unknown template: " + k +
@@ -144,34 +140,14 @@ const fail = (label, message) => fails.push(label + ": " + message);
     ok(!(excluded in j), "json active scope excludes " + excluded);
 }
 
-// ── 3. プロンプト：漏らしてはならない情報が出ないこと ──
+// ── 3/4. 外部AIプロンプト・Guild 概要は 2026-09-22（Owner）にこの画面から外れた ──
+//   プロンプトはデスクトップ 03「AIプラットフォームで動作確認」が持つ。Guild 概要
+//   （MACHI-GUILD-SUMMARY）は廃止: AMU/MACHI は署名付きパック経由でのみ受け取る。
 {
-  const d = api.EXAMPLE();
-  const p = api.toPrompt(d);
-  // 出るべきもの
-  ok(p.includes(d.meta.name), "prompt: 名前");
-  ok(p.includes("first person"), "prompt: expression semantics");
-  ok(p.includes("hard invariant"), "prompt: hard invariants");
-  ok(p.includes("Seat 8 is a human"), "prompt: Human handoff boundary");
-  ok(p.includes("not Canonical") && p.includes("not an approval"), "prompt: authoring boundary");
-  // 出てはならないもの（黒子の契約・保険・席別モデル・調達詳細）
-  for (const leak of ["準委任", "保険", "human_procurement", "model_claude",
-                      "model_codex", "gpt-5", "sonnet", "qualification_check"])
-    ok(!p.includes(leak), "prompt漏えい検査: " + leak);
-  // 緊急連絡先の生値を出さない
-  ok(!p.includes(d.saku.seats.seat8_human.emergency_contact), "prompt漏えい検査: 緊急連絡先");
-}
-
-// ── 4. Guild 概要 ──
-{
-  const g = JSON.parse(api.toGuildJson(api.EXAMPLE()));
-  ok(g.schema === "MACHI-GUILD-SUMMARY" && g.version === "1.0", "guild: schema/version");
-  ok(g.source_artifact_class === "authoring_export" && g.execution_eligible === false &&
-     g.publisher_signature_status === "absent", "guild: 未署名・実行不可境界");
-  ok(g.seat8 === "human", "guild: seat8=human");
-  ok(typeof g.charback_required === "boolean", "guild: charback_required");
-  ok(Array.isArray(g.human_approval_required) && g.human_approval_required.length > 0,
-     "guild: human_approval_required");
+  ok(api.toPrompt === undefined && api.toGuildJson === undefined, "removed: toPrompt / toGuildJson are no longer page functions");
+  ok(api.TABS.map(t => t[0]).join(",") === "yaml,json,test,help", "tabs: character.yaml / Character File / 試験記録 / Help only");
+  ok(!api.TABS.some(t => /外部AIプロンプト|Guild概要/.test(t[1])), "tabs: no 外部AIプロンプト / Guild概要 tab");
+  ok(api.TAB_PURPOSE.json.ja.includes("署名・パック化の元になる正本") && api.TAB_PURPOSE.json.ja.includes("署名付きパック経由でのみ受け取る"), "Character File purpose names the canonical JSON and the signed-pack-only hand-over");
 }
 
 // ── 4-b. ContactGuard：初版MVPから継承した外部出力前検査 ──
@@ -273,7 +249,7 @@ const fail = (label, message) => fails.push(label + ": " + message);
   //   ここが赤くなると、正しい定義が出力できなくなる＝実害が出る。
   for (const key of Object.keys(api.TEMPLATES)) {
     const d = api.TEMPLATES[key].make();
-    for (const tab of ["json", "prompt", "guild"]) {
+    for (const tab of ["json"]) {
       const text = api.payloadFor(tab, d).text;
       const r = api.contactGuard(text);
       ok(r.safe, `contactGuard: テンプレート ${key} の ${tab} を誤検知しない（${r.hits.join(",")}）`);
@@ -288,10 +264,10 @@ const fail = (label, message) => fails.push(label + ": " + message);
   ok(api.approvalMatches("json", "AAA", snap), "approval: 同じ内容なら有効");
   ok(!api.approvalMatches("json", "AAB", snap),
      "★approval: 承認後に内容が変わったら無効（1文字でも）");
-  ok(!api.approvalMatches("prompt", "AAA", snap), "approval: 別タブの承認は流用できない");
+  ok(!api.approvalMatches("yaml", "AAA", snap), "approval: 別タブの承認は流用できない");
   ok(!api.approvalMatches("json", "AAA", null), "approval: 承認が無ければ無効");
-  ok(api.isExternalOutput("json") && api.isExternalOutput("prompt")
-     && api.isExternalOutput("guild"), "approval: 外部出力3種の判定");
+  ok(api.isExternalOutput("json") && !api.isExternalOutput("prompt")
+     && !api.isExternalOutput("guild"), "approval: 外部出力は Character File のみ");
   ok(!api.isExternalOutput("yaml") && !api.isExternalOutput("test"),
      "approval: 内部成果物は対象外");
 }
@@ -303,5 +279,5 @@ if (fails.length) {
   process.exit(1);
 }
 
-console.log("selftest OK（Unified V1 YAML/JSON / プロンプト境界 / Guild / テンプレート8種 / 5章 / ContactGuard）");
+console.log("selftest OK（Unified V1 YAML/JSON / タブ = yaml・json・test / テンプレート8種 / 5章 / ContactGuard）");
 process.exit(0);

@@ -76,7 +76,7 @@
           <button type="button" id="viewer-new-character">新規作成</button>
         </div>
         <input type="file" id="viewer-file-input" accept=".json,.yaml,.yml,application/json,text/yaml" multiple hidden>
-        <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Packageファイルをドロップして読み込む">`.zip` / `.witpkg` / `.json` をここへドロップ</div>
+        <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Packageファイルをドロップして読み込む">SAKU Character Pack（`.zip`）をここへドロップ</div>
         <p id="library-count" class="library-count" data-runtime-value></p>
       </section>
           <section class="import-history" aria-labelledby="import-history-title">
@@ -163,50 +163,54 @@
       <div class="viewer-header"><button type="button" id="platform-back" class="quiet">← 戻る</button><div><span class="eyebrow">RUN / AI PLATFORM</span><h2 id="platform-title">AIプラットホームでキャラクターを動作</h2><p>選択中のキャラクターを、お使いのAIにそのまま読み込ませて動かします。ここでキャラクターは変わりません。</p></div></div>
       <div id="platform-subject" class="status info" role="status" aria-live="polite"><strong>PLATFORM_READY</strong><span>動かすキャラクターを選んでください。</span></div>
 
+      <div class="screen-with-help platform-layout"><div class="platform-main">
       <ol class="platform-steps">
         <li>
           <h3>1. 動かすキャラクターを確認する</h3>
           <p id="platform-active" class="platform-active" data-runtime-value>未選択</p>
         </li>
         <li>
-          <h3>2. 渡し方を選ぶ</h3>
-          <p>貼り付けやすい形を選びます。どれを選んでもキャラクターの中身は同じです。</p>
-          <div class="platform-formats" role="group" aria-label="渡し方">
-            <button type="button" class="button" data-platform-format="prompt" aria-pressed="true">キャラクタープロンプト</button>
-            <button type="button" class="button" data-platform-format="json" aria-pressed="false">JSON</button>
-            <button type="button" class="button" data-platform-format="yaml" aria-pressed="false">YAML</button>
-          </div>
-        </li>
-        <li>
-          <h3>3. 貼り付ける文をコピーする</h3>
+          <h3>2. 貼り付ける文をコピーする</h3>
           <p>下の全文をコピーします。冒頭の指示と、キャラクター定義が入っています。</p>
           <textarea id="platform-launch" class="platform-launch" readonly rows="12" aria-label="貼り付ける文"></textarea>
           <div class="actions"><button type="button" id="platform-copy" class="button primary">コピーする</button><span id="platform-copy-state" class="platform-copy-state" role="status" aria-live="polite"></span></div>
         </li>
         <li>
-          <h3>4. AIの入力欄に貼る</h3>
+          <h3>3. AIの入力欄に貼る</h3>
           <p>ChatGPT・Claude・Gemini など、お使いのAIの新しい会話を開き、最初のメッセージとして貼り付けます。ローカルLLMでも同じ手順です。連携設定やAPIの用意は要りません。</p>
         </li>
         <li>
-          <h3>5. 読み込ませる</h3>
+          <h3>4. 読み込ませる</h3>
           <p>貼り付けた文には「この定義に従うこと」「足りない情報を勝手に作らないこと」が含まれています。そのまま送信してください。</p>
         </li>
         <li>
-          <h3>6. 最初のあいさつを受け取る</h3>
+          <h3>5. 最初のあいさつを受け取る</h3>
           <p>キャラクターとして短いあいさつが返れば、読み込めています。返らない場合は、貼り付けが途中で切れていないか確認してください。</p>
         </li>
         <li>
-          <h3>7. そのまま話しかける</h3>
+          <details id="platform-echo" class="platform-echo">
+            <summary id="platform-echo-title">読み込めたか AI に聞く（任意）</summary>
+            <p>読み込めたかどうかは、AI に申告してもらう以外に確かめる方法がありません。下の依頼文を貼り、返ってきた行をそのまま貼り戻してください。</p>
+            <div class="actions"><button type="button" id="platform-echo-copy" class="button">依頼文をコピーする</button><span id="platform-echo-copy-state" class="platform-copy-state" role="status" aria-live="polite"></span></div>
+            <textarea id="platform-echo-request" class="platform-launch" readonly rows="3" aria-label="AI への依頼文"></textarea>
+            <label for="platform-echo-answer">AI の返答を貼り付ける</label>
+            <textarea id="platform-echo-answer" class="platform-launch" rows="6" aria-label="AI の返答"></textarea>
+            <div class="actions"><button type="button" id="platform-echo-check" class="button">照合する</button></div>
+            <div id="platform-echo-result" class="status info" role="status" aria-live="polite" hidden></div>
+          </details>
+        </li>
+        <li>
+          <h3>6. そのまま話しかける</h3>
           <p>あとは普通に質問や相談を続けます。会話の途中で人格がぶれたと感じたら、同じ文をもう一度貼り直せば読み直します。</p>
         </li>
         <li>
-          <h3>8. 気になった応答をSAKU Trainerへ持ち帰る</h3>
+          <h3>7. 気になった応答をSAKU Trainerへ持ち帰る</h3>
           <p>「思っていた反応と違う」と感じた応答をコピーしておき、04 キャラクターをトレーニングする に貼り付けます。Expected・Observed・Diff を見て、キャラクターを直すかどうかを決められます。</p>
           <div class="actions"><button type="button" id="platform-to-trainer" class="button">04 キャラクターをトレーニングする へ</button></div>
         </li>
       </ol>
 
-      <section class="platform-boundary" aria-labelledby="platform-boundary-title">
+      <section id="platform-boundary" class="platform-boundary" aria-labelledby="platform-boundary-title">
         <h3 id="platform-boundary-title">この方法でできないこと</h3>
         <p>一般のAIサービスに貼り付けて動かす方法です。次のことは保証されません。</p>
         <ul>
@@ -218,10 +222,11 @@
         </ul>
         <p>ここで扱うのはキャラクター定義そのものです。貼り付けても、SAKU側のキャラクターは変更されません。</p>
       </section>
+      </div><aside id="platform-help" class="help-pane" aria-label="ヘルプ"></aside></div>
     </section>
   </main>
 
   <footer><span id="build-revision-view" class="build-revision" data-runtime-value></span><span>STATUS = IMPLEMENTED_CANDIDATE</span><span>CODE_SIGNING = UNSIGNED</span><span>CANONICAL = NO</span></footer>
-  <script type="module" src="./i18n.mjs"></script><script type="module" src="./app.mjs"></script>
+  <link rel="stylesheet" href="./tools/unified-v1/help-pane.css"><script type="module" src="./i18n.mjs"></script><script type="module" src="./app.mjs"></script>
 </body>
 </html>

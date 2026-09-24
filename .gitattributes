@@ -1,0 +1,15 @@
+* text=auto eol=lf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+
+# Byte-for-byte. These files are compared by digest — the shared base layer at
+# startup and before every hand-off, the prompt fixtures against AMU's copy — so a
+# checkout must never rewrite their line endings. A CRLF here stops 03 outright.
+desktop/resources/base/*.txt -text
+tests/fixtures/platform-prompt-golden/** -text

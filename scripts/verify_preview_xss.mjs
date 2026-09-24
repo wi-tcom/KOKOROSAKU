@@ -48,7 +48,7 @@ const profile=await mkdtemp(path.join(tmpdir(),"saku-preview-xss-"));
 const child=spawn(chrome,["--headless=new","--disable-gpu","--disable-background-networking","--disable-breakpad","--disable-crash-reporter","--no-first-run","--no-default-browser-check","--user-data-dir="+profile,"--virtual-time-budget=8000","--dump-dom","http://127.0.0.1:"+server.address().port+"/__preview_xss__.html"],{windowsHide:true,stdio:["ignore","pipe","pipe"]});
 let output="",errors="";child.stdout.setEncoding("utf8");child.stderr.setEncoding("utf8");child.stdout.on("data",chunk=>output+=chunk);child.stderr.on("data",chunk=>errors+=chunk);
 const code=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{child.kill();reject(new Error("Chrome timeout"));},30000);child.on("error",reject);child.on("exit",value=>{clearTimeout(timer);resolve(value);});}).catch(error=>{errors+=error.message;return -1;});
-server.close();await rm(profile,{recursive:true,force:true,maxRetries:5,retryDelay:200});
+server.close();await rm(profile,{recursive:true,force:true,maxRetries:20,retryDelay:250}).catch(error=>console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code||error}`));
 const match=output.match(/<pre id="result" data-status="PASS">([\s\S]*?)<\/pre>/);
 if(code!==0||!match){console.error("PREVIEW_XSS FAIL");console.error(errors.slice(-2000));console.error(output.slice(-2000));process.exit(1);}
 const report=JSON.parse(match[1].replace(/&quot;/g,'"').replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">"));

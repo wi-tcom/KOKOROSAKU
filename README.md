@@ -1,4 +1,4 @@
-# KOKOROSAKU v0.1.0-beta.2
+# KOKOROSAKU v0.1.0-beta.8
 
 Japanese documentation: [README.ja.md](README.ja.md)
 
@@ -6,19 +6,17 @@ KOKOROSAKU is the public SAKU Builder/Trainer source and evaluation package. Bui
 
 ## Install and use
 
-Download the Release asset `SAKU Builder_0.1.0-beta.2_x64-setup.exe` only from the future official GitHub Release. This beta is unsigned and Windows SmartScreen may display a warning. Before running it, verify:
+Download the Release asset `SAKU Builder_0.1.0-beta.8_x64-setup.exe` only from the future official GitHub Release. This beta is unsigned and Windows SmartScreen may display a warning. Before running it, verify:
 
 ```powershell
-(Get-FileHash -Algorithm SHA256 -LiteralPath '.\SAKU Builder_0.1.0-beta.2_x64-setup.exe').Hash.ToLower()
+(Get-FileHash -Algorithm SHA256 -LiteralPath '.\SAKU Builder_0.1.0-beta.8_x64-setup.exe').Hash.ToLower()
 ```
 
-Expected SHA-256: `7d357f41a59d923f940acc2fd7f7d65a3aee5ee0840f06a8e8def9fd83fcb572` (1,875,865 bytes). The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
+Expected SHA-256: `66b8c28d537f8387f2df511ee61f709959d95ea4f9f98958ddf812c68411b0c6` (2,169,165 bytes). The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
 
-## What is new in v0.1.0-beta.2
+## What is new in v0.1.0-beta.8
 
-- Package import accepts the sold SAKU Character Pack (`character-pack.json` ZIP). The host verifies every digest binding in the pack; the Ed25519 publisher signatures are verified with pinned publisher keys and shown as 「署名検証 PASS（発行者 fingerprint）」 or, where the runtime cannot verify, 「digest 一致・署名は未検証」. Operation class A/B/C is recorded beside each Character.
-- Trainer: external review-only intake for AMU Trainer Review Candidates (nothing is applied automatically).
-- Trainer: AI speed test in paste mode (manual measurement; times include the human copy and paste).
+<!-- PENDING_WORDING: release notes (ライター&SNS 様式チェック → 英語翻訳チーム). Not publishable until replaced. -->
 
 ## Try without installing
 
@@ -26,7 +24,7 @@ Serve the source archive root over local HTTP and open `tooling/builder/index.ht
 
 ## Developers
 
-Clone the repository, use Node 24.19.0, run `npm ci`, `npm run desktop:prepare:public`, and then `npm run tauri:build`. See `docs/releases/0.1.0-beta.2/BUILD_ENVELOPE.json` for the exact accepted beta toolchain and build boundary.
+Clone the repository, use Node 24.19.0, run `npm ci`, `npm run desktop:prepare:public`, and then `npm run tauri:build`. See `docs/releases/0.1.0-beta.8/BUILD_ENVELOPE.json` for the exact accepted beta toolchain and build boundary.
 
 ## Licensing and brand
 

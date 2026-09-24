@@ -1,0 +1,781 @@
+{
+  "profile": "saku.screen-guide@1",
+  "screen": "04-trainer",
+  "applies_to_app_version": "0.1.0-beta.8",
+  "content_review": {
+    "ja": {
+      "status": "APPROVED",
+      "approved_on": "2026-09-22",
+      "approved_by": "Owner",
+      "approval_route": "統制卓チャット（H = U4 画面ガイド 03／04 の文言、一旦承認）",
+      "condition": "実機打鍵での確認後、修正があれば差し替え可",
+      "drafted_by": "Claude Code SAKU Builder(4)",
+      "checked_by": "Wi-t.comライター&SNS（様式チェック 9f3daf0、M1〜M6・C4 反映）"
+    },
+    "en": {
+      "status": "DELIVERED",
+      "source": "wi-tcom/Wi-t_Site site-content/manuals/translation/saku-u4-guides-H_EN.v2.json@823efef ＋ names addendum @90d93aa（依頼 f82d115）",
+      "translated_by": "英語翻訳チーム",
+      "checked_by": "Wi-t.comライター&SNS",
+      "delivered_on": "2026-09-22",
+      "note": "03 実 UI 英語に合わせた 2 件（platform.chapters[3].title、platform.format.uiLabel = Handover form）。Trainer 選択肢名 19 件 = 実 UI 表示。"
+    }
+  },
+  "effect_notice": {
+    "ja": "※ 傾向であり断定ではありません。AI プラットフォームや事前のメモリー・学習・知識により、思いどおりの傾向にならないことがあります。Trainer で実際の応答を確認してください。"
+  },
+  "chapters": [
+    {
+      "id": "prepare",
+      "numeral": "01",
+      "title": {
+        "ja": "準備する",
+        "en": "Prepare"
+      },
+      "question": {
+        "ja": "何を、どの方法で確かめますか？",
+        "en": "What will you check, and how?"
+      }
+    },
+    {
+      "id": "check",
+      "numeral": "02",
+      "title": {
+        "ja": "AI で確認する",
+        "en": "Check with an AI"
+      },
+      "question": {
+        "ja": "外部 AI の回答をどう記録し、どう評価しますか？",
+        "en": "How do you record and evaluate the external AI's answers?"
+      }
+    },
+    {
+      "id": "results",
+      "numeral": "03",
+      "title": {
+        "ja": "結果を確認する",
+        "en": "Check the results"
+      },
+      "question": {
+        "ja": "結果は何を意味し、何を変えればよいですか？",
+        "en": "What do the results mean, and what should you change?"
+      }
+    }
+  ],
+  "fields": [
+    {
+      "canonicalPath": "trainer.character",
+      "chapter": "prepare",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "試す Character",
+        "en": "Character to test"
+      },
+      "label": {
+        "ja": "試す Character",
+        "en": "試す Character"
+      },
+      "currentNote": {
+        "ja": "現在の Character（01 か編集画面から渡されたもの）が対象です。Trainer は Character を書き換えません。",
+        "en": "The current Character (from 01 or passed from the edit screen) is the subject. The Trainer does not rewrite the Character."
+      },
+      "screenSection": "stage-01",
+      "help": {
+        "about": {
+          "ja": "Trainer は外部 AI へ手で貼り付ける自己完結のテキストを作り、回答と人の評価を証拠として保存します。Character の変更は編集画面で行います。",
+          "en": "The Trainer builds self-contained text to paste by hand into an external AI, and saves the answers and the person's evaluation as evidence. Changes to the Character are made on the edit screen."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "",
+          "en": ""
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    },
+    {
+      "canonicalPath": "trainer.method",
+      "chapter": "prepare",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "トレーニング方法",
+        "en": "Training method"
+      },
+      "label": {
+        "ja": "トレーニング方法",
+        "en": "トレーニング方法"
+      },
+      "currentNote": {
+        "ja": "使う外部 AI、言語・実行方法、確かめる範囲を順に選び、再現できるメニュー（質問の一覧）を作ります。",
+        "en": "Choose, in order, the external AI to use, the language and how it is run, and the scope to check, to build a reproducible menu (a list of questions)."
+      },
+      "screenSection": "stage-01",
+      "help": {
+        "about": {
+          "ja": "使う外部 AI、言語・実行方法、確かめる範囲を順に選び、再現できるメニュー（質問の一覧）を作ります。",
+          "en": "Choose, in order, the external AI to use, the language and how it is run, and the scope to check, to build a reproducible menu (a list of questions)."
+        },
+        "what": {
+          "ja": "メニューの質問は定義から生成されたもの（人が確認して採用）と、人が書いたものの 2 種類です。",
+          "en": "Menu questions are of two kinds: generated from the definition (checked and adopted by a person) and written by a person."
+        },
+        "caution": {
+          "ja": "メニューを開始しても、保存済みの回答や結果は上書きされません。",
+          "en": "Starting a menu does not overwrite saved answers or results."
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    },
+    {
+      "canonicalPath": "trainer.prompt",
+      "chapter": "check",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "02-1 AI にプロンプトを渡す",
+        "en": "02-1 Hand the prompt to the AI"
+      },
+      "label": {
+        "ja": "02-1 AI にプロンプトを渡す",
+        "en": "02-1 AI にプロンプトを渡す"
+      },
+      "currentNote": {
+        "ja": "Character 定義と質問をまとめた文をコピーし、外部 AI の新しい会話に貼り付けます。",
+        "en": "Copy the text that combines the Character definition and the question, and paste it into a new conversation in the external AI."
+      },
+      "screenSection": "ai-step-1",
+      "help": {
+        "about": {
+          "ja": "Character 定義と質問をまとめた文をコピーし、外部 AI の新しい会話に貼り付けます。",
+          "en": "Copy the text that combines the Character definition and the question, and paste it into a new conversation in the external AI."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "何も送信しません。コピーと貼り付けは人が行います。",
+          "en": "Nothing is sent. Copying and pasting are done by a person."
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    },
+    {
+      "canonicalPath": "trainer.answer",
+      "chapter": "check",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "02-2 AI の回答を貼り付ける",
+        "en": "02-2 Paste the AI's answer"
+      },
+      "label": {
+        "ja": "02-2 AI の回答を貼り付ける",
+        "en": "02-2 AI の回答を貼り付ける"
+      },
+      "currentNote": {
+        "ja": "外部 AI の回答をそのまま貼り付けて保存します。回答は証拠として残り、あとから差分を見られます。",
+        "en": "Paste the external AI's answer as it is and save it. The answer is kept as evidence, and differences can be viewed later."
+      },
+      "screenSection": "ai-step-2",
+      "help": {
+        "about": {
+          "ja": "外部 AI の回答をそのまま貼り付けて保存します。回答は証拠として残り、あとから差分を見られます。",
+          "en": "Paste the external AI's answer as it is and save it. The answer is kept as evidence, and differences can be viewed later."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "",
+          "en": ""
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    },
+    {
+      "canonicalPath": "trainer.conclusion",
+      "chapter": "check",
+      "kind": "enum",
+      "manualType": "SELECT_SINGLE",
+      "uiLabel": {
+        "ja": "人の結論",
+        "en": "Human conclusion"
+      },
+      "label": {
+        "ja": "人の結論",
+        "en": "人の結論"
+      },
+      "currentNote": {
+        "ja": "回答を読んだ人が 1 つ選びます。AI が自動で判定することはありません。",
+        "en": "The person who read the answer chooses one. The AI does not judge automatically."
+      },
+      "screenSection": "evaluation-form",
+      "help": {
+        "about": {
+          "ja": "人の結論・確認できた項目・理由の 3 つで 1 件の評価になります。",
+          "en": "The human conclusion, the confirmed items and the reasons together make up one evaluation."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "",
+          "en": ""
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": [
+          {
+            "value": "MATCH",
+            "name": {
+              "ja": "期待どおり",
+              "en": "As expected"
+            },
+            "meaning": {
+              "ja": "期待した内容・話し方と合っている",
+              "en": "Matches the expected content and way of speaking"
+            },
+            "effect": {
+              "ja": "この質問は「確認できた」側に数えられ、結果の一覧で期待どおりとして表示されます。",
+              "source": "OPERATION_FACT",
+              "en": "This question is counted on the \"confirmed\" side and shown as matching expectations in the results list."
+            }
+          },
+          {
+            "value": "PARTIAL",
+            "name": {
+              "ja": "一部違いがある",
+              "en": "Some differences"
+            },
+            "meaning": {
+              "ja": "合っている部分と違う部分がある",
+              "en": "Some parts match and some differ"
+            },
+            "effect": {
+              "ja": "理由を 1 つ以上選ぶよう求められ、結果では「調整候補」として関連する項目が示されます。",
+              "source": "OPERATION_FACT",
+              "en": "You are asked to choose at least one reason, and the results show related items as \"adjustment candidates.\""
+            }
+          },
+          {
+            "value": "MAJOR",
+            "name": {
+              "ja": "大きな違いがある",
+              "en": "Major differences"
+            },
+            "meaning": {
+              "ja": "期待から大きく外れている",
+              "en": "Far from what was expected"
+            },
+            "effect": {
+              "ja": "理由を 1 つ以上選ぶよう求められ、結果では優先して見直す候補として示されます。",
+              "source": "OPERATION_FACT",
+              "en": "You are asked to choose at least one reason, and the results show the item as a priority candidate for review."
+            }
+          },
+          {
+            "value": "NOT_ASSESSED",
+            "name": {
+              "ja": "まだ判断しない",
+              "en": "Not ready to judge"
+            },
+            "meaning": {
+              "ja": "判断に必要な情報・確認がそろっていない",
+              "en": "The information or checks needed for a judgment are not yet in place"
+            },
+            "effect": {
+              "ja": "未判断のまま保存され、集計に「確認できた」としては数えられません。追加の回で確かめます。",
+              "source": "OPERATION_FACT",
+              "en": "Saved as not yet judged, and not counted as \"confirmed\" in the totals. Check again in a further round."
+            }
+          }
+        ]
+      },
+      "options": [
+        "MATCH",
+        "PARTIAL",
+        "MAJOR",
+        "NOT_ASSESSED"
+      ]
+    },
+    {
+      "canonicalPath": "trainer.confirmed",
+      "chapter": "check",
+      "kind": "enum-list",
+      "manualType": "SELECT_MULTI",
+      "uiLabel": {
+        "ja": "確認できた項目",
+        "en": "Confirmed items"
+      },
+      "label": {
+        "ja": "確認できた項目",
+        "en": "確認できた項目"
+      },
+      "currentNote": {
+        "ja": "回答から確認できたことを選びます（複数可）。「確認できた項目はない」は他と同時に選べません。",
+        "en": "Choose what could be confirmed from the answer (more than one allowed). \"No item could be confirmed\" cannot be chosen together with others."
+      },
+      "screenSection": "evaluation-form",
+      "help": {
+        "about": {
+          "ja": "回答から確認できたことを選びます（複数可）。「確認できた項目はない」は他と同時に選べません。",
+          "en": "Choose what could be confirmed from the answer (more than one allowed). \"No item could be confirmed\" cannot be chosen together with others."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "",
+          "en": ""
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": [
+          {
+            "value": "C01",
+            "name": {
+              "ja": "質問に沿って答えている",
+              "en": "Answers the question"
+            },
+            "meaning": {
+              "ja": "質問に沿って答えている",
+              "en": "Answers in line with the question"
+            },
+            "effect": {
+              "ja": "質問への対応が確認できた証拠として残ります。",
+              "source": "OPERATION_FACT",
+              "en": "Kept as evidence that the response to the question was confirmed."
+            }
+          },
+          {
+            "value": "C02",
+            "name": {
+              "ja": "Character の役割・方針を保っている",
+              "en": "Maintains the Character’s role and approach"
+            },
+            "meaning": {
+              "ja": "Character の役割・方針を保っている",
+              "en": "Keeps the Character's role and policy"
+            },
+            "effect": {
+              "ja": "役割・方針の保持が確認できた証拠として残ります。",
+              "source": "OPERATION_FACT",
+              "en": "Kept as evidence that the role and policy were maintained."
+            }
+          },
+          {
+            "value": "C03",
+            "name": {
+              "ja": "事実と不確かな点を分けている",
+              "en": "Separates facts from uncertainty"
+            },
+            "meaning": {
+              "ja": "事実と不確かな点を分けている",
+              "en": "Separates facts from uncertain points"
+            },
+            "effect": {
+              "ja": "不確実性の扱いが確認できた証拠として残ります。",
+              "source": "OPERATION_FACT",
+              "en": "Kept as evidence that uncertainty was handled as confirmed."
+            }
+          },
+          {
+            "value": "C04",
+            "name": {
+              "ja": "必要な内容がそろっている",
+              "en": "Includes the necessary content"
+            },
+            "meaning": {
+              "ja": "必要な内容がそろっている",
+              "en": "Contains the necessary content"
+            },
+            "effect": {
+              "ja": "内容の充足が確認できた証拠として残ります。",
+              "source": "OPERATION_FACT",
+              "en": "Kept as evidence that the content was sufficient."
+            }
+          },
+          {
+            "value": "C05",
+            "name": {
+              "ja": "長さ・詳しさが適切",
+              "en": "Uses appropriate length and detail"
+            },
+            "meaning": {
+              "ja": "長さ・詳しさが適切",
+              "en": "Length and level of detail are appropriate"
+            },
+            "effect": {
+              "ja": "分量の適切さが確認できた証拠として残ります。",
+              "source": "OPERATION_FACT",
+              "en": "Kept as evidence that the amount was appropriate."
+            }
+          },
+          {
+            "value": "C06",
+            "name": {
+              "ja": "ことばづかい・表現が適切",
+              "en": "Uses appropriate language and expression"
+            },
+            "meaning": {
+              "ja": "ことばづかい・表現が適切",
+              "en": "Wording and expression are appropriate"
+            },
+            "effect": {
+              "ja": "表現の適切さが確認できた証拠として残ります。",
+              "source": "OPERATION_FACT",
+              "en": "Kept as evidence that the expression was appropriate."
+            }
+          },
+          {
+            "value": "C07",
+            "name": {
+              "ja": "できないことや人への引き継ぎが適切",
+              "en": "Handles limitations and human handoff appropriately"
+            },
+            "meaning": {
+              "ja": "できないことや人への引き継ぎが適切",
+              "en": "Handles limits and handoff to a person appropriately"
+            },
+            "effect": {
+              "ja": "境界と引き継ぎの扱いが確認できた証拠として残ります。",
+              "source": "OPERATION_FACT",
+              "en": "Kept as evidence that boundaries and handoff were handled as confirmed."
+            }
+          },
+          {
+            "value": "C_NONE",
+            "name": {
+              "ja": "この回答から確認できた項目はない",
+              "en": "None of these items could be confirmed from this response"
+            },
+            "meaning": {
+              "ja": "この回答から確認できた項目はない",
+              "en": "No item could be confirmed from this answer"
+            },
+            "effect": {
+              "ja": "確認できた項目なしとして残ります（他の項目とは同時に選べません）。",
+              "source": "OPERATION_FACT",
+              "en": "Kept as no item confirmed (cannot be chosen together with other items)."
+            }
+          }
+        ]
+      },
+      "options": [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C06",
+        "C07",
+        "C_NONE"
+      ]
+    },
+    {
+      "canonicalPath": "trainer.reasons",
+      "chapter": "check",
+      "kind": "enum-list",
+      "manualType": "SELECT_MULTI",
+      "uiLabel": {
+        "ja": "理由",
+        "en": "Reasons"
+      },
+      "label": {
+        "ja": "理由",
+        "en": "理由"
+      },
+      "currentNote": {
+        "ja": "「一部違いがある」「大きな違いがある」のときに、違いの理由を選びます（複数可）。",
+        "en": "When the conclusion is \"Some differences\" or \"Major differences,\" choose the reasons for the difference (more than one allowed)."
+      },
+      "screenSection": "evaluation-form",
+      "help": {
+        "about": {
+          "ja": "「一部違いがある」「大きな違いがある」のときに、違いの理由を選びます（複数可）。",
+          "en": "When the conclusion is \"Some differences\" or \"Major differences,\" choose the reasons for the difference (more than one allowed)."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "",
+          "en": ""
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": [
+          {
+            "value": "R01",
+            "name": {
+              "ja": "期待した内容に合っている",
+              "en": "Matches the expected content"
+            },
+            "meaning": {
+              "ja": "期待した内容に合っている",
+              "en": "Matches the expected content"
+            },
+            "effect": {
+              "ja": "「期待どおり」を補う理由として残ります。",
+              "source": "OPERATION_FACT",
+              "en": "Kept as a reason supporting \"as expected.\""
+            }
+          },
+          {
+            "value": "R02",
+            "name": {
+              "ja": "必要な内容が足りない",
+              "en": "Necessary content is missing"
+            },
+            "meaning": {
+              "ja": "必要な内容が足りない",
+              "en": "Necessary content is missing"
+            },
+            "effect": {
+              "ja": "結果で目的・役割・内容に関わる項目が調整候補として示されます。",
+              "source": "OPERATION_FACT",
+              "en": "In the results, items related to purpose, role and content are shown as adjustment candidates."
+            }
+          },
+          {
+            "value": "R03",
+            "name": {
+              "ja": "不要な内容が多い／詳しすぎる",
+              "en": "Contains unnecessary content or too much detail"
+            },
+            "meaning": {
+              "ja": "不要な内容が多い／詳しすぎる",
+              "en": "Too much unnecessary content / too detailed"
+            },
+            "effect": {
+              "ja": "結果で目的外・話し方に関わる項目が調整候補として示されます。",
+              "source": "OPERATION_FACT",
+              "en": "In the results, items related to non-goals and way of speaking are shown as adjustment candidates."
+            }
+          },
+          {
+            "value": "R04",
+            "name": {
+              "ja": "事実や不確かな点の扱いに問題がある",
+              "en": "Facts or uncertainty are handled poorly"
+            },
+            "meaning": {
+              "ja": "事実や不確かな点の扱いに問題がある",
+              "en": "Problems in handling facts or uncertain points"
+            },
+            "effect": {
+              "ja": "結果で不確実性の表し方・守ることに関わる項目が調整候補として示されます。",
+              "source": "OPERATION_FACT",
+              "en": "In the results, items related to uncertainty expression and things to keep are shown as adjustment candidates."
+            }
+          },
+          {
+            "value": "R05",
+            "name": {
+              "ja": "Character の役割・話し方からずれている",
+              "en": "Departs from the Character’s role or voice"
+            },
+            "meaning": {
+              "ja": "Character の役割・話し方からずれている",
+              "en": "Drifts from the Character's role or way of speaking"
+            },
+            "effect": {
+              "ja": "結果で役割・話し方・人格軸に関わる項目が調整候補として示されます。",
+              "source": "OPERATION_FACT",
+              "en": "In the results, items related to role, way of speaking and personality axes are shown as adjustment candidates."
+            }
+          },
+          {
+            "value": "R06",
+            "name": {
+              "ja": "対応範囲や人への引き継ぎが適切でない",
+              "en": "Scope or human handoff is inappropriate"
+            },
+            "meaning": {
+              "ja": "対応範囲や人への引き継ぎが適切でない",
+              "en": "Scope or handoff to a person is not appropriate"
+            },
+            "effect": {
+              "ja": "結果で人に任せる条件・境界に関わる項目が調整候補として示されます。",
+              "source": "OPERATION_FACT",
+              "en": "In the results, items related to human handoff conditions and boundaries are shown as adjustment candidates."
+            }
+          },
+          {
+            "value": "R07",
+            "name": {
+              "ja": "判断に必要な情報・確認がまだそろっていない",
+              "en": "More information or checking is needed to judge"
+            },
+            "meaning": {
+              "ja": "判断に必要な情報・確認がまだそろっていない",
+              "en": "The information or checks needed for a judgment are not yet in place"
+            },
+            "effect": {
+              "ja": "「まだ判断しない」を補う理由として残り、追加の回が促されます。",
+              "source": "OPERATION_FACT",
+              "en": "Kept as a reason supporting \"not judged yet,\" and a further round is prompted."
+            }
+          }
+        ]
+      },
+      "options": [
+        "R01",
+        "R02",
+        "R03",
+        "R04",
+        "R05",
+        "R06",
+        "R07"
+      ]
+    },
+    {
+      "canonicalPath": "trainer.results",
+      "chapter": "results",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "結果の見方",
+        "en": "How to read the results"
+      },
+      "label": {
+        "ja": "結果の見方",
+        "en": "結果の見方"
+      },
+      "currentNote": {
+        "ja": "メニューごとに 未／途中／済 と、人の結論が一覧になります。「調整候補」は人が選んだ理由から関連する Character 項目を示すだけで、自動では変更しません。",
+        "en": "For each menu, the status (not started / in progress / done) and the human conclusions are listed. \"Adjustment candidates\" only point to related Character items based on the reasons the person chose; nothing is changed automatically."
+      },
+      "screenSection": "stage-03",
+      "help": {
+        "about": {
+          "ja": "メニューごとに 未／途中／済 と、人の結論が一覧になります。「調整候補」は人が選んだ理由から関連する Character 項目を示すだけで、自動では変更しません。",
+          "en": "For each menu, the status (not started / in progress / done) and the human conclusions are listed. \"Adjustment candidates\" only point to related Character items based on the reasons the person chose; nothing is changed automatically."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "Trainer の観察は正式な判定ではなく、推奨は自動適用されません。変更は編集画面で行い、保存すると新しい revision になります。",
+          "en": "The Trainer's observations are not a formal verdict, and recommendations are not applied automatically. Make changes on the edit screen; saving creates a new revision."
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    },
+    {
+      "canonicalPath": "trainer.expected_profile",
+      "chapter": "results",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "Expected Profile との比較",
+        "en": "Comparison with the Expected Profile"
+      },
+      "label": {
+        "ja": "Expected Profile との比較",
+        "en": "Expected Profile との比較"
+      },
+      "currentNote": {
+        "ja": "Character の設定から予想される傾向（Expected）と、回答から観察された傾向（Observed）の差（Diff）を並べます。",
+        "en": "Shows side by side the tendencies predicted from the Character's settings (Expected), the tendencies observed from the answers (Observed), and the difference (Diff)."
+      },
+      "screenSection": "stage-03",
+      "help": {
+        "about": {
+          "ja": "Expected は設計上の対応表から計算した傾向で、能力の測定ではありません。Observed は人の評価から集計します。",
+          "en": "Expected is a tendency calculated from the design correspondence table, not a measurement of ability. Observed is aggregated from the person's evaluations."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "差があっても「どちらが正しい」とは決めません。どの項目を見直すかの手がかりです。",
+          "en": "A difference does not decide \"which one is right.\" It is a clue to which items to review."
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    },
+    {
+      "canonicalPath": "trainer.review_results",
+      "chapter": "results",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "外部 Review を読む（AMU）",
+        "en": "Read external Reviews (AMU)"
+      },
+      "label": {
+        "ja": "外部 Review を読む（AMU）",
+        "en": "外部 Review を読む（AMU）"
+      },
+      "currentNote": {
+        "ja": "AMU Studio 側で行われた Review の結果を読み込んで一覧します。ここでも Character は変更されません。",
+        "en": "Loads and lists the results of Reviews performed on the AMU Studio side. The Character is not changed here either."
+      },
+      "screenSection": "review-results",
+      "help": {
+        "about": {
+          "ja": "AMU Studio 側で行われた Review の結果を読み込んで一覧します。ここでも Character は変更されません。",
+          "en": "Loads and lists the results of Reviews performed on the AMU Studio side. The Character is not changed here either."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "Review 結果は署名付きの読み取り専用データです。編集や再評価はできません。",
+          "en": "Review results are signed, read-only data. They cannot be edited or re-evaluated."
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    }
+  ],
+  "non_canonical_fields": [],
+  "structured_enums": {}
+}

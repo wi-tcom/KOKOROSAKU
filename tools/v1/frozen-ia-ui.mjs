@@ -565,29 +565,11 @@ window.SAKU_RECORD_TRAINER_BUILDER_SAVE = (character, saveAttemptId) => {
   return { active: true, ok: true, session: saved.session };
 };
 
-function helpMarkup(item) {
-  const l = locale();
-  const tuning = (item.tuning || []).map(id => TUNING_ITEMS.find(one => one.id === id)).filter(Boolean);
-  return `<details class="registry-help"><summary>${ui("この項目のHelp", "Help for this field")}</summary>
-    <h4>${ui("人間向け質問", "Human question")}</h4><p>${esc(localized(item.humanQuestion, l))}</p>
-    <h4>${ui("この項目について", "About this field")}</h4><p>${esc(localized(item.help.about, l))}</p>
-    <h4>${ui("なぜ必要か", "Why it is needed")}</h4><p>${esc(localized(item.help.why, l))}</p>
-    <h4>${ui("何を書く項目か", "What to enter")}</h4><p>${esc(localized(item.help.what, l))}</p>
-    <h4>${ui("必須性", "Requiredness")}</h4><p>${esc(item.requiredness)}</p>
-    <h4>${ui("入力例", "Example")}</h4><p>${esc(localized(item.help.example, l))}</p>
-    <h4>${ui("注意点", "Caution")}</h4><p>${esc(localized(item.help.caution, l))}</p>
-    <h4>${ui("関連するAIの動き", "Related AI behaviour")}</h4><p>${esc(localized(item.help.relatedAiBehavior, l))}</p>
-    ${tuning.length ? `<ul>${tuning.map(one => `<li>${esc(localized(one.symptom, l))}</li>`).join("")}</ul>` : `<p>UNKNOWN</p>`}
-    <h4>${ui("関連する項目", "Related fields")}</h4><p>${esc(localized(item.help.relatedItems, l))}</p>
-    <h4>${ui("この設定がどこで使われるか", "Where this setting is used")}</h4><p>${esc(localized(item.help.usedAt, l))}</p>
-    <h4>${ui("保存・Export時の扱い", "Save and Export handling")}</h4><p>${esc(localized(item.help.persistence, l))}</p>
-    <details class="registry-help-expert"><summary>${ui("Expert情報", "Expert information")}</summary>
-      <dl><dt>Canonical path</dt><dd>${esc(item.canonicalPath)}</dd><dt>Editability</dt><dd>${esc(item.editability)}</dd>
-      <dt>Effect state</dt><dd>${esc(item.effectState)} — ${esc(localized(EFFECT_STATES[item.effectState], l))}</dd>
-      <dt>Source</dt><dd>${esc(item.source.repository)} @ ${esc(item.source.revision)}</dd><dt>Evidence</dt><dd>${esc(item.evidence || "UNKNOWN")}</dd></dl>
-    </details>
-  </details>`;
-}
+// The per-field Help block was here, labelled after the field itself. Inside
+// every field it repeated what the help tree already shows — the same eleven
+// rows and the same option meanings — reached by the one link U2 put under each
+// field. Owner removed the duplicate on 2026-09-23 after handling β.4, and the
+// way a screen points at help is now that one expression everywhere.
 
 function simpleControl(path) {
   const item = field(path); const fp = formPath(path);
@@ -598,12 +580,12 @@ function simpleControl(path) {
   if (item.kind === "textarea") control = `<textarea data-path="${esc(fp)}" rows="3">${esc(current)}</textarea>`;
   else if (item.kind === "enum") control = `<select data-path="${esc(fp)}"><option value="">${ui("未選択", "Not selected")}</option>${(item.options || []).map(option => `<option value="${esc(option)}"${String(current) === String(option) ? " selected" : ""}>${esc(option)}</option>`).join("")}</select>`;
   else control = `<input type="text" data-path="${esc(fp)}" value="${esc(current)}">`;
-  return `<div class="field registry-field" data-canonical-path="${esc(path)}"><label>${esc(label(path))}${required}</label>${control}${helpMarkup(item)}</div>`;
+  return `<div class="field registry-field" data-canonical-path="${esc(path)}"><label>${esc(label(path))}${required}</label>${control}</div>`;
 }
 
 function listControl(path, extraClass = "") {
   const item = field(path); const fp = formPath(path);
-  return `<div class="field list registry-field ${extraClass}" data-list="${esc(fp)}" data-canonical-path="${esc(path)}"><label>${esc(label(path))}${item?.required ? '<span class="req">*</span>' : ""}</label>${helpMarkup(item)}</div>`;
+  return `<div class="field list registry-field ${extraClass}" data-list="${esc(fp)}" data-canonical-path="${esc(path)}"><label>${esc(label(path))}${item?.required ? '<span class="req">*</span>' : ""}</label></div>`;
 }
 
 function chapterMarkup(chapter, body) {
@@ -643,7 +625,7 @@ function inspectorMarkup() {
 }
 
 function tuningMarkup() {
-  return `<section class="tuning-entry" aria-labelledby="tuning-title"><h2 id="tuning-title">${ui("AIの動き方を調整", "Adjust AI behaviour")}</h2>
+  return `<section class="tuning-entry" aria-labelledby="tuning-title"><h2 id="tuning-title">${ui("AIの動き方を調整", "Adjust AI behavior")}</h2>
     <p>${ui("気になる症状から、関係するCharacter設定を確認します。Trainerの観察はCanonicalの真実ではなく、推奨は自動適用されません。", "Start with a symptom and inspect related Character settings. Trainer observations are not Canonical truth, and recommendations are never applied automatically.")}</p>
     <div class="tuning-symptom-grid">${TUNING_ITEMS.map(item => `<button type="button" data-tuning-symptom="${item.id}" aria-label="${esc(localized(item.symptom, locale()))}">${esc(localized(item.symptom, locale()))}</button>`).join("")}</div>
     <div id="tuningRegistryDetail" class="tuning-registry-detail" role="status" aria-live="polite">${ui("症状を選択してください。", "Select a symptom.")}</div>
@@ -681,11 +663,16 @@ function renderSurface() {
   wireFrozenActions();
   renderTrainerCandidateReview();
   document.documentElement.dataset.frozenIa = "five-chapter-v1";
+  // The page re-attaches per-field help (U2 「現在の内容」 / 「詳細はヘルプ参照 →」) after every render.
+  window.dispatchEvent(new CustomEvent("saku-frozen-surface-rendered"));
 }
 
+// A closed Schema enum with several answers (work_modes) is a checkbox group:
+// every value visible, nothing typed, nothing to add (U3, Owner 2026-09-22 ①).
 function enumListMarkup(path) {
   const item = field(path); const fp = formPath(path);
-  return `<div class="field registry-field enum-list" data-canonical-path="${path}" data-enum-list="${fp}"><label>${esc(label(path))}<span class="req">*</span></label><div class="enum-items"></div><div class="add"><select aria-label="${esc(label(path))}"><option value="">${ui("選択して追加", "Select to add")}</option>${item.options.map(option => `<option value="${option}">${option}</option>`).join("")}</select><button type="button" class="btn-sm">${ui("追加", "Add")}</button></div>${helpMarkup(item)}</div>`;
+  const name = value => window.SAKU_FIELD_GUIDE_OPTION_NAME?.(path, value) || "";
+  return `<div class="field registry-field enum-list" data-canonical-path="${path}" data-enum-list="${fp}"><label>${esc(label(path))}<span class="req">*</span></label><p class="hint">${ui("この一覧は Schema で固定です。当てはまるものをすべて選びます。", "This list is fixed by the Schema. Tick everything that applies.")}</p><div class="enum-checks" role="group" aria-label="${esc(label(path))}">${item.options.map(option => `<label class="enum-check"><input type="checkbox" value="${esc(option)}" data-enum-option="${esc(option)}"><span class="enum-value">${esc(option)}</span>${name(option) ? `<span class="enum-name">${esc(name(option))}</span>` : ""}</label>`).join("")}</div></div>`;
 }
 
 function normalizeList(path) {
@@ -696,8 +683,8 @@ function normalizeList(path) {
 
 function renderEnumLists() {
   for (const host of document.querySelectorAll("[data-enum-list]")) {
-    const path = host.dataset.enumList; const list = normalizeList(path); const items = host.querySelector(".enum-items"); items.replaceChildren();
-    for (const [index, value] of list.entries()) { const row = document.createElement("span"); row.className = "enum-chip"; row.textContent = value; const remove = document.createElement("button"); remove.type = "button"; remove.textContent = "×"; remove.setAttribute("aria-label", `${value} ${ui("を削除", "remove")}`); remove.addEventListener("click", () => { list.splice(index, 1); renderEnumLists(); window.render?.(); }); row.append(remove); items.append(row); }
+    const path = host.dataset.enumList; const list = normalizeList(path);
+    for (const box of host.querySelectorAll("input[data-enum-option]")) box.checked = list.includes(box.dataset.enumOption);
   }
 }
 
@@ -708,56 +695,134 @@ function renderStructuredEditors() {
   renderReferences();
 }
 
+// ── conformance references from row checks (U3, Owner 2026-09-22 ②) ────────
+// The three reference lists (must_preserve / prohibited_drift / continuity)
+// are edited only through the check boxes on each requirement / handoff row.
+// Nobody types a requirement_id or a locator: the id comes from the row, the
+// locator is computed at save (unified-authoring: id-resolved, PR #34 rule).
+const REF_GROUPS = Object.freeze([
+  ["must_preserve_refs", "保持", "Preserve", "保持を確認する（Trainer が「保たれているか」を見る）", "Checked for preservation"],
+  ["prohibited_drift_refs", "逸脱禁止", "No drift", "逸脱を確認する（外れていないかを見る）", "Checked for drift"],
+  ["continuity_refs", "継続性", "Continuity", "継続性を確認する（会話をまたいで続くかを見る）", "Checked for continuity"],
+]);
+const FIXED_INVARIANT_ID = "INV-INPUT-INTEGRITY";
+function refList(group) { const path = `unified.${group}`; let list = get(state(), path); if (!Array.isArray(list)) { list = []; set(state(), path, list); } for (let i = 0; i < list.length; i += 1) if (typeof list[i] === "string") list[i] = { requirement_id: list[i] }; return list; }
+function hasRef(group, id) { return refList(group).some(ref => ref && ref.requirement_id === id); }
+function setRef(group, id, on) {
+  const list = refList(group); const at = list.findIndex(ref => ref && ref.requirement_id === id);
+  if (on && at < 0) list.push({ requirement_id: id });      // locator is added at save, by id
+  if (!on && at >= 0) list.splice(at, 1);
+}
+function renameRef(oldId, newId) { if (!oldId || oldId === newId) return; for (const [group] of REF_GROUPS) for (const ref of refList(group)) if (ref && ref.requirement_id === oldId) ref.requirement_id = newId; }
+function refChecks(getId) {
+  const wrap = document.createElement("div"); wrap.className = "ref-checks"; wrap.setAttribute("role", "group"); wrap.setAttribute("aria-label", ui("確認の対象", "Conformance checks"));
+  for (const [group, ja, en, titleJa, titleEn] of REF_GROUPS) {
+    const label = document.createElement("label"); label.className = "checkbox-label ref-check"; label.title = ui(titleJa, titleEn);
+    const box = document.createElement("input"); box.type = "checkbox"; box.dataset.refGroup = group; box.checked = hasRef(group, getId());
+    box.addEventListener("change", () => { setRef(group, getId(), box.checked); renderReferences(); window.render?.(); });
+    label.append(box, document.createTextNode(` ${ui(ja, en)}`)); wrap.append(label);
+  }
+  return wrap;
+}
+
 function renderRequirements() {
   const host = document.getElementById("invariantsEditor"); if (!host) return;
   const path = "unified.hard_invariants"; const list = normalizeList(path).map((item, i) => typeof item === "string" ? { id: `INV-${i + 1}`, statement: item } : item); set(state(), path, list);
-  host.innerHTML = `<h3>${esc(label("character_core.hard_invariants"))}<span class="req">*</span></h3><p class="fixed-held">INV-INPUT-INTEGRITY — REQUIRED_INPUT != AI_GENERATED_SUBSTITUTE (${ui("固定・編集不可", "fixed, read only")})</p><div class="object-rows"></div><button type="button" class="btn-sm object-add">${ui("約束を追加", "Add commitment")}</button>${helpMarkup(field("character_core.hard_invariants"))}`;
+  host.innerHTML = `<h3>${esc(label("character_core.hard_invariants"))}<span class="req">*</span></h3><p class="ref-legend">${ui("各行の「保持／逸脱禁止／継続性」で、あとで確認する対象を選びます。参照位置（locator）は保存時に自動で付きます。", "Tick 保持 / 逸脱禁止 / 継続性 on a row to make it a conformance check. The locator is added at save.")}</p><div class="fixed-held" data-fixed-invariant><span>${FIXED_INVARIANT_ID} — REQUIRED_INPUT != AI_GENERATED_SUBSTITUTE (${ui("固定・編集不可", "fixed, read only")})</span></div><div class="object-rows"></div><button type="button" class="btn-sm object-add">${ui("不変条件を追加", "Add invariant")}</button>`;
+  host.querySelector("[data-fixed-invariant]").append(refChecks(() => FIXED_INVARIANT_ID));
   const rows = host.querySelector(".object-rows");
-  list.forEach((item, index) => rows.append(objectRow([["id", ui("ID", "ID")], ["statement", ui("内容", "Statement")]], item, () => { list.splice(index, 1); renderRequirements(); window.render?.(); })));
+  list.forEach((item, index) => {
+    const row = objectRow([["id", ui("ID", "ID")], ["statement", ui("内容", "Statement")]], item, () => { for (const [group] of REF_GROUPS) setRef(group, item.id, false); list.splice(index, 1); renderRequirements(); renderReferences(); window.render?.(); }, { onIdChange: renameRef });
+    row.insertBefore(refChecks(() => item.id), row.lastElementChild); rows.append(row);
+  });
   host.querySelector(".object-add").addEventListener("click", () => { list.push({ id: `INV-${list.length + 1}`, statement: "" }); renderRequirements(); });
 }
 
-function objectRow(fields, item, remove) {
+function objectRow(fields, item, remove, { onIdChange = null } = {}) {
   const row = document.createElement("div"); row.className = "object-row";
-  for (const [key, text] of fields) { const wrap = document.createElement("label"); wrap.textContent = text; const input = document.createElement(key.includes("statement") || key.includes("trigger") || key.includes("boundary") ? "textarea" : "input"); input.value = item[key] || ""; input.addEventListener("input", () => { item[key] = input.value; window.render?.(); }); wrap.append(input); row.append(wrap); }
+  for (const [key, text] of fields) { const wrap = document.createElement("label"); wrap.textContent = text; const input = document.createElement(key.includes("statement") || key.includes("trigger") || key.includes("boundary") ? "textarea" : "input"); input.value = item[key] || ""; input.addEventListener("input", () => { const previous = item[key]; item[key] = input.value; if (key === "id" && onIdChange) onIdChange(previous, input.value); window.render?.(); }); wrap.append(input); row.append(wrap); }
   const del = document.createElement("button"); del.type = "button"; del.className = "btn-sm danger"; del.textContent = ui("削除", "Remove"); del.addEventListener("click", remove); row.append(del); return row;
 }
 
 function renderHandoffs() {
   const host = document.getElementById("handoffEditor"); if (!host) return;
   const path = "unified.human_handoff_conditions"; const raw = get(state(), path); const list = Array.isArray(raw) ? raw.map((item, i) => typeof item === "string" ? { id: `HANDOFF-${i + 1}`, reason_class: "OTHER", trigger: item, boundary_statement: item, seat8_required: true } : item) : []; set(state(), path, list);
-  host.innerHTML = `<h3>${esc(label("character_core.human_handoff_conditions"))}<span class="req">*</span></h3><div class="object-rows"></div><button type="button" class="btn-sm object-add">${ui("条件を追加", "Add condition")}</button>${helpMarkup(field("character_core.human_handoff_conditions"))}`;
+  host.innerHTML = `<h3>${esc(label("character_core.human_handoff_conditions"))}<span class="req">*</span></h3><div class="object-rows"></div><button type="button" class="btn-sm object-add">${ui("条件を追加", "Add condition")}</button>`;
   const rows = host.querySelector(".object-rows");
   list.forEach((item, index) => {
-    const row = objectRow([["id", "ID"], ["trigger", ui("きっかけ", "Trigger")], ["boundary_statement", ui("境界", "Boundary")]], item, () => { list.splice(index, 1); renderHandoffs(); window.render?.(); });
-    const reason = document.createElement("label"); reason.textContent = ui("理由区分", "Reason class"); const select = document.createElement("select");
-    for (const value of HANDOFF_REASON_OPTIONS) { const option = new Option(value, value, false, item.reason_class === value); select.add(option); }
+    const row = objectRow([["id", "ID"], ["trigger", ui("きっかけ", "Trigger")], ["boundary_statement", ui("境界", "Boundary")]], item, () => { for (const [group] of REF_GROUPS) setRef(group, item.id, false); list.splice(index, 1); renderHandoffs(); renderReferences(); window.render?.(); }, { onIdChange: renameRef });
+    const reason = document.createElement("label"); reason.textContent = ui("理由区分", "Reason class"); const select = document.createElement("select"); select.dataset.reasonClass = "";
+    for (const value of HANDOFF_REASON_OPTIONS) { const option = new Option(`${value}${window.SAKU_FIELD_GUIDE_ENUM_MEANING?.("character_core.human_handoff_conditions.reason_class", value) ? ` — ${window.SAKU_FIELD_GUIDE_ENUM_MEANING("character_core.human_handoff_conditions.reason_class", value)}` : ""}`, value, false, item.reason_class === value); select.add(option); }
     select.addEventListener("change", () => { item.reason_class = select.value; window.render?.(); }); reason.append(select); row.insertBefore(reason, row.lastElementChild);
+    row.insertBefore(refChecks(() => item.id), row.lastElementChild);
     const related = document.createElement("label"); related.className = "checkbox-label"; const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.checked = Boolean(item.seat8_required); checkbox.addEventListener("change", () => { item.seat8_required = checkbox.checked; window.render?.(); }); related.append(checkbox, document.createTextNode(ui("席8へ渡す条件として関連付ける", "Link explicitly as a Seat 8 condition"))); row.insertBefore(related, row.lastElementChild);
     rows.append(row);
   });
   host.querySelector(".object-add").addEventListener("click", () => { list.push({ id: `HANDOFF-${list.length + 1}`, reason_class: "OTHER", trigger: "", boundary_statement: "", seat8_required: true }); renderHandoffs(); });
 }
 
+// The three lists are shown read-only as a summary; a reference whose id is
+// on no row (「その他の参照」) is kept visible with its own remove button —
+// never dropped silently, never typed here.
 function renderReferences() {
   const host = document.getElementById("referenceEditors"); if (!host) return; host.replaceChildren();
-  for (const canonical of ["conformance_expectations.must_preserve_refs", "conformance_expectations.prohibited_drift_refs", "conformance_expectations.continuity_refs"]) {
-    const path = formPath(canonical); let list = get(state(), path); if (!Array.isArray(list)) list = []; list = list.map(item => typeof item === "string" ? { requirement_id: item } : item); set(state(), path, list);
-    const box = document.createElement("div"); box.className = "object-editor registry-field"; box.dataset.canonicalPath = canonical;
-    box.innerHTML = `<h3>${esc(label(canonical))}<span class="req">*</span></h3><div class="object-rows"></div><button type="button" class="btn-sm object-add">${ui("参照を追加", "Add reference")}</button>${helpMarkup(field(canonical))}`;
-    const rows = box.querySelector(".object-rows"); list.forEach((item, index) => rows.append(objectRow([["requirement_id", ui("Requirement ID", "Requirement ID")], ["locator", ui("任意locator", "Optional locator")]], item, () => { list.splice(index, 1); renderReferences(); window.render?.(); })));
-    box.querySelector(".object-add").addEventListener("click", () => { list.push({ requirement_id: "", locator: "" }); renderReferences(); }); host.append(box);
+  const rowIds = new Set([FIXED_INVARIANT_ID, ...normalizeList("unified.hard_invariants").map(item => item?.id), ...((get(state(), "unified.human_handoff_conditions") || []).map(item => item?.id))].filter(Boolean));
+  for (const [group, ja, en] of REF_GROUPS) {
+    const canonical = `conformance_expectations.${group}`; const list = refList(group);
+    const box = document.createElement("div"); box.className = "object-editor registry-field reference-summary"; box.dataset.canonicalPath = canonical; box.dataset.refGroup = group;
+    const known = list.filter(ref => rowIds.has(ref.requirement_id)); const foreign = list.filter(ref => !rowIds.has(ref.requirement_id));
+    box.innerHTML = `<h3>${esc(label(canonical))}<span class="req">*</span></h3><p class="ref-summary" data-ref-summary>${known.length ? known.map(ref => `<code>${esc(ref.requirement_id)}</code>`).join(" ") : `<span class="ref-empty">${ui("（行のチェックで選びます）", "(tick a row to add)")}</span>`}</p>${foreign.length ? `<div class="ref-foreign" data-ref-foreign><strong>${ui("その他の参照（この画面の行にない id）", "Other references (ids not on any row)")}</strong></div>` : ""}`;
+    const foreignHost = box.querySelector("[data-ref-foreign]");
+    for (const ref of foreign) { const line = document.createElement("div"); line.className = "ref-foreign-row"; const code = document.createElement("code"); code.textContent = `${ref.requirement_id}${ref.locator ? ` (${ref.locator})` : ""}`; const remove = document.createElement("button"); remove.type = "button"; remove.className = "btn-sm danger"; remove.textContent = ui("外す", "Remove"); remove.addEventListener("click", () => { setRef(group, ref.requirement_id, false); renderReferences(); window.render?.(); }); line.append(code, remove); foreignHost.append(line); }
+    host.append(box);
   }
 }
 
 function wireFrozenActions() {
-  for (const host of document.querySelectorAll("[data-enum-list]")) { const select = host.querySelector(".add select"); host.querySelector(".add button").addEventListener("click", () => { if (!select.value) return; const list = normalizeList(host.dataset.enumList); if (!list.includes(select.value)) list.push(select.value); select.value = ""; renderEnumLists(); window.render?.(); }); }
+  // Ticking keeps the Character's existing order and appends new values; unticking removes.
+  for (const host of document.querySelectorAll("[data-enum-list]")) host.addEventListener("change", event => { const box = event.target.closest("input[data-enum-option]"); if (!box) return; const list = normalizeList(host.dataset.enumList); const value = box.dataset.enumOption; const at = list.indexOf(value); if (box.checked && at < 0) list.push(value); if (!box.checked && at >= 0) list.splice(at, 1); window.render?.(); });
   document.querySelector("[data-jump-chapter]")?.addEventListener("click", () => { const target = document.querySelector('[data-frozen-chapter="boundary"]'); const details = target?.closest("details"); if (details) details.open = true; target?.scrollIntoView({ behavior: "smooth" }); target?.querySelector("input,select,textarea,button")?.focus(); });
   document.querySelector(".tuning-symptom-grid")?.addEventListener("click", event => { const button = event.target.closest("[data-tuning-symptom]"); if (!button) return; const item = TUNING_ITEMS.find(one => one.id === button.dataset.tuningSymptom); const related = FIELDS.filter(one => one.tuning.includes(item.id)); const observed = (() => { try { const id = state()?._unified_source?.identity?.character_id || state()?.meta?.slug || ""; return JSON.parse(localStorage.getItem("saku.trainer.observedTuning") || "{}")[id]?.[item.id] || "NOT_ASSESSED"; } catch { return "NOT_ASSESSED"; } })(); document.getElementById("tuningRegistryDetail").innerHTML = `<strong>${esc(localized(item.symptom, locale()))}</strong><p>Current: ${related.map(one => esc(localized(one.label, locale()))).join(" / ") || "UNKNOWN"}</p><p>Observed: ${esc(observed)}</p><p>Diff: ${observed === "NOT_ASSESSED" ? "UNKNOWN" : ui("TrainerのEvidenceを確認してください", "Review Trainer evidence")}</p><p>${ui("Recommendationは自動適用されません。関連項目のHelpを開き、Previewを確認してから明示的に編集してください。", "Recommendations are not applied automatically. Open the related field Help, preview the change, then edit explicitly.")}</p>`; });
   for (const id of ["resetAll", "loadExample"]) document.getElementById(id)?.addEventListener("click", () => setTimeout(renderStructuredEditors, 0));
 }
 
 initializeTrainerCandidateReview();
+// Exposed before the first render so the page's surface-rendered listener can
+// already decorate (guide labels, datalists) from that first render on.
+window.SAKU_FROZEN_IA = Object.freeze({ chapters: CHAPTERS, fields: FIELDS, refresh: renderSurface, renderStructuredEditors, decorateFromGuide });
 renderSurface();
-window.SAKU_FROZEN_IA = Object.freeze({ chapters: CHAPTERS, fields: FIELDS, refresh: renderSurface, renderStructuredEditors });
+// Guide-derived labels (option names, reason_class meanings) are filled in
+// place once the field guide has loaded — no re-render, nothing typed is lost.
+function decorateFromGuide() {
+  for (const host of document.querySelectorAll("[data-enum-list]")) {
+    const canonical = host.dataset.canonicalPath;
+    for (const check of host.querySelectorAll(".enum-check")) {
+      if (check.querySelector(".enum-name")) continue;
+      const value = check.querySelector("input[data-enum-option]")?.dataset.enumOption; const name = window.SAKU_FIELD_GUIDE_OPTION_NAME?.(canonical, value);
+      if (name) { const span = document.createElement("span"); span.className = "enum-name"; span.textContent = name; check.append(span); }
+    }
+  }
+  // Owner-approved vocabulary as a datalist on semi-open text fields (U4): a hint,
+  // never a constraint — the note says so and the input stays free text.
+  for (const host of document.querySelectorAll('.registry-field[data-canonical-path] > input[type="text"]')) {
+    const field = host.parentElement; const path = field.dataset.canonicalPath;
+    const candidates = window.SAKU_FIELD_GUIDE_CANDIDATES?.(path);
+    if (!candidates || candidates.render !== "datalist" || host.getAttribute("list")) continue;
+    const id = `dl-${path.replace(/[^a-z0-9]+/gi, "-")}`;
+    const list = document.createElement("datalist"); list.id = id;
+    for (const item of candidates.items) { const option = document.createElement("option"); option.value = item.value; if (item.note) option.label = item.note; list.append(option); }
+    host.setAttribute("list", id); host.after(list);
+    const note = document.createElement("p"); note.className = "hint candidate-note"; note.dataset.candidateNote = path; note.textContent = candidates.screen_note?.ja || "例です。自由に書けます"; list.after(note);
+  }
+  // Enum selects (the fifteen axes) show the field guide's name for each value;
+  // the value stored is unchanged. The first render can come before the guide.
+  for (const select of document.querySelectorAll(".registry-field[data-canonical-path] > select[data-path]")) {
+    const canonical = select.parentElement.dataset.canonicalPath;
+    for (const option of select.options) { if (!option.value) continue; const name = window.SAKU_FIELD_GUIDE_OPTION_NAME?.(canonical, option.value); if (name) option.text = name; }
+  }
+  for (const select of document.querySelectorAll("select[data-reason-class]")) for (const option of select.options) {
+    const meaning = window.SAKU_FIELD_GUIDE_ENUM_MEANING?.("character_core.human_handoff_conditions.reason_class", option.value);
+    if (meaning && !option.text.includes(" — ")) option.text = `${option.value} — ${meaning}`;
+  }
+}
 window.addEventListener("saku-ui-locale-changed", () => renderSurface());

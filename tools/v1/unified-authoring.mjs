@@ -176,16 +176,30 @@ export function toUnifiedCharacter(form, base = null, options = {}) {
 
   // Input Integrity is a Character-level invariant, not a preference. It is
   // always present and is never sourced from the form.
+  //
+  // Order matters: conformance_expectations and Seat 8 reference these rows by
+  // index (`/character_core/hard_invariants/N`). Until 2026-09-22 this list was
+  // rebuilt with Input Integrity first, which silently moved every other row
+  // and left the locators pointing at the wrong invariant; the locator check
+  // (PR #30) then refused an unchanged save. The base order is now kept: rows
+  // the author edited are updated in place, rows the base had stay where they
+  // were, new rows go to the end, and Input Integrity is inserted first only
+  // for a Character that never had it.
   const authored = (Array.isArray(extras.hard_invariants) ? extras.hard_invariants : [])
     .map(item => (typeof item === "string"
       ? { id: `INV-${item.slice(0, 24).replace(/[^A-Za-z0-9._:-]/g, "-") || "AUTHORED"}`, statement: item }
       : { id: String(item?.id || "INV-AUTHORED"), statement: String(item?.statement || "") }))
     .filter(item => item.statement.trim());
-  core.hard_invariants = [
-    { id: "INV-INPUT-INTEGRITY", statement: INPUT_INTEGRITY_STATEMENT },
-    ...(base ? (base.character_core?.hard_invariants || []).filter(item => item.id !== "INV-INPUT-INTEGRITY" && !authored.some(one => one.id === item.id)) : []),
-    ...authored,
-  ];
+  const authoredById = new Map(authored.map(item => [item.id, item]));
+  const invariants = [];
+  for (const item of base ? (base.character_core?.hard_invariants || []) : []) {
+    if (item.id === "INV-INPUT-INTEGRITY") invariants.push({ id: "INV-INPUT-INTEGRITY", statement: INPUT_INTEGRITY_STATEMENT });
+    else if (authoredById.has(item.id)) { invariants.push(authoredById.get(item.id)); authoredById.delete(item.id); }
+    else invariants.push({ id: item.id, statement: item.statement });
+  }
+  if (!invariants.some(item => item.id === "INV-INPUT-INTEGRITY")) invariants.unshift({ id: "INV-INPUT-INTEGRITY", statement: INPUT_INTEGRITY_STATEMENT });
+  for (const item of authored) if (authoredById.has(item.id)) { invariants.push(item); authoredById.delete(item.id); }
+  core.hard_invariants = invariants;
 
   const handoffSource = Array.isArray(extras.human_handoff_conditions) ? extras.human_handoff_conditions : [];
   const explicitHandoffIds = new Set(handoffSource.filter(item => item && typeof item === "object" && item.seat8_required)
@@ -225,8 +239,13 @@ export function toUnifiedCharacter(form, base = null, options = {}) {
   if (materials.length) seat8.handoff_material_requirements = materials;
   else if (!seat8.handoff_material_requirements) seat8.handoff_material_requirements = [];
   // A Seat 8 reference is created only when the author explicitly marks that
-  // handoff row as related.  It is never inferred from similar prose.
-  seat8.human_required_condition_refs = [...explicitHandoffIds].map(requirement_id => ({ requirement_id }));
+  // handoff row as related.  It is never inferred from similar prose. A
+  // reference the base already carried keeps its locator (recomputed below).
+  const baseSeat8Refs = base?.assistant_composition?.seat8?.human_required_condition_refs || [];
+  seat8.human_required_condition_refs = [...explicitHandoffIds].map(requirement_id => {
+    const previous = baseSeat8Refs.find(ref => ref && ref.requirement_id === requirement_id);
+    return previous && typeof previous === "object" && "locator" in previous ? { requirement_id, locator: previous.locator } : { requirement_id };
+  });
   composition.seat8 = seat8;
 
   const axes = { ...(character.personality_axes || {}) };
@@ -239,19 +258,67 @@ export function toUnifiedCharacter(form, base = null, options = {}) {
 
   const conformance = character.conformance_expectations || {};
   for (const [key, source] of [["must_preserve_refs", extras.must_preserve_refs], ["prohibited_drift_refs", extras.prohibited_drift_refs], ["continuity_refs", extras.continuity_refs]]) {
+    // A ref the base already carried is kept exactly as it was (with or
+    // without a locator) so an unchanged save stays byte-identical. A ref the
+    // author added on this screen (U3: by ticking a row) has no locator yet and
+    // is marked for generation below — nobody types a locator.
+    const baseRefs = Array.isArray(base?.conformance_expectations?.[key]) ? base.conformance_expectations[key] : [];
     const list = (Array.isArray(source) ? source : asList(source)).map(item => {
       if (item && typeof item === "object") return { requirement_id: String(item.requirement_id || "").trim(), ...(String(item.locator || "").trim() ? { locator: String(item.locator).trim() } : {}) };
       return { requirement_id: String(item || "").trim() };
-    }).filter(item => item.requirement_id);
+    }).filter(item => item.requirement_id).map(item => {
+      if ("locator" in item) return item;
+      const previous = baseRefs.find(ref => ref && ref.requirement_id === item.requirement_id);
+      if (previous) return "locator" in previous ? { requirement_id: item.requirement_id, locator: previous.locator } : item;
+      return { requirement_id: item.requirement_id, locator: LOCATOR_PENDING };
+    });
     if (list.length) conformance[key] = list;
     else if (!Array.isArray(conformance[key])) conformance[key] = [];
   }
   character.conformance_expectations = conformance;
 
+  // Locators are index-based and the arrays above may have moved: every ref
+  // that carries a locator is re-pointed by id (ids are stable), so the saved
+  // Character satisfies "locator resolves to requirement_id" by construction.
+  // New refs (LOCATOR_PENDING) receive their locator here; one whose id is on
+  // no row is left without a locator and the validator says so.
+  relocateRequirementRefs(character);
+  for (const list of Object.values(character.conformance_expectations)) for (const ref of Array.isArray(list) ? list : []) if (ref && ref.locator === LOCATOR_PENDING) delete ref.locator;
+
   if (options.bumpRevision) {
     character.identity.character_revision = nextRevision(base?.identity?.character_revision || character.identity.character_revision);
   }
   return character;
+}
+
+/**
+ * Re-point every `{ requirement_id, locator }` under conformance_expectations
+ * and Seat 8 at the array element that carries that id (hard_invariants, then
+ * human_handoff_conditions). Refs without a locator are left alone; refs whose
+ * id is not found keep their locator (a pending "" marker is removed by the
+ * caller). Returns the number of locators rewritten.
+ */
+/** Marker for a reference added on the edit screen whose locator is generated at save. */
+export const LOCATOR_PENDING = "";
+
+export function relocateRequirementRefs(character) {
+  const core = character?.character_core || {};
+  const indexOf = (list, id) => (Array.isArray(list) ? list.findIndex(item => item && item.id === id) : -1);
+  let rewritten = 0;
+  const relocate = refs => {
+    if (!Array.isArray(refs)) return;
+    for (const ref of refs) {
+      if (!ref || typeof ref !== "object" || !("locator" in ref)) continue;
+      let locator = null;
+      const invariant = indexOf(core.hard_invariants, ref.requirement_id);
+      if (invariant >= 0) locator = `/character_core/hard_invariants/${invariant}`;
+      else { const handoff = indexOf(core.human_handoff_conditions, ref.requirement_id); if (handoff >= 0) locator = `/character_core/human_handoff_conditions/${handoff}`; }
+      if (locator !== null && ref.locator !== locator) { ref.locator = locator; rewritten += 1; }
+    }
+  };
+  for (const list of Object.values(character?.conformance_expectations || {})) relocate(list);
+  relocate(character?.assistant_composition?.seat8?.human_required_condition_refs);
+  return rewritten;
 }
 
 /**

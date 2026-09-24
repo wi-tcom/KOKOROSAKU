@@ -12,7 +12,10 @@ import { testCharacter } from '/scripts/fixtures/trainer-ux3-character.mjs';
 import { openStore, current } from '/tools/v1/trainer-ux4.mjs';
 const checks=[],check=(value,label)=>{if(!value)throw new Error(label);checks.push(label);};
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-const until=async fn=>{for(let i=0;i<500;i++){if(fn())return;await wait(20);}throw new Error('TIMEOUT');};
+const until=async fn=>{for(let i=0;i<1500;i++){if(fn())return;await wait(20);}throw new Error('TIMEOUT');};
+// The store writes asynchronously (IndexedDB). Read until the expected state is
+// there, instead of reading once after a fixed pause and failing under load.
+const settle=async(read,predicate)=>{let value;for(let i=0;i<1500;i++){value=await read();if(predicate(value))return value;await wait(20);}return value;};
 let frame,doc;const errors=[];window.addEventListener('error',event=>errors.push(event.message));
 const load=async()=>{if(frame)frame.remove();frame=document.createElement('iframe');frame.style.cssText='width:1280px;height:950px';frame.src='/tools/saku-trainer.html';document.body.append(frame);await new Promise(resolve=>frame.onload=resolve);doc=frame.contentDocument;frame.contentWindow.addEventListener('error',event=>errors.push(event.message));await until(()=>doc.getElementById('stage-01')||doc.getElementById('stage-02')||doc.getElementById('stage-03'));};
 const click=async(id,predicate)=>{const element=doc.getElementById(id);if(!element)throw new Error('MISSING '+id);element.click();await wait(220);if(predicate)await until(predicate);};
@@ -48,7 +51,7 @@ try{
  await input('generated-source','AI generated source');await input('generated-name','生成メニュー');await input('generated-question','生成質問');await input('generated-expected','生成期待');await input('generated-review','生成見るポイント');await click('add-generated',()=>doc.querySelectorAll('input[name="menu-item"]').length===11);
  state=await db.load(sessionId);check(Object.values(state.r4.added_items).some(item=>item.provenance.kind==='GENERATED_HUMAN_CONFIRMED'),'R4-ADD-01 generated candidate selectable only after Human-confirmed add');
  const all=[...doc.querySelectorAll('input[name="menu-item"]')].map(x=>x.value);for(const id of all)if(!['PB-SAFETY','PB-HANDOFF'].includes(id))await toggle(id,false);
- state=await db.load(sessionId);check(state.r4.generation.current_selected_item_ids.length===2,'working menu selection persisted');
+ state=await settle(()=>db.load(sessionId),s=>s?.r4?.generation?.current_selected_item_ids?.length===2);check(state.r4.generation.current_selected_item_ids.length===2,'working menu selection persisted');
  await change('execution-mode','CATEGORY_BATCH');await click('start-training',()=>doc.getElementById('stage-02'));
  check(doc.defaultView.scrollY===0,'Revision 4 stage transition starts at heading');
  check(doc.querySelectorAll('#stage-menu-list input[type="radio"]').length===2,'R4-02-01 Stage 02 shows all selected menu items');
@@ -110,5 +113,5 @@ try{
  const target=await(await fetch(`http://127.0.0.1:${port}/json/new?${encodeURIComponent(`http://127.0.0.1:${server.address().port}/__ux4__`)}`,{method:'PUT'})).json();socket=new WebSocket(target.webSocketDebuggerUrl);await new Promise(resolve=>socket.onopen=resolve);
  let sequence=0;const pending=new Map();socket.onmessage=event=>{const data=JSON.parse(event.data);if(data.id){pending.get(data.id)?.(data);pending.delete(data.id);}};const call=(method,params={})=>new Promise(resolve=>{const id=++sequence;pending.set(id,resolve);socket.send(JSON.stringify({id,method,params}));});
  for(let i=0;i<1200;i++){const result=await call('Runtime.evaluate',{expression:'document.getElementById("report")?.dataset.status',returnByValue:true});if(result.result?.result?.value){output=(await call('Runtime.evaluate',{expression:'document.documentElement.outerHTML',returnByValue:true})).result.result.value;break;}await pause(100);}if(!output)output=(await call('Runtime.evaluate',{expression:'document.documentElement.outerHTML',returnByValue:true})).result.result.value;
-}finally{socket?.close();child.kill();await new Promise(resolve=>child.exitCode!==null?resolve():child.once('exit',resolve));server.close();await rm(profile,{recursive:true,force:true});}
+}finally{socket?.close();child.kill();await new Promise(resolve=>child.exitCode!==null?resolve():child.once('exit',resolve));server.close();await rm(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }).catch(error => console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code || error}`));}
 const match=output.match(/<pre id="report" data-status="(PASS|FAIL)">([\s\S]*?)<\/pre>/);if(!match){console.error(output.slice(0,2000),stderr.slice(-1000));process.exit(1);}const report=JSON.parse(match[2].replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>'));console.log(JSON.stringify(report,null,2));if(report.status!=='PASS')process.exitCode=1;

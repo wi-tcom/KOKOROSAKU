@@ -1,0 +1,255 @@
+{
+  "profile": "saku.screen-guide@1",
+  "screen": "03-ai-platform",
+  "applies_to_app_version": "0.1.0-beta.8",
+  "content_review": {
+    "ja": {
+      "status": "APPROVED",
+      "approved_on": "2026-09-22",
+      "approved_by": "Owner",
+      "approval_route": "統制卓チャット（H = U4 画面ガイド 03／04 の文言、一旦承認）",
+      "condition": "実機打鍵での確認後、修正があれば差し替え可",
+      "drafted_by": "Claude Code SAKU Builder(4)",
+      "checked_by": "Wi-t.comライター&SNS（様式チェック 9f3daf0、M1〜M6・C4 反映）",
+      "revised": [
+        {
+          "on": "2026-09-24",
+          "fields": [
+            "platform.speed_test"
+          ],
+          "why": "β.7 実機確認の所見 F2（説明が 9/22 以前の計測方式のまま）",
+          "checked_by": "Wi-t.comライター&SNS（様式チェック 59b31dd、①②③ 可）",
+          "note": "「現在の内容」は 2 文以内の決まりに合わせ、確定文①の 3 文目（手計測）を②の末尾へ移した（文面は同じ。ライター&SNS 2026-09-24 に可）。"
+        }
+      ]
+    },
+    "en": {
+      "status": "DELIVERED",
+      "source": "wi-tcom/Wi-t_Site site-content/manuals/translation/saku-u4-guides-H_EN.v2.json@823efef ＋ names addendum @90d93aa（依頼 f82d115）",
+      "translated_by": "英語翻訳チーム",
+      "checked_by": "Wi-t.comライター&SNS",
+      "delivered_on": "2026-09-22",
+      "note": "03 実 UI 英語に合わせた 2 件（platform.chapters[3].title、platform.format.uiLabel = Handover form）。Trainer 選択肢名 19 件 = 実 UI 表示。",
+      "revised": [
+        {
+          "on": "2026-09-24",
+          "fields": [
+            "platform.speed_test"
+          ],
+          "source": "wi-tcom/Wi-t_Site SAKU-verify/saku-beta7-findings-O_EN.json@922d0b9（依頼 O 23f8a9e、O2〜O4）",
+          "translated_by": "英語翻訳チーム",
+          "checked_by": "Wi-t.comライター&SNS"
+        }
+      ]
+    }
+  },
+  "effect_notice": {
+    "ja": "※ 傾向であり断定ではありません。AI プラットフォームや事前のメモリー・学習・知識により、思いどおりの傾向にならないことがあります。Trainer で実際の応答を確認してください。"
+  },
+  "chapters": [
+    {
+      "id": "subject",
+      "numeral": "1",
+      "title": {
+        "ja": "動かすキャラクターを確認する",
+        "en": "Check the Character to run"
+      },
+      "question": {
+        "ja": "どのキャラクターを外部 AI に渡しますか？",
+        "en": "Which Character will you hand to the external AI?"
+      }
+    },
+    {
+      "id": "paste",
+      "numeral": "2",
+      "title": {
+        "ja": "貼り付けて読み込ませる",
+        "en": "Paste and load"
+      },
+      "question": {
+        "ja": "外部 AI にどう渡し、何が返れば成功ですか？",
+        "en": "How do you hand it to the external AI, and what reply means success?"
+      }
+    },
+    {
+      "id": "boundary",
+      "numeral": "3",
+      "title": {
+        "ja": "この方法でできないこと",
+        "en": "What this way does not give you"
+      },
+      "question": {
+        "ja": "貼り付けて動かす方法でできないことは何ですか？",
+        "en": "What can the paste-and-run method not do?"
+      }
+    },
+    {
+      "id": "speed",
+      "numeral": "4",
+      "title": {
+        "ja": "AI スピードテスト（貼り付けモード）",
+        "en": "AI speed test (paste mode)"
+      },
+      "question": {
+        "ja": "応答の速さをどう記録しますか？",
+        "en": "How do you record response speed?"
+      }
+    }
+  ],
+  "fields": [
+    {
+      "canonicalPath": "platform.subject",
+      "chapter": "subject",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "動かすキャラクター",
+        "en": "Character to run"
+      },
+      "label": {
+        "ja": "動かすキャラクター",
+        "en": "動かすキャラクター"
+      },
+      "currentNote": {
+        "ja": "01 で選んだ、または編集画面から渡された現在のキャラクターがここに出ます。別のキャラクターにするには 01 で選び直します。",
+        "en": "The current Character, selected in 01 or passed from the edit screen, appears here. To use a different Character, select again in 01."
+      },
+      "screenSection": "platform-active",
+      "help": {
+        "about": {
+          "ja": "03 は SAKU の Character 定義を外部 AI に貼り付けて試す画面です。ここに出ているキャラクターの定義だけが渡ります。",
+          "en": "03 is the screen for trying a SAKU Character definition by pasting it into an external AI. Only the definition of the Character shown here is handed over."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "保存していない編集内容は渡りません。編集画面の「AIプラットフォームで動作確認」は未保存があれば先に保存を確認します。",
+          "en": "Unsaved edits are not handed over. \"Test on an AI platform\" on the edit screen first asks you to save if there are unsaved changes."
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    },
+    {
+      "canonicalPath": "platform.paste",
+      "chapter": "paste",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "貼り付けと読み込み",
+        "en": "Paste and load"
+      },
+      "label": {
+        "ja": "貼り付けと読み込み",
+        "en": "貼り付けと読み込み"
+      },
+      "currentNote": {
+        "ja": "お使いの AI の新しい会話を開き、コピーした全文を最初のメッセージとして送ります。キャラクターとして短いあいさつが返れば読み込めています。",
+        "en": "Open a new conversation in the AI you use and send the whole copied text as the first message. If a short greeting comes back in character, the definition has loaded."
+      },
+      "screenSection": "platform-launch",
+      "help": {
+        "about": {
+          "ja": "お使いの AI の新しい会話を開き、コピーした全文を最初のメッセージとして送ります。キャラクターとして短いあいさつが返れば読み込めています。",
+          "en": "Open a new conversation in the AI you use and send the whole copied text as the first message. If a short greeting comes back in character, the definition has loaded."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "あいさつが返らないときは、貼り付けが途中で切れていないかを確認します。会話の途中で人格がぶれたら、同じ文をもう一度貼り直します。",
+          "en": "If no greeting comes back, check whether the pasted text was cut off partway. If the personality drifts during the conversation, paste the same text again."
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    },
+    {
+      "canonicalPath": "platform.boundary",
+      "chapter": "boundary",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "できないこと",
+        "en": "What it cannot do"
+      },
+      "label": {
+        "ja": "できないこと",
+        "en": "できないこと"
+      },
+      "currentNote": {
+        "ja": "一般の AI サービスに貼り付けて動かす方法では、独立して動き続けること・会話をまたいだ記憶・ツール操作・人（Seat 8）の実際の紐づけ・AMU の状態の引き継ぎは行われません。",
+        "en": "When run by pasting into a general AI service, the following do not happen: running independently over time, memory across conversations, operating tools, actual linkage to a person (Seat 8), and carrying over AMU state."
+      },
+      "screenSection": "platform-boundary",
+      "help": {
+        "about": {
+          "ja": "一般の AI サービスに貼り付けて動かす方法では、独立して動き続けること・会話をまたいだ記憶・ツール操作・人（Seat 8）の実際の紐づけ・AMU の状態の引き継ぎは行われません。",
+          "en": "When run by pasting into a general AI service, the following do not happen: running independently over time, memory across conversations, operating tools, actual linkage to a person (Seat 8), and carrying over AMU state."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "ここで扱うのは Character 定義そのものです。貼り付けても SAKU 側のキャラクターは変わりません。運用区分 B の「使う前に人（Seat 8）の確認」は AMU の仕組みで、貼り付け先の AI には働きません。",
+          "en": "What is handled here is the Character definition itself. Pasting it does not change the Character on the SAKU side. The \"check by a person (Seat 8) before use\" of operation class B is a mechanism of AMU and does not work in the AI you paste into."
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    },
+    {
+      "canonicalPath": "platform.speed_test",
+      "chapter": "speed",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "AI スピードテスト",
+        "en": "AI speed test"
+      },
+      "label": {
+        "ja": "AI スピードテスト",
+        "en": "AI スピードテスト"
+      },
+      "currentNote": {
+        "ja": "設問に定型の指示を添えて外部 AI に貼り付け、応答の速さを記録します。計測値には、AI が回答の最初と最後に書いた開始時刻と終了時刻の差を使います。",
+        "en": "Paste a question with the standard instruction into an external AI and record the speed of the response. The measured value is the difference between the 開始時刻 and the 終了時刻 the AI writes at the beginning and the end of its answer."
+      },
+      "screenSection": "platform-to-trainer",
+      "help": {
+        "about": {
+          "ja": "04 の「AI スピードテスト」で行います。設問は固定で、コピーには「回答の最初と最後に開始時刻と終了時刻を書く」定型の指示が添えられます。手計測（コピー＆ペーストの時間を含む）は参考として別に記録します。",
+          "en": "This is done in \"AI speed test\" in 04. The questions are fixed, and the copy comes with a standard instruction to write 開始時刻 and 終了時刻 at the beginning and the end of the answer. Manual timing, which includes the time to copy and paste, is recorded separately for reference."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "開始時刻と終了時刻は AI が自分で書いたもので、このツールでは確かめられません。コピーから貼り付けまでの実測時間より長い計測には印を付け、集計から外します。",
+          "en": "The 開始時刻 and the 終了時刻 are written by the AI itself and cannot be checked by this tool. A measurement longer than the actual time from copy to paste is flagged and left out of the totals."
+        },
+        "usedAt": {
+          "ja": "04 › AI スピードテスト",
+          "en": "04 › AI speed test"
+        },
+        "optionDetails": []
+      }
+    }
+  ],
+  "non_canonical_fields": [],
+  "structured_enums": {}
+}

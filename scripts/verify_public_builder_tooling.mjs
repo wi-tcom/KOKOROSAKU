@@ -25,6 +25,61 @@ async function files(directory) {
   return result;
 }
 
+// ── the committed projection is what the projection produces ───────────────
+// Until 2026-09-23 this gate checked what the tree contains, never whether it
+// still matches its sources — so `lib/speed-test-ui.mjs` sat in the public tree
+// carrying a sentence that had already been revised where it comes from, and
+// nothing said so. The question is not "is it there" or "is it the right
+// version": it is **does projecting again produce these bytes**.
+{
+  const target = path.join(await mkdtemp(path.join(tmpdir(), "saku-projection-")), "builder");
+  const build = spawn(process.execPath, [path.join(ROOT, "scripts/build_public_builder_tooling.mjs")], {
+    cwd: ROOT, env: { ...process.env, SAKU_PUBLIC_TOOLING_TARGET: target }, windowsHide: true,
+  });
+  let noise = "";
+  build.stdout.on("data", chunk => { noise += chunk; });
+  build.stderr.on("data", chunk => { noise += chunk; });
+  const code = await new Promise(resolve => build.on("close", resolve));
+  assert.equal(code, 0, `PROJECTION a second projection could not be built:\n${noise}`);
+
+  const relative = directory => files(directory).then(list => list.map(file => path.relative(directory, file).replaceAll(path.sep, "/")).sort());
+  const [committed, projected] = await Promise.all([relative(PUBLIC), relative(target)]);
+
+  // Two files are generated and then extended by hand: the READMEs carry a
+  // section about importing the three sample Characters that the generator does
+  // not write, which is why `npm run public:tooling` is followed by restoring
+  // them from git. They are compared by what the generator still contributes.
+  const HAND_EXTENDED = Object.freeze(["README.md", "README.ja.md"]);
+
+  assert.deepEqual(projected, committed, "PROJECTION the committed tree holds exactly the files a projection produces");
+  checks.push(`PROJECTION the committed tree holds exactly the ${committed.length} files a projection produces`);
+
+  const drifted = [];
+  for (const name of committed) {
+    if (HAND_EXTENDED.includes(name)) continue;
+    const [a, b] = await Promise.all([readFile(path.join(PUBLIC, name)), readFile(path.join(target, name))]);
+    if (!a.equals(b)) drifted.push(name);
+  }
+  assert.deepEqual(drifted, [], `PROJECTION these committed files are not what projecting produces — run \`npm run public:tooling\`:\n  ${drifted.join("\n  ")}`);
+  checks.push(`PROJECTION all ${committed.length - HAND_EXTENDED.length} generated files are byte-equal to a fresh projection`);
+
+  for (const name of HAND_EXTENDED) {
+    const committedLines = (await readFile(path.join(PUBLIC, name), "utf8")).split(/\r?\n/);
+    const generatedLines = (await readFile(path.join(target, name), "utf8")).split(/\r?\n/).filter(line => line.trim());
+    let at = 0;
+    const missing = [];
+    for (const line of generatedLines) {
+      const found = committedLines.indexOf(line, at);
+      if (found < 0) missing.push(line);
+      else at = found + 1;
+    }
+    assert.deepEqual(missing, [], `PROJECTION ${name} no longer carries what the generator writes, in order — the generator changed and this file did not follow:\n  ${missing.join("\n  ")}`);
+  }
+  checks.push(`PROJECTION the ${HAND_EXTENDED.length} hand-extended READMEs still carry every line the generator writes, in order`);
+
+  await rm(path.dirname(target), { recursive: true, force: true });
+}
+
 const publicFiles = await files(PUBLIC);
 check(publicFiles.length >= 25, `public tooling has a complete bounded tree (${publicFiles.length} files)`);
 for (const file of publicFiles) {
@@ -135,14 +190,14 @@ try {
   child.kill();
   await new Promise(resolve => child.exitCode !== null ? resolve() : child.once("exit", resolve));
   server.close();
-  await rm(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+  await rm(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }).catch(error => console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code || error}`));
 }
 const body = /<pre[^>]*>([\s\S]*?)<\/pre>/.exec(dom)?.[1]?.replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">") || "";
 const report = JSON.parse(body || '{"status":"FAIL","error":"NO_BROWSER_REPORT"}');
 if (report.status !== "PASS") throw new Error(`${report.error || "PUBLIC_BROWSER_SMOKE_FAILED"}\n${browserErrors}`.trim());
 checks.push(...report.checks);
 
-const PACKAGE_PREFIX = "KOKOROSAKU-v0.1.0-beta.2";
+const PACKAGE_PREFIX = "KOKOROSAKU-v0.1.0-beta.3";
 const zipWorkspace = await mkdtemp(path.join(tmpdir(), "saku-public-zip-"));
 const zipSource = path.join(zipWorkspace, "source", PACKAGE_PREFIX);
 const zipArchive = path.join(zipWorkspace, `${PACKAGE_PREFIX}.zip`);

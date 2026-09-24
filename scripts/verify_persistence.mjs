@@ -66,21 +66,11 @@ let chrome = "";
 for (const candidate of candidates) { try { if ((await stat(candidate)).isFile()) { chrome = candidate; break; } } catch { /* next */ } }
 if (!chrome) { console.error("PERSISTENCE NOT_AVAILABLE / CHROME_NOT_FOUND"); process.exit(2); }
 
-const character = {
-  schema: { schema_id: "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE", schema_version: "final-delta-recovery-closure-2026-09-04" },
-  identity: { character_id: "persistence-probe", character_revision: "1.0.0", display_name: "永続性確認用" },
-  purpose: { summary: "復元の確認", primary_value: "確認", work_modes: ["REVIEW"], non_goals: ["実運用"] },
-  character_core: { role_kind: "CHARACTER_ROLE", character_role: "確認用", values: ["確認する"], hard_invariants: [{ id: "INV-INPUT-INTEGRITY", statement: "REQUIRED_INPUT != AI_GENERATED_SUBSTITUTE" }], expressive_range: { allowed_variation: [], prohibited_drift: [] }, human_handoff_conditions: [] },
-  assistant_composition: (() => {
-    const fns = { seat1: "FRONT_CHARACTER", seat2: "SPECIALIST_ASSISTANT", seat3: "FACT_SOURCE_CHECK_ASSISTANT", seat4: "SAFETY_RISK_PRIVACY_ASSISTANT", seat5: "USER_VIEWPOINT_ASSISTANT", seat6: "RED_TEAM_ASSISTANT", seat7: "PERSONA_BRAND_GUARD_ASSISTANT" };
-    const comp = { profile_version: "v1", front_post_resolution: "AFTER_CONSTRAINTS_AND_UNRESOLVED_BLOCKERS_ARE_SETTLED_IDENTIFY_BEST_ALLOWED_NEXT_ACTION" };
-    for (const [seat, fn] of Object.entries(fns)) comp[seat] = { function: fn, responsibilities: [] };
-    comp.seat8 = { function: "LOGICAL_HUMAN_ASSISTANT", expected_human_contribution: "判断と承認", human_required_condition_refs: [], handoff_question_requirements: [], handoff_material_requirements: [] };
-    return comp;
-  })(),
-  personality_axes: { a_motif: "STUDY_LAMP", b_companion_domain: "THOUGHT_SPARRING", c_intelligence_vector: "STRUCTURAL_LOGIC", d_socratic_angle: "PARADOX", e_vocabulary_tone: "WARM_EMBRACING", f_acknowledgement: "CURIOSITY", g_pulse: "WAVE", h_tactile: "WASHI", i_thinking_pause_ms: 2000, j_theme_color: "EVERGREEN_MIRUCHA", k_whitespace_percent: 50, l_weathering_presentation: "REDUCED_CONTRAST", m_error_narrative: "SCHOLAR", n_crystallization: "GROWTH_AND_CONFLICT", o_closing: "BOOK_CLOSE" },
-  conformance_expectations: { must_preserve_refs: ["INV-INPUT-INTEGRITY"], prohibited_drift_refs: ["INV-INPUT-INTEGRITY"], continuity_refs: ["INV-INPUT-INTEGRITY"] },
-};
+// A Character the adopted schema accepts: the workspace rebuild admits through
+// the adopted schema (2026-09-23), as every intake route does. It is a shipped
+// sample with its identity changed, so what this gate asks is unchanged.
+const character = JSON.parse(await read("tools/unified-v1/sample-pack/sample-characters.json")).characters[0];
+character.identity = { ...character.identity, character_id: "persistence-probe", character_revision: "1.0.0", display_name: "永続性確認用" };
 
 const mime = new Map([[".html", "text/html; charset=utf-8"], [".mjs", "text/javascript; charset=utf-8"], [".js", "text/javascript; charset=utf-8"], [".css", "text/css; charset=utf-8"], [".json", "application/json; charset=utf-8"], [".svg", "image/svg+xml"]]);
 
@@ -148,7 +138,7 @@ let dom = "";
 child.stdout.on("data", chunk => { dom += chunk; });
 await new Promise(resolve => child.on("close", resolve));
 server.close();
-await rm(profile, { recursive: true, force: true });
+await rm(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }).catch(error => console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code || error}`));
 
 const status = /data-status="([A-Z]+)"/.exec(dom)?.[1] || "UNKNOWN";
 const body = /<pre[^>]*>([\s\S]*?)<\/pre>/.exec(dom)?.[1]?.replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">") || "";

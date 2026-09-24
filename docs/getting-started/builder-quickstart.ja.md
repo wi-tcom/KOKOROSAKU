@@ -50,6 +50,10 @@ repositoryの `samples/oss-launch/unified-v1/` を開いてください。Deskto
 **01 キャラクターを選択する**から**個別インポート**を選び、1体単位のJSONを
 1本ずつ読み込みます。これらのファイルにはPackageインポートを使用しません。
 
+### locator のずれを修復して読み込む
+
+個別インポートで「CONFORMANCE_LOCATOR_MISMATCH」（locator が要件とずれている）と表示され、「locator を修復して読み込む」ボタンが出ることがあります。2026-09-22 より前に編集画面で保存した Character に起きる既知の症状です。ボタンは requirement_id から参照位置（locator）を計算し直すだけで本文は変えず、修復後は新しい revision として一覧に入り、詳細の「locator 修復」行に修復前後の digest が残ります。手元の JSON をまとめて直すには node tools/v1/relocate-locators.mjs <ファイルか フォルダ> で差分を確認し（既定は dry-run）、--out <出力先> で書き出します。署名付きパックの中身は修復しません。
+
 ## 4. 保存またはexportする
 
 - `この内容で保存する` は、browser内の作業libraryへ新しいCharacter revisionを保存します。

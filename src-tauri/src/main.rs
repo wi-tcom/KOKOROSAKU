@@ -11,17 +11,20 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
 mod character_pack;
+mod saku_return;
 use character_pack::{CharacterPackImport, looks_like_character_pack, parse_character_pack};
+use saku_return::{SakuReturnImport, looks_like_saku_return, parse_saku_return};
 
-const APP_VERSION: &str = "0.1.0-beta.2";
+const APP_VERSION: &str = "0.1.0-beta.8";
 const CONFIG_FILE: &str = "desktop-host.json";
 const MAX_PACKAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_ARCHIVE_ENTRY_BYTES: usize = 32 * 1024 * 1024;
-// A Builder package (.witpkg) is two files; a sold SAKU Character Pack is a
-// folder of 20-30 files with one archive per Character.  Each shape has its
-// own entry ceiling and a total uncompressed budget, so a pack cannot be used
-// to expand more than the package intake limit.
-const MAX_WITPKG_ENTRIES: usize = 16;
+// A sold SAKU Character Pack is a folder of 20-30 files with one archive per
+// Character; the shape carries an entry ceiling and a total uncompressed
+// budget so an archive cannot be used to expand past the intake limit.
+// (The two-file Builder package, .witpkg, was retired on 2026-09-21: nothing
+// produced it, and its manifest name is now the marker of the AMU Character
+// File, which this host recognises only to point the user back to AMU Studio.)
 const MAX_PACK_ENTRIES: usize = 512;
 const MAX_ARCHIVE_TOTAL_BYTES: usize = 64 * 1024 * 1024;
 
@@ -29,6 +32,10 @@ pub(crate) struct ArchiveShape {
     pub max_entries: usize,
     pub max_total_bytes: usize,
     pub allow_directory_prefix: bool,
+    /// Layout rules off (any folder depth, mixed roots) — used only to *look at*
+    /// an archive this host will not import, never to import from it.  Size,
+    /// count, traversal, encryption and compression rules still apply.
+    pub peek_only: bool,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
@@ -45,7 +52,59 @@ struct RuntimeState {
     cache_dir: String,
     workspace: Option<String>,
     first_run: bool,
+    /// Whether this window holds the workspace's lock. A window that does not
+    /// reads the workspace and writes nothing to it (D6).
+    workspace_writable: bool,
     code_signing: &'static str,
+    /// The shared base layer as found on disk at startup: its digest, and whether
+    /// it is the one this build shipped. The screen refuses to hand anything over
+    /// when it is not, so the state is reported rather than left to be discovered
+    /// at the moment someone tries to paste.
+    base_layer: BaseLayerState,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct BaseLayerState {
+    version: &'static str,
+    expected_sha256: &'static str,
+    sha256: Option<String>,
+    ok: bool,
+    reason: Option<String>,
+}
+
+/// The shared base layer this build ships (統制卓 2026-09-23, Owner-approved v1.0).
+const BASE_LAYER_VERSION: &str = "1.0";
+const BASE_LAYER_SHA256: &str = "ab4745a3617e5b8e49125146a47ee99d1adde7ad8436c953431518ac23358654";
+const BASE_LAYER_RESOURCE: &str = "help/base/saku-base-directives.v1.txt";
+
+/// Read the bundled base layer and compare it with the digest built into this
+/// binary. Reading the bytes matters: a checkout or an editor that rewrote the
+/// line endings changes the digest, and that is exactly what must be caught.
+fn base_layer_state(app: &AppHandle) -> BaseLayerState {
+    let mut state = BaseLayerState {
+        version: BASE_LAYER_VERSION,
+        expected_sha256: BASE_LAYER_SHA256,
+        sha256: None,
+        ok: false,
+        reason: None,
+    };
+    // The base layer travels inside the frontend bundle, which is what the WebView
+    // will actually load — so the check reads the same bytes the screen will read.
+    let asset = match app.asset_resolver().get(BASE_LAYER_RESOURCE.to_string()) {
+        Some(asset) => asset,
+        None => {
+            state.reason = Some("BASE_LAYER_NOT_BUNDLED".to_string());
+            return state;
+        }
+    };
+    let bytes = asset.bytes;
+    let digest = sha256_hex(&bytes);
+    state.ok = digest == BASE_LAYER_SHA256;
+    if !state.ok {
+        state.reason = Some("BASE_LAYER_DIGEST_MISMATCH".to_string());
+    }
+    state.sha256 = Some(digest);
+    state
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -66,13 +125,6 @@ struct PackageManifest {
     payload_hash: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct PackageEnvelope {
-    wit_package: PackageManifest,
-    payload_encoding: String,
-    payload_json: String,
-}
-
 #[derive(Debug, Serialize)]
 struct ImportResult {
     status: &'static str,
@@ -84,6 +136,9 @@ struct ImportResult {
     manifest: Option<PackageManifest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pack: Option<CharacterPackImport>,
+    /// Present only for an AMU Studio saku-return (nothing is written for it).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    saku_return: Option<SakuReturnImport>,
 }
 
 #[derive(Debug, Serialize)]
@@ -241,7 +296,13 @@ fn runtime_state_inner(app: &AppHandle) -> Result<RuntimeState, String> {
         cache_dir: path_string(&cache_dir),
         workspace: config.workspace.as_deref().map(path_string),
         first_run: config.workspace.is_none(),
+        workspace_writable: config
+            .workspace
+            .as_deref()
+            .map(|workspace| app.state::<WorkspaceLock>().acquire(workspace))
+            .unwrap_or(false),
         code_signing: "UNSIGNED",
+        base_layer: base_layer_state(app),
     })
 }
 
@@ -266,12 +327,41 @@ fn get_startup_route() -> &'static str {
     startup_route_from_args(std::env::args())
 }
 
+/// Pick a folder. Nothing changes yet: the page asks about an unsaved draft
+/// between picking and opening, so cancelling the picker never costs a draft.
+/// A window that does not hold its workspace does not change the choice that
+/// both windows share.
 #[tauri::command]
-fn choose_workspace(app: AppHandle) -> Result<RuntimeState, String> {
+fn pick_workspace_folder(app: AppHandle) -> Result<String, String> {
+    if let Some(current) = read_config(&app)?.workspace {
+        if !holds_lock(&app, &current) {
+            return Err(READ_ONLY.to_string());
+        }
+    }
     let selection = rfd::FileDialog::new()
         .set_title("SAKU workspaceを選択または作成")
         .pick_folder()
         .ok_or_else(|| "WORKSPACE_SELECTION_CANCELLED".to_string())?;
+    Ok(path_string(&selection))
+}
+
+/// Picking and opening in one step, kept for callers from before the split.
+#[tauri::command]
+fn choose_workspace(app: AppHandle) -> Result<RuntimeState, String> {
+    let folder = pick_workspace_folder(app.clone())?;
+    open_workspace(app, folder)
+}
+
+/// Make `path` the workspace: create it if needed, record the choice, let go
+/// of the workspace this window held, and take the new one's lock.
+#[tauri::command]
+fn open_workspace(app: AppHandle, path: String) -> Result<RuntimeState, String> {
+    if let Some(current) = read_config(&app)?.workspace {
+        if !holds_lock(&app, &current) {
+            return Err(READ_ONLY.to_string());
+        }
+    }
+    let selection = PathBuf::from(path);
     fs::create_dir_all(&selection).map_err(|error| format!("WORKSPACE_CREATE_FAILED: {error}"))?;
     let marker = selection.join(".saku-builder");
     fs::create_dir_all(&marker)
@@ -293,168 +383,16 @@ fn choose_workspace(app: AppHandle) -> Result<RuntimeState, String> {
             workspace: Some(selection),
         },
     )?;
+    app.state::<WorkspaceLock>().release();
     runtime_state_inner(&app)
 }
 
-fn parse_version(version: &str) -> Option<[u64; 3]> {
-    let mut values = [0_u64; 3];
-    let core = version.split_once('-').map_or(version, |(value, _)| value);
-    let mut parts = core.split('.');
-    for value in &mut values {
-        *value = parts.next()?.parse().ok()?;
-    }
-    if parts.next().is_some() {
-        return None;
-    }
-    Some(values)
-}
-
-// The Character schemas this application can read. Package integrity says
-// nothing about whether the Character inside is one of these, so the two
-// questions are answered separately and both must pass.
-//
-// Unified V1 is the sole active schema. Earlier v1 and legacy-schema inputs remain readable
-// sources, but this host never converts or relabels either one. Every payload is
-// bound to exactly the schema its manifest declares.
-const LEGACY_SCHEMA_VERSION: &str = concat!("v", "next-1.0");
-const SUPPORTED_SCHEMAS: &[(&str, &str)] = &[
-    (
-        "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE",
-        "final-delta-recovery-closure-2026-09-04",
-    ),
-    ("SAKU-CHARACTER", "1.0"),
-    ("saku.character", LEGACY_SCHEMA_VERSION),
-];
-
-fn schema_is_supported(schema_id: &str, schema_version: &str) -> bool {
-    SUPPORTED_SCHEMAS
-        .iter()
-        .any(|(id, version)| *id == schema_id && *version == schema_version)
-}
-
-fn schema_id_is_known(schema_id: &str) -> bool {
-    SUPPORTED_SCHEMAS.iter().any(|(id, _)| *id == schema_id)
-}
-
-/// What a Character says it is. v1 declares a bare string plus a sibling
-/// version; Unified V1 declares an object. Nothing is inferred from shape.
-fn declared_schema(character: &Value) -> Option<(String, String)> {
-    let schema = character.get("schema")?;
-    if let Some(text) = schema.as_str() {
-        if text.trim().is_empty() {
-            return None;
-        }
-        let version = character
-            .get("version")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .trim()
-            .to_string();
-        return Some((text.trim().to_string(), version));
-    }
-    let id = schema.get("schema_id")?.as_str()?.trim().to_string();
-    if id.is_empty() {
-        return None;
-    }
-    let version = schema
-        .get("schema_version")
-        .and_then(Value::as_str)
-        .unwrap_or("")
-        .trim()
-        .to_string();
-    Some((id, version))
-}
-
-fn payload_characters(payload: &Value) -> Vec<&Value> {
-    if let Some(list) = payload.as_array() {
-        return list.iter().collect();
-    }
-    if let Some(list) = payload.get("characters").and_then(Value::as_array) {
-        return list.iter().collect();
-    }
-    if payload.is_object() {
-        return vec![payload];
-    }
-    Vec::new()
-}
-
-/// Bind the manifest's declared schema to the payload's, exactly.
-fn validate_schema_binding(
-    manifest: &PackageManifest,
-    payload_json: &str,
-) -> Result<String, PackageValidationFailure> {
-    let manifest_id = manifest.schema_id.trim();
-    let manifest_version = manifest.schema_version.trim();
-    if manifest_id.is_empty() {
-        return Err(package_failure(
-            "INVALID",
-            "MANIFEST_SCHEMA_ID_MISSING",
-            "Package manifest does not name a Character schema identity.",
-        ));
-    }
-    if !schema_id_is_known(manifest_id) {
-        return Err(package_failure(
-            "UNSUPPORTED",
-            "MANIFEST_SCHEMA_ID_UNKNOWN",
-            format!("Package manifest names an unknown Character schema: {manifest_id}"),
-        ));
-    }
-    if !schema_is_supported(manifest_id, manifest_version) {
-        return Err(package_failure(
-            "UNSUPPORTED",
-            "MANIFEST_SCHEMA_VERSION_UNSUPPORTED",
-            format!("Character schema {manifest_id} {manifest_version} is not supported."),
-        ));
-    }
-    let payload: Value = serde_json::from_str(payload_json).map_err(|error| {
-        package_failure(
-            "INVALID",
-            "PAYLOAD_JSON_INVALID",
-            format!("Payload is not valid JSON: {error}"),
-        )
-    })?;
-    let characters = payload_characters(&payload);
-    if characters.is_empty() {
-        return Err(package_failure(
-            "INVALID",
-            "PAYLOAD_HAS_NO_CHARACTER",
-            "Package payload carries no Character.",
-        ));
-    }
-    for (index, character) in characters.iter().enumerate() {
-        let position = index + 1;
-        let Some((payload_id, payload_version)) = declared_schema(character) else {
-            return Err(package_failure(
-                "INVALID",
-                "PAYLOAD_SCHEMA_NOT_DECLARED",
-                format!("Payload Character {position} declares no schema."),
-            ));
-        };
-        if payload_id != manifest_id || payload_version != manifest_version {
-            return Err(package_failure(
-                "INVALID",
-                "MANIFEST_PAYLOAD_SCHEMA_MISMATCH",
-                format!(
-                    "Manifest says {manifest_id} {manifest_version}; payload Character {position} says {payload_id} {}.",
-                    if payload_version.is_empty() {
-                        "(version absent)".to_string()
-                    } else {
-                        payload_version
-                    }
-                ),
-            ));
-        }
-    }
-    Ok(format!("{manifest_id} {manifest_version}"))
-}
-
-fn supported_minimum_version(required: &str) -> bool {
-    match (parse_version(APP_VERSION), parse_version(required)) {
-        (Some(current), Some(minimum)) => current >= minimum,
-        _ => false,
-    }
-}
-
+// The one Character schema this host imports from a pack: the active Unified
+// V1 (Canonical adoption).  A pack declaring anything else is refused here,
+// before any file is written; the page (character-schema.mjs admit()) then
+// decides each Character.  The host never converts or relabels a Character.
+const ACTIVE_SCHEMA_ID: &str = "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE";
+const ACTIVE_SCHEMA_VERSION: &str = "final-delta-recovery-closure-2026-09-04";
 fn sha256_hex(bytes: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(bytes);
@@ -475,96 +413,8 @@ fn invalid(reason: impl Into<String>, source_path: Option<String>) -> ImportResu
         payload_json: None,
         manifest: None,
         pack: None,
+        saku_return: None,
     }
-}
-
-fn validate_package(
-    manifest: &PackageManifest,
-    payload_encoding: &str,
-    payload_json: &str,
-) -> Result<String, PackageValidationFailure> {
-    if manifest.package_type != "WIT_PACKAGE" {
-        return Err(PackageValidationFailure {
-            status: "INVALID",
-            code: "PACKAGE_TYPE_INVALID",
-            reason: "package_type must be WIT_PACKAGE".to_string(),
-        });
-    }
-    if manifest.product.trim().is_empty()
-        || manifest.package_version.trim().is_empty()
-        || manifest.schema_version.trim().is_empty()  // presence only; compatibility is decided by validate_schema_binding
-        || manifest.minimum_app_version.trim().is_empty()
-        || manifest.content_type.trim().is_empty()
-        || manifest.distribution_channel.trim().is_empty()
-        || manifest.license_state.trim().is_empty()
-    {
-        return Err(PackageValidationFailure {
-            status: "INVALID",
-            code: "REQUIRED_MANIFEST_FIELD_MISSING",
-            reason: "One or more required manifest fields are empty.".to_string(),
-        });
-    }
-    if payload_encoding != "utf8-json" {
-        return Err(PackageValidationFailure {
-            status: "UNSUPPORTED",
-            code: "PAYLOAD_ENCODING_UNSUPPORTED",
-            reason: format!("Unsupported payload encoding: {payload_encoding}"),
-        });
-    }
-    if !supported_minimum_version(&manifest.minimum_app_version) {
-        return Err(PackageValidationFailure {
-            status: "UNSUPPORTED",
-            code: "MINIMUM_APP_VERSION_UNSUPPORTED",
-            reason: format!(
-                "Package requires app {} but this candidate is {}",
-                manifest.minimum_app_version, APP_VERSION
-            ),
-        });
-    }
-    if !matches!(
-        manifest.content_type.as_str(),
-        "CHARACTER" | "CHARACTER_PACK" | "CATALOG_MANIFEST"
-    ) {
-        return Err(PackageValidationFailure {
-            status: "UNSUPPORTED",
-            code: "CONTENT_TYPE_UNSUPPORTED",
-            reason: format!("Unsupported content type: {}", manifest.content_type),
-        });
-    }
-    let expected_hash = manifest.payload_hash.as_str();
-    if expected_hash.len() != 64
-        || !expected_hash
-            .bytes()
-            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-    {
-        return Err(PackageValidationFailure {
-            status: "INVALID",
-            code: "PAYLOAD_HASH_FORMAT_INVALID",
-            reason: "payload_hash must be 64 lowercase hexadecimal characters.".to_string(),
-        });
-    }
-    let actual_hash = sha256_hex(payload_json.as_bytes());
-    if actual_hash != expected_hash {
-        return Err(PackageValidationFailure {
-            status: "INVALID",
-            code: "PAYLOAD_HASH_MISMATCH",
-            reason: format!(
-                "Payload hash mismatch: expected {expected_hash}, actual {actual_hash}"
-            ),
-        });
-    }
-    if let Err(error) = serde_json::from_str::<Value>(payload_json) {
-        return Err(PackageValidationFailure {
-            status: "INVALID",
-            code: "PAYLOAD_JSON_INVALID",
-            reason: format!("Payload is not valid JSON: {error}"),
-        });
-    }
-    // Integrity is settled above: the archive is well formed and the payload is
-    // the one the manifest hashed. That says nothing about whether the Character
-    // inside is a schema this application can read, which is asked separately.
-    validate_schema_binding(manifest, payload_json)?;
-    Ok(actual_hash)
 }
 
 fn package_failure(
@@ -589,6 +439,7 @@ fn failure_result(failure: PackageValidationFailure, source_path: Option<String>
         payload_json: None,
         manifest: None,
         pack: None,
+        saku_return: None,
     }
 }
 
@@ -616,13 +467,6 @@ fn crc32(bytes: &[u8]) -> u32 {
 
 fn invalid_archive(reason: impl Into<String>) -> PackageValidationFailure {
     package_failure("INVALID", "PACKAGE_ARCHIVE_INVALID", reason)
-}
-
-fn archive_entries(bytes: &[u8]) -> Result<HashMap<String, Vec<u8>>, PackageValidationFailure> {
-    archive_entries_with(
-        bytes,
-        &ArchiveShape { max_entries: MAX_WITPKG_ENTRIES, max_total_bytes: MAX_ARCHIVE_TOTAL_BYTES, allow_directory_prefix: false },
-    )
 }
 
 pub(crate) fn archive_entries_with(
@@ -756,7 +600,12 @@ pub(crate) fn archive_entries_with(
             return Err(invalid_archive("ZIP package files must be at the archive root."));
         }
         let mut is_directory_entry = false;
-        let stored_name = if shape.allow_directory_prefix {
+        let stored_name = if shape.peek_only {
+            if name.ends_with('/') && uncompressed_size == 0 {
+                is_directory_entry = true;
+            }
+            name.clone()
+        } else if shape.allow_directory_prefix {
             if name.ends_with('/') && uncompressed_size == 0 {
                 // A folder entry carries no bytes; it is skipped after the
                 // structural checks below.
@@ -861,30 +710,15 @@ pub(crate) fn archive_entries_with(
     Ok(entries)
 }
 
-fn parse_zip_package(bytes: &[u8]) -> Result<PackageEnvelope, PackageValidationFailure> {
-    let mut entries = archive_entries(bytes)?;
-    if entries.len() != 2
-        || !entries.contains_key("wit-package.json")
-        || !entries.contains_key("payload.json")
-    {
-        return Err(invalid_archive(
-            "ZIP must contain only wit-package.json and payload.json at its root.",
-        ));
-    }
-    let manifest_bytes = entries.remove("wit-package.json").unwrap_or_default();
-    let payload_bytes = entries.remove("payload.json").unwrap_or_default();
-    let wit_package: PackageManifest = serde_json::from_slice(&manifest_bytes)
-        .map_err(|error| invalid_archive(format!("wit-package.json is invalid JSON: {error}")))?;
-    let payload_json = String::from_utf8(payload_bytes)
-        .map_err(|_| invalid_archive("payload.json must be UTF-8."))?;
-    Ok(PackageEnvelope {
-        wit_package,
-        payload_encoding: "utf8-json".to_string(),
-        payload_json,
-    })
-}
-
-pub(crate) const ACCEPTED_FORMATS_JA: &str = "受け付ける形式: SAKU Character Pack（character-pack.json を含む ZIP）／Builder パッケージ（.witpkg: wit-package.json と payload.json）／Character JSON。";
+pub(crate) const ACCEPTED_FORMATS_JA: &str = "受け付ける形式: SAKU Character Pack（character-pack.json を含む署名付き ZIP）。";
+pub(crate) const INDIVIDUAL_IMPORT_HINT_JA: &str = "Character JSON／YAML は「個別インポート」から読み込んでください。";
+pub(crate) const AMU_CHARACTER_FILE_JA: &str = "これは AMU Character File（.amupkg）です。SAKU Builder では開けません。SAKU へ戻すには AMU Studio の「この編集内容を SAKU へ戻す」を使い、できた .saku-return.zip を読み込んでください。";
+pub(crate) const RETIRED_BUILDER_PACKAGE_JA: &str = "旧 Builder パッケージ（.witpkg: wit-package.json と payload.json）は 2026-09-21 に廃止され、読み込めません。";
+// The AMU Character File marks itself in wit-package.json (KOKOROAMU-STUDIO
+// specification/constants.js, PR #68 7c1e24e): exact strings, pinned.
+const AMU_WIT_PACKAGE_TYPE: &str = "WIT_PACKAGE";
+const AMU_CHARACTER_KIND: &str = "AMU_CHARACTER";
+const AMU_CHARACTER_SCHEMA_PREFIX: &str = "AMU-CHARACTER/";
 
 fn unrecognized_format(detail: impl Into<String>) -> PackageValidationFailure {
     package_failure(
@@ -896,61 +730,127 @@ fn unrecognized_format(detail: impl Into<String>) -> PackageValidationFailure {
 
 #[derive(Debug)]
 enum ParsedPackage {
-    Envelope(PackageEnvelope),
     CharacterPack(CharacterPackImport),
+    SakuReturn(SakuReturnImport),
 }
 
-#[cfg(test)]
-fn parse_package_envelope(
-    path: &Path,
-    bytes: &[u8],
-) -> Result<PackageEnvelope, PackageValidationFailure> {
-    match parse_package(path, bytes)? {
-        ParsedPackage::Envelope(envelope) => Ok(envelope),
-        ParsedPackage::CharacterPack(_) => Err(invalid_archive(
-            "A Character Pack is imported through the pack path, not as a Builder package.",
-        )),
-    }
+/// Is this wit-package.json the AMU Character File marker?  Decided by the
+/// pinned strings only; a schema prefix match alone is accepted as a hedge
+/// against a future kind rename, never a shape guess.
+fn is_amu_character_file(manifest: &Value) -> bool {
+    let package_type = manifest.get("package_type").and_then(Value::as_str).unwrap_or("");
+    let kind = manifest.get("kind").and_then(Value::as_str).unwrap_or("");
+    let schema = manifest.get("schema").and_then(Value::as_str).unwrap_or("");
+    package_type == AMU_WIT_PACKAGE_TYPE && (kind == AMU_CHARACTER_KIND || schema.starts_with(AMU_CHARACTER_SCHEMA_PREFIX))
+}
+
+/// The root wit-package.json of an archive, read with layout rules off.  None
+/// when the archive cannot be read at all or carries no such root entry.
+fn peek_root_wit_package(bytes: &[u8]) -> Option<Value> {
+    let entries = archive_entries_with(
+        bytes,
+        &ArchiveShape { max_entries: MAX_PACK_ENTRIES, max_total_bytes: MAX_ARCHIVE_TOTAL_BYTES, allow_directory_prefix: true, peek_only: true },
+    )
+    .ok()?;
+    serde_json::from_slice(entries.get("wit-package.json")?).ok()
+}
+
+fn amu_character_file() -> PackageValidationFailure {
+    package_failure("UNSUPPORTED", "PACKAGE_FORMAT_AMU_CHARACTER_FILE", AMU_CHARACTER_FILE_JA)
 }
 
 fn parse_package(path: &Path, bytes: &[u8]) -> Result<ParsedPackage, PackageValidationFailure> {
     let has_zip_magic = bytes.starts_with(b"PK\x03\x04");
-    let zip_extension = path
+    let extension = path
         .extension()
         .and_then(|extension| extension.to_str())
-        .is_some_and(|extension| extension.eq_ignore_ascii_case("zip"));
+        .map(|extension| extension.to_ascii_lowercase())
+        .unwrap_or_default();
     if has_zip_magic {
-        // Read once with the wider pack shape: a two-file Builder package is a
-        // subset of it, and the pack marker decides the path.
-        let entries = archive_entries_with(
+        let entries = match archive_entries_with(
             bytes,
-            &ArchiveShape { max_entries: MAX_PACK_ENTRIES, max_total_bytes: MAX_ARCHIVE_TOTAL_BYTES, allow_directory_prefix: true },
-        )?;
+            &ArchiveShape { max_entries: MAX_PACK_ENTRIES, max_total_bytes: MAX_ARCHIVE_TOTAL_BYTES, allow_directory_prefix: true, peek_only: false },
+        ) {
+            Ok(entries) => entries,
+            Err(failure) => {
+                // The AMU Character File has a mixed root (wit-package.json beside
+                // pack/ and characters/), so the pack layout rules refuse it before
+                // it can be named.  Look once more, layout rules off, only to say
+                // what it is; nothing from this read is imported.
+                if let Some(manifest) = peek_root_wit_package(bytes) {
+                    if is_amu_character_file(&manifest) {
+                        return Err(amu_character_file());
+                    }
+                    return Err(unrecognized_format(format!("{RETIRED_BUILDER_PACKAGE_JA} {INDIVIDUAL_IMPORT_HINT_JA}")));
+                }
+                if extension == "amupkg" {
+                    return Err(amu_character_file());
+                }
+                return Err(failure);
+            }
+        };
         if looks_like_character_pack(&entries) {
-            return parse_character_pack(entries).map(ParsedPackage::CharacterPack);
+            let pack = parse_character_pack(entries)?;
+            if pack.schema_id != ACTIVE_SCHEMA_ID || pack.schema_version != ACTIVE_SCHEMA_VERSION {
+                return Err(package_failure(
+                    "UNSUPPORTED",
+                    "CHARACTER_PACK_SCHEMA_UNSUPPORTED",
+                    format!("この Character Pack の schema（{} {}）はこの Builder では読めません。対応: {ACTIVE_SCHEMA_ID} {ACTIVE_SCHEMA_VERSION}。", pack.schema_id, pack.schema_version),
+                ));
+            }
+            return Ok(ParsedPackage::CharacterPack(pack));
         }
-        if entries.contains_key("wit-package.json") || entries.contains_key("payload.json") {
-            return parse_zip_package(bytes).map(ParsedPackage::Envelope);
+        // AMU Studio's 「SAKU へ戻す」: root edit-request.json + character.json.
+        if looks_like_saku_return(&entries) {
+            let ret = parse_saku_return(entries)?;
+            if ret.schema_id != ACTIVE_SCHEMA_ID || ret.schema_version != ACTIVE_SCHEMA_VERSION {
+                return Err(package_failure(
+                    "UNSUPPORTED",
+                    "SAKU_RETURN_SCHEMA_UNSUPPORTED",
+                    format!("戻された Character の schema（{} {}）はこの Builder では読めません。対応: {ACTIVE_SCHEMA_ID} {ACTIVE_SCHEMA_VERSION}。", ret.schema_id, ret.schema_version),
+                ));
+            }
+            return Ok(ParsedPackage::SakuReturn(ret));
+        }
+        // wit-package.json now marks two things this host does not import: the
+        // AMU Character File (say where it belongs) and the retired Builder
+        // package (say that it is retired).  Neither is guessed from anything
+        // but the manifest's own declared strings.
+        if let Some(manifest_bytes) = entries.get("wit-package.json") {
+            let manifest: Value = serde_json::from_slice(manifest_bytes).unwrap_or(Value::Null);
+            if is_amu_character_file(&manifest) {
+                return Err(amu_character_file());
+            }
+            return Err(unrecognized_format(format!("{RETIRED_BUILDER_PACKAGE_JA} {INDIVIDUAL_IMPORT_HINT_JA}")));
+        }
+        if extension == "amupkg" {
+            return Err(amu_character_file());
         }
         let mut names: Vec<&String> = entries.keys().collect();
         names.sort();
         let shown: Vec<&str> = names.iter().take(5).map(|name| name.as_str()).collect();
         return Err(unrecognized_format(format!(
-            "ZIP に character-pack.json も wit-package.json もありません: {}{}",
+            "ZIP に character-pack.json がありません: {}{}",
             shown.join(", "),
             if names.len() > 5 { " …" } else { "" }
         )));
     }
-    if zip_extension {
+    if extension == "amupkg" {
+        return Err(amu_character_file());
+    }
+    if extension == "zip" {
         return Err(unrecognized_format("拡張子は .zip ですが ZIP のヘッダーがありません"));
     }
-    serde_json::from_slice(bytes).map(ParsedPackage::Envelope).map_err(|error| {
-        package_failure(
-            "INVALID",
-            "PACKAGE_JSON_INVALID",
-            format!("{ACCEPTED_FORMATS_JA} JSON として読めません: {error}"),
-        )
-    })
+    if extension == "witpkg" {
+        return Err(unrecognized_format(RETIRED_BUILDER_PACKAGE_JA));
+    }
+    // A bare JSON / YAML Character belongs to the individual import, which reads
+    // it in the page; the package route refuses it with that pointer rather than
+    // failing on a manifest it was never going to have.
+    if matches!(extension.as_str(), "json" | "yaml" | "yml") || serde_json::from_slice::<Value>(bytes).is_ok() {
+        return Err(package_failure("INVALID", "PACKAGE_FORMAT_INDIVIDUAL_FILE", format!("{INDIVIDUAL_IMPORT_HINT_JA} {ACCEPTED_FORMATS_JA}")));
+    }
+    Err(unrecognized_format("ZIP ではありません"))
 }
 
 fn import_package(app: &AppHandle, path: &Path) -> ImportResult {
@@ -973,98 +873,50 @@ fn import_package(app: &AppHandle, path: &Path) -> ImportResult {
         Ok(bytes) => bytes,
         Err(error) => return invalid(format!("PACKAGE_READ_FAILED: {error}"), source_path),
     };
-    let envelope = match parse_package(path, &bytes) {
-        Ok(ParsedPackage::Envelope(value)) => value,
-        Ok(ParsedPackage::CharacterPack(pack)) => return import_character_pack(app, pack, source_path),
-        Err(failure) => return failure_result(failure, source_path),
-    };
-    let manifest = envelope.wit_package;
-    let actual_hash = match validate_package(
-        &manifest,
-        &envelope.payload_encoding,
-        &envelope.payload_json,
-    ) {
-        Ok(hash) => hash,
-        Err(failure) => {
-            return ImportResult {
-                status: failure.status,
-                code: failure.code,
-                reason: failure.reason,
-                source_path,
-                imported_path: None,
-                payload_json: None,
-                manifest: Some(manifest),
-                pack: None,
-            };
-        }
-    };
-    let config = match read_config(app) {
-        Ok(config) => config,
-        Err(error) => return invalid(error, source_path),
-    };
-    let workspace = match config.workspace {
-        Some(path) => path,
-        None => {
-            return ImportResult {
-                status: "NOT_CONFIGURED",
-                code: "WORKSPACE_REQUIRED",
-                reason: "Select or create a workspace before importing a package.".to_string(),
-                source_path,
-                imported_path: None,
-                payload_json: None,
-                manifest: Some(manifest),
-                pack: None,
-            };
-        }
-    };
-    let safe_product: String = manifest
-        .product
-        .chars()
-        .map(|character| {
-            if character.is_ascii_alphanumeric() || character == '-' || character == '_' {
-                character
-            } else {
-                '_'
-            }
-        })
-        .collect();
-    let import_dir = workspace.join("imports").join(format!(
-        "{}-{}-{}",
-        safe_product,
-        manifest.package_version,
-        &actual_hash[..12]
-    ));
-    if let Err(error) = fs::create_dir_all(&import_dir) {
-        return invalid(
-            format!("IMPORT_DIRECTORY_CREATE_FAILED: {error}"),
-            source_path,
-        );
+    match parse_package(path, &bytes) {
+        Ok(ParsedPackage::CharacterPack(pack)) => import_character_pack(app, pack, source_path),
+        Ok(ParsedPackage::SakuReturn(ret)) => import_saku_return(ret, source_path),
+        Err(failure) => failure_result(failure, source_path),
     }
-    if let Err(error) = fs::write(
-        import_dir.join("payload.json"),
-        envelope.payload_json.as_bytes(),
-    ) {
-        return invalid(format!("IMPORT_PAYLOAD_WRITE_FAILED: {error}"), source_path);
-    }
-    let manifest_bytes = match serde_json::to_vec_pretty(&manifest) {
-        Ok(bytes) => bytes,
-        Err(error) => return invalid(format!("MANIFEST_SERIALIZE_FAILED: {error}"), source_path),
+}
+
+/// A saku-return is handed to the page as one Character plus the request; the
+/// workspace is not touched (Q1, 2026-09-21: a return is the entry point of an
+/// edit, not an imported artifact), so no workspace is required either.
+fn import_saku_return(ret: SakuReturnImport, source_path: Option<String>) -> ImportResult {
+    let character: Value = match serde_json::from_str(&ret.character_json) {
+        Ok(value) => value,
+        Err(error) => return invalid(format!("SAKU_RETURN_CHARACTER_INVALID: {error}"), source_path),
     };
-    if let Err(error) = fs::write(import_dir.join("wit-package.json"), manifest_bytes) {
-        return invalid(
-            format!("IMPORT_MANIFEST_WRITE_FAILED: {error}"),
-            source_path,
-        );
-    }
+    let payload_json = match serde_json::to_string(&serde_json::json!({ "characters": [character] })) {
+        Ok(text) => text,
+        Err(error) => return invalid(format!("SAKU_RETURN_PAYLOAD_SERIALIZE_FAILED: {error}"), source_path),
+    };
+    let manifest = PackageManifest {
+        package_type: "amu-saku-return".to_string(),
+        product: ret.character_id.clone(),
+        package_version: ret.character_revision.clone(),
+        schema_id: ret.schema_id.clone(),
+        schema_version: ret.schema_version.clone(),
+        minimum_app_version: APP_VERSION.to_string(),
+        content_type: "CHARACTER".to_string(),
+        distribution_channel: "AMU_STUDIO_RETURN".to_string(),
+        license_state: "AS_SIGNED_ARCHIVE".to_string(),
+        payload_hash: sha256_hex(payload_json.as_bytes()),
+    };
     ImportResult {
         status: "IMPORTED",
-        code: "PACKAGE_IMPORTED",
-        reason: "Compatibility and payload integrity checks passed.".to_string(),
+        code: "SAKU_RETURN_READY",
+        reason: format!(
+            "AMU Studio からの戻し: {} rev {}（{} 件の依頼フィールド）。workspace には保存していません。",
+            ret.character_id, ret.character_revision, ret.fields.len()
+        ),
         source_path,
-        imported_path: Some(path_string(&import_dir)),
-        payload_json: Some(envelope.payload_json),
+        imported_path: None,
+        payload_json: Some(payload_json),
         manifest: Some(manifest),
         pack: None,
+        saku_return: Some(ret),
     }
 }
 
@@ -1082,7 +934,14 @@ fn import_character_pack(app: &AppHandle, pack: CharacterPackImport, source_path
         Ok(values) => values,
         Err(error) => return invalid(format!("CHARACTER_PACK_CHARACTER_INVALID: {error}"), source_path),
     };
-    let payload_json = match serde_json::to_string(&serde_json::json!({ "characters": characters })) {
+    // The glossaries travel beside the Characters, keyed by character_id, so the
+    // screen can pick the right one without re-reading the archive.
+    let directives: serde_json::Map<String, Value> = pack
+        .entries
+        .iter()
+        .filter_map(|entry| entry.directives_json.as_ref().and_then(|text| serde_json::from_str::<Value>(text).ok()).map(|value| (entry.character_id.clone(), value)))
+        .collect();
+    let payload_json = match serde_json::to_string(&serde_json::json!({ "characters": characters, "directives": directives })) {
         Ok(text) => text,
         Err(error) => return invalid(format!("CHARACTER_PACK_PAYLOAD_SERIALIZE_FAILED: {error}"), source_path),
     };
@@ -1115,9 +974,14 @@ fn import_character_pack(app: &AppHandle, pack: CharacterPackImport, source_path
                 payload_json: None,
                 manifest: Some(manifest),
                 pack: Some(pack),
+                saku_return: None,
             };
         }
     };
+    // Writing into the workspace needs its lock: a second window reads only (D6).
+    if let Err(error) = require_workspace_lock(app, None) {
+        return invalid(error, source_path);
+    }
     let import_dir = workspace.join("imports").join(format!(
         "{}-{}-{}",
         safe_path_segment(&pack.pack_id),
@@ -1148,6 +1012,15 @@ fn import_character_pack(app: &AppHandle, pack: CharacterPackImport, source_path
             import_dir.join("characters").join(format!("{}.character.json", safe_path_segment(&entry.slug))),
             entry.character_json.clone().into_bytes(),
         ));
+        // A pack may carry the directive glossary its Character needs. It was
+        // digest-checked with the rest of the entry; keep it beside the
+        // Character so 03 can prefer it over the copy bundled with the app.
+        if let Some(directives) = &entry.directives_json {
+            writes.push((
+                import_dir.join("characters").join(format!("{}.directives.json", safe_path_segment(&entry.slug))),
+                directives.clone().into_bytes(),
+            ));
+        }
     }
     for (target, bytes) in writes {
         if let Err(error) = fs::write(&target, bytes) {
@@ -1167,14 +1040,15 @@ fn import_character_pack(app: &AppHandle, pack: CharacterPackImport, source_path
         payload_json: Some(payload_json),
         manifest: Some(manifest),
         pack: Some(pack),
+        saku_return: None,
     }
 }
 
 #[tauri::command]
 fn choose_and_import_package(app: AppHandle) -> Result<ImportResult, String> {
     let selection = rfd::FileDialog::new()
-        .set_title("SAKU Character Pack / Builder パッケージを選択")
-        .add_filter("SAKU Character Pack / Builder package", &["zip", "witpkg", "json"])
+        .set_title("SAKU Character Pack を選択")
+        .add_filter("SAKU Character Pack (.zip)", &["zip"])
         .pick_file()
         .ok_or_else(|| "PACKAGE_SELECTION_CANCELLED".to_string())?;
     Ok(import_package(&app, &selection))
@@ -1336,26 +1210,274 @@ fn save_workspace_character(
         .ok()
         .filter(|value| value.is_object())
         .ok_or_else(|| "CHARACTER_NOT_JSON_OBJECT".to_string())?;
-    let config = read_config(&app)?;
-    let workspace = config
-        .workspace
-        .ok_or_else(|| "WORKSPACE_NOT_CONFIGURED".to_string())?;
+    let workspace = require_workspace_lock(&app, None)?;
+    write_character_files(&workspace, &character_id, &character_json)
+}
+
+/// The latest revision as `character.json`, and every revision the workspace
+/// has seen under `revisions/` (D3): a save never overwrites an older revision.
+fn write_character_files(workspace: &Path, character_id: &str, character_json: &str) -> Result<String, String> {
     let dir = workspace
         .join("characters")
-        .join(safe_path_segment(&character_id));
+        .join(safe_path_segment(character_id));
     fs::create_dir_all(&dir).map_err(|error| format!("CHARACTER_DIR_CREATE_FAILED: {error}"))?;
+    let revision = serde_json::from_str::<Value>(character_json)
+        .ok()
+        .and_then(|value| value.pointer("/identity/character_revision").and_then(Value::as_str).map(str::to_string))
+        .filter(|revision| !revision.trim().is_empty())
+        .unwrap_or_else(|| "unversioned".to_string());
+    let revisions = dir.join("revisions");
+    fs::create_dir_all(&revisions).map_err(|error| format!("CHARACTER_DIR_CREATE_FAILED: {error}"))?;
+    write_atomically(&revisions.join(format!("{}.json", safe_path_segment(&revision))), character_json.as_bytes())?;
     let file = dir.join("character.json");
-    fs::write(&file, character_json.as_bytes())
-        .map_err(|error| format!("CHARACTER_WRITE_FAILED: {error}"))?;
+    write_atomically(&file, character_json.as_bytes())?;
     Ok(path_string(&file))
+}
+
+// ── Workspace-scoped state (D-20260923-workspace-scoped-library) ─────────────
+//
+// The Character list, its deletion marks, the import history, the selected
+// Character and its draft belong to the workspace. The page keeps a working
+// copy in WebView storage and writes each change through to
+// `.saku-builder/state/`. One window holds a workspace at a time: the lock is
+// an exclusive open of `.saku-builder/lock`, so the operating system releases
+// it when the process ends and a crash never leaves a stale lock. A window
+// without the lock reads the workspace and writes nothing to it.
+
+const READ_ONLY: &str = "WORKSPACE_READ_ONLY: another window holds this workspace";
+const STATE_DIR: &str = "state";
+const STATE_FILES: [(&str, &str); 4] = [
+    ("saku.workspace.library", "library.json"),
+    ("saku.workspace.importHistory", "import-history.json"),
+    ("saku.workspace.active", "active.json"),
+    ("saku.workspace.draft", "draft.json"),
+];
+const MAX_STATE_BYTES: usize = 64 * 1024 * 1024;
+
+#[derive(Default)]
+struct WorkspaceLock(std::sync::Mutex<Option<(PathBuf, fs::File)>>);
+
+fn metadata_dir(workspace: &Path) -> PathBuf {
+    workspace.join(".saku-builder")
+}
+
+#[cfg(windows)]
+fn open_exclusive(path: &Path) -> std::io::Result<fs::File> {
+    use std::os::windows::fs::OpenOptionsExt;
+    // share_mode(0): no other handle, in this process or another, may open the
+    // file while this one is open.
+    fs::OpenOptions::new().read(true).write(true).create(true).share_mode(0).open(path)
+}
+#[cfg(not(windows))]
+fn open_exclusive(path: &Path) -> std::io::Result<fs::File> {
+    fs::OpenOptions::new().read(true).write(true).create(true).open(path)
+}
+
+impl WorkspaceLock {
+    fn slot(&self) -> std::sync::MutexGuard<'_, Option<(PathBuf, fs::File)>> {
+        match self.0.lock() {
+            Ok(guard) => guard,
+            Err(poisoned) => poisoned.into_inner(),
+        }
+    }
+    /// Hold `workspace` for this process. True when it is held, already or now.
+    fn acquire(&self, workspace: &Path) -> bool {
+        let mut slot = self.slot();
+        if slot.as_ref().map(|(held, _)| held == workspace).unwrap_or(false) {
+            return true;
+        }
+        let dir = metadata_dir(workspace);
+        if fs::create_dir_all(&dir).is_err() {
+            return false;
+        }
+        match open_exclusive(&dir.join("lock")) {
+            Ok(mut file) => {
+                use std::io::Write;
+                let _ = file.set_len(0);
+                let _ = write!(file, "{}", std::process::id());
+                *slot = Some((workspace.to_path_buf(), file));
+                true
+            }
+            Err(_) => false,
+        }
+    }
+    fn holds(&self, workspace: &Path) -> bool {
+        self.slot().as_ref().map(|(held, _)| held == workspace).unwrap_or(false)
+    }
+    fn release(&self) {
+        *self.slot() = None;
+    }
+}
+
+fn holds_lock(app: &AppHandle, workspace: &Path) -> bool {
+    app.state::<WorkspaceLock>().holds(workspace)
+}
+
+/// The configured workspace, provided this window holds it — and, when the page
+/// names the workspace it means, that it is the configured one.
+fn require_workspace_lock(app: &AppHandle, expected: Option<&str>) -> Result<PathBuf, String> {
+    let workspace = read_config(app)?
+        .workspace
+        .ok_or_else(|| "WORKSPACE_NOT_CONFIGURED".to_string())?;
+    if let Some(expected) = expected {
+        if expected != path_string(&workspace) {
+            return Err(format!(
+                "WORKSPACE_MISMATCH: the page wrote for {expected}, the open workspace is {}",
+                path_string(&workspace)
+            ));
+        }
+    }
+    if !holds_lock(app, &workspace) {
+        return Err(READ_ONLY.to_string());
+    }
+    Ok(workspace)
+}
+
+/// Write to a temporary file beside the target, then rename over it: a crash
+/// leaves the old file or the new one, never half of one.
+fn write_atomically(path: &Path, bytes: &[u8]) -> Result<(), String> {
+    let parent = path
+        .parent()
+        .ok_or_else(|| format!("WORKSPACE_WRITE_FAILED: {} has no parent", path_string(path)))?;
+    fs::create_dir_all(parent).map_err(|error| format!("WORKSPACE_WRITE_FAILED: {error}"))?;
+    let name = path
+        .file_name()
+        .map(|name| name.to_string_lossy().to_string())
+        .unwrap_or_default();
+    let temporary = parent.join(format!(".{name}.tmp"));
+    fs::write(&temporary, bytes).map_err(|error| format!("WORKSPACE_WRITE_FAILED: {error}"))?;
+    fs::rename(&temporary, path).map_err(|error| {
+        let _ = fs::remove_file(&temporary);
+        format!("WORKSPACE_WRITE_FAILED: {error}")
+    })
+}
+
+fn read_state_files(workspace: &Path) -> Result<serde_json::Map<String, Value>, String> {
+    let dir = metadata_dir(workspace).join(STATE_DIR);
+    let mut keys = serde_json::Map::new();
+    for (key, file) in STATE_FILES {
+        let path = dir.join(file);
+        let value = match fs::read_to_string(&path) {
+            Ok(text) => Value::String(text),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Value::Null,
+            Err(error) => {
+                return Err(format!(
+                    "WORKSPACE_STATE_READ_FAILED: {}: {error}",
+                    path_string(&path)
+                ))
+            }
+        };
+        keys.insert(key.to_string(), value);
+    }
+    Ok(keys)
+}
+
+/// Every value is checked before any file is touched, so a refused write
+/// changes nothing.
+fn write_state_files(workspace: &Path, keys: &HashMap<String, Option<String>>) -> Result<(), String> {
+    for (key, value) in keys {
+        if !STATE_FILES.iter().any(|(known, _)| known == key) {
+            return Err(format!("WORKSPACE_STATE_KEY_UNKNOWN: {key}"));
+        }
+        if let Some(text) = value {
+            if text.len() > MAX_STATE_BYTES {
+                return Err(format!("WORKSPACE_STATE_TOO_LARGE: {key}"));
+            }
+            serde_json::from_str::<Value>(text)
+                .map_err(|error| format!("WORKSPACE_STATE_NOT_JSON: {key}: {error}"))?;
+        }
+    }
+    let dir = metadata_dir(workspace).join(STATE_DIR);
+    for (key, file) in STATE_FILES {
+        let Some(value) = keys.get(key) else { continue };
+        let path = dir.join(file);
+        match value {
+            Some(text) => write_atomically(&path, text.as_bytes())?,
+            None => match fs::remove_file(&path) {
+                Ok(()) => {}
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => return Err(format!("WORKSPACE_WRITE_FAILED: {error}")),
+            },
+        }
+    }
+    Ok(())
+}
+
+/// A copy of the working state as it was, kept under `migration/` (D2). A new
+/// file every time; an existing copy is never overwritten.
+fn write_migration_copy(workspace: &Path, content: &str) -> Result<String, String> {
+    if content.len() > MAX_STATE_BYTES {
+        return Err("WORKSPACE_STATE_TOO_LARGE: migration copy".to_string());
+    }
+    serde_json::from_str::<Value>(content)
+        .map_err(|error| format!("WORKSPACE_STATE_NOT_JSON: migration copy: {error}"))?;
+    let dir = metadata_dir(workspace).join("migration");
+    fs::create_dir_all(&dir).map_err(|error| format!("WORKSPACE_WRITE_FAILED: {error}"))?;
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|elapsed| elapsed.as_secs())
+        .unwrap_or(0);
+    for attempt in 0..1000 {
+        let path = dir.join(format!("state-{stamp}-{attempt}.json"));
+        match fs::OpenOptions::new().write(true).create_new(true).open(&path) {
+            Ok(mut file) => {
+                use std::io::Write;
+                file.write_all(content.as_bytes())
+                    .map_err(|error| format!("WORKSPACE_WRITE_FAILED: {error}"))?;
+                return Ok(path_string(&path));
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(error) => return Err(format!("WORKSPACE_WRITE_FAILED: {error}")),
+        }
+    }
+    Err("WORKSPACE_WRITE_FAILED: no free name for the migration copy".to_string())
+}
+
+#[derive(Debug, Serialize)]
+struct WorkspaceStateRead {
+    status: &'static str,
+    workspace: Option<String>,
+    writable: bool,
+    keys: serde_json::Map<String, Value>,
+}
+
+#[tauri::command]
+fn read_workspace_state(app: AppHandle) -> Result<WorkspaceStateRead, String> {
+    let Some(workspace) = read_config(&app)?.workspace else {
+        return Ok(WorkspaceStateRead { status: "NO_WORKSPACE", workspace: None, writable: false, keys: serde_json::Map::new() });
+    };
+    Ok(WorkspaceStateRead {
+        status: "OK",
+        workspace: Some(path_string(&workspace)),
+        writable: holds_lock(&app, &workspace),
+        keys: read_state_files(&workspace)?,
+    })
+}
+
+#[tauri::command]
+fn write_workspace_state(app: AppHandle, workspace: String, keys: HashMap<String, Option<String>>) -> Result<(), String> {
+    let root = require_workspace_lock(&app, Some(&workspace))?;
+    write_state_files(&root, &keys)
+}
+
+#[tauri::command]
+fn write_workspace_migration_backup(app: AppHandle, workspace: String, content: String) -> Result<String, String> {
+    let root = require_workspace_lock(&app, Some(&workspace))?;
+    write_migration_copy(&root, &content)
 }
 
 fn main() {
     tauri::Builder::default()
+        .manage(WorkspaceLock::default())
         .invoke_handler(tauri::generate_handler![
             get_runtime_state,
             get_startup_route,
             choose_workspace,
+            pick_workspace_folder,
+            open_workspace,
+            read_workspace_state,
+            write_workspace_state,
+            write_workspace_migration_backup,
             choose_and_import_package,
             import_package_path,
             save_builder_file,
@@ -1369,30 +1491,16 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::{
-        LEGACY_SCHEMA_VERSION, PackageManifest, collect_authored, collect_imports, crc32,
-        parse_package_envelope, parse_version, path_string, safe_path_segment, sha256_hex,
-        startup_route_from_args, supported_minimum_version, valid_export_filename,
-        validate_package, write_export_file,
+        collect_authored, collect_imports, crc32, metadata_dir, path_string, read_state_files,
+        safe_path_segment, sha256_hex, startup_route_from_args, valid_export_filename,
+        write_character_files, write_export_file, write_migration_copy, write_state_files,
+        WorkspaceLock, STATE_DIR,
     };
+    use std::collections::HashMap;
     use flate2::{Compression, write::DeflateEncoder};
     use std::fs;
     use std::io::Write;
     use std::path::{Path, PathBuf};
-
-    fn manifest(payload_hash: String) -> PackageManifest {
-        PackageManifest {
-            package_type: "WIT_PACKAGE".to_string(),
-            product: "test-product".to_string(),
-            package_version: "1.0.0".to_string(),
-            schema_id: "saku.character".to_string(),
-            schema_version: LEGACY_SCHEMA_VERSION.to_string(),
-            minimum_app_version: "0.1.0".to_string(),
-            content_type: "CHARACTER_PACK".to_string(),
-            distribution_channel: "OWNER_REVIEW".to_string(),
-            license_state: "NOT_SPECIFIED".to_string(),
-            payload_hash,
-        }
-    }
 
     #[test]
     fn sha256_is_lowercase_hex_of_exact_bytes() {
@@ -1400,15 +1508,6 @@ mod tests {
             sha256_hex(b"abc"),
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         );
-    }
-
-    #[test]
-    fn app_version_gate_is_deterministic() {
-        assert_eq!(parse_version("1.2.3"), Some([1, 2, 3]));
-        assert_eq!(parse_version("1.2.3-beta.1"), Some([1, 2, 3]));
-        assert_eq!(parse_version("1.2"), None);
-        assert!(supported_minimum_version("0.1.0"));
-        assert!(!supported_minimum_version("0.1.1"));
     }
 
     #[test]
@@ -1448,43 +1547,6 @@ mod tests {
                 .unwrap_or("")
                 .starts_with("FILE_WRITE_FAILED:")
         );
-    }
-
-    // A minimal Character that declares the schema the test manifest names.
-    fn legacy_schema_payload() -> String {
-        format!(
-            "{{\"characters\":[{{\"schema\":{{\"schema_id\":\"saku.character\",\"schema_version\":\"{}\"}},\"identity\":{{\"character_id\":\"t\"}}}}]}}",
-            LEGACY_SCHEMA_VERSION
-        )
-    }
-
-    #[test]
-    fn valid_package_contract_passes() {
-        let payload = legacy_schema_payload();
-        let payload = payload.as_str();
-        let result = validate_package(
-            &manifest(sha256_hex(payload.as_bytes())),
-            "utf8-json",
-            payload,
-        );
-        assert!(result.is_ok());
-    }
-
-    #[test]
-    fn payload_mismatch_is_invalid() {
-        let failure = validate_package(&manifest("0".repeat(64)), "utf8-json", "{}").unwrap_err();
-        assert_eq!(failure.status, "INVALID");
-        assert_eq!(failure.code, "PAYLOAD_HASH_MISMATCH");
-    }
-
-    #[test]
-    fn unknown_content_type_is_unsupported() {
-        let payload = "{}";
-        let mut candidate = manifest(sha256_hex(payload.as_bytes()));
-        candidate.content_type = "UNKNOWN_FUTURE_TYPE".to_string();
-        let failure = validate_package(&candidate, "utf8-json", payload).unwrap_err();
-        assert_eq!(failure.status, "UNSUPPORTED");
-        assert_eq!(failure.code, "CONTENT_TYPE_UNSUPPORTED");
     }
 
     #[test]
@@ -1564,256 +1626,9 @@ mod tests {
         output
     }
 
-    #[test]
-    fn downloaded_zip_package_is_parsed_without_manual_extraction() {
-        let payload = legacy_schema_payload();
-        let payload = payload.as_str();
-        let manifest = manifest(sha256_hex(payload.as_bytes()));
-        let archive = test_zip(&[
-            (
-                "wit-package.json",
-                serde_json::to_vec_pretty(&manifest).unwrap(),
-            ),
-            ("payload.json", payload.as_bytes().to_vec()),
-        ]);
-        let envelope =
-            parse_package_envelope(Path::new("downloaded-character-pack.zip"), &archive).unwrap();
-        assert_eq!(envelope.payload_json, payload);
-        assert_eq!(envelope.wit_package.product, "test-product");
-        assert!(
-            validate_package(
-                &envelope.wit_package,
-                &envelope.payload_encoding,
-                &envelope.payload_json
-            )
-            .is_ok()
-        );
-    }
-
-    // The packages handed to the Owner for the intake test must be proven by the
-    // host's own reader, not by the tool that wrote them. These are the exact
-    // bytes that ship, read from the repository.
-    fn fixture(name: &str) -> Vec<u8> {
-        let file = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("..")
-            .join("tests")
-            .join("fixtures")
-            .join("packages")
-            .join(name);
-        std::fs::read(&file).unwrap_or_else(|error| panic!("fixture {name}: {error}"))
-    }
-
     // ── SAKU-COMPAT-01 ───────────────────────────────────────────────────
     // Package integrity and schema compatibility are separate questions. These
     // exercise the second one at the point where the host answers it.
-
-    fn v1_character() -> String {
-        concat!(
-            "{\"schema\":\"SAKU-CHARACTER\",\"version\":\"1.0\",",
-            "\"front_character\":{\"name\":\"v1\"},",
-            "\"assistants\":[{\"key\":\"seat7_persona_guard\",\"kind\":\"ai\"}]}"
-        )
-        .to_string()
-    }
-
-    fn legacy_schema_character() -> String {
-        format!(
-            "{{\"schema\":{{\"schema_id\":\"saku.character\",\"schema_version\":\"{}\"}},\"identity\":{{\"character_id\":\"n\"}}}}",
-            LEGACY_SCHEMA_VERSION
-        )
-    }
-
-    fn unified_character() -> String {
-        concat!(
-            "{\"schema\":{\"schema_id\":\"SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE\",",
-            "\"schema_version\":\"final-delta-recovery-closure-2026-09-04\"},",
-            "\"identity\":{\"character_id\":\"u\"}}"
-        )
-        .to_string()
-    }
-
-    fn pack(character: &str) -> String {
-        format!("{{\"characters\":[{character}]}}")
-    }
-
-    fn bound(schema_id: &str, schema_version: &str, payload: &str) -> PackageManifest {
-        let mut m = manifest(sha256_hex(payload.as_bytes()));
-        m.schema_id = schema_id.to_string();
-        m.schema_version = schema_version.to_string();
-        m
-    }
-
-    #[test]
-    fn compat_01_valid_v1_package_binds() {
-        let payload = pack(&v1_character());
-        let manifest = bound("SAKU-CHARACTER", "1.0", &payload);
-        assert!(validate_package(&manifest, "utf8-json", &payload).is_ok());
-    }
-
-    #[test]
-    fn compat_02_valid_legacy_schema_package_binds() {
-        let payload = pack(&legacy_schema_character());
-        let manifest = bound("saku.character", LEGACY_SCHEMA_VERSION, &payload);
-        assert!(validate_package(&manifest, "utf8-json", &payload).is_ok());
-    }
-
-    #[test]
-    fn compat_active_unified_package_binds() {
-        let payload = pack(&unified_character());
-        let manifest = bound(
-            "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE",
-            "final-delta-recovery-closure-2026-09-04",
-            &payload,
-        );
-        assert!(validate_package(&manifest, "utf8-json", &payload).is_ok());
-    }
-
-    #[test]
-    fn compat_03_unknown_schema_is_refused() {
-        let character = "{\"schema\":{\"schema_id\":\"some.other\",\"schema_version\":\"9\"}}";
-        let payload = pack(character);
-        let manifest = bound("some.other", "9", &payload);
-        let failure = validate_package(&manifest, "utf8-json", &payload).unwrap_err();
-        assert_eq!(failure.code, "MANIFEST_SCHEMA_ID_UNKNOWN");
-    }
-
-    #[test]
-    fn compat_04_05_unsupported_revision_is_refused() {
-        for (id, version) in [
-            ("SAKU-CHARACTER", "9.9"),
-            ("saku.character", concat!("v", "next-99.0")),
-        ] {
-            let character = format!(
-                "{{\"schema\":{{\"schema_id\":\"{id}\",\"schema_version\":\"{version}\"}}}}"
-            );
-            let payload = pack(&character);
-            let manifest = bound(id, version, &payload);
-            let failure = validate_package(&manifest, "utf8-json", &payload).unwrap_err();
-            assert_eq!(failure.status, "UNSUPPORTED", "{id} {version}");
-            assert_eq!(
-                failure.code, "MANIFEST_SCHEMA_VERSION_UNSUPPORTED",
-                "{id} {version}"
-            );
-        }
-    }
-
-    #[test]
-    fn compat_06_manifest_v1_payload_legacy_schema_is_refused() {
-        let payload = pack(&legacy_schema_character());
-        let manifest = bound("SAKU-CHARACTER", "1.0", &payload);
-        let failure = validate_package(&manifest, "utf8-json", &payload).unwrap_err();
-        assert_eq!(failure.code, "MANIFEST_PAYLOAD_SCHEMA_MISMATCH");
-    }
-
-    #[test]
-    fn compat_07_manifest_legacy_schema_payload_v1_is_refused() {
-        let payload = pack(&v1_character());
-        let manifest = bound("saku.character", LEGACY_SCHEMA_VERSION, &payload);
-        let failure = validate_package(&manifest, "utf8-json", &payload).unwrap_err();
-        assert_eq!(failure.code, "MANIFEST_PAYLOAD_SCHEMA_MISMATCH");
-    }
-
-    #[test]
-    fn compat_08_payload_without_a_declared_schema_is_refused() {
-        let payload = "{\"characters\":[{\"identity\":{\"character_id\":\"x\"}}]}";
-        let manifest = bound("saku.character", LEGACY_SCHEMA_VERSION, payload);
-        let failure = validate_package(&manifest, "utf8-json", payload).unwrap_err();
-        assert_eq!(failure.code, "PAYLOAD_SCHEMA_NOT_DECLARED");
-    }
-
-    #[test]
-    fn compat_09_intact_package_with_incompatible_schema_is_refused() {
-        // Integrity is perfect: the hash matches its own payload exactly. Only
-        // the schema is wrong, and that alone must stop the import.
-        let character = format!(
-            "{{\"schema\":{{\"schema_id\":\"saku.character\",\"schema_version\":\"{}\"}}}}",
-            concat!("v", "next-0.9")
-        );
-        let payload = pack(&character);
-        let manifest = bound("saku.character", concat!("v", "next-0.9"), &payload);
-        assert_eq!(
-            sha256_hex(payload.as_bytes()),
-            manifest.payload_hash,
-            "integrity must be intact for this vector to mean anything"
-        );
-        let failure = validate_package(&manifest, "utf8-json", &payload).unwrap_err();
-        assert_eq!(failure.code, "MANIFEST_SCHEMA_VERSION_UNSUPPORTED");
-    }
-
-    #[test]
-    fn compat_a_manifest_without_a_schema_identity_is_refused() {
-        let payload = pack(&legacy_schema_character());
-        let manifest = bound("", LEGACY_SCHEMA_VERSION, &payload);
-        let failure = validate_package(&manifest, "utf8-json", &payload).unwrap_err();
-        assert_eq!(failure.code, "MANIFEST_SCHEMA_ID_MISSING");
-    }
-
-    #[test]
-    fn compat_b_no_seat_vocabulary_is_translated_by_the_host() {
-        // The host must not rewrite either schema's seat names on the way in.
-        let payload = pack(&v1_character());
-        let manifest = bound("SAKU-CHARACTER", "1.0", &payload);
-        validate_package(&manifest, "utf8-json", &payload).expect("v1 binds");
-        assert!(payload.contains("seat7_persona_guard"));
-        assert!(!payload.contains("FORWARD_DRIVER"));
-    }
-
-    #[test]
-    fn owner_intake_test_packages_import() {
-        for (name, content_type) in [
-            ("saku-import-test-pack.zip", "CHARACTER_PACK"),
-            ("saku-import-test-character.zip", "CHARACTER"),
-        ] {
-            let bytes = fixture(name);
-            let envelope = parse_package_envelope(Path::new(name), &bytes)
-                .unwrap_or_else(|failure| panic!("{name} did not parse: {}", failure.reason));
-            assert_eq!(envelope.wit_package.content_type, content_type, "{name}");
-            validate_package(
-                &envelope.wit_package,
-                &envelope.payload_encoding,
-                &envelope.payload_json,
-            )
-            .unwrap_or_else(|failure| panic!("{name} did not validate: {}", failure.reason));
-            serde_json::from_str::<serde_json::Value>(&envelope.payload_json)
-                .unwrap_or_else(|error| panic!("{name} payload is not JSON: {error}"));
-        }
-    }
-
-    #[test]
-    fn owner_intake_broken_package_is_refused() {
-        let bytes = fixture("saku-import-test-broken-hash.zip");
-        let envelope =
-            parse_package_envelope(Path::new("saku-import-test-broken-hash.zip"), &bytes)
-                .expect("the archive itself is well formed; only the payload was changed");
-        let failure = validate_package(
-            &envelope.wit_package,
-            &envelope.payload_encoding,
-            &envelope.payload_json,
-        )
-        .expect_err("a package whose payload no longer matches its hash must not import");
-        assert_eq!(failure.status, "INVALID");
-        assert_eq!(failure.code, "PAYLOAD_HASH_MISMATCH");
-    }
-
-    #[test]
-    fn zip_package_with_extra_or_nested_content_fails_closed() {
-        let nested = test_zip(&[
-            ("wit-package.json", b"{}".to_vec()),
-            ("payload.json", b"{}".to_vec()),
-            ("extra.txt", b"not allowed".to_vec()),
-        ]);
-        let failure = parse_package_envelope(Path::new("extra.zip"), &nested).unwrap_err();
-        assert_eq!(failure.status, "INVALID");
-        assert_eq!(failure.code, "PACKAGE_ARCHIVE_INVALID");
-
-        let nested = test_zip(&[
-            ("folder/wit-package.json", b"{}".to_vec()),
-            ("payload.json", b"{}".to_vec()),
-        ]);
-        let failure = parse_package_envelope(Path::new("nested.zip"), &nested).unwrap_err();
-        assert_eq!(failure.status, "INVALID");
-        assert_eq!(failure.code, "PACKAGE_ARCHIVE_INVALID");
-    }
 
     #[test]
     fn save_reports_the_real_path_and_size_after_writing() {
@@ -1915,6 +1730,87 @@ mod tests {
         let _ = std::fs::remove_dir_all(&root);
     }
 
+    fn scratch(name: &str) -> PathBuf {
+        let root = std::env::temp_dir().join(format!("saku-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root).expect("scratch dir");
+        root
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn workspace_lock_is_exclusive() {
+        let root = scratch("lock");
+        let first = WorkspaceLock::default();
+        let second = WorkspaceLock::default();
+        assert!(first.acquire(&root), "the first window takes the lock");
+        assert!(first.acquire(&root), "taking it again is a no-op, not a refusal");
+        assert!(!second.acquire(&root), "a second holder is refused while the first holds it");
+        assert!(first.holds(&root) && !second.holds(&root));
+        first.release();
+        assert!(second.acquire(&root), "released, it can be taken");
+        second.release();
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn workspace_state_round_trips_and_deletes() {
+        let root = scratch("state");
+        let mut keys = HashMap::new();
+        keys.insert("saku.workspace.library".to_string(), Some(r#"{"version":1,"entries":[]}"#.to_string()));
+        keys.insert("saku.workspace.active".to_string(), Some(r#"{"character":{}}"#.to_string()));
+        write_state_files(&root, &keys).expect("write");
+        let read = read_state_files(&root).expect("read");
+        assert_eq!(read["saku.workspace.library"], Value::String(r#"{"version":1,"entries":[]}"#.to_string()));
+        assert_eq!(read["saku.workspace.importHistory"], Value::Null, "an absent key reads as null");
+        let mut drop = HashMap::new();
+        drop.insert("saku.workspace.active".to_string(), None);
+        write_state_files(&root, &drop).expect("delete");
+        assert_eq!(read_state_files(&root).expect("read")["saku.workspace.active"], Value::Null, "null deletes the file");
+        let leftovers: Vec<_> = std::fs::read_dir(metadata_dir(&root).join(STATE_DIR)).expect("dir").flatten().filter(|entry| entry.file_name().to_string_lossy().ends_with(".tmp")).collect();
+        assert!(leftovers.is_empty(), "no temporary file is left behind");
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn workspace_state_refuses_before_touching_anything() {
+        let root = scratch("state-refuse");
+        let mut good = HashMap::new();
+        good.insert("saku.workspace.library".to_string(), Some(r#"{"entries":[1]}"#.to_string()));
+        write_state_files(&root, &good).expect("write");
+        let mut bad = HashMap::new();
+        bad.insert("saku.workspace.library".to_string(), Some(r#"{"entries":[]}"#.to_string()));
+        bad.insert("saku.workspace.draft".to_string(), Some("not json".to_string()));
+        assert!(write_state_files(&root, &bad).unwrap_err().starts_with("WORKSPACE_STATE_NOT_JSON"));
+        assert_eq!(read_state_files(&root).expect("read")["saku.workspace.library"], Value::String(r#"{"entries":[1]}"#.to_string()), "a refused write changed nothing");
+        let mut unknown = HashMap::new();
+        unknown.insert("saku.trainer.anything".to_string(), Some("{}".to_string()));
+        assert!(write_state_files(&root, &unknown).unwrap_err().starts_with("WORKSPACE_STATE_KEY_UNKNOWN"));
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn workspace_state_migration_copy_never_overwrites() {
+        let root = scratch("migration");
+        let a = write_migration_copy(&root, r#"{"keys":{"n":1}}"#).expect("first");
+        let b = write_migration_copy(&root, r#"{"keys":{"n":2}}"#).expect("second");
+        assert_ne!(a, b, "each copy is its own file");
+        assert!(std::fs::read_to_string(&a).expect("a").contains("\"n\":1"));
+        assert!(write_migration_copy(&root, "not json").is_err());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn workspace_state_keeps_every_revision() {
+        let root = scratch("revisions");
+        write_character_files(&root, "one", r#"{"identity":{"character_id":"one","character_revision":"1.0.0"}}"#).expect("1.0.0");
+        write_character_files(&root, "one", r#"{"identity":{"character_id":"one","character_revision":"1.1.0"}}"#).expect("1.1.0");
+        let revisions = root.join("characters").join("one").join("revisions");
+        assert!(revisions.join("1_0_0.json").exists() && revisions.join("1_1_0.json").exists(), "both revisions are kept");
+        assert!(std::fs::read_to_string(root.join("characters").join("one").join("character.json")).expect("latest").contains("1.1.0"), "character.json is the latest");
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
     #[test]
     fn durable_store_is_empty_without_a_workspace_tree() {
         let root =
@@ -1941,9 +1837,9 @@ mod tests {
     use super::{ParsedPackage, parse_package};
     use serde_json::{Value, json};
 
-    fn character_json(slug: &str, name: &str) -> String {
+    fn character_json_with_schema(slug: &str, name: &str, schema_id: &str, schema_version: &str) -> String {
         json!({
-            "schema": { "schema_id": "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE", "schema_version": "final-delta-recovery-closure-2026-09-04" },
+            "schema": { "schema_id": schema_id, "schema_version": schema_version },
             "identity": { "character_id": slug, "character_revision": "1.0.0", "display_name": name },
             "purpose": { "summary": format!("{name} summary") }
         })
@@ -1964,16 +1860,24 @@ mod tests {
     }
 
     fn synthetic_pack(slugs: &[&'static str], prefix: &str, tamper: Option<&str>) -> SyntheticPack {
+        synthetic_pack_full(slugs, prefix, tamper, "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE", "final-delta-recovery-closure-2026-09-04")
+    }
+
+    fn synthetic_pack_with_schema(slugs: &[&'static str], prefix: &str, schema_id: &str, schema_version: &str) -> SyntheticPack {
+        synthetic_pack_full(slugs, prefix, None, schema_id, schema_version)
+    }
+
+    fn synthetic_pack_full(slugs: &[&'static str], prefix: &str, tamper: Option<&str>, schema_id: &str, schema_version: &str) -> SyntheticPack {
         let mut inner_archives: Vec<(String, Vec<u8>, Value, String)> = Vec::new();
         let mut membership = Vec::new();
         for slug in slugs {
-            let character = character_json(slug, &format!("名前 {slug}"));
+            let character = character_json_with_schema(slug, &format!("名前 {slug}"), schema_id, schema_version);
             let character_digest = sha256_hex(character.as_bytes());
             let manifest = signed(
                 json!({
                     "format": "kokorosaku-portable-package", "schemaVersion": "3.0.0", "profile": "saku-unified-v1",
                     "source": { "provider": "kokorosaku", "characterId": format!("id-{slug}"), "sourceSlug": slug, "sourceVersion": "1.0.0",
-                        "schema": { "schemaId": "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE", "schemaVersion": "final-delta-recovery-closure-2026-09-04" },
+                        "schema": { "schemaId": schema_id, "schemaVersion": schema_version },
                         "characterDigest": { "domain": "CHARACTER_FULL_SEMANTICS", "profile": "saku.sha256-rfc8785-ijson@1.0.0", "value": character_digest } },
                     "summary": { "displayName": format!("名前 {slug}"), "seat8": "human" },
                     "files": [{ "path": "character.json", "size": character.len(), "digest": format!("sha-256:{}", sha256_hex(character.as_bytes())) }]
@@ -2054,7 +1958,7 @@ mod tests {
     fn parse_pack(bytes: &[u8]) -> Result<super::character_pack::CharacterPackImport, super::PackageValidationFailure> {
         match parse_package(Path::new("saku-pack-test-1.0.0-beta.zip"), bytes)? {
             ParsedPackage::CharacterPack(pack) => Ok(pack),
-            ParsedPackage::Envelope(_) => panic!("a pack must not parse as a Builder package"),
+            ParsedPackage::SakuReturn(_) => panic!("a pack must not parse as a saku-return"),
         }
     }
 
@@ -2098,7 +2002,7 @@ mod tests {
         let pack = synthetic_pack(&["aoi-one"], "saku-pack-test-1.0.0/", None);
         // Rewrite the catalog release with a different digest for the member and re-sign nothing:
         // SHA256SUMS then fails first — so rebuild SHA256SUMS honestly to reach the catalog check.
-        let entries = super::archive_entries_with(&pack.bytes, &super::ArchiveShape { max_entries: 512, max_total_bytes: 64 << 20, allow_directory_prefix: true }).unwrap();
+        let entries = super::archive_entries_with(&pack.bytes, &super::ArchiveShape { max_entries: 512, max_total_bytes: 64 << 20, allow_directory_prefix: true, peek_only: false }).unwrap();
         let mut catalog: Value = serde_json::from_slice(&entries["catalog-release.v1.json"]).unwrap();
         catalog["membership"][0]["character_digest"] = Value::String("0".repeat(64));
         let catalog_text = catalog.to_string();
@@ -2139,21 +2043,203 @@ mod tests {
         // two different folders are never accepted
         let two = test_zip(&[("a/character-pack.json", b"{}".to_vec()), ("b/x.txt", b"x".to_vec())]);
         assert_eq!(parse_package(Path::new("two.zip"), &two).unwrap_err().code, "PACKAGE_ARCHIVE_INVALID");
-        // the Builder package path keeps its own 16-entry ceiling
-        let mut witpkg: Vec<(String, Vec<u8>)> = vec![("wit-package.json".to_string(), b"{}".to_vec()), ("payload.json".to_string(), b"{}".to_vec())];
-        for index in 0..15 {
-            witpkg.push((format!("extra{index}.txt"), b"x".to_vec()));
-        }
-        let borrowed: Vec<(&str, Vec<u8>)> = witpkg.iter().map(|(name, bytes)| (name.as_str(), bytes.clone())).collect();
-        let failure = parse_package(Path::new("wide.zip"), &test_zip(&borrowed)).unwrap_err();
-        assert_eq!(failure.code, "PACKAGE_ARCHIVE_INVALID");
-        assert!(failure.reason.contains("17"), "{}", failure.reason);
+        // the retired two-file Builder package is refused with the retirement notice
+        let retired = test_zip(&[("wit-package.json", br#"{"package_type":"WIT_PACKAGE","product":"x"}"#.to_vec()), ("payload.json", b"{}".to_vec())]);
+        let failure = parse_package(Path::new("old.witpkg"), &retired).unwrap_err();
+        assert_eq!(failure.code, "PACKAGE_FORMAT_UNRECOGNIZED");
+        assert!(failure.reason.contains("廃止"), "{}", failure.reason);
+        assert!(failure.reason.contains("個別インポート"), "{}", failure.reason);
         // an unknown ZIP names the accepted formats in Japanese, not just a code
         let unknown = test_zip(&[("notes.txt", b"hello".to_vec())]);
         let failure = parse_package(Path::new("unknown.zip"), &unknown).unwrap_err();
         assert_eq!(failure.code, "PACKAGE_FORMAT_UNRECOGNIZED");
         assert!(failure.reason.contains("受け付ける形式"), "{}", failure.reason);
         assert!(failure.reason.contains("character-pack.json"));
+    }
+
+    #[test]
+    fn amu_character_file_is_recognised_and_pointed_back_to_amu_studio() {
+        // The .amupkg marks itself in wit-package.json (KOKOROAMU-STUDIO constants, exact strings).
+        let amu_manifest = br#"{"package_type":"WIT_PACKAGE","kind":"AMU_CHARACTER","schema":"AMU-CHARACTER/3.0.0","entries":[]}"#.to_vec();
+        let amupkg = test_zip(&[("wit-package.json", amu_manifest.clone()), ("pack/saku-pack-support-1.0.0.zip", b"PK".to_vec()), ("characters/aimi/instance.json", b"{}".to_vec())]);
+        for name in ["aimi-meguru.amupkg", "renamed.zip", "no-extension"] {
+            let failure = parse_package(Path::new(name), &amupkg).unwrap_err();
+            assert_eq!(failure.code, "PACKAGE_FORMAT_AMU_CHARACTER_FILE", "{name}");
+            assert_eq!(failure.status, "UNSUPPORTED");
+            assert!(failure.reason.contains("AMU Studio"), "{}", failure.reason);
+            assert!(failure.reason.contains("SAKU へ戻す"), "{}", failure.reason);
+        }
+        // kind alone (no schema field) is enough — kind is the primary marker
+        let by_kind = test_zip(&[("wit-package.json", br#"{"package_type":"WIT_PACKAGE","kind":"AMU_CHARACTER"}"#.to_vec())]);
+        assert_eq!(parse_package(Path::new("x.zip"), &by_kind).unwrap_err().code, "PACKAGE_FORMAT_AMU_CHARACTER_FILE");
+        // schema prefix alone (kind renamed upstream) still routes to AMU Studio
+        let by_schema = test_zip(&[("wit-package.json", br#"{"package_type":"WIT_PACKAGE","kind":"SOMETHING_ELSE","schema":"AMU-CHARACTER/4.0.0"}"#.to_vec())]);
+        assert_eq!(parse_package(Path::new("x.zip"), &by_schema).unwrap_err().code, "PACKAGE_FORMAT_AMU_CHARACTER_FILE");
+        // package_type must match: an unrelated manifest is not an AMU file
+        let other = test_zip(&[("wit-package.json", br#"{"package_type":"OTHER","kind":"AMU_CHARACTER"}"#.to_vec())]);
+        assert_eq!(parse_package(Path::new("x.zip"), &other).unwrap_err().code, "PACKAGE_FORMAT_UNRECOGNIZED");
+        // a non-ZIP file with the .amupkg extension is still pointed at AMU Studio
+        assert_eq!(parse_package(Path::new("broken.amupkg"), b"not a zip").unwrap_err().code, "PACKAGE_FORMAT_AMU_CHARACTER_FILE");
+        // a pack that happens to sit beside a wit-package.json is still a pack (marker decides)
+        let pack = synthetic_pack(&["aoi-one"], "saku-pack-test-1.0.0/", None);
+        assert!(parse_pack(&pack.bytes).is_ok());
+        // the real file written by AMU Studio (PR #69), when the shared fixture folder is present
+        let real = std::env::var("SAKU_AMU_FIXTURES").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from("C:/Users/Public/SAKU-verify")).join("aimi-meguru.amupkg");
+        if let Ok(bytes) = std::fs::read(&real) {
+            let failure = parse_package(&real, &bytes).unwrap_err();
+            assert_eq!(failure.code, "PACKAGE_FORMAT_AMU_CHARACTER_FILE", "real .amupkg");
+            let failure = parse_package(Path::new("renamed.zip"), &bytes).unwrap_err();
+            assert_eq!(failure.code, "PACKAGE_FORMAT_AMU_CHARACTER_FILE", "real .amupkg renamed to .zip");
+        } else {
+            eprintln!("real .amupkg fixture not present at {} — skipped", real.display());
+        }
+    }
+
+    /// Build a saku-return the way AMU's writeSakuReturn does, from one archive of a synthetic pack.
+    fn synthetic_return(pack: &SyntheticPack, slug: &str, request: Option<Value>, with_archive: bool) -> Vec<u8> {
+        let entries = super::archive_entries_with(&pack.bytes, &super::ArchiveShape { max_entries: 512, max_total_bytes: 64 << 20, allow_directory_prefix: true, peek_only: false }).unwrap();
+        let archive = entries.get(&format!("{slug}.kokorosaku.zip")).expect("archive").clone();
+        let inner = super::archive_entries_with(&archive, &super::ArchiveShape { max_entries: 8, max_total_bytes: 8 << 20, allow_directory_prefix: false, peek_only: false }).unwrap();
+        let character = inner.get("character.json").unwrap().clone();
+        let manifest = inner.get("portable-manifest.json").unwrap().clone();
+        let manifest_value: Value = serde_json::from_slice(&manifest).unwrap();
+        let request = request.unwrap_or_else(|| json!({
+            "schema": "AMU-SAKU-RETURN/1.0.0", "created_at": "2026-09-21T00:00:00.000Z",
+            "character_id": slug, "character_revision": "1.0.0",
+            "character_digest": manifest_value["source"]["characterDigest"]["value"],
+            "from_instance": { "amu_instance_ref": "00000000-0000-4000-8000-000000000002", "instance_config_digest": "sha-256:5f31eed016ab6eb0f3c7ab795da0bf91771178642c0ca6ec330909caa2493a4b" },
+            "note": "価値観の 2 番目を『静かな傾聴』に改めたい", "fields": ["values"],
+            "meaning": "AMU Studio からの編集依頼。"
+        }));
+        let mut files: Vec<(&str, Vec<u8>)> = vec![("character.json", character), ("portable-manifest.json", manifest), ("edit-request.json", request.to_string().into_bytes())];
+        let name = format!("{slug}.kokorosaku.zip");
+        if with_archive { files.push((Box::leak(name.into_boxed_str()), archive)); }
+        test_zip(&files)
+    }
+
+    fn parse_return(bytes: &[u8]) -> Result<super::saku_return::SakuReturnImport, super::PackageValidationFailure> {
+        match parse_package(Path::new("aoi-one.saku-return.zip"), bytes)? {
+            ParsedPackage::SakuReturn(ret) => Ok(ret),
+            ParsedPackage::CharacterPack(_) => panic!("a return must not parse as a pack"),
+        }
+    }
+
+    #[test]
+    fn saku_return_is_read_and_cross_checked_without_writing() {
+        let pack = synthetic_pack(&["aoi-one", "beni-two"], "saku-pack-test-1.0.0/", None);
+        let ret = parse_return(&synthetic_return(&pack, "aoi-one", None, true)).expect("return parses");
+        assert_eq!(ret.schema, "AMU-SAKU-RETURN/1.0.0");
+        assert_eq!((ret.character_id.as_str(), ret.character_revision.as_str()), ("aoi-one", "1.0.0"));
+        assert_eq!(ret.fields, vec!["values".to_string()]);
+        assert!(ret.note.contains("静かな傾聴"));
+        assert!(ret.from_instance.is_some());
+        assert!(ret.archive_present && ret.archive_file.as_deref() == Some("aoi-one.kokorosaku.zip"));
+        assert_eq!(ret.signature_state, "NOT_VERIFIED_BY_HOST");
+        assert_eq!(ret.digest_state, "CHARACTER_BYTES_AND_SIGNED_MANIFEST_VERIFIED");
+        assert_eq!(ret.publisher_key_id, "saku-character-publisher-ed25519.v1");
+        assert_eq!(ret.character_json_sha256.len(), 64);
+        // without the archive it still parses, and says so
+        let bare = parse_return(&synthetic_return(&pack, "aoi-one", None, false)).unwrap();
+        assert!(!bare.archive_present && bare.archive_file.is_none());
+        // the ImportResult carries one Character and no imported_path
+        let result = super::import_saku_return(ret, Some("x".into()));
+        assert_eq!((result.status, result.code), ("IMPORTED", "SAKU_RETURN_READY"));
+        assert!(result.imported_path.is_none() && result.pack.is_none() && result.saku_return.is_some());
+        let payload: Value = serde_json::from_str(result.payload_json.as_deref().unwrap()).unwrap();
+        assert_eq!(payload["characters"].as_array().unwrap().len(), 1);
+        assert_eq!(result.manifest.as_ref().unwrap().content_type, "CHARACTER");
+    }
+
+    #[test]
+    fn saku_return_mismatches_and_bad_requests_are_refused() {
+        let pack = synthetic_pack(&["aoi-one", "beni-two"], "saku-pack-test-1.0.0/", None);
+        let good = synthetic_return(&pack, "aoi-one", None, true);
+        let base: Value = {
+            let entries = super::archive_entries_with(&good, &super::ArchiveShape { max_entries: 8, max_total_bytes: 8 << 20, allow_directory_prefix: false, peek_only: false }).unwrap();
+            serde_json::from_slice(entries.get("edit-request.json").unwrap()).unwrap()
+        };
+        let with = |mutate: &dyn Fn(&mut Value)| { let mut r = base.clone(); mutate(&mut r); synthetic_return(&pack, "aoi-one", Some(r), true) };
+        // request names another Character / revision / digest
+        let failure = parse_return(&with(&|r| r["character_id"] = json!("beni-two"))).unwrap_err();
+        assert_eq!(failure.code, "SAKU_RETURN_MISMATCH");
+        assert!(failure.reason.contains("character.json は aoi-one"), "{}", failure.reason);
+        assert_eq!(parse_return(&with(&|r| r["character_revision"] = json!("1.0.1"))).unwrap_err().code, "SAKU_RETURN_MISMATCH");
+        assert_eq!(parse_return(&with(&|r| r["character_digest"] = json!("0".repeat(64)))).unwrap_err().code, "SAKU_RETURN_MISMATCH");
+        // unknown schema, empty note, over-long field, non-array fields, odd from_instance
+        assert_eq!(parse_return(&with(&|r| r["schema"] = json!("AMU-SAKU-RETURN/2.0.0"))).unwrap_err().code, "SAKU_RETURN_SCHEMA_UNSUPPORTED");
+        assert_eq!(parse_return(&with(&|r| r["note"] = json!(""))).unwrap_err().code, "SAKU_RETURN_INVALID");
+        assert_eq!(parse_return(&with(&|r| r["fields"] = json!(["x".repeat(121)]))).unwrap_err().code, "SAKU_RETURN_INVALID");
+        assert_eq!(parse_return(&with(&|r| r["fields"] = json!("values"))).unwrap_err().code, "SAKU_RETURN_INVALID");
+        assert_eq!(parse_return(&with(&|r| r["from_instance"] = json!({ "amu_instance_ref": "x" }))).unwrap_err().code, "SAKU_RETURN_INVALID");
+        // character.json bytes edited after signing → files[] digest breaks
+        let entries = super::archive_entries_with(&good, &super::ArchiveShape { max_entries: 8, max_total_bytes: 8 << 20, allow_directory_prefix: false, peek_only: false }).unwrap();
+        let mut list: Vec<(&str, Vec<u8>)> = Vec::new();
+        for (name, bytes) in &entries {
+            let bytes = if name == "character.json" { let mut c: Value = serde_json::from_slice(bytes).unwrap(); c["purpose"]["summary"] = json!("edited"); c.to_string().into_bytes() } else { bytes.clone() };
+            list.push((name.as_str(), bytes));
+        }
+        assert_eq!(parse_return(&test_zip(&list)).unwrap_err().code, "SAKU_RETURN_MISMATCH");
+        // manifest edited → signed digest breaks
+        let mut list: Vec<(&str, Vec<u8>)> = Vec::new();
+        for (name, bytes) in &entries {
+            let bytes = if name == "portable-manifest.json" { let mut m: Value = serde_json::from_slice(bytes).unwrap(); m["summary"]["author"] = json!("someone"); m.to_string().into_bytes() } else { bytes.clone() };
+            list.push((name.as_str(), bytes));
+        }
+        assert_eq!(parse_return(&test_zip(&list)).unwrap_err().code, "SAKU_RETURN_MISMATCH");
+        // enclosed archive belongs to another Character → byte mismatch
+        let pack_entries = super::archive_entries_with(&pack.bytes, &super::ArchiveShape { max_entries: 512, max_total_bytes: 64 << 20, allow_directory_prefix: true, peek_only: false }).unwrap();
+        let mut list: Vec<(&str, Vec<u8>)> = entries.iter().filter(|(name, _)| !name.ends_with(".kokorosaku.zip")).map(|(name, bytes)| (name.as_str(), bytes.clone())).collect();
+        list.push(("aoi-one.kokorosaku.zip", pack_entries.get("beni-two.kokorosaku.zip").unwrap().clone()));
+        let failure = parse_return(&test_zip(&list)).unwrap_err();
+        assert_eq!(failure.code, "SAKU_RETURN_MISMATCH");
+        assert!(failure.reason.contains("内の character.json"), "{}", failure.reason);
+        // a stowaway file is refused; too many entries too
+        let mut list: Vec<(&str, Vec<u8>)> = entries.iter().map(|(name, bytes)| (name.as_str(), bytes.clone())).collect();
+        list.push(("extra.txt", b"x".to_vec()));
+        assert_eq!(parse_return(&test_zip(&list)).unwrap_err().code, "SAKU_RETURN_INVALID");
+        // a return of another schema is refused by the active-schema pin
+        let other = synthetic_pack_with_schema(&["aoi-one"], "saku-pack-test-1.0.0/", "SAKU-CHARACTER", "1.0");
+        assert_eq!(parse_return(&synthetic_return(&other, "aoi-one", None, true)).unwrap_err().code, "SAKU_RETURN_SCHEMA_UNSUPPORTED");
+        // the real file written by AMU Studio (PR #69), when present
+        let real = std::env::var("SAKU_AMU_FIXTURES").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from("C:/Users/Public/SAKU-verify")).join("aimi-meguru.saku-return.zip");
+        if let Ok(bytes) = std::fs::read(&real) {
+            let ret = match parse_package(&real, &bytes).expect("real return parses") { ParsedPackage::SakuReturn(ret) => ret, _ => panic!("not a return") };
+            assert_eq!((ret.character_id.as_str(), ret.character_revision.as_str()), ("aimi-meguru", "1.0.0"));
+            assert_eq!(ret.character_digest, "67442422ead69b5c78438478b528af13aacfa7e83c2d0149c746fc7f906f0537");
+            assert_eq!(ret.fields, vec!["values".to_string()]);
+            assert!(ret.archive_present && ret.from_instance.is_some());
+        } else {
+            eprintln!("real .saku-return.zip fixture not present at {} — skipped", real.display());
+        }
+    }
+
+    #[test]
+    fn a_pack_of_another_schema_is_refused_before_anything_is_written() {
+        // A different declared schema, consistently carried by manifest and
+        // character.json, is not relabelled but refused with the supported identity named.
+        let pack = synthetic_pack_with_schema(&["aoi-one"], "saku-pack-test-1.0.0/", "SAKU-CHARACTER", "1.0");
+        let failure = parse_pack(&pack.bytes).unwrap_err();
+        assert_eq!(failure.code, "CHARACTER_PACK_SCHEMA_UNSUPPORTED");
+        assert_eq!(failure.status, "UNSUPPORTED");
+        assert!(failure.reason.contains("SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE"));
+    }
+
+    #[test]
+    fn individual_files_on_the_package_route_are_pointed_at_individual_import() {
+        for (name, bytes) in [("hero.json", br#"{"schema":{"schema_id":"x"}}"#.to_vec()), ("hero.yaml", b"identity:\n  character_id: x\n".to_vec()), ("noext", b"{}".to_vec())] {
+            let failure = parse_package(Path::new(name), &bytes).unwrap_err();
+            assert_eq!(failure.code, "PACKAGE_FORMAT_INDIVIDUAL_FILE", "{name}");
+            assert!(failure.reason.contains("個別インポート"), "{}", failure.reason);
+        }
+        // an empty/binary non-ZIP file is simply unrecognised
+        let failure = parse_package(Path::new("blob.bin"), b"\x00\x01\x02").unwrap_err();
+        assert_eq!(failure.code, "PACKAGE_FORMAT_UNRECOGNIZED");
+        // the old extension alone is answered with the retirement notice
+        let failure = parse_package(Path::new("old.witpkg"), b"garbage").unwrap_err();
+        assert_eq!(failure.code, "PACKAGE_FORMAT_UNRECOGNIZED");
+        assert!(failure.reason.contains("廃止"));
+        // .zip that is not a ZIP
+        assert!(parse_package(Path::new("fake.zip"), b"nope").unwrap_err().reason.contains("ZIP のヘッダー"));
     }
 
     #[test]

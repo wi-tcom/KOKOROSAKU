@@ -51,6 +51,10 @@ ZIP or repository, open `samples/oss-launch/unified-v1/`. In the Desktop app,
 open **01 Choose a Character**, select **Individual import**, and choose each
 one-Character JSON file separately. Do not use Package import for these files.
 
+### Repair shifted locators on import
+
+Individual import may show CONFORMANCE_LOCATOR_MISMATCH (a locator no longer points at its requirement) together with a button 「locator を修復して読み込む」 (repair locators and import). This is a known state of Characters saved by the edit screen before 2026-09-22. The button only recomputes each locator from its requirement_id, changes no other text, imports the result as a new revision, and the detail row 「locator 修復」 keeps the before/after digests. To repair JSON files in bulk, run node tools/v1/relocate-locators.mjs <file or folder> to see the changes (dry-run by default) and add --out <dir> to write them. Signed pack contents are never repaired.
+
 ## 4. Save or export
 
 - `この内容で保存する` / `Save this Character` stores a new Character revision in the browser-side working library.

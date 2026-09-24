@@ -1,50 +1,48 @@
 {
   "format": "wi-t.kokorosaku-release-asset-manifest.v1",
-  "version": "v0.1.0-beta.2",
+  "version": "v0.1.0-beta.8",
   "state": "CANDIDATE_NOT_RELEASED",
   "publication_source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "exact_revision": "9c2aafedac12d1521326aedc73d56a475d27326c",
-    "tree": "6fe675dcf961d35cd9de493e85efd318119d7822"
+    "exact_revision": "368ab8dc35d32e019ae5e785687545c34c38412e",
+    "tree": "083644c8a74d09615a0d088a49e5909e4f68a940"
   },
   "binary_build_source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "exact_revision": "20663d6078675df64f2fe4a9640ac3c1313bbaa7",
-    "tree": "8e1bd558bfe4be8e1bcb22cc92ec33dd201cb290",
-    "note": "PR #27 head 20663d6 is the built tree; 9c2aafe (merge of PR #27 into main) differs only by the merge commit and the β.2 envelope documents."
+    "exact_revision": "16a79a719a10b55b47ddffde6568d74b77ee2c34",
+    "tree": "eb3895ceac8a256df13ddb4df0a371807f98abd5"
   },
   "build_envelope": {
     "source_repository": "wi-tcom/-SAKU-builder",
-    "source_revision": "9c2aafedac12d1521326aedc73d56a475d27326c",
-    "path": "docs/releases/0.1.0-beta.2/BUILD_ENVELOPE.json",
-    "sha256": "e3914cfa9160a02c1c2bc92be8efc40311ec806673ff789914631b9f2886d521"
+    "source_revision": "368ab8dc35d32e019ae5e785687545c34c38412e",
+    "path": "docs/releases/0.1.0-beta.8/BUILD_ENVELOPE.json",
+    "sha256": "81e2f8dfd177312e0486655927a37e10df25a3ddfa79ffb66730cb1a0a242c98"
   },
   "assets": [
     {
-      "filename": "SAKU Builder_0.1.0-beta.2_x64-setup.exe",
-      "bytes": 1875865,
-      "sha256": "7d357f41a59d923f940acc2fd7f7d65a3aee5ee0840f06a8e8def9fd83fcb572",
+      "filename": "SAKU Builder_0.1.0-beta.8_x64-setup.exe",
+      "bytes": 2169165,
+      "sha256": "66b8c28d537f8387f2df511ee61f709959d95ea4f9f98958ddf812c68411b0c6",
       "authenticode": "NotSigned",
       "release_asset": true
     }
   ],
   "embedded_application": {
     "filename": "saku-builder-desktop.exe",
-    "bytes": 4040704,
-    "sha256": "106aa0503e2c5b736f328e9820b45c87a57eb36b783d86bf8f90201693873989",
+    "bytes": 4270080,
+    "sha256": "1119108e859c22618c277e037685ba9f8c1ac2a1c310283042cc35e227ff3812",
     "authenticode": "NotSigned",
     "release_asset": false,
     "location": "INSIDE_INSTALLER",
-    "post_bundle_release_sha256": "41b29dccfb1fd37e9ee1f01d5fd9c5795f43bbcf0fffbaa51e1bd986543b0d9b"
+    "post_bundle_release_sha256": "6e44c2c9914c5772fa2ca615ab397ed222f6e92d76d14050c73a1c0024371ed1"
   },
   "superseded_installer": {
-    "version": "v0.1.0-beta.1",
-    "bytes": 1812494,
-    "sha256": "4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63",
-    "label": "tauri-exact-1.97.1-beta1-public-oss-2200704-003",
+    "bytes": 1875865,
+    "sha256": "7d357f41a59d923f940acc2fd7f7d65a3aee5ee0840f06a8e8def9fd83fcb572",
+    "label": "v0.1.0-beta.2 (published 2026-09-21)",
     "staged": false,
     "prohibited": false,
-    "reason": "β.1 Package import refused the sold SAKU Character Packs (Owner defect 2026-09-20; fixed in -SAKU-builder PR #27)."
+    "reason": "the previous published beta; superseded by v0.1.0-beta.8"
   },
   "installer_in_git_tree": false,
   "installer_in_source_archive": false,
@@ -56,6 +54,6 @@
     "exact_revision": "0f9a0592287a14ea9dd6aa00ae18da8e8e6d3449",
     "tree": "907a451b07dff9edcce7cf85c01911a1852a3cea"
   },
-  "generated_by": "Claude Code (SAKU Builder Active Writer) on Owner instruction 2026-09-21, same generation model as β.1 r4 (generator sha256:1293a14382821ebc5c6d76c186d804538e353d3447a78e0cb47163e547c8f31e)",
-  "release_asset_manifest_id": "sha256:2fd43f50e57a9c73f773b2ecd4e9f4a87e2fff15c5472577e3f9c6cc8b7c31b5"
+  "generated_by": "Claude Code SAKU Builder(4), DRY RUN outside KOKOROSAKU (統制卓 2026-09-24), β.2 model rebuilt",
+  "release_asset_manifest_id": "sha256:88282d351b67e1110fe2ea90fbc5783266993aba1406e0a7c07906087d337534"
 }

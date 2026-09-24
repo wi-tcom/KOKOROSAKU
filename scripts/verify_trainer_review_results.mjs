@@ -135,8 +135,33 @@ const builderSource = await read("tools/saku-builder.html");
 ok(/builder-golden-ui\.mjs/.test(builderSource) && /frozen-ia-ui\.mjs/.test(builderSource), "Builder preserves Golden presentation with Frozen IA authoring");
 check(sha256(await read("tools/unified-v1/derived-profile-engine.mjs")), "1f4ff549a3170d2b603fc15206b631dfb47e818ac5f01ef040bc34c266a9d225", "Trainer engine changed");
 // Pin advanced 2026-09-20 with the reviewed Character Pack intake (Owner defect: sold packs refused by β.1;
-// pack path, archive shape limits, Japanese format guidance, 0.1.0-beta.2). Any later unreviewed edit trips it again.
-check(sha256(await read("src-tauri/src/main.rs")), "e0cbb4f9a7e9ebd0af6ba8e24b7558ee476993ea9488d418b5ecdf91cc0efdf1", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
+// pack path, archive shape limits, Japanese format guidance, 0.1.0-beta.2), and again 2026-09-21 with the
+// package-formats change (Owner: .witpkg / two-file envelope retired, .amupkg recognised and pointed at AMU
+// Studio, bare JSON pointed at 個別インポート, packs pinned to the active Unified V1 schema). Any later
+// unreviewed edit trips it again. Advanced once more the same day for PR-B (AMU saku-return intake:
+// saku_return.rs cross-checks, import_saku_return writes nothing, active-schema pin), and for β.3
+// (APP_VERSION 0.1.0-beta.3 only). Advanced 2026-09-23 for the shared base layer:
+// `base_layer_state()` reads the bundled base layer through the asset resolver at
+// startup and reports it in `get_runtime_state`.
+// Advanced 2026-09-23 for the workspace-scoped list (Owner 「推奨で」,
+// D-20260923-workspace-scoped-library): the workspace lock (exclusive open of
+// `.saku-builder/lock`), `pick_workspace_folder` / `open_workspace` (choose =
+// both), `read_workspace_state` / `write_workspace_state` /
+// `write_workspace_migration_backup`, every revision kept on save, and a pack
+// import that writes only with the lock. Covered by workspace:verify and five
+// cargo tests.
+//
+// The pin is taken with APP_VERSION normalised away (2026-09-23). It had gone
+// stale twice for that one line alone — at β.4, where it reached main unnoticed
+// because the β.4 build never ran this gate, and again at β.5. Which version the
+// host carries is not this gate's question: `docs:verify` ties APP_VERSION to the
+// other six version sites and fails by name if any of them is left behind. Every
+// other byte of main.rs is still pinned, so an unreviewed change to Package
+// Import still trips this.
+const hostSource = await read("src-tauri/src/main.rs");
+const APP_VERSION_LINE = /const APP_VERSION: &str = "[^"]+";/;
+ok(APP_VERSION_LINE.test(hostSource), "the host still declares APP_VERSION (the normalisation below must have something to remove)");
+check(sha256(hostSource.replace(APP_VERSION_LINE, 'const APP_VERSION: &str = "<VERSION>";')), "99545217afb014d71cce485aa5898de8bef4c7e6927b4788fe528c029e6b14f0", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
 ok(/SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE/.test(await read("src-tauri/src/main.rs")), "Package Import host does not recognise the active Unified schema");
 check(sha256(await read("desktop/resources/profiles/public-oss.json")), "6a3ae8a7faeaa719d24f0aff70d816fb8a27d99c03b47bbd4a31f2ad7a0984a4", "Public profile changed");
 

@@ -1,14 +1,37 @@
 import {
-  CHOICES, VALIDATION_RULE_VERSION_R4, newId, current, openStore, menuCompletion,
-  copyPayloads, savedMenuSource, digest, legacyReference,
+  CHOICES, VALIDATION_RULE_VERSION_R4, PROMPT_CONSTRUCTION, newId, current, openStore, menuCompletion,
+  copyPayloads, promptConstructionOf, savedMenuSource, digest, legacyReference,
 } from './trainer-ux4.mjs';
+import { HANDOFF_FORMAT, platformLaunchText, sha256Of } from './platform-prompt.mjs';
+import { BASE_DIRECTIVES_UNUSABLE, handoffBlocked, handoffOptions, loadHandoffContext } from './handoff-context.mjs';
 import { TEST_SCOPES, EXECUTION_MODES, listSessions, loadSession } from './trainer-contract.mjs';
 import { contentDigest } from './trainer-contract.mjs';
 import { assessBuilderEditGuidance } from './builder-field-registry.mjs';
 import { validateUnifiedV1 } from '../lib/unified-authoring.mjs';
+import { loadAdoptedSchema, validateCompleteAdoptedCharacter } from '../lib/adopted-schema-validator.mjs';
 import * as ActiveSaku from './active-character.mjs';
 import * as Library from './character-library.mjs';
 import { consumeHandoff } from './handoff-binding.mjs';
+
+// The Trainer hands an external AI the same text 03 does, so it reads the same
+// base layer and the same glossary through the same module (Owner 2026-09-23).
+// Without a base layer that checks out it hands over nothing and cannot start a
+// training: a run that measured a different text is not evidence about what ships.
+let handoffContext=null;
+const handoffFor=()=>{
+  const id=String(session?.source?.character_id||'');
+  const entry=Library.list().find(item=>!item.deleted&&String(item?.character?.identity?.character_id||'')===id)||null;
+  return handoffOptions(handoffContext,entry);
+};
+const handoffStopped=()=>handoffBlocked(handoffContext);
+async function handoffStamp(){
+  const {options}=handoffFor();
+  const composed=platformLaunchText(session.source.snapshot,HANDOFF_FORMAT,options);
+  if(!composed)return null;
+  return {construction:PROMPT_CONSTRUCTION.composed,prompt_sha256:await sha256Of(composed),
+    base_layer:{version:options.baseLayer.version,sha256:options.baseLayer.sha256},
+    glossary_sha256:options.glossaryDigest||null,glossary_source:options.glossarySource};
+}
 
 const $=id=>document.getElementById(id);
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -36,6 +59,7 @@ function errorMessage(error){
     MENU_ITEM_INCOMPLETE:['項目名・質問文・期待される内容・見るポイントをすべて入力してください。','Enter the item name, question, expected content, and review points.'],GENERATED_SOURCE_REQUIRED:['外部AIから貼り付けた生成候補を残してください。','Keep the generated candidate pasted from the external AI.'],
     SAVED_TRAINING_SOURCE_INVALID:['再利用する保存済みトレーニングを選んでください。','Choose a saved training to reuse.'],SESSION_STORAGE_CONFLICT:['保存内容が別の画面で変更されています。入力を保持しています。現在状態を確認して再試行してください。','Another window changed the saved training. Input is retained; review current state and retry.'],
     STALE_EXPECTED_HEAD:['参照中の保存状態が変わりました。古い回答や評価は上書きしません。','The referenced saved state changed. Existing responses and evaluations were not overwritten.'],
+    CHARACTER_INVALID:['この Character は採択済みSchemaに合わないため、Trainer では使えません。02 で内容を直して保存するか、一覧から別の Character を選んでください。',"This Character does not match the adopted Schema, so it cannot be used in the Trainer. Edit it in 02 and save, or choose another Character from the list."],
     AI_CONSULTATION_RESPONSE_REQUIRED:['外部AIの相談回答を貼り付けてください。','Paste the external AI consultation response.'],CANDIDATE_FIELDS_REQUIRED:['候補の対象・方向または値・理由を入力してください。','Enter the candidate target, direction or value, and reason.'],
   };
   return code.split(',').map(item=>messages[item]?pair(messages[item]):`${t('保存できませんでした。入力を保持しています。','Could not save. Input is retained.')} (${item})`).join(' ');
@@ -98,10 +122,10 @@ function renderAI(c){
   return`<section id="stage-02"><h1>${title(2)}</h1><p class="intro">${t('選択した全メニューの進み具合を見ながら、1件ずつAI回答を保存・評価します。<br>メニュー切替だけでは回答・評価・結果を保存しません。','Work through AI responses one menu at a time while viewing progress for the full selected menu.<br>Switching items alone does not save a response, evaluation, or result.')}</p><div class="actions">${button('back-prepare','01 準備へ戻る','Back to 01 Prepare')}</div>
   <div id="stage-menu-context" class="stage-menu-context"><section id="stage-menu-panel" class="card" tabindex="-1"><h2>${t('選択したトレーニングメニュー','Selected training menu')}</h2><div id="stage-menu-list" class="stage-menu-list">${items.map(row=>`<label><input type="radio" name="active-menu" value="${esc(row.id)}" ${row.id===selected?'checked':''}><span><span class="status-chip" data-state="${esc(row.status.state)}">${esc(row.status.state)}</span><strong>${esc(loc(row.item?.name)||row.id)}</strong><br><small>${esc(statusLabel(row.status.code))}</small></span></label>`).join('')}</div></section>
   <section id="selected-menu-detail" class="card"><h2>${t('選択中のメニュー','Selected menu')}</h2><h3>${t('質問文','Question')}</h3><p>${esc(loc(c.question.snapshot.prompt))}</p><h3>${t('期待される内容','Expected content')}</h3><p>${esc(loc(c.question.snapshot.expected))}</p><h3>${t('見るポイント','Review points')}</h3><p>${esc(loc(c.question.snapshot.rubric))}</p></section></div>
-  <details class="step" id="ai-step-1" ${openSection===1?'open':''}><summary>${t('02-1 AIにプロンプトを渡す','02-1 Give the prompt to AI')}</summary><p class="intro">${t('Character定義、現在の実行単位のメニュー、または同じ2要素をコピーできます。<br>コピーは送信・外部AI実行・提供元確認を意味しません。','Copy the Character definition, the current execution-group menu, or the same two components together.<br>Copying does not mean sending, external-AI execution, or provider verification.')}</p><div class="actions">${button('copy-character','キャラクターの定義をコピー','Copy Character definition')}${button('copy-menu','トレーニングメニューをコピー','Copy training menu')}${button('copy-both','両方をコピー','Copy both','primary')}</div><p id="copy-status" class="status" role="status">${t('手動コピー用の内容も下に表示しています。','Manual-copy content is also shown below.')}</p><div class="copy-fallback"><label><span>${t('キャラクターの定義','Character definition')}</span><textarea id="character-copy-text" readonly>${esc(copyPayloads(session,selected,session.preparation.language).character)}</textarea></label><label><span>${t('トレーニングメニュー','Training menu')}</span><textarea id="menu-copy-text" readonly>${esc(copyPayloads(session,selected,session.preparation.language).menu)}</textarea></label></div></details>
+  <details class="step" id="ai-step-1" ${openSection===1?'open':''}><summary>${t('02-1 AIにプロンプトを渡す','02-1 Give the prompt to AI')}</summary><p class="intro">${t('Character定義、現在の実行単位のメニュー、または同じ2要素をコピーできます。<br>コピーは送信・外部AI実行・提供元確認を意味しません。','Copy the Character definition, the current execution-group menu, or the same two components together.<br>Copying does not mean sending, external-AI execution, or provider verification.')}</p>${handoffStopped()?`<p id="trainer-base-unusable" class="error" role="alert">${esc(BASE_DIRECTIVES_UNUSABLE.join(''))}</p>`:''}<div class="actions">${button('copy-character','キャラクターの定義をコピー','Copy Character definition','',handoffStopped())}${button('copy-menu','トレーニングメニューをコピー','Copy training menu')}${button('copy-both','両方をコピー','Copy both','primary',handoffStopped())}</div><p id="copy-status" class="status" role="status">${t('手動コピー用の内容も下に表示しています。','Manual-copy content is also shown below.')}</p><div class="copy-fallback"><label><span>${t('キャラクターの定義','Character definition')}</span><textarea id="character-copy-text" readonly>${esc(copyPayloads(session,selected,session.preparation.language,handoffFor().options).character)}</textarea></label><label><span>${t('トレーニングメニュー','Training menu')}</span><textarea id="menu-copy-text" readonly>${esc(copyPayloads(session,selected,session.preparation.language,handoffFor().options).menu)}</textarea></label></div></details>
   <details class="step" id="ai-step-2" ${openSection===2?'open':''}><summary>${t('02-2 AIの回答を貼り付ける','02-2 Paste the AI response')}</summary><p class="intro">${t('外部AIから戻った回答を、そのまま貼り付けます。<br>保存時に、表示中の回答全体を選択中メニューの評価に使います。','Paste the response returned by the external AI exactly as received.<br>On save, the whole displayed response is explicitly associated with the selected menu.')}</p><label><span>${t('外部AIの回答','AI response')}</span><textarea id="answer-input" class="original" ${original&&!correctionMode?'readonly':''}>${esc(original&&!correctionMode?original.text:responseDraft)}</textarea></label><p id="whole-association" class="status">${t(`表示中の回答全体を「${loc(c.question.snapshot.name)||c.question.snapshot.id}」の評価に使います。`,`The entire displayed response will be used to evaluate “${loc(c.question.snapshot.name)||c.question.snapshot.id}”.`)}</p>${original&&!correctionMode?button('correct-response','回答原文を訂正する','Correct the Original Response'):button('save-response','回答を保存して評価へ','Save response and evaluate','primary',!responseDraft.trim())}<p class="small">${t('訂正は新しい回答原文を作り、以前のBinding・評価・結果を履歴に残します。','A correction creates a new Original Response and keeps earlier bindings, evaluations, and results in history.')}</p></details>
   <details class="step" id="ai-step-3" ${openSection===3?'open':''}><summary>${t('02-3 回答を評価する','02-3 Evaluate the response')}</summary>${!original?`<p class="status">${t('先に回答を保存してください。','Save a response first.')}</p>`:`${binding?.kind==='PARTIAL'?`<p class="status">${t('以前に保存したPARTIAL範囲を読み取り専用で使用します。新しいPARTIALはこの画面では作成しません。','The exact saved legacy PARTIAL range is used read-only. New PARTIAL mappings cannot be created here.')} [${binding.range.start}, ${binding.range.end}) UTF-8 bytes</p>`:''}${c.evaluation&&!reevaluating?`${evaluationSummary(c.evaluation)}${button('reevaluate','同じ回答を再評価する','Re-evaluate this response')}`:evaluationForm()}`}</details>
-  <section id="menu-result" class="card"><h2>${t('02-4 このメニューの結果','02-4 Result for this menu')}</h2>${result?`${evaluationSummary(c.evaluation)}<p id="character-mutation-state" class="status">${t('TrainerによるCharacter変更：0。これは診断・候補であり、自動反映ではありません。','Character changes by Trainer: 0. This is diagnosis/a candidate, not automatic application.')}</p><details><summary>${t('回答・評価の記録情報','Response and evaluation references')}</summary><pre>${esc(JSON.stringify({result_id:result.id,evaluation_id:c.evaluation.id,original_id:c.original.id,binding_id:c.binding.id,validation_rule_version:c.evaluation.validation_rule_version},null,2))}</pre></details>${recommendationMarkup(result)}`:`<p class="status">${t('このメニューには、現在の回答・Bindingに結び付いた保存済み結果がまだありません。','This menu does not yet have a result saved for its current response and binding.')}</p>`}</section>
+  <section id="menu-result" class="card"><h2>${t('02-4 このメニューの結果','02-4 Result for this menu')}</h2>${result?`${evaluationSummary(c.evaluation)}<p id="character-mutation-state" class="status">${t('TrainerによるCharacter変更：0。これは診断・候補であり、自動反映ではありません。','Character changes by Trainer: 0. This is diagnosis/a candidate, not automatic application.')}</p><details><summary>${t('回答・評価の記録情報','Response and evaluation references')}</summary><pre>${esc(JSON.stringify({result_id:result.id,evaluation_id:c.evaluation.id,original_id:c.original.id,binding_id:c.binding.id,validation_rule_version:c.evaluation.validation_rule_version,...promptConstruction(c.execution)},null,2))}</pre></details>${recommendationMarkup(result)}`:`<p class="status">${t('このメニューには、現在の回答・Bindingに結び付いた保存済み結果がまだありません。','This menu does not yet have a result saved for its current response and binding.')}</p>`}</section>
   <section class="card"><h2>${t('次の操作','Next action')}</h2><p>${t('別のメニューを続けるか、現在の状態を全体まとめへ固定します。未完成の下書きを結果として自動保存しません。','Continue with another menu, or pin the current state to the overall summary. Incomplete drafts are not auto-saved as results.')}</p><p>${countsText(items)}</p><div class="finish-actions">${button('other-menu','他のメニューを選択する','Choose another menu')}${button('finish-training','トレーニングを終了する','Finish training','primary')}</div></section></section>`;
 }
 function countsText(items){const count=key=>items.filter(row=>row.status.state===key).length;return`${t('未','Not started')}: ${count('未')} · ${t('途中','In progress')}: ${count('途中')} · ${t('済','Done')}: ${count('済')}`;}
@@ -125,10 +149,19 @@ function renderSummary(){
   <section id="summary-next" class="card"><h2>${t('03-5 次にすること','03-5 What to do next')}</h2><div class="summary-actions">${firstUnresolved?`<button id="summary-continue-training" data-summary-menu="${esc(firstUnresolved)}">${t('追加のトレーニングを行う','Run more training')}</button>`:''}${firstUnresolved?`<button id="summary-consult-ai" data-summary-menu="${esc(firstUnresolved)}">${t('修正候補についてAIに相談する','Consult AI about a revision candidate')}</button>`:''}<a class="button-link" href="../index.html?stay=1">${t('変更せず終了する','Finish without changes')}</a></div></section></section>`;
 }
 
+// Which text this run was measured with. A run from before the Trainer changed
+// is named for what it handed over then, so the two are never read as the same
+// measurement (Owner 2026-09-23, decision 3). Nothing stored is rewritten.
+function promptConstruction(execution){
+  const mark=promptConstructionOf(execution);
+  return {prompt_construction:mark.construction,prompt_sha256:mark.prompt_sha256,
+    base_layer_sha256:mark.base_layer?.sha256||null,glossary_sha256:mark.glossary_sha256||null};
+}
+
 function optionalDraft(kind){const prefix=kind;const draft={name:$(`${prefix}-name`)?.value||'',question:$(`${prefix}-question`)?.value||'',expected:$(`${prefix}-expected`)?.value||'',review_points:$(`${prefix}-review`)?.value||''};if(kind==='generated')draft.source_response=$('generated-source')?.value||'';return draft;}
 function scheduleOptional(kind){clearTimeout(optionalTimer);optionalTimer=setTimeout(()=>guard(async()=>{await run('optional-drafts',{kind,draft:optionalDraft(kind)});return false;}),500);}
 async function savePreparation(){if(!session||!$('platform'))return;const old=session.preparation,scopeValue=$('test-scope').value;const next={...structuredClone(old),platform:$('platform').value,language:$('question-language').value,mode:$('execution-mode').value,source_kind:scopeValue==='SAVED_TRAINING'?'SAVED_TRAINING':'POOL'};if(scopeValue!=='SAVED_TRAINING')next.scope=scopeValue;if(JSON.stringify(next)!==JSON.stringify(old)){const scopeChanged=next.scope!==old.scope;await run('prepare',{expected:old,preparation:next});if(scopeChanged&&generation())await run('menu-clear',{expected_generation:generation().generation_id});}}
-async function copyText(kind){const payload=copyPayloads(session,currentMenuId(),session.preparation.language)[kind];try{await navigator.clipboard.writeText(payload);$('copy-status').textContent=t('コピーしました。外部AIへの送信・実行は確認していません。','Copied. Sending to or execution by an external AI has not been verified.');if(kind==='menu'||kind==='both')openSection=2;}catch{$('copy-status').textContent=t('コピーできませんでした。下の別々のテキスト欄から手動でコピーしてください。','Copy failed. Use the separate text areas below for manual copy.');const field=kind==='character'?'character-copy-text':'menu-copy-text';$(field)?.select();}}
+async function copyText(kind){const payload=copyPayloads(session,currentMenuId(),session.preparation.language,handoffFor().options)[kind];if(!payload&&kind!=='menu'){$('copy-status').textContent=BASE_DIRECTIVES_UNUSABLE.join('');return;}try{await navigator.clipboard.writeText(payload);$('copy-status').textContent=t('コピーしました。外部AIへの送信・実行は確認していません。','Copied. Sending to or execution by an external AI has not been verified.');if(kind==='menu'||kind==='both')openSection=2;}catch{$('copy-status').textContent=t('コピーできませんでした。下の別々のテキスト欄から手動でコピーしてください。','Copy failed. Use the separate text areas below for manual copy.');const field=kind==='character'?'character-copy-text':'menu-copy-text';$(field)?.select();}}
 function bind(){
   $('locale').onchange=()=>guard(async()=>{await saveDrafts();language=$('locale').value;localStorage.setItem('saku.trainer.ux4.locale',language);status=t('保存済み','Saved');});
   if($('pick'))$('pick').onchange=()=>guard(async()=>{const character=characters.get($('pick').value);if(!character)return;session=await store.create(character);stage=1;selectedTraining='';draftsFromSession();await refreshList();status=t('新しいトレーニング準備を作成しました','New training preparation created');});
@@ -145,7 +178,10 @@ function bind(){
   on('copy-generated-prompt',async()=>{try{await navigator.clipboard.writeText($('generated-prompt').value);status=t('質問生成の依頼文をコピーしました','Copied the question-generation request');}catch{$('generated-prompt').select();status=t('コピーできませんでした。依頼文を手動でコピーしてください。','Copy failed. Copy the request manually.');}});
   on('add-generated',async()=>{clearTimeout(optionalTimer);optionalTimer=null;const draft=optionalDraft('generated');await run('add-menu-item',{...draft,language:session.preparation.language,provenance:'GENERATED_HUMAN_CONFIRMED'});status=t('人が確認した生成項目をメニューへ追加しました','Added the Human-reviewed generated item to the menu');});
   on('add-manual',async()=>{clearTimeout(optionalTimer);optionalTimer=null;const draft=optionalDraft('manual');await run('add-menu-item',{...draft,language:session.preparation.language,provenance:'MANUAL_HUMAN_AUTHORED'});status=t('手作り項目をメニューへ追加しました','Added the manually authored item to the menu');});
-  on('start-training',async()=>{await savePreparation();await run('start-training',{});stage=2;openSection=1;draftsFromSession();status=t('トレーニングを開始しました','Training started');});
+  on('start-training',async()=>{
+    if(handoffStopped()){lastError=BASE_DIRECTIVES_UNUSABLE.join('');return;}
+    await savePreparation();await run('start-training',{handoff:await handoffStamp()});
+    stage=2;openSection=1;draftsFromSession();status=t('トレーニングを開始しました','Training started');});
   on('back-prepare',async()=>{await saveDrafts();await run('view',{stage:1,history_result:null});stage=1;});
   for(const element of document.querySelectorAll('input[name="active-menu"]'))element.onchange=()=>guard(async()=>{await saveDrafts();await run('select-menu',{menu_item_id:element.value});openSection=1;draftsFromSession();});
   on('other-menu',async()=>{await saveDrafts();const panel=$('stage-menu-panel'),selected=document.querySelector('input[name="active-menu"]:checked');panel.scrollIntoView({behavior:'smooth',block:'start'});(selected||panel).focus({preventScroll:true});status=t('別のメニューを選べます。保存済みの結果と入力中の下書きは保持しています。','Choose another menu. Saved results and the current draft are preserved.');if($('save-state'))$('save-state').textContent=status;return false;});
@@ -166,12 +202,20 @@ function bind(){
 function on(id,action){if($(id))$(id).onclick=()=>guard(action);}
 
 async function init(){
-  language=localStorage.getItem('saku.trainer.ux4.locale')==='en'?'en':'ja';store=await openStore();for(const entry of Library.list())if(validateUnifiedV1(entry.character).ok)characters.set(entry.character.identity.character_id,entry.character);
+  language=localStorage.getItem('saku.trainer.ux4.locale')==='en'?'en':'ja';
+  handoffContext=await loadHandoffContext({baseDirs:['../help/','../desktop/resources/','./'],guideUrls:['./manual/saku-field-guide.data.json','./manual/saku-field-guide.data.json']});
+  // A Character is admitted here as the import gate admits it: the hand checks and
+  // the adopted schema (2026-09-24). Without the schema nothing is admitted.
+  let adoptedSchema=null;try{adoptedSchema=await loadAdoptedSchema();}catch{adoptedSchema=null;}
+  const admissible=value=>Boolean(adoptedSchema)&&validateUnifiedV1(value).ok&&validateCompleteAdoptedCharacter(value,adoptedSchema).ok;
+  store=await openStore();for(const entry of Library.list())if(admissible(entry.character))characters.set(entry.character.identity.character_id,entry.character);
   const params=new URLSearchParams(location.search),handoff=consumeHandoff(localStorage,'trainer',{character_id:params.get('character_id')||'',character_revision:params.get('character_revision')||''});if(handoff.status==='REJECTED'||(params.get('character_id')&&handoff.status==='EMPTY'))throw new Error(`CHARACTER_HANDOFF_${handoff.reason||'MISSING'}`);
-  const character=handoff.status==='ACCEPTED'?handoff.character:ActiveSaku.getWorkingCharacter();if(character&&!validateUnifiedV1(character).ok)throw new Error('CHARACTER_INVALID');if(character)characters.set(character.identity.character_id,character);
+  const character=handoff.status==='ACCEPTED'?handoff.character:ActiveSaku.getWorkingCharacter();if(character&&!admissible(character))throw new Error('CHARACTER_INVALID');if(character)characters.set(character.identity.character_id,character);
   const activeId=await store.active();if(activeId)session=await store.load(activeId);if(activeId===undefined&&character)session=await store.create(character);if(activeId&&character&&session&&JSON.stringify(session.source.snapshot)!==JSON.stringify(character))session=await store.create(character);if(handoff.status==='ACCEPTED'&&(!session||session.source.character_id!==character.identity.character_id||session.source.character_revision!==String(character.identity.character_revision)||JSON.stringify(session.source.snapshot)!==JSON.stringify(character)))session=await store.create(character);
   if(session){characters.set(session.source.character_id,session.source.snapshot);stage=session.view.stage;draftsFromSession();status=activeId===session.session_id?t('保存したトレーニングを再開しました','Saved training resumed'):t('新しいトレーニング準備を作成しました','New training preparation created');}
-  await refreshList();render();window.__saku_trainer={revision:4,getSession:()=>structuredClone(session),getStage:()=>stage};
+  await refreshList();render();window.__saku_trainer={revision:4,getSession:()=>structuredClone(session),getStage:()=>stage,
+    getHandoffContext:()=>({baseLayer:handoffContext?.baseLayer||null,problems:[...(handoffContext?.baseLayerProblems||[])]}),
+    getHandoffText:kind=>session?copyPayloads(session,currentMenuId(),session.preparation.language,handoffFor().options)[kind||'character']:''};
 }
 window.addEventListener('beforeunload',event=>{if(draftTimer||optionalTimer||busy){event.preventDefault();event.returnValue='';}});
 init().catch(error=>{lastError=errorMessage(error);render();});

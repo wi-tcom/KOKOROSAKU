@@ -17,3 +17,17 @@
 .st-small-mono { font-family:ui-monospace,Consolas,monospace; font-size:12.5px; }
 .st-layout > * { min-width:0; } .st-group,.st-probe { overflow-x:auto; }
 @media(max-width:760px) { .st-setup,.st-thresholds { grid-template-columns:1fr; } .st-runs { display:block; overflow-x:auto; } }
+.st-reported-note { display:block; margin:6px 0 10px; padding:6px 10px; border-left:4px solid #6b7c93; background:#eef2f7; color:#2f3d4f; font-size:14px; }
+.st-reported { color:#2f3d4f; }
+.st-instruction { min-height:40px; background:#f4f6f9; }
+.st-manual-seconds input { max-width:160px; }
+/* A button with no class took `background: var(--paper)` — the same colour as the
+   card it sits on — so only a 1px border separated it from the page and it read
+   as something that could not be pressed (Owner 2026-09-23, 「コピー」が白地なので
+   ボタン押下できないように見える). Secondary buttons get a surface of their own;
+   the disabled ones keep the faded look, so the two stay told apart. */
+.st-probe button:not(.primary):not(:disabled),
+#st-export button:not(.primary):not(:disabled) { background:#e9f0ea; border-width:1.5px; font-weight:600; }
+.st-probe button:not(.primary):not(:disabled):hover,
+#st-export button:not(.primary):not(:disabled):hover { background:#dce7de; }
+

@@ -72,12 +72,21 @@ try{
   const yamlBeforeHelp=d.querySelector("#yaml").textContent;
   const helpTab=Array.from(d.querySelectorAll("#pvTabs button")).find(button=>button.textContent.trim()==="Help");
   check(Boolean(helpTab),"Help tab exists");
-  click(helpTab);const purposeHelp=d.querySelector('[data-canonical-path="purpose.summary"] .registry-help');purposeHelp.open=true;
-  check(/何を書く項目か/.test(purposeHelp.textContent),"Help has novice guidance sections");
-  check(purposeHelp.querySelectorAll("h4").length>=4,"Help has the four required sections");
-  click(d.querySelector('[data-builder-locale="en-US"]'));await wait(80);
-  const purposeHelpEn=d.querySelector('[data-canonical-path="purpose.summary"] .registry-help');purposeHelpEn.open=true;
-  check(/What to enter/.test(purposeHelpEn.textContent),"Help guidance English");
+  // The guidance moved out of every field and into the Help tab's tree on
+  // 2026-09-23 (Owner: the inline block repeated what the tree already shows).
+  // The same rows are checked, in the place that now holds them.
+  click(helpTab);await wait(120);
+  check(d.querySelector('[data-canonical-path="purpose.summary"] .registry-help')===null,"the inline per-field Help block is gone");
+  const purposeNode=d.querySelector('#contextHelp [data-help-field="purpose.summary"]');
+  check(Boolean(purposeNode),"the Help tab's tree carries the field");
+  purposeNode.querySelectorAll("details").forEach(node=>{node.open=true;});
+  check(/何を書くか/.test(purposeNode.textContent),"Help has novice guidance sections");
+  check(purposeNode.querySelectorAll(".help-detail-rows dt").length>=4,"Help has the four required sections");
+  check(d.querySelector('main.form [data-canonical-path="purpose.summary"] .field-current-note [data-help-link]')!==null,"and the field itself carries the one link into it");
+  click(d.querySelector('[data-builder-locale="en-US"]'));await wait(120);
+  const purposeNodeEn=d.querySelector('#contextHelp [data-help-field="purpose.summary"]');
+  purposeNodeEn.querySelectorAll("details").forEach(node=>{node.open=true;});
+  check(/What to write/.test(purposeNodeEn.textContent),"Help guidance English");
   check(d.querySelector('[data-path="meta.name"]').value==="テスト人物","UI language does not translate Character data");
   click(Array.from(d.querySelectorAll("#pvTabs button")).find(button=>/character\.yaml/.test(button.textContent)));
   check(d.querySelector("#yaml").textContent===yamlBeforeHelp,"Help does not mutate Character output");
@@ -149,7 +158,7 @@ const profile=await mkdtemp(path.join(tmpdir(),"saku-builder-beta1-"));
 const child=spawn(chrome,["--headless=new","--disable-gpu","--disable-background-networking","--no-first-run","--no-default-browser-check","--user-data-dir="+profile,"--window-size=1280,820","--virtual-time-budget=20000","--dump-dom","http://127.0.0.1:"+server.address().port+"/__beta1__.html"],{windowsHide:true,stdio:["ignore","pipe","pipe"]});
 let output="",errors="";child.stdout.setEncoding("utf8");child.stderr.setEncoding("utf8");child.stdout.on("data",chunk=>output+=chunk);child.stderr.on("data",chunk=>errors+=chunk);
 const exitCode=await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>{child.kill();reject(new Error("Chrome timeout"));},60000);child.on("error",reject);child.on("exit",code=>{clearTimeout(timeout);resolve(code);});}).catch(error=>{errors+="\n"+error.message;return -1;});
-server.close();await rm(profile,{recursive:true,force:true});
+server.close();await rm(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }).catch(error => console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code || error}`));
 const match=output.match(/<pre id="result" data-status="PASS">([\s\S]*?)<\/pre>/);
 if(exitCode!==0||!match){
   console.error("BETA1_OWNER_FIXES FAIL");

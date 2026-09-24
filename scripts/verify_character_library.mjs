@@ -3,7 +3,7 @@
 // The previous screen showed whatever the last import left behind. It now holds
 // a list that survives further imports, soft-deletes rows, clears only on
 // confirmation, and reads YAML as well as JSON. Every one of those is a
-// behaviour, not a marker, so this gate performs them:
+// behavior, not a marker, so this gate performs them:
 //
 //   * the module, against a storage stub, for the state rules
 //   * the YAML reader, for what it accepts and what it refuses
@@ -401,7 +401,7 @@ const profile = await mkdtemp(path.join(tmpdir(), "saku-lib-"));
 const child = spawn(browser, ["--headless=new", "--disable-gpu", "--no-first-run", "--no-default-browser-check", "--user-data-dir=" + profile, "--window-size=1400,900", "--virtual-time-budget=30000", "--dump-dom", `http://127.0.0.1:${server.address().port}/__lib__.html`], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
 let output = ""; child.stdout.setEncoding("utf8"); child.stdout.on("data", chunk => output += chunk);
 await new Promise(resolve => child.on("exit", resolve));
-server.close(); await rm(profile, { recursive: true, force: true });
+server.close(); await rm(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }).catch(error => console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code || error}`));
 
 const decode = value => value.replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">");
 const match = output.match(/<pre id="r" data-status="(PASS|FAIL)">([\s\S]*?)<\/pre>/);

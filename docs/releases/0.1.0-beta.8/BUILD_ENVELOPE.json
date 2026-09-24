@@ -1,0 +1,189 @@
+{
+  "profile": "saku.desktop.public-build-envelope@1",
+  "artifact": {
+    "product": "SAKU Builder",
+    "version": "0.1.0-beta.8",
+    "filename": "SAKU Builder_0.1.0-beta.8_x64-setup.exe",
+    "relative_path": "release/bundle/nsis/SAKU Builder_0.1.0-beta.8_x64-setup.exe",
+    "sha256": "66b8c28d537f8387f2df511ee61f709959d95ea4f9f98958ddf812c68411b0c6",
+    "bytes": 2169165,
+    "code_signing": "UNSIGNED"
+  },
+  "application_artifact": {
+    "product": "SAKU Builder",
+    "version": "0.1.0-beta.8",
+    "filename": "saku-builder-desktop.exe",
+    "relative_path": "release/saku-builder-desktop.exe",
+    "sha256": "1119108e859c22618c277e037685ba9f8c1ac2a1c310283042cc35e227ff3812",
+    "embedded_sha256": "1119108e859c22618c277e037685ba9f8c1ac2a1c310283042cc35e227ff3812",
+    "post_bundle_release_sha256": "6e44c2c9914c5772fa2ca615ab397ed222f6e92d76d14050c73a1c0024371ed1",
+    "bundle_type_stamp_note": "The installer-embedded application and the post-bundle release executable differ at 3 byte(s) (offsets 3969594–3969596, the Tauri bundle-type stamp: \"NSIS\" against \"UNKNOWN\"). sha256 is the installer-embedded identity.",
+    "bytes": 4270080,
+    "code_signing": "UNSIGNED",
+    "host_path_scan": {
+      "user_profile_root_backslash": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "user_profile_root_slash": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "build_user_name": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "cloud_sync_folder_name": {
+        "utf8": false,
+        "utf16le": false
+      }
+    }
+  },
+  "source": {
+    "repository": "wi-tcom/-SAKU-builder",
+    "commit": "16a79a719a10b55b47ddffde6568d74b77ee2c34",
+    "tree": "eb3895ceac8a256df13ddb4df0a371807f98abd5",
+    "branch": "claude/saku-beta8-20260924",
+    "note": "the version bump is committed before the build, so this commit and tree are the ones the binary was made from",
+    "base": {
+      "commit": "6cc904f2bb503a02aceceb2c230cd3f287afad28",
+      "branch": "main",
+      "note": "main after PR #78 merged"
+    },
+    "revision": "16a79a7"
+  },
+  "resource_profile": {
+    "name": "public-oss",
+    "file": "resource-profile.json",
+    "sha256": "6a3ae8a7faeaa719d24f0aff70d816fb8a27d99c03b47bbd4a31f2ad7a0984a4",
+    "distribution_boundary": "PUBLIC_OSS_CANDIDATE",
+    "internal_content_count": 0
+  },
+  "build_metadata": {
+    "file": "build-metadata.json",
+    "sha256": "fb2921a6368fd6195b20117ea64f7169c8eb7aa7ba09a68f1338f17cf02a3d63"
+  },
+  "bundled_notice_binding": {
+    "mode": "SHA_INDEPENDENT_EXTERNAL_RELEASE_ASSET_MANIFEST",
+    "files": {
+      "LICENSING.md": "5ca061a2f5a2bcec8f64ae8f569bf85946e6ec40cb7791fd53e300c20a55b5b7",
+      "THIRD_PARTY_NOTICES.md": "2168f1a7acb03af839f718403679984b9a12bb4220a7c5d953eff1096bcd17c8",
+      "third-party/THIRD_PARTY_LICENSE_MANIFEST.json": "ac683f2dba75f35aa9c0fcc8a2e94e481f13b831ef946f3f9d3dcda236c34964"
+    },
+    "embedded_installer_sha256_reference_count": 0
+  },
+  "tauri_public_override": {
+    "file": "tauri.public.override.json",
+    "sha256": "fbfdc5edb130c3a82558ca55e77ae8a2844d5f1a3c97b7f661f69c613389a85a",
+    "purpose": "preserve the prepared public resource projection by disabling the default owner-internal beforeBuildCommand"
+  },
+  "rust_flags": {
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": {
+      "encoding": "U+001F-separated argv",
+      "arguments": [
+        "--remap-path-prefix=<BUILD_USER_HOME>\\\\=/host/",
+        "--remap-path-prefix=<BUILD_USER_HOME>/=/host/",
+        "--remap-path-prefix=<CARGO_REGISTRY_SRC>\\\\=/cargo/registry/src/",
+        "--remap-path-prefix=<CARGO_REGISTRY_SRC>/=/cargo/registry/src/"
+      ],
+      "parameters": {
+        "BUILD_USER_HOME": "absolute build-user home on the reproducing host; not published",
+        "CARGO_REGISTRY_SRC": "absolute Cargo registry source root on the reproducing host; not published"
+      },
+      "result_contract": "no build-host absolute path remains in the public application executable"
+    }
+  },
+  "target": {
+    "triple": "x86_64-pc-windows-msvc",
+    "cargo_target_label": "tauri-exact-1.97.1-beta7-public-oss-4fcd5dd-001",
+    "label": "tauri-exact-1.97.1-beta8-public-oss-16a79a7-001"
+  },
+  "build_revision": "16a79a7",
+  "tools": {
+    "node": "24.21.0",
+    "npm": "11.19.0",
+    "rustc": "1.97.1 (8bab26f4f 2026-07-14)",
+    "cargo": "1.97.1 (c980f4866 2026-06-30)",
+    "llvm": "22.1.6",
+    "tauri_cli": "2.11.4",
+    "tauri_runtime_crate": "2.11.5",
+    "tauri_build_crate": "2.6.3",
+    "nsis": "3.11",
+    "visual_studio_build_tools": "18.7.1 (18.7.11911.148)",
+    "msvc": "14.51.36231",
+    "deviation_note": "Same host toolchain as β.2 – β.7 (rustc/cargo 1.97.1, Tauri CLI 2.11.4, Node 24.21.0 / npm 11.19.0). No tool changed for this build."
+  },
+  "build": {
+    "cwd": "<REPOSITORY_ROOT>",
+    "environment": {
+      "CARGO_TARGET_DIR": "<REPOSITORY_ROOT>/src-tauri/target/tauri-exact-1.97.1-beta8-public-oss-16a79a7-001",
+      "CARGO_ENCODED_RUSTFLAGS": "construct from rust_flags.CARGO_ENCODED_RUSTFLAGS.arguments using U+001F",
+      "CARGO_NET_OFFLINE": "true",
+      "CARGO_BUILD_JOBS": "1",
+      "CARGO_INCREMENTAL": "0",
+      "RUSTUP_TOOLCHAIN": "1.97.1"
+    },
+    "command": "<NODE_24_21_0>/node.exe node_modules/@tauri-apps/cli/tauri.js build --bundles nsis --config docs/releases/0.1.0-beta.8/tauri.public.override.json -- --locked",
+    "bundles": [
+      "nsis"
+    ],
+    "offline": true,
+    "locked": true,
+    "jobs": 1,
+    "source_mutation": 0,
+    "duration": "7m 45s total",
+    "builder": "Claude Code (SAKU Builder Active Writer). Owner 2026-09-24: 見つかった所見は修正してください。／進めてください"
+  },
+  "webview2": {
+    "install_mode": "downloadBootstrapper",
+    "bootstrapper_url": "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+    "bootstrapper_bundled": false,
+    "runtime_bundled": false
+  },
+  "app_icon": {
+    "source_revision": "512f0363078bb8a6529483a8b8a47923ca10ed08",
+    "icon_ico_sha256": "fb8b522e90452f924956cec5ca56eb437c9b3e218739e55b091b252feb9e14e0",
+    "icon_256_png_embedded_in_executables": {
+      "embedded_exe": true,
+      "post_bundle_exe": true,
+      "installer": true
+    }
+  },
+  "base_layer": {
+    "profile": "saku.base-directives@1",
+    "version": "1.0",
+    "source_file": "desktop/resources/base/saku-base-directives.v1.txt",
+    "bundled_as": "help/base/saku-base-directives.v1.txt",
+    "sha256": "ab4745a3617e5b8e49125146a47ee99d1adde7ad8436c953431518ac23358654",
+    "bytes": 4397,
+    "burned_in_as": "BASE_LAYER_SHA256 (tools/unified-v1/platform-prompt.mjs and src-tauri/src/main.rs)",
+    "checked": "at startup (host, through the asset resolver the WebView reads) and before every hand-off (03). A mismatch stops 03 from producing any text at all.",
+    "first_bundled_in": "0.1.0-beta.4"
+  },
+  "superseded": {
+    "supersedes": "0.1.0-beta.7",
+    "note": "β.7 (b7787034…) predates PR #78, the seven findings from its own hands-on and Chrome check."
+  },
+  "contents_since_beta7": [
+    "F1 the help says the list lives in the Workspace's .saku-builder folder and comes back after an uninstall (#78)",
+    "F2 the speed-test guide describes the clock readings, not manual-only statistics (#78)",
+    "F3 a speed-test record shows its local time (#78)",
+    "F4 verdicts have Japanese and English names, the code stays in the title, and the run count reads （N 回） / (n = N) (#78)",
+    "F5 an empty import state says so instead of UNKNOWN ×6 (#78)",
+    "F6 the Trainer names the refusal of an inadmissible Character (#78)",
+    "F7 speed-test notices follow the language (#78)"
+  ],
+  "provisional_wording": {
+    "state": "NONE",
+    "approved": true,
+    "count": 0,
+    "note": "docs/collaboration/provisional-wording.json has no entries: every user-visible string in this build has been through ライター&SNS 様式チェック, and the English is the 英語翻訳チーム delivery."
+  },
+  "release_state": {
+    "code_signing": "NOT_EXECUTED",
+    "authenticode": "NotSigned",
+    "published": false,
+    "note": "UNSIGNED / NOT_RELEASED. Publication, GitHub Release, the KOKOROSAKU tree and site updates are Owner decisions and have not been taken."
+  }
+}

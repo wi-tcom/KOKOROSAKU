@@ -21,5 +21,104 @@
       "bytes": 5884,
       "sha256": "52769ad1e2b7916cfb8d3800d362da8570016a20c6d0f3b653ee5140049e59b1"
     }
+  },
+  "app_icon": {
+    "adopted_by_owner": "2026-09-21",
+    "source_repository": "wi-tcom/Wi-t_Site",
+    "source_branch": "claude/content-20260918",
+    "source_revision": "512f0363078bb8a6529483a8b8a47923ca10ed08",
+    "source_path": "site-content/brand/app-icon/saku-builder",
+    "source_sha256sums": "site-content/brand/app-icon/SHA256SUMS",
+    "design": "正八角形（辺が上下）・和紙地・縁なし・淡い浮かせ影。マーク = brand/logo/saku/saku.svg の幾何を写した SAKU 変奏（弧 2 本＋萌黄 #5F8F2A の点、墨 #1B1A16）",
+    "provenance": "AI 生成を含む画像。マークの幾何は当社の公式 SVG（brand/logo/saku/saku.svg、人間創作）を決定論的スクリプト build-icons.py（PIL）で写したもの。背景（和紙地）のみ Gemini 生成画像由来（washi-source-gemini.jpg → washi-tile-1024.png）。SynthID／C2PA の識別情報が残り得る。",
+    "provenance_note": "ロゴ本体（desktop/icon.svg・favicon）の証跡ブロックは不変（生成モデル不使用）。",
+    "license": "CC-BY-4.0 — マークおよびアイコン全体（公式 SVG 由来の人間創作部分）に対して。背景（和紙地）単体には著作権を主張せず、ライセンスの対象にもしない（権利主張なし）。",
+    "rights_holder": "株式会社wi-t.com",
+    "trademark_rights_granted": false,
+    "sources": {
+      "saku-builder-icon-1024.png": {
+        "bytes": 460209,
+        "sha256": "509644b182809f07118e994284b42f132671a398c4d223fffa7819c202e8e670"
+      },
+      "saku-builder-icon-128.png": {
+        "bytes": 19290,
+        "sha256": "44931459cd57df174a5ad44db092d4f4fa47c6439fcc7ac17310d047f7ea5097"
+      },
+      "saku-builder-icon-16.png": {
+        "bytes": 863,
+        "sha256": "5959a503996e968d334513e62f6104ac5ab60ab153579efd2dc828f0b433bd36"
+      },
+      "saku-builder-icon-256.png": {
+        "bytes": 57506,
+        "sha256": "9fdf782b698c4cdebcfa4dc02185dd5064ac58a19d9b3e176fd4fced6035462b"
+      },
+      "saku-builder-icon-32.png": {
+        "bytes": 2227,
+        "sha256": "e7257de4af581411e8368c3c05efb047ccfe7028b2abf7db795b22f2bc1a4127"
+      },
+      "saku-builder-icon-48.png": {
+        "bytes": 4162,
+        "sha256": "221264e79da202e1f0a1d7d73a31078455792e4b668030509a1100fe3d1bc80a"
+      },
+      "saku-builder-icon-512.png": {
+        "bytes": 189586,
+        "sha256": "ed5cc1d4fdbc8c8a4728fac52ff64c524764ef8df8c7d3e45dd2e169ae165def"
+      },
+      "saku-builder-icon-64.png": {
+        "bytes": 6429,
+        "sha256": "a52f15156bf1d3f415e7cd4dfae3585651edf1e348b016ad50506bb4efe4201d"
+      },
+      "saku-builder.ico": {
+        "bytes": 90579,
+        "sha256": "fb8b522e90452f924956cec5ca56eb437c9b3e218739e55b091b252feb9e14e0"
+      }
+    },
+    "tauri_targets": {
+      "32x32.png": {
+        "source_file": "saku-builder-icon-32.png",
+        "bytes": 2227,
+        "sha256": "e7257de4af581411e8368c3c05efb047ccfe7028b2abf7db795b22f2bc1a4127"
+      },
+      "64x64.png": {
+        "source_file": "saku-builder-icon-64.png",
+        "bytes": 6429,
+        "sha256": "a52f15156bf1d3f415e7cd4dfae3585651edf1e348b016ad50506bb4efe4201d"
+      },
+      "128x128.png": {
+        "source_file": "saku-builder-icon-128.png",
+        "bytes": 19290,
+        "sha256": "44931459cd57df174a5ad44db092d4f4fa47c6439fcc7ac17310d047f7ea5097"
+      },
+      "128x128@2x.png": {
+        "source_file": "saku-builder-icon-256.png",
+        "bytes": 57506,
+        "sha256": "9fdf782b698c4cdebcfa4dc02185dd5064ac58a19d9b3e176fd4fced6035462b"
+      },
+      "icon.png": {
+        "source_file": "saku-builder-icon-512.png",
+        "bytes": 189586,
+        "sha256": "ed5cc1d4fdbc8c8a4728fac52ff64c524764ef8df8c7d3e45dd2e169ae165def"
+      },
+      "icon.ico": {
+        "source_file": "saku-builder.ico",
+        "bytes": 90579,
+        "sha256": "fb8b522e90452f924956cec5ca56eb437c9b3e218739e55b091b252feb9e14e0"
+      },
+      "icon.icns": {
+        "source_file": "saku-builder-icon-1024.png (Tauri CLI 2 `tauri icon`, macOS container only; not built)",
+        "bytes": 905615,
+        "sha256": "8bd5b82edefa1b9396adbb9646911ba0bf8287b98295daceb2f33bab2b535282"
+      }
+    },
+    "rights_statement_owner_confirmed": "背景（和紙地）のみ Gemini 生成由来。クレジット表記の義務なし・商用利用可・背景単体には著作権を主張しない。マークの幾何は当社の公式 SVG（人間創作）。商標は付与しない。ロゴ本体の「生成モデル不使用」証跡は不変。",
+    "rights_statement_confirmed_on": "2026-09-21",
+    "rights_basis": "codex-handoff-20260911/brand/logo-family-arcs.md「和紙地（Gemini 生成）の権利の整理（Owner 提示 2026-09-21）」",
+    "background_rights": {
+      "origin": "Gemini 生成画像由来",
+      "copyright_claimed": false,
+      "credit_required": false,
+      "commercial_use": true,
+      "displayed_labelling": "来歴のみ（アイコン・インストーラ・サイトに「Gemini 生成」表記は付けない）"
+    }
   }
 }

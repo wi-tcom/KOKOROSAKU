@@ -93,7 +93,7 @@ const profile=await mkdtemp(path.join(tmpdir(),"saku-round3-"));
 const child=spawn(chrome,["--headless=new","--disable-gpu","--disable-background-networking","--no-first-run","--no-default-browser-check","--user-data-dir="+profile,"--window-size=900,1000","--virtual-time-budget=20000","--dump-dom",`http://127.0.0.1:${server.address().port}/__round3__.html`],{windowsHide:true,stdio:["ignore","pipe","pipe"]});
 let stdout="",stderr="";child.stdout.setEncoding("utf8");child.stderr.setEncoding("utf8");child.stdout.on("data",chunk=>stdout+=chunk);child.stderr.on("data",chunk=>stderr+=chunk);
 const code=await new Promise((resolve,reject)=>{const timeout=setTimeout(()=>{child.kill();reject(new Error("Chrome timeout"))},60000);child.on("error",reject);child.on("exit",value=>{clearTimeout(timeout);resolve(value)})}).catch(error=>{stderr+="\n"+error.message;return -1});
-server.close();await rm(profile,{recursive:true,force:true});
+server.close();await rm(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }).catch(error => console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code || error}`));
 const match=stdout.match(/<pre id="result" data-status="PASS">([\s\S]*?)<\/pre>/);
 const decode=text=>text.replace(/&quot;/g,'"').replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">");
 if(code!==0||!match){console.error("ROUND3_OWNER_FIXES FAIL");const failed=stdout.match(/<pre id="result" data-status="FAIL">([\s\S]*?)<\/pre>/);if(failed)console.error(decode(failed[1]));else console.error(stderr.slice(-3000));process.exit(1)}

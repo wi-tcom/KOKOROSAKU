@@ -1,9 +1,13 @@
 // Deterministic validator for the exact adopted SAKU Unified Character V1
-// schema.  This implements every validation keyword used by the pinned schema
-// artifact (draft 2020-12): local $ref, type, const, enum, required,
-// properties, additionalProperties, minLength, pattern, minProperties,
-// minItems, uniqueItems, items, contains/minContains/maxContains, allOf and
-// if/then.  Annotation and x-wit-* keywords are intentionally non-validating.
+// schema and its character-extension schema (draft 2020-12). SUPPORTED_KEYWORDS
+// below is every keyword it evaluates; ANNOTATION_KEYWORDS the ones it reads
+// past on purpose. `schema:keywords:verify` walks both schemas and fails on a
+// keyword in neither list, so a keyword the schema starts using cannot be
+// skipped silently (maxLength and propertyNames were, until 2026-09-23).
+// x-wit-* keywords document; the rules they state that can be checked on a
+// Character are enforced in validateAdoptedSemanticReferences.
+
+import { conformanceLocatorMismatches } from "./unified-schema.mjs";
 
 export const ADOPTED_SCHEMA = Object.freeze({
   repository: "wi-tcom/-SAKU-1-7-Character-System",
@@ -37,7 +41,18 @@ export const ADOPTION_STATUS = Object.freeze({
   }),
 });
 
-const deepEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+export const SUPPORTED_KEYWORDS = Object.freeze(["$ref", "type", "const", "enum", "minLength", "maxLength", "pattern", "minItems", "uniqueItems", "items", "contains", "minContains", "maxContains", "minProperties", "required", "properties", "additionalProperties", "propertyNames", "allOf", "if", "then", "else"]);
+export const ANNOTATION_KEYWORDS = Object.freeze(["$id", "$schema", "$defs", "$comment", "title", "description", "default", "examples"]);
+
+// JSON equality does not depend on the order an object's keys were written in.
+// JSON.stringify does, so two equal references written in different key orders
+// passed uniqueItems (2026-09-23 overall check). Keys are sorted at every level.
+const canonical = value => value === null || typeof value !== "object"
+  ? JSON.stringify(value)
+  : Array.isArray(value)
+    ? `[${value.map(canonical).join(",")}]`
+    : `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonical(value[key])}`).join(",")}}`;
+const deepEqual = (a, b) => canonical(a) === canonical(b);
 const pointerTokens = pointer => pointer.replace(/^#\/?/, "").split("/").filter(Boolean)
   .map(token => token.replace(/~1/g, "/").replace(/~0/g, "~"));
 
@@ -94,6 +109,9 @@ function evaluate(value, schema, root, path, errors) {
   if (typeof value === "string") {
     if (schema.minLength != null && [...value].length < schema.minLength)
       issue(errors, path, "minLength", `must contain at least ${schema.minLength} character(s)`, schema.minLength, [...value].length);
+    // Characters (code points), as minLength counts them — not UTF-16 units.
+    if (schema.maxLength != null && [...value].length > schema.maxLength)
+      issue(errors, path, "maxLength", `must contain at most ${schema.maxLength} character(s)`, schema.maxLength, [...value].length);
     if (schema.pattern && !(new RegExp(schema.pattern)).test(value))
       issue(errors, path, "pattern", `must match ${schema.pattern}`, schema.pattern, value);
   }
@@ -103,7 +121,7 @@ function evaluate(value, schema, root, path, errors) {
     if (schema.uniqueItems) {
       const seen = new Set();
       value.forEach((item, index) => {
-        const key = JSON.stringify(item);
+        const key = canonical(item);
         if (seen.has(key)) issue(errors, joinPath(path, index), "uniqueItems", "duplicate item is not allowed");
         seen.add(key);
       });
@@ -128,6 +146,10 @@ function evaluate(value, schema, root, path, errors) {
       issue(errors, path, "minProperties", `must contain at least ${schema.minProperties} property/properties`, schema.minProperties, keys.length);
     for (const key of schema.required || []) if (!Object.prototype.hasOwnProperty.call(value, key))
       issue(errors, joinPath(path, key), "required", "required value is missing", true, false);
+    // Every key of the object is itself validated as a string (the extension
+    // map's keys must be namespaced ids).
+    if (schema.propertyNames !== undefined)
+      for (const key of keys) evaluate(key, schema.propertyNames, root, joinPath(path, key), errors);
     for (const [key, child] of Object.entries(schema.properties || {}))
       if (Object.prototype.hasOwnProperty.call(value, key)) evaluate(value[key], child, root, joinPath(path, key), errors);
     if (schema.additionalProperties === false) {
@@ -161,6 +183,9 @@ export function validateAgainstAdoptedSchema(character, schema) {
 // JSON Schema intentionally cannot assert that stable references resolve to
 // requirement identifiers elsewhere in the same Character. These checks are
 // deterministic cross-field conformance rules from the adopted contract.
+/** Extensions this implementation understands. None yet: a CRITICAL extension is refused. */
+export const KNOWN_EXTENSIONS = Object.freeze(new Set());
+
 export function validateAdoptedSemanticReferences(character) {
   const errors = [];
   const invariants = character?.character_core?.hard_invariants || [];
@@ -185,6 +210,41 @@ export function validateAdoptedSemanticReferences(character) {
     const id = String(ref?.requirement_id || "").trim();
     if (id && !targets.has(id)) issue(errors, `${path}/${index}/requirement_id`, "unresolvedRequirementRef", `reference ${id} does not resolve in this Character`, "existing requirement id", id);
   });
+  // x-wit-semantic-validation.duplicate_reference_requirement_id_rejected: one
+  // requirement_id per reference list. uniqueItems only refuses identical
+  // objects; the same id with another locator (or none) is the same reference.
+  for (const [list, path] of refs) {
+    const seen = new Map();
+    list.forEach((ref, index) => {
+      const id = String(ref?.requirement_id || "").trim();
+      if (!id) return;
+      if (seen.has(id)) issue(errors, `${path}/${index}/requirement_id`, "duplicateReferenceRequirementId", `reference ${id} is already listed at index ${seen.get(id)}`, "one reference per requirement id", id);
+      else seen.set(id, index);
+    });
+  }
+  // The extension schema's x-wit-semantic-validation: a map key is the entry's
+  // own extension_id, and a CRITICAL extension this implementation does not
+  // know fails closed. It knows none, so every CRITICAL extension is refused;
+  // a NONCRITICAL one is kept, read-only, with no runtime effect.
+  const extensions = character?.extensions;
+  if (extensions && typeof extensions === "object" && !Array.isArray(extensions)) {
+    for (const [key, entry] of Object.entries(extensions)) {
+      const at = `/extensions/${key.replace(/~/g, "~0").replace(/\//g, "~1")}`;
+      if (entry?.extension_id !== key) issue(errors, `${at}/extension_id`, "extensionKeyMismatch", `the map key ${key} is not the entry's extension_id`, key, entry?.extension_id);
+      if (entry?.criticality === "CRITICAL" && !KNOWN_EXTENSIONS.has(key)) issue(errors, `${at}/criticality`, "unknownCriticalExtension", `CRITICAL extension ${key} is not known to this implementation (fails closed)`, "a known extension", key);
+    }
+  }
+  // The locator beside a requirement_id is a JSON Pointer into this Character.
+  // The schema: "Resolution or locator mismatch fails closed." A locator that
+  // lands on another requirement, or nowhere, is refused here so the Builder
+  // never saves or exports one (2026-09-21, after four hand-generated
+  // Characters shipped with swapped hard_invariants locators).
+  for (const item of conformanceLocatorMismatches(character)) {
+    const message = item.resolvable
+      ? `locator ${JSON.stringify(item.locator)} resolves to ${item.resolved_id === null ? "an element without id" : `id ${item.resolved_id}`}, not ${item.requirement_id === null ? "(requirement_id missing)" : item.requirement_id}`
+      : `locator ${JSON.stringify(item.locator)} does not resolve (${item.reason})`;
+    issue(errors, `/conformance_expectations/${item.group}/${item.index}/locator`, "locatorMismatch", message, item.requirement_id, item.resolved_id);
+  }
   return { ok: errors.length === 0, errors, schema: ADOPTED_SCHEMA };
 }
 

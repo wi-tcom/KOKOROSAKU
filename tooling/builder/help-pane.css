@@ -1,0 +1,21 @@
+/* U4 screen help pane — shared by 03 (desktop index), 04 Trainer and the speed test. Not part of desktop.css (AMU exact pin). */
+.screen-with-help{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,32%);gap:18px;align-items:start}
+.screen-with-help>main,.screen-with-help>.platform-main{min-width:0}
+.help-pane{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;padding:14px;border:1px solid #2e3b34;border-radius:10px;background:#0f1512;color:#e8f0eb;font-size:.86rem}
+.help-pane:empty{display:none}
+.help-pane-title{margin:0 0 .5rem;font-size:.95rem;letter-spacing:.06em;color:#9fd1b3}
+.help-sync{margin-left:.6rem;padding:.1rem .5rem;border:1px solid #9fb3a8;border-radius:.4rem;background:transparent;color:inherit;font-size:.72rem;cursor:pointer;vertical-align:middle}
+.help-sync:hover,.help-sync:focus-visible{background:#9fd1b322}
+.help-target-pulse{animation:help-target-pulse 1.2s ease-out}@keyframes help-target-pulse{0%{box-shadow:0 0 0 3px #9fd1b3aa}100%{box-shadow:0 0 0 0 transparent}}
+/* tree styles (same as the edit screen's additions) */
+.help-tree{font-size:.86rem}.help-tree-lead{margin:0 0 .6rem;color:#9fb3a8}.help-tree-empty{color:#e0b07a}
+.help-chapter{margin:.35rem 0;border:1px solid #2e3b34;border-radius:.5rem;background:#141b17}.help-chapter>summary{cursor:pointer;padding:.5rem .7rem;display:flex;gap:.5rem;align-items:baseline;font-weight:700;color:#e8f0eb}.help-chapter-num{color:#9fd1b3}.help-count{margin-left:auto;font-size:.72rem;color:#8fa599}
+.help-chapter-question{margin:0 .7rem .4rem;color:#b7c8be;font-size:.8rem}.help-fields{list-style:none;margin:0;padding:0 .5rem .5rem}
+.help-field{margin:.25rem 0;border-radius:.4rem}.help-field.is-current{outline:2px solid #9fd1b3;outline-offset:1px}.help-field-details>summary{cursor:pointer;padding:.35rem .5rem;display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap;color:#e8f0eb}.help-field-path{font-size:.7rem;color:#8fa599}
+.help-field-body{padding:.2rem .6rem .6rem}.help-current-note{margin:.2rem 0;color:#dfe9e3}.help-actions{margin:.3rem 0}.help-to-input{font-size:.75rem;padding:.2rem .6rem}
+.help-current-value{margin:.3rem 0;color:#cfe3d7}.help-options>summary,.help-field-detail>summary{cursor:pointer;color:#b7c8be;font-size:.8rem;padding:.25rem 0}
+.help-option-list{list-style:none;margin:.2rem 0;padding:0}.help-option{padding:.35rem .5rem;border-left:3px solid transparent;border-radius:.3rem}.help-option.is-selected{border-left-color:#9fd1b3;background:#1c2822}
+.help-option-head{display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap}.help-option-name{color:#e8f0eb;font-weight:600}.help-option-body{margin:.2rem 0 0;display:grid;grid-template-columns:auto 1fr;gap:.15rem .6rem}.help-option-body dt{color:#8fa599;font-size:.75rem}.help-option-body dd{margin:0;color:#dfe9e3}
+.help-effect.is-not-measured{color:#b7c8be}.help-tag{color:#e0b07a;font-size:.75rem}.help-source{color:#8fa599;font-size:.74rem}.help-effect-notice{margin:.4rem 0 .2rem;padding:.4rem .6rem;border-left:3px solid #e0b07a;background:#241f17;color:#f0dcc0;font-size:.78rem}.help-expert>summary{font-size:.72rem;color:#8fa599;cursor:pointer}
+.help-detail-rows{display:grid;grid-template-columns:auto 1fr;gap:.2rem .6rem}.help-detail-rows dt{color:#8fa599;font-size:.75rem}.help-detail-rows dd{margin:0;color:#dfe9e3}
+@media(max-width:900px){.screen-with-help{grid-template-columns:1fr}.help-pane{position:static;max-height:none}}

@@ -1,6 +1,6 @@
 [package]
 name = "saku-builder-desktop"
-version = "0.1.0-beta.2"
+version = "0.1.0-beta.8"
 description = "Candidate thin desktop host for SAKU Builder and Trainer"
 authors = ["WI-T.COM"]
 edition = "2024"

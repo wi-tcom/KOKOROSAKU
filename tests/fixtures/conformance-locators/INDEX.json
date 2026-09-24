@@ -1,0 +1,67 @@
+{
+  "fixture_set": "conformance-locators",
+  "origin": "derived from tools/unified-v1/sample-pack/sample-characters.json (public OSS sample sample-general-compass); FIRST_PARTY_SYNTHETIC_TEST_FIXTURE",
+  "rule": "every conformance_expectations *_refs[] entry with a locator must resolve (RFC 6901) to an object whose id equals requirement_id; otherwise CONFORMANCE_LOCATOR_MISMATCH (fail closed)",
+  "cases": [
+    {
+      "file": "swapped-hard-invariants.json",
+      "expected_mismatches": 6,
+      "expected_code": "CONFORMANCE_LOCATOR_MISMATCH",
+      "note": "hard_invariants[0] and [1] locators swapped in must_preserve(2)/prohibited_drift(2)/continuity(2); the 江戸編集部 defect shape"
+    },
+    {
+      "file": "index-out-of-range.json",
+      "expected_mismatches": 1,
+      "expected_code": "CONFORMANCE_LOCATOR_MISMATCH",
+      "note": "continuity_refs[1] → index 9 of a 3-element array (unresolvable)"
+    },
+    {
+      "file": "missing-key.json",
+      "expected_mismatches": 1,
+      "expected_code": "CONFORMANCE_LOCATOR_MISMATCH",
+      "note": "must_preserve_refs[0] → key hard_invariant (typo, unresolvable)"
+    },
+    {
+      "file": "root-pointer.json",
+      "expected_mismatches": 1,
+      "expected_code": "CONFORMANCE_LOCATOR_MISMATCH",
+      "note": "prohibited_drift_refs[0] → \"\" (whole document, no id)"
+    },
+    {
+      "file": "handoff-to-invariant.json",
+      "expected_mismatches": 1,
+      "expected_code": "CONFORMANCE_LOCATOR_MISMATCH",
+      "note": "continuity_refs HO ref → hard_invariants/0 (resolves, id differs)"
+    },
+    {
+      "file": "non-index-token.json",
+      "expected_mismatches": 1,
+      "expected_code": "CONFORMANCE_LOCATOR_MISMATCH",
+      "note": "continuity_refs[0] → array token \"first\" (unresolvable)"
+    },
+    {
+      "file": "descend-into-scalar.json",
+      "expected_mismatches": 1,
+      "expected_code": "CONFORMANCE_LOCATOR_MISMATCH",
+      "note": "continuity_refs[0] → beyond a string leaf (unresolvable)"
+    },
+    {
+      "file": "requirement-id-missing.json",
+      "expected_mismatches": 1,
+      "expected_code": "CONFORMANCE_LOCATOR_MISMATCH",
+      "note": "must_preserve_refs[1] has a locator but no requirement_id"
+    },
+    {
+      "file": "positive-no-locators.json",
+      "expected_mismatches": 0,
+      "expected_code": null,
+      "note": "all locators removed; refs stand on requirement_id (must be accepted)"
+    },
+    {
+      "file": "positive-sample.json",
+      "expected_mismatches": 0,
+      "expected_code": null,
+      "note": "unchanged public sample sample-general-compass (must be accepted)"
+    }
+  ]
+}

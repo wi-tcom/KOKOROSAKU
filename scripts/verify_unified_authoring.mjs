@@ -39,7 +39,7 @@ check(mapCount > 0 && basisCount === mapCount, `every pairing states why it is p
 // The old model must not be what leaves the Builder.
 const builder = await read("tools/saku-builder.html");
 check(/function toSakuJson\([\s\S]{0,600}?toUnifiedCharacter/.test(builder), "Canonical JSON is the Unified V1 Character");
-check(/function toPrompt\([\s\S]{0,600}?unifiedPrompt/.test(builder), "the generic prompt derives from the same Character");
+check(!/function toPrompt\(/.test(builder) && !/function toGuildJson\(/.test(builder), "no prompt / Guild output leaves the Builder (03 owns the platform prompt since 2026-09-22)");
 check(!/schema:"SAKU-CHARACTER"/.test(builder), "the old SAKU-CHARACTER export shape is gone");
 check(builder.includes("_unified_source"), "the Character an edit started from is retained so unshown Canonical content survives");
 check(!/saku-builder-unified-v1\.html\?desktop=/.test(builder), "no legacy-schema authoring route from the Builder");
@@ -142,9 +142,15 @@ const harness = [
   '  check(!/最初から/.test(toolbar.textContent),"the toolbar no longer repeats the reset button");',
   '  const nav=d.getElementById("builderTopNav");',
   '  check(nav!==null,"GLOBAL navigation bar is present");',
-  '  check(nav.querySelector("[data-builder-locale]")!==null,"language lives in the top-right header");',
-  '  check(nav.querySelector("#openDesktopHome")!==null&&nav.querySelector("#openDesktopHome").hidden===false,"ホーム lives in the top-right header");',
-  '  check(nav.querySelector("#builderHelpLink")!==null,"ヘルプ lives in the top-right header");',
+  '  check(nav.querySelector("[data-builder-locale]")!==null,"language lives in the one top row");',
+  '  check(nav.querySelector("#openDesktopHome")!==null&&nav.querySelector("#openDesktopHome").hidden===false,"ホーム lives in the one top row");',
+  '  check(nav.querySelector("#builderHelpLink")!==null,"ヘルプ lives in the one top row");',
+  '  // Owner 2026-09-23: one row, in this order, and it stays at the top of the window.',
+  '  check(nav.querySelector("#runOnPlatform")!==null&&nav.querySelector("#trainCharacter")!==null,"the two hand-off buttons moved into that row");',
+  '  const rowOrder=[...nav.querySelectorAll("#runOnPlatform,#trainCharacter,[data-builder-locale],#builderHelpLink,#openDesktopHome")].map(x=>x.textContent.trim());',
+  '  check(rowOrder.join("|")==="AIプラットフォームで動作確認|トレーニングする|日本語|English|ヘルプ|ホーム","the row reads in the order Owner gave (saw "+rowOrder.join("|")+")");',
+  '  check(d.querySelector(".toolbar #runOnPlatform")===null&&d.querySelector(".toolbar #trainCharacter")===null,"and the toolbar no longer holds a second copy of them");',
+  '  check(nav===d.body.firstElementChild,"the row is first in the document, so sticky holds it at the top of the window");',
   '  check(d.getElementById("authoringMessages")!==null,"messages are inside the authoring box");',
   '  for(const id of ["loadRoleCsv","roleCsvFile","importYamlBtn","importYamlFile","loadTpl","tplSelect"]){',
   '    check(d.getElementById(id)===null,"IMPORT_CONTROLS_DUPLICATED_IN_BUILDER = 0: "+id+" is gone from the authoring screen");',
@@ -173,7 +179,8 @@ const harness = [
   '',
   '  // ── create from scratch produces a Unified V1 Character ──────────────',
   '  const set=(path,value)=>{ const el=d.querySelector(`[data-path="${path}"]`); if(!el) throw new Error("missing field: "+path); el.value=value; el.dispatchEvent(new w.Event(el.tagName==="SELECT"?"change":"input",{bubbles:true})); };',
-  '  const add=(path,value)=>{ const box=d.querySelector(`[data-list="${path}"]`)||d.querySelector(`[data-enum-list="${path}"]`); if(!box) throw new Error("missing list: "+path); const control=box.querySelector(".add input,.add select"),btn=box.querySelector(".add button"); control.value=value; btn.click(); };',
+  '  // U3: a closed enum with several answers is a checkbox group (nothing typed, nothing to add).',
+  '  const add=(path,value)=>{ const box=d.querySelector(`[data-list="${path}"]`)||d.querySelector(`[data-enum-list="${path}"]`); if(!box) throw new Error("missing list: "+path); const tick=box.querySelector(`input[data-enum-option="${value}"]`); if(tick){ tick.checked=true; tick.dispatchEvent(new Event("change",{bubbles:true})); return; } const control=box.querySelector(".add input,.add select"),btn=box.querySelector(".add button"); control.value=value; btn.click(); };',
   '  set("meta.name","新規作成テスト"); set("meta.slug","new-character-probe"); set("meta.field","確認担当");',
   '  set("persona_rationale.core_thesis","目的の記述"); set("identity.value","確認");',
   '  set("identity.first_person","私"); set("identity.voice","低め");',
@@ -208,7 +215,7 @@ const harness = [
   '  check(val("meta.field")==="確認担当","edit shows the role");',
   '  check(val("identity.first_person")==="私","edit shows the expression semantics");',
   '  check(val("unified.axes.a_motif")==="STUDY_LAMP","edit shows the 15 axes");',
-  '  const listText=p=>{const b=d.querySelector(`[data-list="${p}"]`)||d.querySelector(`[data-enum-list="${p}"]`);if(!b)return "";const values=[...b.querySelectorAll(".items input")].map(i=>i.value);for(const chip of b.querySelectorAll(".enum-chip"))values.push(chip.firstChild?.textContent||"");return values.join("|");};',
+  '  const listText=p=>{const b=d.querySelector(`[data-list="${p}"]`)||d.querySelector(`[data-enum-list="${p}"]`);if(!b)return "";const values=[...b.querySelectorAll(".items input")].map(i=>i.value);for(const chip of b.querySelectorAll(".enum-chip"))values.push(chip.firstChild?.textContent||"");for(const tick of b.querySelectorAll("input[data-enum-option]:checked"))values.push(tick.dataset.enumOption);return values.join("|");};',
   '  check(listText("persona_rules.values").includes("確かめる"),"edit shows the Character values");',
   '  check(listText("unified.work_modes").includes("REVIEW"),"edit shows the work modes");',
   '',
@@ -247,11 +254,9 @@ const harness = [
   '  check(HANDED.identity.character_revision==="2.0.0","the source Character revision was not changed");',
   '  check(w.SAKU_ACTIVE.summary().identity.character_revision===saved.character.identity.character_revision&&!w.SAKU_ACTIVE.summary().dirty,"SAVE-02 the latest saved revision becomes the clean Active SAKU");',
   '',
-  '  // ── the prompt comes from the same Character ─────────────────────────',
-  '  const prompt=w.toPrompt(w.__saku_data());',
-  '  check(prompt.includes("受け渡し確認用（改）"),"the generic prompt reflects the edited Character");',
-  '  check(prompt.includes("Seat 8 is a human"),"the prompt states the human seat boundary");',
-  '  check(!prompt.includes("organization_participation"),"the prompt carries no runtime configuration");',
+  '  // ── no prompt / Guild output from this screen (03 owns the platform prompt) ──',
+  '  check(typeof w.toPrompt==="undefined"&&typeof w.toGuildJson==="undefined","no prompt / Guild generator on the Builder page");',
+  '  check([...d.querySelectorAll("#pvTabs .pv-tab")].map(b=>b.textContent.trim()).join(",")==="character.yaml,Character File,試験記録,Help","preview tabs = character.yaml / Character File / 試験記録 / Help");',
   '',
   '  r.textContent=out.join("\\n"); r.dataset.status="PASS";',
   '}catch(error){ r.textContent=(out.join("\\n")+"\\nFAIL "+error.message).trim(); r.dataset.status="FAIL"; }',
@@ -278,7 +283,7 @@ child.stdout.on("data", chunk => { dom += chunk; });
 child.stderr.on("data", chunk => { browserLog += chunk; });
 await new Promise(resolve => child.on("close", resolve));
 server.close();
-await rm(profile, { recursive: true, force: true });
+await rm(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }).catch(error => console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code || error}`));
 
 const status = /data-status="([A-Z]+)"/.exec(dom)?.[1] || "UNKNOWN";
 const body = /<pre[^>]*>([\s\S]*?)<\/pre>/.exec(dom)?.[1]?.replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">") || "";

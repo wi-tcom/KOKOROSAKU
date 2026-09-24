@@ -9,10 +9,8 @@
    these rules only support the five-chapter information architecture and its
    structured Canonical editors. */
 .frozen-chapter .chapter-question{font-size:1rem;font-weight:700;color:#3f3428;margin:.2rem 0 1.4rem;padding:.7rem 1rem;border-left:3px solid #a86f3a;background:#fbf6ed}
-.registry-help{margin:.6rem 0 0;border-top:1px solid rgba(84,65,45,.16);padding-top:.45rem}
-.registry-help summary{cursor:pointer;font-size:.82rem;font-weight:700;color:#765b3f}
-.registry-help h4{font-size:.72rem;letter-spacing:.04em;margin:.75rem 0 .15rem;color:#674b31;text-transform:uppercase}
-.registry-help p,.registry-help li{font-size:.82rem;line-height:1.6;margin:.1rem 0}
+/* The per-field Help block was removed on 2026-09-23 (Owner): the help tree,
+   reached by 「詳細はヘルプ参照 →」, is the one place that explains a field. */
 .object-editor,.reference-editors>.object-editor{margin:1.1rem 0;padding:1rem;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.55)}
 .object-editor h3{margin:0 0 .7rem;font-size:1rem}.object-row{display:grid;grid-template-columns:minmax(120px,.65fr) minmax(180px,1.35fr);gap:.65rem;margin:.75rem 0;padding:.75rem;border:1px solid rgba(84,65,45,.18);border-radius:8px}
 .object-row label{display:grid;gap:.28rem;font-size:.78rem;font-weight:700}.object-row .checkbox-label{grid-column:1/-1;display:flex;align-items:center;gap:.5rem}.object-row .danger{justify-self:start}
@@ -469,25 +467,27 @@ input[type="date"] {
    its own contrast rather than inherit one tuned for a different ground. */
 .authoring-messages .subtitle { margin: 0; color: #43483e; }
 
-/* 言語とホームは画面右上のヘッダーへ。Owner Golden の <header> は byte-locked
-   なので、そこへは入れず、上に重ねる小さなバーとして置く。 */
+/* 03・04 へ渡すボタンと、言語・ヘルプ・ホームを 1 行にまとめ、スクロールしても
+   画面上部で止める（Owner 2026-09-23）。Owner Golden の <header> は byte-locked
+   なので、そこへは入れず、その上に置く行として足す。
+   `fixed` ではなく `sticky` なのは、本文の先頭がこの行の下から始まり、隠れないため。 */
 .builder-top-nav {
-  position: fixed;
-  top: 10px;
-  right: 14px;
+  position: sticky;
+  top: 0;
   z-index: 40;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
-  padding: 6px 8px;
-  border: 1px solid var(--hair, #c8cec0);
-  border-radius: 8px;
-  background: rgba(242, 243, 238, 0.94);
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--hair, #c8cec0);
+  background: #f2f3ee;
 }
 .builder-top-nav .language-control { margin: 0; }
 @media (max-width: 760px) {
   .authoring-top-actions { flex-direction: column; align-items: stretch; }
-  .builder-top-nav { position: static; margin: 10px 14px 0; justify-content: flex-end; background: none; border: 0; }
+  .builder-top-nav { justify-content: flex-start; }
 }
 
 /* 職種情報の受け取り表示。Character とは別のものとして見せる。 */
@@ -518,3 +518,25 @@ input[type="date"] {
   font-size: 13px;
   line-height: 1.6;
 }
+
+/* U3 input widgets: enum checkbox groups, conformance checks on rows, reference summaries */
+.enum-checks{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.35rem .8rem;margin:.4rem 0}
+.enum-check{display:flex;gap:.45rem;align-items:baseline;font-size:.86rem;font-weight:500}.enum-check .enum-value{font-family:ui-monospace,Consolas,monospace;font-size:.8rem}.enum-check .enum-name{color:#4b5a52;font-size:.8rem}
+.ref-checks{display:flex;gap:.7rem;flex-wrap:wrap;align-items:center;grid-column:1/-1}.ref-check{font-weight:600;font-size:.8rem}
+.ref-legend{margin:.2rem 0 .6rem;font-size:.82rem;color:#4b5a52}.fixed-held[data-fixed-invariant]{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+.reference-summary .ref-summary code{margin-right:.35rem}.ref-empty{color:#6b7a72}.ref-foreign{margin:.4rem 0;padding:.5rem .7rem;border-left:4px solid #b7791f;background:#fff8e6}.ref-foreign-row{display:flex;gap:.6rem;align-items:center;margin:.3rem 0}
+/* U2 help tree (right pane) and per-field current note */
+.help-tree{font-size:.86rem}.help-tree-lead{margin:0 0 .6rem;color:#9fb3a8}.help-tree-empty{color:#e0b07a}
+.help-chapter{margin:.35rem 0;border:1px solid #2e3b34;border-radius:.5rem;background:#141b17}.help-chapter>summary{cursor:pointer;padding:.5rem .7rem;display:flex;gap:.5rem;align-items:baseline;font-weight:700;color:#e8f0eb}.help-chapter-num{color:#9fd1b3}.help-count{margin-left:auto;font-size:.72rem;color:#8fa599}
+.help-chapter-question{margin:0 .7rem .4rem;color:#b7c8be;font-size:.8rem}.help-fields{list-style:none;margin:0;padding:0 .5rem .5rem}
+.help-field{margin:.25rem 0;border-radius:.4rem}.help-field.is-current{outline:2px solid #9fd1b3;outline-offset:1px}.help-field-details>summary{cursor:pointer;padding:.35rem .5rem;display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap;color:#e8f0eb}.help-field-path{font-size:.7rem;color:#8fa599}
+.help-field-body{padding:.2rem .6rem .6rem}.help-current-note{margin:.2rem 0;color:#dfe9e3}.help-actions{margin:.3rem 0}.help-to-input{font-size:.75rem}
+.help-current-value{margin:.3rem 0;color:#cfe3d7}.help-options>summary,.help-field-detail>summary{cursor:pointer;color:#b7c8be;font-size:.8rem;padding:.25rem 0}
+.help-option-list{list-style:none;margin:.2rem 0;padding:0}.help-option{padding:.35rem .5rem;border-left:3px solid transparent;border-radius:.3rem}.help-option.is-selected{border-left-color:#9fd1b3;background:#1c2822}
+.help-option-head{display:flex;gap:.5rem;align-items:baseline;flex-wrap:wrap}.help-option-name{color:#e8f0eb;font-weight:600}.help-option-body{margin:.2rem 0 0;display:grid;grid-template-columns:auto 1fr;gap:.15rem .6rem}.help-option-body dt{color:#8fa599;font-size:.75rem}.help-option-body dd{margin:0;color:#dfe9e3}
+.help-effect.is-not-measured{color:#b7c8be}.help-tag{color:#e0b07a;font-size:.75rem}.help-source{color:#8fa599;font-size:.74rem}
+.help-detail-rows{display:grid;grid-template-columns:auto 1fr;gap:.2rem .6rem}.help-detail-rows dt{color:#8fa599;font-size:.75rem}.help-detail-rows dd{margin:0;color:#dfe9e3}
+.help-non-canonical>summary{color:#e0b07a}
+.field-current-note{margin:.15rem 0 .45rem;font-size:.8rem;color:#4b5a52;display:flex;gap:.5rem;flex-wrap:wrap;align-items:baseline}.field-option-meaning{color:#2f5d46}.field-help-link{border:0;background:none;color:#174c3b;text-decoration:underline;cursor:pointer;font-size:.8rem;padding:0}
+.help-target-pulse{animation:help-target-pulse 1.2s ease-out}@keyframes help-target-pulse{0%{box-shadow:0 0 0 3px #9fd1b3aa}100%{box-shadow:0 0 0 0 transparent}}
+.help-effect-notice{margin:.4rem 0 .2rem;padding:.4rem .6rem;border-left:3px solid #e0b07a;background:#241f17;color:#f0dcc0;font-size:.78rem}.help-expert>summary{font-size:.72rem;color:#8fa599;cursor:pointer}

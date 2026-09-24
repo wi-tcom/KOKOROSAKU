@@ -43,7 +43,7 @@ const help = (jaLabel, enLabel, jaWhat, enWhat, jaExample, enExample, jaCaution,
     caution: { ja: jaCaution, en: enCaution },
     relatedAiBehavior: {
       ja: "関連するAIの動きは期待される傾向です。実際の応答はTrainerのEvidenceで別に確認します。",
-      en: "Related AI behaviour is an expected tendency. Actual responses are assessed separately with Trainer evidence.",
+      en: "Related AI behavior is an expected tendency. Actual responses are assessed separately with Trainer evidence.",
     },
     relatedItems: {
       ja: "同じ章の項目と、表示された調整症状を一緒に確認します。",

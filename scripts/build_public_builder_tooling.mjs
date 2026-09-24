@@ -1,11 +1,28 @@
 import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const TARGET = path.join(ROOT, "tooling", "builder");
-if (path.basename(TARGET) !== "builder" || path.dirname(TARGET) !== path.join(ROOT, "tooling")) {
+
+/**
+ * Where the projection is written. `SAKU_PUBLIC_TOOLING_TARGET` lets
+ * `public:tooling:verify` build a second copy and compare it with the committed
+ * one, so a projection that has drifted from its sources is caught rather than
+ * discovered later (2026-09-23: `lib/speed-test-ui.mjs` carried a sentence that
+ * had already been revised in its source).
+ *
+ * This script **deletes its target** before writing it, so a wrong value here
+ * would delete the wrong tree. The default must be exactly `tooling/builder`,
+ * and an override is only accepted inside the OS temp directory.
+ */
+const OVERRIDE = (process.env.SAKU_PUBLIC_TOOLING_TARGET || "").trim();
+const TARGET = OVERRIDE ? path.resolve(OVERRIDE) : path.join(ROOT, "tooling", "builder");
+if (OVERRIDE) {
+  const temp = path.resolve(tmpdir());
+  if (TARGET === temp || !TARGET.startsWith(temp + path.sep)) throw new Error("PUBLIC_TOOLING_TARGET_INVALID");
+} else if (path.basename(TARGET) !== "builder" || path.dirname(TARGET) !== path.join(ROOT, "tooling")) {
   throw new Error("PUBLIC_TOOLING_TARGET_INVALID");
 }
 
@@ -25,9 +42,17 @@ function project(text, source) {
     ["./saku-builder-desktop-additions.css", "./builder.css"],
     ["./unified-v1/active-saku.mjs", "./lib/active-character.mjs"],
     ["./v1/unified-authoring.mjs", "./lib/unified-authoring.mjs"],
+    ["./v1/help-tree.mjs", "./lib/help-tree.mjs"],
+    ["./unified-v1/screen-help.mjs", "./lib/screen-help.mjs"],
+    ["./unified-v1/help-pane.css", "./help-pane.css"],
+    ["../help/trainer-guide.data.json", "./manual/trainer-guide.data.json"],
+    ["../help/platform-guide.data.json", "./manual/platform-guide.data.json"],
+    ["../manual/trainer-guide.data.json", "./manual/trainer-guide.data.json"],
+    ["../manual/platform-guide.data.json", "./manual/platform-guide.data.json"],
     ["./v1/adopted-schema-validator.mjs", "./lib/adopted-schema-validator.mjs"],
     ["./v1/semantic-registry.mjs", "./lib/semantic-registry.mjs"],
     ["./unified-v1/character-library.mjs", "./lib/character-library.mjs"],
+    ["./unified-v1/handoff-binding.mjs", "./lib/handoff-binding.mjs"],
     ["./unified-v1/tuning/tuning-projection.mjs", "./lib/tuning-projection.mjs"],
     ["./v1/builder-golden-ui.mjs", "./lib/builder-ui.mjs"],
     ["./v1/frozen-ia-ui.mjs", "./lib/frozen-ia-ui.mjs"],
@@ -50,7 +75,9 @@ function project(text, source) {
     ["./unified-schema-v1.mjs", "./unified-schema.mjs"],
     ["../unified-v1/tuning/tuning-projection.mjs", "./tuning-projection.mjs"],
     ["../unified-v1/handoff-binding.mjs", "./handoff-binding.mjs"],
+    ["../v1/help-tree.mjs", "./help-tree.mjs"],
     ["../v1/trainer-ux4.mjs", "./trainer-ux4.mjs"],
+    ["../unified-v1/platform-prompt.mjs", "./platform-prompt.mjs"],
     ["../v1/trainer-frozen-ia.mjs", "./trainer-contract.mjs"],
     ["../v1/builder-field-registry.mjs", "./builder-field-registry.mjs"],
     ["../v1/unified-authoring.mjs", "./unified-authoring.mjs"],
@@ -182,7 +209,10 @@ async function verifyRelativeReferences(file, source) {
   return count;
 }
 let checkedRelativeLinks = 0;
-for (const file of await (async function collect(directory) {
+// Links like `../../docs/getting-started/builder-quickstart.md` only resolve at
+// tooling/builder's own depth, so this part is skipped for a temp projection.
+// It reads the files and writes none, so the projected bytes are the same.
+for (const file of OVERRIDE ? [] : await (async function collect(directory) {
   const found = [];
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     const absolute = path.join(directory, entry.name);
@@ -199,9 +229,11 @@ for (const file of await (async function collect(directory) {
 
 // Disposable document inputs prove the generator's guard rejects missing and
 // out-of-package links without modifying any license or generated artifact.
-await assert.rejects(verifyRelativeReferences(path.join(TARGET, "README.md"), "[missing](./__missing_link_fixture__.md)"), /PUBLIC_RELATIVE_LINK_MISSING/);
-await assert.rejects(verifyRelativeReferences(path.join(TARGET, "README.md"), "[private](../../package.json)"), /PUBLIC_RELATIVE_LINK_OUTSIDE_TREE/);
+if (!OVERRIDE) {
+  await assert.rejects(verifyRelativeReferences(path.join(TARGET, "README.md"), "[missing](./__missing_link_fixture__.md)"), /PUBLIC_RELATIVE_LINK_MISSING/);
+  await assert.rejects(verifyRelativeReferences(path.join(TARGET, "README.md"), "[private](../../package.json)"), /PUBLIC_RELATIVE_LINK_OUTSIDE_TREE/);
+}
 
 console.log(`PUBLIC_TOOLING_READY ${path.relative(ROOT, TARGET).replaceAll(path.sep, "/")}`);
 console.log(`PUBLIC_RELATIVE_LINKS PASS ${checkedRelativeLinks}/${checkedRelativeLinks}`);
-console.log("PUBLIC_RELATIVE_LINK_REJECTION PASS 2/2");
+console.log(OVERRIDE ? "PUBLIC_RELATIVE_LINK_REJECTION SKIPPED (temp projection: these links resolve at tooling/builder's own depth)" : "PUBLIC_RELATIVE_LINK_REJECTION PASS 2/2");

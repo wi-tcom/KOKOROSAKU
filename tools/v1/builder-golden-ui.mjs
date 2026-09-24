@@ -13,8 +13,8 @@ function storeImportedCharacter(payload) {
     content_digest: (hash >>> 0).toString(16).padStart(8, "0"),
   }));
 }
-const HERO_SUBTITLE_JA = '心が咲く — 表人格・1+7構造・境界・黒子接続・試験までを一枚で設計し、<code>character.yaml</code>／Character File JSON／外部AIプロンプト／Guild概要を出力する';
-const HERO_SUBTITLE_EN = 'Design the public persona, 1+7 structure, boundaries, Human-backstage prerequisites, and tests on one screen; export <code>character.yaml</code>, Character File JSON, an external-AI prompt, and a Guild summary.';
+const HERO_SUBTITLE_JA = '心が咲く — 表人格・1+7構造・境界・黒子接続・試験までを一枚で設計し、<code>character.yaml</code>／Character File（署名・パック化の元になる正本 Unified V1 JSON）を出力する';
+const HERO_SUBTITLE_EN = 'Design the public persona, 1+7 structure, boundaries, Human-backstage prerequisites, and tests on one screen; export <code>character.yaml</code> and the Character File (the canonical Unified V1 JSON that signing and packing start from).';
 
 // The Golden Japanese strings are stable resource keys. Character/user data is never passed here.
 const EN = new Map(Object.entries({
@@ -129,7 +129,7 @@ const EN = new Map(Object.entries({
   "逸脱を確認する項目":"Checked for drift",
   "継続性を確認する項目":"Checked for continuity",
   "この内容で保存する":"Save this Character",
-  "心が咲く — 表人格・1+7構造・境界・黒子接続・試験までを一枚で設計し、character.yaml／Character File JSON／外部AIプロンプト／Guild概要を出力する":"Design the public persona, 1+7 structure, boundaries, Human-backstage prerequisites, and tests on one screen; export character.yaml, Character File JSON, an external-AI prompt, and a Guild summary.",
+  "心が咲く — 表人格・1+7構造・境界・黒子接続・試験までを一枚で設計し、character.yaml／Character File（署名・パック化の元になる正本 Unified V1 JSON）を出力する":"Design the public persona, 1+7 structure, boundaries, Human-backstage prerequisites, and tests on one screen; export character.yaml and the Character File (the canonical Unified V1 JSON that signing and packing start from).",
   "お品書き":"Tools","すべて畳む":"Collapse all","すべて広げる":"Expand all","同期":"Sync",
   "職能CSVを読み込む":"Import role CSV","この項目の詳しい説明":"Detailed help for this field","記入例（星野ルカ）を読み込む":"Load example (Hoshino Luka)",
   "テンプレート…":"Template…","テンプレートを読み込む":"Load template","character.yaml を読み込む":"Import character.yaml",
@@ -162,7 +162,7 @@ const EN = new Map(Object.entries({
   "職能の分類":"Role classification","職能名":"Role name","事業運営":"Business operations","継続的改善":"Continuous improvement","商品販売":"Product sales",
   "越境禁止リスト":"Prohibited-boundary list","人間席の調達型":"Human-seat procurement","振り返り合議":"Retrospective deliberation","試験質問の生成":"Test-question generation",
   "黒子は不要（設定なし）":"Human backstage support is not required (not configured)","Organization Participationは未使用":"Organization Participation is not used",
-  "外部AIプロンプト":"External AI prompt","Guild概要":"Guild summary","試験記録":"Test record",
+  "AIプラットフォームで動作確認":"Check on an AI platform","トレーニングする":"Train","試験記録":"Test record",
   "一":"1","二":"2","三":"3","四":"4","五":"5","六":"6","七":"7","八":"8","九":"9","十":"10","十一":"11",
   "基本情報":"Basic information","設計の芯":"Persona core","話法と価値観":"Voice and values",
   "SAKU構成（1＋7）":"SAKU composition (1+7)","活動規程":"Activity rules","職能とミッション":"Role and mission",
@@ -248,7 +248,7 @@ const EN = new Map(Object.entries({
   "区分Cは有資格者の席8と、組織責任を持つ別の人間が埋まっていないと稼働できない。":"Class C cannot operate until a qualified Human in Seat 8 and a separate Human with organizational responsibility are assigned.",
   "このキャラクターが黒子（人間の確認・承認）なしで動けるかを定める。 詳細な黒子情報は AMU Studio 側で管理し、ここでは":"Define whether this Character can operate without Human backstage review and approval. Detailed backstage data is managed in AMU Studio; define only",
   "を定義する。 本章の内容は":"here. This chapter is not included in",
-  "には出さず、Character File JSON（AMU/MACHI連携）にのみ出力する。":"and is exported only in Character File JSON for AMU/MACHI integration.",
+  "には出さず、Character File（署名・パック化の元になる正本 Unified V1 JSON）にのみ出力する。AMU/MACHI は署名付きパック経由でのみ受け取る。":"and is exported only in the Character File (the canonical Unified V1 JSON that signing and packing start from). AMU / MACHI receive it only through a signed pack.",
   "作って終わりにしない。定義から試験質問を自動生成し、実機（Claude Code / Codex）で 1問ずつ確かめて結果を記録する。婉曲・役割の偽装・経由・設定への攻撃の回避パターンは":"Do not stop at authoring. Generate test questions from the definition and verify them one by one in Claude Code / Codex. Evasion patterns for indirect requests, role impersonation, routing, and configuration attacks follow",
   "の分類に従う。":".",
   "（頻度重みを持たない）。":"(no frequency weighting).",
@@ -605,13 +605,24 @@ function buildAuthoringTop() {
   const form = document.querySelector(".form");
   if (!form) return;
 
-  // Top-right header: language and Home. The Owner Golden <header> is byte-locked,
-  // so these move into an additive bar rather than into that element.
+  // One row across the top, in the order Owner gave (2026-09-23):
+  //   AIプラットフォームで動作確認  トレーニングする  日本語  English  ヘルプ  ホーム
+  // The two hand-off actions used to sit in the toolbar and scrolled away, while
+  // language / help / home floated over the top-right corner as a separate box.
+  // They are the same kind of control — leave this screen for somewhere else — so
+  // they are one row, and the row stays at the top of the window while the form
+  // scrolls under it. The Owner Golden <header> is byte-locked, so this is an
+  // additive bar placed above it rather than an edit of that element.
   let nav = document.getElementById("builderTopNav");
   if (!nav) {
     nav = document.createElement("div");
     nav.id = "builderTopNav";
     nav.className = "builder-top-nav";
+    // The host reveals these two; moving them does not change when they appear.
+    for (const id of ["runOnPlatform", "trainCharacter"]) {
+      const control = document.getElementById(id);
+      if (control) nav.append(control);
+    }
     const language = document.querySelector(".language-control");
     if (language) nav.append(language);
     const help = document.createElement("a");
@@ -622,7 +633,9 @@ function buildAuthoringTop() {
     nav.append(help);
     const home = document.getElementById("openDesktopHome");
     if (home) { home.hidden = false; nav.append(home); }
-    document.body.append(nav);
+    // First in the document, so `position: sticky` holds it at the top of the
+    // window rather than at the bottom of the page.
+    document.body.insertBefore(nav, document.body.firstChild);
   }
 
   const box = document.createElement("section");
