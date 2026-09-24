@@ -6,6 +6,8 @@ import {
   conflictingRecommendations,
 } from '../tools/v1/trainer-ux4.mjs';
 import { operate as operateV3 } from '../tools/v1/trainer-ux3.mjs';
+import { PROMPT_CONSTRUCTION, promptConstructionOf } from '../tools/v1/trainer-ux4.mjs';
+import * as P from '../tools/unified-v1/platform-prompt.mjs';
 import { testCharacter } from './fixtures/trainer-ux3-character.mjs';
 
 let passed=0,intent=0;
@@ -104,6 +106,50 @@ ok(payloads.character.includes('ux3-test'),'Character-only copy uses execution-f
 ok(payloads.menu.includes('PB-SAFETY')&&payloads.menu.includes('PB-HANDOFF'),'menu copy includes exact batch items');
 ok(!payloads.menu.includes('期待')&&!payloads.menu.includes('見るポイント'),'normal test menu payload does not leak expected/review target');
 check(payloads.both,`${payloads.character}${payloads.separator}${payloads.menu}`,'both copy is exact components plus stable separator');
+
+// What goes to the external AI is the composed text, not the record (Owner 2026-09-23).
+ok(payloads.character.startsWith('以下はあなたが演じるキャラクターの定義です。'),'HANDOFF the Trainer hands over the composed text, the same one 03 composes');
+ok(payloads.snapshot.startsWith('{')&&payloads.snapshot.includes('"identity"'),'HANDOFF the JSON snapshot is still produced — for the record of what was tested');
+ok(!payloads.character.includes(payloads.snapshot),'HANDOFF the snapshot is not inside the text handed over');
+{
+  const BASE=['B0:','  ALWAYS name Seat 8 as a human role','','PRECEDENCE','  Hard invariants win.',''].join(String.fromCharCode(10));
+  const sha=await P.sha256Of(BASE);
+  const good={text:BASE,version:'t',sha256:sha,expectedSha256:sha};
+  const withBase=copyPayloads(flow,'PB-SAFETY','ja',{baseLayer:good});
+  ok(withBase.character.includes('## Base')&&withBase.character.indexOf('## Base')<withBase.character.indexOf('## Character'),'HANDOFF with a base layer the Trainer carries it, above the persona');
+  // falsification (Owner 2026-09-23): a base layer that is not the shipped one
+  // stops the Trainer handing anything over — a run measured on a different text
+  // is not evidence about what ships.
+  const broken=copyPayloads(flow,'PB-SAFETY','ja',{baseLayer:{...good,sha256:'0'.repeat(64)}});
+  check(broken.character,'','HANDOFF falsification: a base layer that does not check out leaves nothing to hand over');
+  check(broken.both,'','HANDOFF falsification: and nothing to hand over with the menu either');
+  ok(broken.snapshot.length>0,'HANDOFF the record is unaffected — nothing is deleted when a hand-off is refused');
+}
+// The construction mark: a run from before the change is read for what it was.
+{
+  const execution=flow.executions[qa.execution_id];
+  const unmarked=promptConstructionOf(execution);
+  check(unmarked.construction,PROMPT_CONSTRUCTION.rawSnapshot,'MARK an execution with no mark is read as the raw-snapshot construction');
+  check(unmarked.prompt_sha256,execution.character_sha256,'MARK its digest is the one already in the record — that is what went to the AI then');
+  check(unmarked.stamped,false,'MARK and it says plainly that it carries no mark');
+  const marked=promptConstructionOf({...execution,handoff:{construction:PROMPT_CONSTRUCTION.composed,prompt_sha256:'a'.repeat(64)}});
+  check(marked.construction,PROMPT_CONSTRUCTION.composed,'MARK a marked execution names the composed construction');
+  check(marked.prompt_sha256,'a'.repeat(64),'MARK and carries the digest of the text it handed over');
+  ok(unmarked.prompt_sha256!==marked.prompt_sha256,'MARK the two constructions are told apart by their digests');
+}
+// A training started with a mark records it on the executions it creates.
+{
+  const stamp={construction:PROMPT_CONSTRUCTION.composed,prompt_sha256:'b'.repeat(64),base_layer:{version:'1.0',sha256:'c'.repeat(64)},glossary_sha256:null};
+  let marked=await create(character,'r4-mark');
+  marked.preparation.mode='CATEGORY_BATCH';
+  marked=await run(marked,'menu-generate',{expected_generation:null,seed:'mark-seed'});
+  const ids=marked.r4.generation.selected_item_ids.slice(0,2);
+  marked=await run(marked,'menu-selection',{expected_generation:marked.r4.generation.generation_id,item_ids:ids});
+  marked=await run(marked,'start-training',{handoff:stamp});
+  const created=Object.values(marked.executions);
+  ok(created.length>0&&created.every(execution=>promptConstructionOf(execution).construction===PROMPT_CONSTRUCTION.composed),'MARK every execution a marked training creates carries the mark');
+  ok(created.every(execution=>promptConstructionOf(execution).prompt_sha256==='b'.repeat(64)),'MARK and the digest of the text that training hands over');
+}
 
 let originalSave=await operate(flow,{intent:`r4-${++intent}`,type:'response-whole-r4',payload:{execution_id:qa.execution_id,question_attempt_id:qa.id,expected_original:null,text:'同じbatch回答'}});flow=originalSave.session;
 const originalId=originalSave.result.original_id,bindingA=originalSave.result.binding_id;

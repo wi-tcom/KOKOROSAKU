@@ -365,7 +365,7 @@ const profile = await mkdtemp(path.join(tmpdir(), "saku-desktop-e2e-"));
 const child = spawn(chrome, ["--headless=new", "--disable-gpu", "--disable-background-networking", "--no-first-run", "--no-default-browser-check", "--user-data-dir=" + profile, "--window-size=1280,820", "--virtual-time-budget=25000", "--dump-dom", `http://127.0.0.1:${server.address().port}/__e2e__.html`], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
 let output = "", errors = ""; child.stdout.setEncoding("utf8"); child.stderr.setEncoding("utf8"); child.stdout.on("data", chunk => output += chunk); child.stderr.on("data", chunk => errors += chunk);
 const exitCode = await new Promise((resolve, reject) => { const timeout = setTimeout(() => { child.kill(); reject(new Error("Chrome timeout")); }, 60000); child.on("error", reject); child.on("exit", code => { clearTimeout(timeout); resolve(code); }); }).catch(error => { errors += "\n" + error.message; return -1; });
-server.close(); await rm(profile, { recursive: true, force: true });
+server.close(); await rm(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }).catch(error => console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code || error}`));
 const match = output.match(/<pre id="result" data-status="PASS">([\s\S]*?)<\/pre>/);
 if (exitCode !== 0 || !match) {
   console.error("DESKTOP_E2E_READINESS FAIL");

@@ -6,9 +6,25 @@
 <title>SAKU Speed Test</title>
 <link rel="stylesheet" href="./unified-v1/trainer-ux4.css">
 <link rel="stylesheet" href="./unified-v1/speed-test.css">
+<link rel="stylesheet" href="./unified-v1/help-pane.css">
 </head>
 <body>
+<div class="screen-with-help">
 <main id="speed-test-root" aria-live="polite">AI スピードテストを読み込み中 / Loading AI speed test…</main>
+<aside id="speed-test-help" class="help-pane" aria-label="ヘルプ"></aside>
+</div>
 <script type="module" src="./unified-v1/speed-test-ui.mjs"></script>
+<script type="module">
+import { mountScreenHelp } from "./unified-v1/screen-help.mjs";
+const aside = document.getElementById("speed-test-help");
+const localeOf = () => document.getElementById("locale")?.value === "en" ? "en" : "ja";
+const help = await mountScreenHelp({ aside, guideUrls: ["../help/platform-guide.data.json", "../manual/platform-guide.data.json"], locale: localeOf() });
+if (help) {
+  window.__saku_speed_test_help = help;
+  const root = document.getElementById("speed-test-root");
+  new MutationObserver(() => { help.setLocale(localeOf()); }).observe(root, { childList: true, subtree: true });
+  help.show("platform.speed_test"); help.fromHash();
+}
+</script>
 </body>
 </html>

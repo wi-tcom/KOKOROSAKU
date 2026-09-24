@@ -7,9 +7,15 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const argument = process.argv[2];
 assert.ok(argument, "usage: node scripts/verify_generated_nsis.mjs <isolated-target-label-or-installer.nsi>");
 
+// A relative argument is the isolated target label; the Cargo target directory
+// is `src-tauri/target`. It read `src-tauri/src-tauri/target` until 2026-09-23,
+// so every relative label failed with ENOENT and the check was only ever run by
+// absolute path — found while building β.5.
 const candidate = path.isAbsolute(argument)
   ? argument
-  : path.join(ROOT, "src-tauri/src-tauri/target", argument, "release/nsis/x64/installer.nsi");
+  : argument.endsWith(".nsi")
+    ? path.resolve(ROOT, argument)
+    : path.join(ROOT, "src-tauri/target", argument, "release/nsis/x64/installer.nsi");
 await stat(candidate);
 const generated = await readFile(candidate, "utf8");
 

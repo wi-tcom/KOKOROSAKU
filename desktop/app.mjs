@@ -1,10 +1,18 @@
 import { catalogFacets, compareCharacters, filterCatalog, packageSummary, parseViewerPayload, viewerCopy } from "./viewer.mjs";
 import * as ActiveSaku from "../tools/unified-v1/active-saku.mjs";
 import * as Library from "../tools/unified-v1/character-library.mjs";
+import * as WorkspaceState from "../tools/unified-v1/workspace-state.mjs";
 import { parseCharacterText, YamlLiteError } from "../tools/unified-v1/yaml-lite.mjs";
 import { admit, checkManifestBinding, classify, labelFor, UNKNOWN } from "../tools/unified-v1/character-schema.mjs";
-import { OPERATION_CLASS_TEXT, assessPackSignatures, packEntryMeta, packVerification, signatureStateText } from "../tools/unified-v1/character-pack-intake.mjs";
+import { formatValidationIssue, loadAdoptedSchema } from "../tools/v1/adopted-schema-validator.mjs";
+import { FIELDS as SEMANTIC_FIELDS } from "../tools/v1/semantic-registry.mjs";
+import { OPERATION_CLASS_TEXT, assessPackSignatures, assessReturnSignature, compareReturnWithLibrary, packEntryMeta, packVerification, returnEntryMeta, returnRelationText, returnVerification, signatureStateText } from "../tools/unified-v1/character-pack-intake.mjs";
 import { presentationTokens, absentAxes } from "../tools/unified-v1/axis-renderer.mjs";
+import { diagnose as diagnoseLocators, repairLocators } from "../tools/unified-v1/locator-repair.mjs";
+import { mountScreenHelp } from "../tools/unified-v1/screen-help.mjs";
+import { HANDOFF_FORMAT, characterPromptText, loadBaseLayer, platformLaunchText } from "../tools/unified-v1/platform-prompt.mjs";
+import { ECHO_CHECK_LABEL, ECHO_REQUEST, buildDirectiveLookup, compareEchoedDirectives, glossaryFallbackText } from "../tools/unified-v1/directive-glossary.mjs";
+import { BASE_DIRECTIVES_UNUSABLE, handoffOptions } from "../tools/unified-v1/handoff-context.mjs";
 import * as TuningUI from "./tuning-ui.mjs";
 import * as Tuning from "../tools/unified-v1/tuning/tuning-projection.mjs";
 
@@ -92,6 +100,40 @@ function localizePlaceholders() {
 
 let workspaceReady = false;
 
+// Wording for the workspace-scoped list (D-20260923-workspace-scoped-library).
+// Japanese approved: ライター&SNS 様式チェック 2026-09-24（Wi-t_Site 7ffbaa0, site-content/manuals/reviews/2026-09-24_saku-builder-5groups-wording-check.md）.
+// English: 英語翻訳チーム 2026-09-24（ライター&SNS 経由、Wi-t_Site bb7c84d, `SAKU-verify/saku-speedtest-workspace-M_EN.json`）.
+export const WORKSPACE_WORDING_APPROVED = true;
+export const WORKSPACE_WORDING_JA = Object.freeze({
+  discardDraft: "編集中の内容が保存されていません。破棄して Workspace を切り替えますか？",
+  readOnly: "この Workspace は別のウィンドウで開かれています。このウィンドウでは変更を保存しません。編集は、先に開いたウィンドウで行ってください。",
+  writeFailed: "Workspace に書き込めませんでした。保存先の空き容量とアクセス権を確認してください。",
+});
+export const WORKSPACE_WORDING_EN = Object.freeze({
+  discardDraft: "Your edits have not been saved. Discard them and switch the Workspace?",
+  readOnly: "This Workspace is open in another window. Changes are not saved in this window. Make your edits in the window that opened it first.",
+  writeFailed: "The Workspace could not be written. Check the free space and the access rights of the save location.",
+});
+const workspaceWording = key => (locale() === "en-US" ? WORKSPACE_WORDING_EN : WORKSPACE_WORDING_JA)[key];
+
+function showWorkspaceBinding(result) {
+  if (result.status === "READ_ONLY") {
+    setNativeEnabled(false);
+    showStatus("WORKSPACE_READ_ONLY", workspaceWording("readOnly"), "warning");
+    return true;
+  }
+  if (result.status === "FAILED") { showWriteFailed(result.reason); return true; }
+  return false;
+}
+// A write the workspace refused (or could not take) is said, not swallowed.
+window.addEventListener("saku-workspace-state-error", event => showWriteFailed(event.detail?.error));
+// The sentence says what to check; the host's technical reason is not user
+// language, so it rides in the title attribute (ライター&SNS 2026-09-24 §5).
+function showWriteFailed(reason) {
+  showStatus("WORKSPACE_STATE_WRITE_FAILED", workspaceWording("writeFailed"), "error");
+  const host = $("host-status"); if (host) host.title = String(reason || "");
+}
+
 function renderState(state) {
   const workspace = state.workspace || "未選択";
   $("workspace-path").textContent = workspace; $("workspace-path-detail").textContent = workspace;
@@ -106,6 +148,8 @@ function renderState(state) {
 // single next thing to do, so the home screen is never just a status report.
 function renderHomeGuidance(workspace) {
   if (!workspaceReady) return;
+  // A read-only window keeps saying so: the guidance would replace that notice.
+  if (WorkspaceState.isReadOnly()) return;
   const subject = ActiveSaku.summary();
   if (!subject) { showStatus("CHARACTER_REQUIRED", "「01 キャラクターを選択する」からキャラクターを選択してください。", "info"); return; }
   const name = subject.identity.display_name || subject.identity.character_id || "選択中のキャラクター";
@@ -114,7 +158,18 @@ function renderHomeGuidance(workspace) {
 
 async function refreshState() {
   if (!invoke) { revealShell(); setNativeEnabled(false); showStatus("DESKTOP_HOST_REQUIRED", "この画面はbrowser previewです。Workspace選択とnative Package importはSAKUアプリで利用できます。", "warning"); showRecovery("host"); return; }
-  try { renderState(await invoke("get_runtime_state")); revealShell(); } catch (error) { revealShell(); showStatus("HOST_STATE_FAILED", String(error), "error"); showRecovery("host", String(error)); }
+  try {
+    const state = await invoke("get_runtime_state");
+    // The working copy is made the open workspace's before anything is shown.
+    const bound = await WorkspaceState.bindAtStartup(state);
+    window.__saku_workspace_state_bound = bound;
+    renderState(state); revealShell();
+    // The views were drawn at load from the working copy as it was; draw them
+    // again from what the binding left there (a restore or migration changes it),
+    // and only then say how the binding went, so nothing drawn replaces that.
+    renderImportHistory(); renderLibrary(); renderActiveSaku();
+    showWorkspaceBinding(bound);
+  } catch (error) { revealShell(); showStatus("HOST_STATE_FAILED", String(error), "error"); showRecovery("host", String(error)); }
 }
 
 async function applyStartupRoute() {
@@ -124,9 +179,20 @@ async function applyStartupRoute() {
   return false;
 }
 
+// Pick the folder, ask about an unsaved draft, then switch: the list, the
+// import history and the selected Character become the new workspace's.
 async function chooseWorkspace() {
-  try { renderState(await invoke("choose_workspace")); }
-  catch (error) { const message = String(error); showStatus(message.includes("CANCELLED") ? "WORKSPACE_SELECTION_CANCELLED" : "WORKSPACE_SELECTION_FAILED", message, message.includes("CANCELLED") ? "warning" : "error"); showRecovery("workspace", message); }
+  const result = await WorkspaceState.switchWorkspace({ confirm: () => window.confirm(workspaceWording("discardDraft")) });
+  if (result.status === "SWITCHED") {
+    renderState(result.runtime);
+    renderImportHistory(); renderLibrary(); renderActiveSaku();
+    showWorkspaceBinding({ status: result.adopted });
+    return;
+  }
+  if (result.status === "KEPT_DRAFT") return;   // the Owner chose to stay with the draft
+  if (showWorkspaceBinding(result)) return;
+  const message = String(result.reason || result.status);
+  showStatus(result.status === "CANCELLED" ? "WORKSPACE_SELECTION_CANCELLED" : "WORKSPACE_SELECTION_FAILED", message, result.status === "CANCELLED" ? "warning" : "error"); showRecovery("workspace", message);
 }
 
 function availabilityLabel(value) {
@@ -134,8 +200,18 @@ function availabilityLabel(value) {
   return value === "AVAILABLE" ? labels.available : value === "UNAVAILABLE" ? labels.unavailable : value === "LOCKED" ? labels.locked : labels.unverified;
 }
 
+// Nothing imported since the app started (β.7 hands-on F5, 2026-09-24): the
+// panel listed UNKNOWN six times and an English reason. Approved: ライター&SNS
+// 様式チェック 2026-09-24 (Wi-t_Site 59b31dd). English: 英語翻訳チーム via ライター&SNS 2026-09-24（Wi-t_Site 922d0b9, SAKU-verify/saku-beta7-findings-O_EN.json）.
+export const PACKAGE_EMPTY_EN = "No Package has been imported since the app started. Select a row in the import history to show the result from that time.";
+export const PACKAGE_EMPTY_JA = "アプリを起動してから、まだ Package を取り込んでいません。取り込み履歴の行を選ぶと、そのときの結果を表示します。";
 function packageFields(summary) {
   const labels = copy();
+  if (summary.status === "UNKNOWN" && summary.code === "NOT_PROVIDED") {
+    const dl = $("viewer-package-fields"); dl.replaceChildren();
+    const note = document.createElement("p"); note.className = "small"; note.dataset.packageEmpty = ""; note.textContent = locale() === "en-US" ? PACKAGE_EMPTY_EN : PACKAGE_EMPTY_JA;
+    dl.append(note); return;
+  }
   const values = [[labels.status, summary.status], [labels.product, summary.product], [labels.version, summary.version], [labels.compatibility, summary.compatibility], [labels.hash, summary.payload_hash], [labels.reason, `${summary.code}: ${summary.reason}`]];
   const dl = $("viewer-package-fields"); dl.replaceChildren();
   for (const [label, value] of values) { const row = document.createElement("div"); const dt = document.createElement("dt"); const dd = document.createElement("dd"); dt.textContent = label; dd.textContent = value; dd.dataset.runtimeValue = ""; row.append(dt, dd); dl.append(row); }
@@ -166,7 +242,17 @@ function importRecovery(code, reason) {
   if (code === "PAYLOAD_SCHEMA_NOT_DECLARED" || code === "SCHEMA_NOT_DECLARED") {
     return `${reason} Schema未宣言のCharacterを直接Unified Characterとして扱いません。Legacy Characterの場合はSAKU ConverterとConversion Receiptを経由してください。`;
   }
+  if (code === "CONFORMANCE_LOCATOR_MISMATCH") {
+    return `${reason} conformance_expectations の locator が requirement_id と別の要件を指しているため、このCharacterは取り込みません（Schema の規則: 参照不一致は fail closed）。Builder側では内容を書き換えず、作成元／配布元から修正版を入手してください。`;
+  }
   if (code === "PACKAGE_FORMAT_UNRECOGNIZED" || code === "PACKAGE_JSON_INVALID") return reason;
+  // Two files this route names but never imports: the AMU Character File
+  // belongs to AMU Studio; a bare Character JSON/YAML belongs to 個別インポート.
+  if (code === "PACKAGE_FORMAT_AMU_CHARACTER_FILE" || code === "PACKAGE_FORMAT_INDIVIDUAL_FILE") return reason;
+  if (code === "LOCATOR_REPAIRED") return reason;
+  if (String(code || "").startsWith("SAKU_RETURN_")) {
+    return `${reason} AMU Studio の「この編集内容を SAKU へ戻す」で作った .saku-return.zip をそのまま（解凍・編集せずに）選んでください。中身が合わない場合は AMU Studio で作り直してください。`;
+  }
   if (String(code || "").startsWith("CHARACTER_PACK_")) {
     return `${reason} SAKU Character Pack は ZIP のまま（解凍せずに）選んでください。ファイルが配布元のものと同じかは SHA256SUMS で確認できます。`;
   }
@@ -220,7 +306,22 @@ function renderDetail(record) {
   const dl = document.createElement("dl");
   addDetailRow(dl, labels.role, record.role); addDetailRow(dl, labels.category, record.category); addDetailRow(dl, labels.revision, record.revision);
   addDetailRow(dl, labels.availability, availabilityLabel(record.availability), false); addDetailRow(dl, labels.packageState, record.package_state, false);
-  if (record.provenance) {
+  if (record.provenance && record.provenance.locator_repair) {
+    const lang = locale() === "en-US" ? "en" : "ja";
+    const repair = record.provenance.locator_repair;
+    addDetailRow(dl, lang === "en" ? "Locator repair" : "locator 修復", lang === "en"
+      ? `rev ${repair.from_revision} → ${repair.to_revision}, ${repair.rewritten} locator(s) re-pointed by id, ${repair.repaired_at}`
+      : `rev ${repair.from_revision} → ${repair.to_revision}、locator ${repair.rewritten}件を id で再計算、${repair.repaired_at}`, false);
+    addDetailRow(dl, lang === "en" ? "Content digest" : "内容 digest", `${String(repair.digest_before || "").slice(0, 16)}… → ${String(repair.digest_after || "").slice(0, 16)}…（本文は不変・locator と revision のみ）`, false);
+  } else if (record.provenance && record.provenance.edit_request) {
+    const lang = locale() === "en-US" ? "en" : "ja";
+    const request = record.provenance.edit_request;
+    addDetailRow(dl, lang === "en" ? "Edit request from AMU" : "AMU からの編集依頼", request.note || "", true);
+    addDetailRow(dl, lang === "en" ? "Fields to revise" : "依頼フィールド", (request.fields || []).length ? request.fields.join("、") : (lang === "en" ? "not specified" : "指定なし"), false);
+    if (request.from_instance) addDetailRow(dl, lang === "en" ? "From Instance" : "元の Instance", `${request.from_instance.amu_instance_ref || ""}${request.from_instance.instance_config_digest ? ` · ${String(request.from_instance.instance_config_digest).slice(0, 23)}…` : ""}`, false);
+    addDetailRow(dl, lang === "en" ? "Requested at" : "依頼日時", request.created_at || "", false);
+    addDetailRow(dl, lang === "en" ? "Signature" : "署名", signatureStateText(record.provenance.signature_state, lang, record.provenance.publisher_fingerprint), false);
+  } else if (record.provenance) {
     const lang = locale() === "en-US" ? "en" : "ja";
     const classText = OPERATION_CLASS_TEXT[record.provenance.operation_class];
     addDetailRow(dl, lang === "en" ? "Operation class" : "運用区分", classText ? classText[lang] : String(record.provenance.operation_class || "UNKNOWN"), false);
@@ -540,6 +641,14 @@ function renderLibrary() {
   if (totals.active) showViewerStatus("LIBRARY_READY", `一覧 ${totals.active}件 — この画面でCharacter dataは変更しません（Viewer data mutation: 0）`, "success");
 }
 
+/** The per-Character glossaries the host carried out of the pack, keyed by character_id. */
+function directivesOf(payloadJson) {
+  let payload;
+  try { payload = typeof payloadJson === "string" ? JSON.parse(payloadJson) : payloadJson; }
+  catch { return null; }
+  return payload && typeof payload.directives === "object" && payload.directives ? payload.directives : null;
+}
+
 function charactersOf(payloadJson) {
   let payload;
   try { payload = typeof payloadJson === "string" ? JSON.parse(payloadJson) : payloadJson; }
@@ -564,11 +673,20 @@ function resolveConflicts(characters) {
 // Package integrity is settled before this point. Whether the Character inside
 // is a schema this application can read is a separate question, asked here, and
 // nothing that fails it reaches the list.
-function admitCharacters(characters) {
+//
+// The question is asked of the adopted schema — the same file, loaded the same
+// way, as the edit screen's save (Owner 2026-09-23). If the schema cannot be
+// read, the gate refuses every Unified V1 Character instead of falling back to
+// the hand checks, and the refusal carries the loader's reason.
+async function admitCharacters(characters) {
   const accepted = new Map();   // schema kind -> characters
   const refused = [];
+  let schema = null, schemaProblem = "";
+  try { schema = await loadAdoptedSchema(); } catch (error) { schemaProblem = String(error?.message || error); }
+  const describe = issue => formatValidationIssue(issue, SEMANTIC_FIELDS, locale() === "en-US" ? "en" : "ja");
   for (const [index, character] of characters.entries()) {
-    const verdict = admit(character);
+    const verdict = admit(character, { schema, describe });
+    if (!verdict.accepted && schemaProblem && verdict.code === "ADOPTED_SCHEMA_REQUIRED") verdict.reason = `${verdict.reason} ${schemaProblem}`;
     const name = Library.displayNameOf(character) || `#${index + 1}`;
     if (!verdict.accepted) { refused.push({ name, code: verdict.code, reason: verdict.reason }); continue; }
     const key = JSON.stringify({ kind: verdict.kind, schema_id: verdict.schema_id, schema_version: verdict.schema_version });
@@ -630,10 +748,15 @@ async function reconstructFromWorkspace() {
   try { durable = await invoke("list_workspace_characters"); }
   catch (error) { return { status: "SCAN_FAILED", recovered: 0, reason: String(error) }; }
   if (durable.status === "NO_WORKSPACE") return { status: "NO_WORKSPACE", recovered: 0 };
+  // Something may have entered the list while the workspace was being read (an
+  // import the Owner started right away). The list is no longer empty, so there
+  // is nothing to rebuild — and nothing to report as empty.
+  if (Library.summary().total) return { status: "INDEX_NOT_EMPTY", recovered: 0 };
   const characters = [];
   for (const artifact of durable.artifacts || []) characters.push(...charactersFromArtifact(artifact));
   if (!characters.length) return { status: "NOTHING_DURABLE", recovered: 0, workspace: durable.workspace };
-  const { accepted } = admitCharacters(characters);
+  const { accepted } = await admitCharacters(characters);
+  if (Library.summary().total) return { status: "INDEX_NOT_EMPTY", recovered: 0 };
   let recovered = 0;
   for (const [key, group] of accepted) {
     const outcome = Library.importCharacters(group, "WORKSPACE_RECOVERY", { onConflict: "KEEP_BOTH", verification: null, schema: JSON.parse(key) });
@@ -643,9 +766,9 @@ async function reconstructFromWorkspace() {
   return { status: recovered ? "RECOVERED" : "NOTHING_RECOVERED", recovered, workspace: durable.workspace };
 }
 
-function addToLibrary(characters, source, verification, entryMeta = null) {
+async function addToLibrary(characters, source, verification, entryMeta = null) {
   if (!characters.length) { showViewerStatus("NOTHING_TO_IMPORT", "読み込めるCharacterがファイルに含まれていません。", "warning"); return null; }
-  const { accepted, refused } = admitCharacters(characters);
+  const { accepted, refused } = await admitCharacters(characters);
   let added = 0, replaced = 0, failure = "";
   for (const [key, group] of accepted) {
     const schema = JSON.parse(key);
@@ -665,22 +788,22 @@ function addToLibrary(characters, source, verification, entryMeta = null) {
 
 // A one-shot handoff left over from an older flow is adopted into the list once,
 // so an Owner who imported before this screen existed does not lose it.
-function adoptPendingHandoff() {
+async function adoptPendingHandoff() {
   if (Library.summary().total) return;
   const pending = localStorage.getItem("saku.desktop.pendingPack") || localStorage.getItem("saku.desktop.pendingCharacter");
   const characters = pending ? charactersOf(pending) : [];
   // A handoff is intake like any other: it passes the same schema gate, so a
   // Character left behind by an older flow cannot enter unclassified.
-  const adopt = list => {
-    const { accepted } = admitCharacters(list);
+  const adopt = async list => {
+    const { accepted } = await admitCharacters(list);
     for (const [key, group] of accepted) Library.importCharacters(group, "HANDOFF", { onConflict: "KEEP_BOTH", schema: JSON.parse(key) });
     return [...accepted.values()].reduce((total, group) => total + group.length, 0);
   };
-  if (characters.length && adopt(characters)) return;
+  if (characters.length && await adopt(characters)) return;
   // A handoff is consumed once, so an Owner who already has a subject would
   // otherwise arrive at an empty list and wonder where it went.
   const subject = ActiveSaku.getWorkingCharacter();
-  if (subject) adopt([subject]);
+  if (subject) await adopt([subject]);
 }
 
 function showTuning(record) {
@@ -715,18 +838,21 @@ function readObservedStates(record) {
   } catch { return {}; }
 }
 
-function showViewer() {
+async function showViewer() {
   $("home-content").hidden = true; $("viewer-panel").hidden = false;
-  adoptPendingHandoff(); renderLibrary(); $("viewer-back").focus();
+  renderLibrary(); $("viewer-back").focus();
+  // Both of these fill an empty list, and both ask "is the list empty?" first.
+  // The handoff is adopted before the workspace is read; run together, each
+  // would see an empty list and the same Character would be imported twice.
+  await adoptPendingHandoff(); renderLibrary();
   // An empty index after an uninstall that removed app data is a recoverable
   // state, not an empty Library. Rebuild from the workspace and say so.
-  reconstructFromWorkspace().then(result => {
-    if (result.status === "RECOVERED") {
-      showViewerStatus("LIBRARY_RECOVERED_FROM_WORKSPACE", `${result.recovered}件をworkspaceから復元しました（${result.workspace}）。Character dataは変更していません。`, "success");
-    } else if (result.status === "NOTHING_DURABLE") {
-      showViewerStatus("LIBRARY_EMPTY_NO_DURABLE_COPY", `一覧は空です。workspace（${result.workspace}）にも復元できるCharacterがありません。`, "info");
-    }
-  });
+  const result = await reconstructFromWorkspace();
+  if (result.status === "RECOVERED") {
+    showViewerStatus("LIBRARY_RECOVERED_FROM_WORKSPACE", `${result.recovered}件をworkspaceから復元しました（${result.workspace}）。Character dataは変更していません。`, "success");
+  } else if (result.status === "NOTHING_DURABLE") {
+    showViewerStatus("LIBRARY_EMPTY_NO_DURABLE_COPY", `一覧は空です。workspace（${result.workspace}）にも復元できるCharacterがありません。`, "info");
+  }
 }
 function renderActiveSaku() {
   const host = $("selected-character");
@@ -774,9 +900,11 @@ function readImportHistory() {
 }
 
 function recordImport(entry) {
+  // The history belongs to the open workspace; a window that does not hold it writes nothing.
+  if (WorkspaceState.isReadOnly()) return;
   const history = readImportHistory();
   history.unshift({ ...entry, at: new Date().toISOString() });
-  try { localStorage.setItem(IMPORT_HISTORY_KEY, JSON.stringify(history.slice(0, 50))); } catch { /* full or blocked */ }
+  try { localStorage.setItem(IMPORT_HISTORY_KEY, JSON.stringify(history.slice(0, 50))); WorkspaceState.noteChanged(IMPORT_HISTORY_KEY); } catch { /* full or blocked */ }
   renderImportHistory();
 }
 
@@ -1020,7 +1148,17 @@ function showHome() { $("viewer-panel").hidden = true; $("tuning-panel").hidden 
 // the exact text to paste into whichever AI they use, and says plainly what a
 // general AI service does not give them. Copying never changes the Character.
 
-let platformFormat = "prompt";
+// The Library entry for the Character 03 is about. Its provenance carries the
+// two things that are not in the Character: the operation class, which comes
+// from the signed catalog (統制卓 2026-09-23 ②), and the pack's own glossary.
+// 03 hands over the operation class's directive lines so that 「使う前に人の確認」
+// reaches the external AI too. This is not the regulated passthrough, which
+// stays closed on this path.
+function libraryEntryForPlatform() {
+  const id = String(ActiveSaku.getActive()?.character?.identity?.character_id || "").trim();
+  if (!id) return null;
+  return libraryEntries.find(item => !item.deleted && String(item?.character?.identity?.character_id || "") === id) || null;
+}
 
 function activeCharacterForPlatform() {
   const active = ActiveSaku.getActive();
@@ -1031,94 +1169,53 @@ function activeCharacterForPlatform() {
   return active?.character && typeof active.character === "object" ? active.character : null;
 }
 
-function platformLaunchText(character, format) {
-  if (!character) return "";
-  const name = String(character?.identity?.display_name || "").trim() || "(display_name 未設定)";
-  const body = format === "json"
-    ? JSON.stringify(character, null, 2)
-    : format === "yaml"
-      ? toPlainYaml(character)
-      : characterPromptText(character);
-  const instruction = [
-    "以下はあなたが演じるキャラクターの定義です。",
-    "1. この定義に従って振る舞ってください。",
-    "2. 定義に書かれていない必要な情報を、勝手に作って埋めないでください。分からないことは分からないと言ってください。",
-    "3. まずキャラクターとして短いあいさつをしてください。",
-    "",
-    `--- ${name} のキャラクター定義 ここから ---`,
-    body,
-    `--- ${name} のキャラクター定義 ここまで ---`,
-  ];
-  return instruction.join("\n");
+// The 03 prompt hands each selected value over with its Directive Glossary
+// lines (L2); the glossary is the field guide, loaded once per page. Until it
+// is loaded (or if it cannot be) the text says so instead of passing bare
+// tokens quietly.
+let platformDirectives = null;
+let platformGlossaryDigest = null;
+let platformDirectivesLoad = null;
+function ensurePlatformDirectives() {
+  if (platformDirectivesLoad) return platformDirectivesLoad;
+  platformDirectivesLoad = (async () => {
+    for (const url of ["./help/saku-field-guide.data.json", "../manual/saku-field-guide.data.json"]) {
+      try { const response = await fetch(url); if (!response.ok) continue; const guide = await response.json(); platformDirectives = buildDirectiveLookup(guide); platformGlossaryDigest = guide?.directive_glossary?.sha256 || null; break; }
+      catch { /* try the next location */ }
+    }
+    if (platformDirectives && !$("platform-panel")?.hidden) renderPlatform();
+    return platformDirectives;
+  })();
+  return platformDirectivesLoad;
 }
 
-// A readable YAML rendering of the Character. Authoring output only.
-function toPlainYaml(value, indent = 0) {
-  const pad = "  ".repeat(indent);
-  if (value === null || value === undefined) return "";
-  if (Array.isArray(value)) {
-    if (!value.length) return " []";
-    return "\n" + value.map(item => (item && typeof item === "object")
-      ? `${pad}  -${toPlainYaml(item, indent + 2)}`
-      : `${pad}  - ${String(item)}`).join("\n");
-  }
-  if (typeof value === "object") {
-    const lines = Object.entries(value).map(([key, item]) => {
-      const rendered = (item && typeof item === "object") ? toPlainYaml(item, indent + 1) : ` ${String(item)}`;
-      return `${pad}${key}:${rendered}`;
-    });
-    return (indent === 0 ? "" : "\n") + lines.join("\n");
-  }
-  return ` ${String(value)}`;
-}
-
-function characterPromptText(character) {
-  const identity = character?.identity || {};
-  const purpose = character?.purpose || {};
-  const core = character?.character_core || {};
-  const expression = character?.expression_semantics || {};
-  const seat7 = character?.assistant_composition?.seat7 || {};
-  const seat8 = character?.assistant_composition?.seat8 || {};
-  const lines = [];
-  const add = (label, value) => { if (value !== undefined && value !== null && String(value).trim()) lines.push(`${label}: ${value}`); };
-  const addList = (label, list) => { if (Array.isArray(list) && list.length) lines.push(`${label}: ${list.join(" / ")}`); };
-  const required = (label, value) => lines.push(`${label}: ${value !== undefined && value !== null && String(value).trim() ? value : "未設定（推測しない）"}`);
-  lines.push("【Identity】");
-  add("名前", identity.display_name);
-  add("Character ID", identity.character_id);
-  add("Revision", identity.character_revision);
-  required("役割", core.character_role);
-  lines.push("");
-  lines.push("【Purpose / Values】");
-  required("目的", purpose.summary);
-  required("提供価値", purpose.primary_value);
-  addList("対象", purpose.target_users);
-  addList("対応しない領域", purpose.non_goals);
-  required("価値観", Array.isArray(core.values) && core.values.length ? core.values.join(" / ") : "");
-  for (const invariant of core.hard_invariants || []) add("守ること", invariant.statement);
-  addList("ゆらいでよい範囲", core.expressive_range?.allowed_variation);
-  addList("ゆらいではいけない範囲", core.expressive_range?.prohibited_drift);
-  lines.push("");
-  lines.push("【Voice / Expression】");
-  add("一人称", expression.first_person);
-  add("口調", expression.address_style);
-  required("話し方（voice）", expression.voice);
-  add("不確実性の表し方", expression.uncertainty_expression);
-  add("誤りの正し方", expression.error_correction_rule);
-  add("会話の閉じ方", expression.closing_rule);
-  addList("好む問い方", expression.preferred_questions);
-  lines.push("");
-  lines.push("【席7・席8の境界】");
-  required("席7の機能", seat7.function);
-  addList("席7の責務", seat7.responsibilities);
-  lines.push("席7はCharacterの人格・価値観・話し方・役割境界の一貫性を確認するAI側の席であり、席8の人間判断を代行しません。");
-  for (const condition of core.human_handoff_conditions || []) add("人間へ渡す条件", `${condition.trigger} → ${condition.boundary_statement}`);
-  addList("人間に期待する寄与", seat8.expected_human_contribution);
-  lines.push("席8は人間です。AIがこの席を埋めることはできません。");
-  return lines.join("\n");
+// The shared base layer B, read once per page and checked against the digest the
+// product was built with. If it does not check out, 03 hands over nothing at all
+// (設計 2026-09-23 §9) — so the screen has to say why, plainly.
+let baseLayer = null;
+let baseLayerProblems = [];
+let baseLayerLoad = null;
+function ensureBaseLayer() {
+  if (baseLayerLoad) return baseLayerLoad;
+  baseLayerLoad = (async () => {
+    const read = async name => {
+      for (const url of [`./help/${name}`, `../desktop/resources/${name}`]) {
+        try { const response = await fetch(url); if (response.ok) return await response.text(); } catch { /* try the next location */ }
+      }
+      return null;
+    };
+    const result = await loadBaseLayer(read);
+    baseLayer = result.layer;
+    baseLayerProblems = result.problems;
+    if (!$("platform-panel")?.hidden) renderPlatform();
+    return result;
+  })();
+  return baseLayerLoad;
 }
 
 function renderPlatform() {
+  ensurePlatformDirectives();
+  ensureBaseLayer();
   const character = activeCharacterForPlatform();
   const nameSlot = $("platform-active");
   const launch = $("platform-launch");
@@ -1126,16 +1223,49 @@ function renderPlatform() {
     setStatus($("platform-subject"), "CHARACTER_REQUIRED", "「01 キャラクターを選択する」からキャラクターを選んでください。", "warning");
     if (nameSlot) nameSlot.textContent = "未選択";
     if (launch) launch.value = "";
+    // Nothing to copy: the button says so by not being pressable (it used to accept the click and do nothing).
+    if ($("platform-copy")) $("platform-copy").disabled = true;
     return;
   }
   const name = String(character?.identity?.display_name || "").trim() || "(display_name 未設定)";
   const revision = String(character?.identity?.character_revision || "").trim() || "revision 未設定";
   setStatus($("platform-subject"), "PLATFORM_SUBJECT", [{ data: name }, " — 貼り付けてもCharacterは変更されません。"], "info");
   if (nameSlot) nameSlot.textContent = `${name}（${revision}）`;
-  if (launch) launch.value = platformLaunchText(character, platformFormat);
-  for (const button of document.querySelectorAll("[data-platform-format]")) {
-    button.setAttribute("aria-pressed", String(button.dataset.platformFormat === platformFormat));
+  const { options, glossaryProblems } = handoffOptions({ baseLayer, directives: platformDirectives, glossaryDigest: platformGlossaryDigest }, libraryEntryForPlatform());
+  if (launch) launch.value = platformLaunchText(character, HANDOFF_FORMAT, options);
+  // A base layer that does not check out yields no text (fail closed): nothing to copy then either.
+  if ($("platform-copy")) $("platform-copy").disabled = !launch?.value;
+  if (baseLayerProblems.length) {
+    // Nothing is handed over in this state, so the message says that first.
+    // The wording is the approved one, shared with 04 Trainer (handoff-context.mjs).
+    setStatus($("platform-subject"), "BASE_DIRECTIVES_UNUSABLE", [
+      ...BASE_DIRECTIVES_UNUSABLE,
+    ].join(""), "error");
+    $("platform-subject").title = baseLayerProblems.join(" / ");
   }
+  if (glossaryProblems.length) {
+    // Warning, not error: nothing is lost and the paste still works (ライター&SNS 2026-09-23).
+    setStatus($("platform-subject"), "GLOSSARY_FROM_APP", glossaryFallbackText(glossaryProblems), "warning");
+    $("platform-subject").title = glossaryProblems.map(problem => problem.detail).join(" / ");   // the internal reason, for support
+  }
+  renderEchoRequest();
+  if (platformHelp) platformHelp.refresh();
+}
+
+// U4: the shared help tree beside 03. The platform guide explains each step.
+// The step headings carried a 「同期」 button as well; Owner removed it on
+// 2026-09-23 as a duplicate — the pane is already beside the steps, and the
+// tree's 「入力欄へ」 still walks back to the step it explains.
+let platformHelp = null;
+async function ensurePlatformHelp() {
+  if (platformHelp !== null) return platformHelp;
+  platformHelp = false;   // one attempt per page load
+  const aside = $("platform-help"); if (!aside) return false;
+  const help = await mountScreenHelp({ aside, guideUrls: ["./help/platform-guide.data.json", "../manual/platform-guide.data.json"], locale: locale() === "en-US" ? "en" : "ja" });
+  if (!help) return false;
+  platformHelp = help; help.fromHash();
+  window.__saku_platform_help = help;
+  return help;
 }
 
 function showPlatform() {
@@ -1145,6 +1275,7 @@ function showPlatform() {
   $("platform-panel").hidden = false;
   renderPlatform();
   $("platform-back").focus();
+  void ensurePlatformHelp();
 }
 
 function handOffImport(result) {
@@ -1178,15 +1309,20 @@ function handOffImport(result) {
     return;
   }
   if (result.pack) { handOffCharacterPack(result, characters, binding); return; }
-  const key = result.manifest?.content_type === "CHARACTER" ? "saku.desktop.pendingCharacter" : "saku.desktop.pendingPack";
-  if (key === "saku.desktop.pendingCharacter") storeBoundCharacter(key, result.payload_json); else localStorage.setItem(key, result.payload_json);
-  clearRecovery(); showStatus("PACKAGE_IMPORTED", `${result.reason} 保存先: ${result.imported_path}`, "success");
-  addToLibrary(characters, "PACKAGE", { status: result.status, code: result.code, product: result.manifest?.product || "", schema_id: binding.schema_id, schema_version: binding.schema_version });
+  if (result.saku_return) { handOffSakuReturn(result, characters); return; }
+  // Since 2026-09-21 the host imports SAKU Character Packs only (the two-file
+  // Builder package is retired), so an IMPORTED result without a pack summary
+  // is a host/page mismatch, not a Character to adopt.
+  showStatus("PACKAGE_RESULT_UNEXPECTED", "取り込み結果に Character Pack の情報がありません。アプリを更新してから読み込み直してください。", "error");
+  showViewerStatus("PACKAGE_RESULT_UNEXPECTED", "取り込み結果に Character Pack の情報がありません。取り込みは行いませんでした。", "error");
 }
 
 // A sold SAKU Character Pack. The host recomputed every digest; the signatures
 // are checked here with the pinned publisher keys. FAIL refuses the whole pack.
 // DIGEST_ONLY (no Ed25519 in this WebView) imports, but the label says so.
+/** The sentence the host writes about signatures (main.rs import_character_pack). */
+const HOST_SIGNATURE_NOT_VERIFIED = "署名（Ed25519）はこのホストでは未検証です。";
+
 async function handOffCharacterPack(result, characters, binding) {
   const pack = result.pack;
   const signatures = await assessPackSignatures(pack);
@@ -1198,14 +1334,54 @@ async function handOffCharacterPack(result, characters, binding) {
     recordImport({ kind: "PACKAGE", source_path: result.source_path || "", status: "REFUSED", code: "CHARACTER_PACK_SIGNATURE_INVALID", fields: [] });
     return;
   }
+  // The host does not verify signatures and says so in its reason; this page
+  // just did. Leaving the host's sentence in the 理由 row put 「未検証」 beside
+  // 「署名検証 PASS」 in the detail row (β.6 hands-on, 2026-09-23). The row now
+  // carries what the page verified, in the detail row's own words.
+  if (currentImportResult === result && typeof result.reason === "string" && result.reason.includes(HOST_SIGNATURE_NOT_VERIFIED)) {
+    const verified = signatureStateText(signatures.signature_state, "ja", signatures.fingerprints?.[pack.pack_publisher_key_id] || null);
+    currentImportResult = { ...result, reason: result.reason.replace(HOST_SIGNATURE_NOT_VERIFIED, `${verified}。`) };
+    packageFields(packageSummary(currentImportResult));
+  }
   const verification = packVerification(result, signatures);
-  const meta = packEntryMeta(pack, signatures);
+  const meta = packEntryMeta(pack, signatures, directivesOf(result.payload_json));
   const classes = [...meta.values()].reduce((acc, item) => { acc[item.operation_class] = (acc[item.operation_class] || 0) + 1; return acc; }, {});
   const classText = Object.entries(classes).sort().map(([cls, count]) => `${cls}:${count}`).join(" / ");
   clearRecovery();
   showStatus("CHARACTER_PACK_IMPORTED", `${pack.pack_id} ${pack.pack_version}: ${pack.character_count}体（運用区分 ${classText}）。${signatureStateText(signatures.signature_state, "ja", signatures.fingerprints?.[pack.pack_publisher_key_id] || null)}。保存先: ${result.imported_path}`, signatures.signature_state === "PASS" ? "success" : "warning");
-  addToLibrary(characters, "PACKAGE", verification, character => meta.get(String(character?.identity?.character_id || "")) || null);
+  await addToLibrary(characters, "PACKAGE", verification, character => meta.get(String(character?.identity?.character_id || "")) || null);
   void binding;
+}
+
+// AMU Studio 「この編集内容を SAKU へ戻す」. The host cross-checked request,
+// character.json, the signed manifest and the enclosed archive; the signature
+// is checked here with the pinned keys (FAIL refuses). The Character enters the
+// list once with the edit request as its provenance, and the status says how it
+// relates to what the list already holds. Nothing is written to the workspace
+// by the host; the Library mirror behaves as for any other Character.
+async function handOffSakuReturn(result, characters) {
+  const ret = result.saku_return;
+  const signatures = await assessReturnSignature(ret);
+  if (signatures.signature_state === "FAIL") {
+    const reason = `署名検証に失敗したため取り込みませんでした: ${signatures.detail}`;
+    showStatus("SAKU_RETURN_SIGNATURE_INVALID", reason, "error");
+    showViewerStatus("SAKU_RETURN_SIGNATURE_INVALID", `${reason} AMU Studio で作り直すか、元のパックを取り込み直してください。`, "error");
+    showRecovery("package", "SAKU_RETURN_SIGNATURE_INVALID");
+    recordImport({ kind: "PACKAGE", source_path: result.source_path || "", status: "REFUSED", code: "SAKU_RETURN_SIGNATURE_INVALID", fields: [] });
+    return;
+  }
+  const comparison = compareReturnWithLibrary(ret, Library.list());
+  const lang = locale() === "en-US" ? "en" : "ja";
+  const verification = returnVerification(result, signatures);
+  const meta = returnEntryMeta(ret, signatures, comparison);
+  clearRecovery();
+  const noteHead = String(ret.note || "").replace(/\s+/g, " ").slice(0, 80) + (String(ret.note || "").length > 80 ? "…" : "");
+  const fieldsText = (ret.fields || []).length ? `対象: ${ret.fields.join("、")}` : "対象フィールドの指定なし";
+  showStatus("SAKU_RETURN_IMPORTED", `AMU Studio からの戻し: ${ret.display_name || ret.character_id} rev ${ret.character_revision}。編集依頼: ${noteHead}（${fieldsText}）。${returnRelationText(comparison, ret, lang)} ${signatureStateText(signatures.signature_state, lang, signatures.fingerprints?.[ret.publisher_key_id] || null)}。workspace には保存していません。`, signatures.signature_state === "PASS" ? "success" : "warning");
+  const outcome = await addToLibrary(characters, "SAKU_RETURN", verification, () => meta);
+  if (outcome?.saved && outcome.added + outcome.replaced > 0) {
+    showViewerStatus("SAKU_RETURN_IMPORTED", `${ret.display_name || ret.character_id}（rev ${ret.character_revision}）を一覧に追加しました（workspace には保存していません）。${returnRelationText(comparison, ret, lang)} 詳細の「AMU からの編集依頼」を確認してから編集してください。`, "success");
+  }
 }
 
 // Individual import: a Character authored as JSON or YAML, with no package
@@ -1224,13 +1400,61 @@ async function importCharacterFiles(files) {
       failures.push(`${file.name}: ${error instanceof YamlLiteError ? error.message : String(error && error.message || error)}`);
     }
   }
-  if (characters.length) addToLibrary(characters, "FILE", null);
+  // A Character whose only fault is a shifted locator (saved by the edit screen
+  // before 2026-09-22) is not imported as it is; it is set aside and the
+  // screen offers the one repair that is safe: re-pointing locators by id.
+  // Only on this route — a pack's character.json is signed and is never edited here.
+  // (Classified by the locator check itself, not by the schema verdict:
+  // admitCharacters stays the one gate, and a repaired Character still passes through it.)
+  const repairable = characters.filter(character => diagnoseLocators(character).repairable);
+  const clean = characters.filter(character => !repairable.includes(character));
+  const outcome = clean.length ? await addToLibrary(clean, "FILE", null) : null;
+  // The record says what the verdict was. A file that was read but whose
+  // Characters were all refused is REFUSED, not IMPORTED (β.6: a refused file
+  // sat in the history looking exactly like a successful one).
+  const entered = outcome ? outcome.added + outcome.replaced : 0;
+  const refusal = outcome?.refused?.[0]?.code || (repairable.length ? "CONFORMANCE_LOCATOR_MISMATCH" : "");
   for (const file of files) {
-    recordImport({ kind: "FILE", source_path: file.name || "", status: characters.length ? "IMPORTED" : "FAILED", code: "", fields: [] });
+    recordImport({ kind: "FILE", source_path: file.name || "", status: entered ? "IMPORTED" : (refusal ? "REFUSED" : "FAILED"), code: entered ? "" : refusal, fields: [] });
   }
+  if (repairable.length) offerLocatorRepair(repairable, files.map(file => file.name || "").join(", "));
   // Say what did not work as plainly as what did.
-  if (failures.length) showViewerStatus("FILE_IMPORT_FAILED", failures.join(" / "), characters.length ? "warning" : "error");
-  else if (notes.length) showViewerStatus("FILE_IMPORT_WARNING", notes.join(" / "), "warning");
+  if (failures.length) showViewerStatus("FILE_IMPORT_FAILED", failures.join(" / "), clean.length ? "warning" : "error");
+  else if (notes.length && !repairable.length) showViewerStatus("FILE_IMPORT_WARNING", notes.join(" / "), "warning");
+}
+
+// The refusal names each shifted locator, and one button repairs them: every
+// `locator` is recomputed from `id == requirement_id`, nothing else changes,
+// the revision is bumped, and the repair record travels with the Character
+// as provenance. A Character whose requirement_id exists nowhere stays refused.
+function offerLocatorRepair(repairable, sourceNames) {
+  const lines = repairable.flatMap(character => {
+    const name = Library.displayNameOf(character) || String(character?.identity?.character_id || "");
+    return diagnoseLocators(character).lines.slice(0, 3).map(line => `${name}: ${line}`);
+  });
+  showViewerStatus("CONFORMANCE_LOCATOR_MISMATCH", `${repairable.length}件は取り込めませんでした（locator＝参照位置が要件とずれています）: ${lines.join(" / ")}${lines.length < repairable.length * 3 ? "" : " …"} 「locator を修復して読み込む」は requirement_id から参照位置を計算し直すだけで、本文は変えません（修復後は新しい revision になります）。`, "warning");
+  const button = document.createElement("button");
+  button.type = "button"; button.className = "btn-sm"; button.id = "viewer-repair-locators";
+  button.textContent = `locator を修復して読み込む（${repairable.length}件）`;
+  button.addEventListener("click", async () => {
+    button.disabled = true;
+    const repaired = []; const meta = new Map(); const stillRefused = [];
+    for (const character of repairable) {
+      const outcome = await repairLocators(character, { bumpRevision: true });
+      if (outcome.remaining.length) { stillRefused.push(`${Library.displayNameOf(character) || character?.identity?.character_id}: ${outcome.remaining.length}件は requirement_id が見つからず修復できません`); continue; }
+      repaired.push(outcome.character);
+      meta.set(outcome.character, { source: "FILE_REPAIRED", locator_repair: outcome.record });
+    }
+    const result = repaired.length ? await addToLibrary(repaired, "FILE_REPAIRED", null, character => meta.get(character) || null) : null;
+    recordImport({ kind: "FILE", source_path: sourceNames, status: repaired.length ? "IMPORTED" : "REFUSED", code: repaired.length ? "LOCATOR_REPAIRED" : "CONFORMANCE_LOCATOR_MISMATCH", fields: [] });
+    if (result?.saved && repaired.length) {
+      const detail = repaired.map(character => `${Library.displayNameOf(character)}（rev ${meta.get(character).locator_repair.from_revision} → ${character.identity.character_revision}、locator ${meta.get(character).locator_repair.rewritten}件）`).join(" / ");
+      showViewerStatus("LOCATOR_REPAIRED", `${repaired.length}件の locator を修復して一覧に追加しました: ${detail}。${stillRefused.length ? ` 修復できなかったもの: ${stillRefused.join(" / ")}` : ""} 詳細の「locator 修復」行に記録があります。`, stillRefused.length ? "warning" : "success");
+    } else if (stillRefused.length) {
+      showViewerStatus("CONFORMANCE_LOCATOR_MISMATCH", stillRefused.join(" / "), "error");
+    }
+  });
+  $("viewer-status").append(button);
 }
 
 async function choosePackage() {
@@ -1277,7 +1501,9 @@ function openActionsFor(recordId) {
   if (!record) return;
   const dialog = $("character-actions");
   dialog.dataset.entryId = record.id;
-  $("character-actions-title").textContent = record.name;
+  // Two revisions of one Character share a name; the revision tells them apart.
+  const revision = record.revision && !["UNKNOWN", NOT_APPLICABLE].includes(record.revision) ? record.revision : "";
+  $("character-actions-title").textContent = revision ? `${record.name}（${revision}）` : record.name;
   $("character-actions-summary").textContent = record.summary === "UNKNOWN" ? record.role : record.summary;
   dialog.querySelector('[data-character-action="delete"]').textContent = record.deleted ? "削除を取り消す" : "削除する";
   if (typeof dialog.showModal === "function") dialog.showModal(); else dialog.setAttribute("open", "");
@@ -1306,7 +1532,10 @@ function runCharacterAction(action) {
   }
   if (action === "view") {
     selectedViewerId = record.id; selectSubject(record, "library-view"); closeActions(); renderCatalog();
-    showViewerStatus("CHARACTER_SELECTED", `${record.name} を選択しました。`, "success"); return;
+    showViewerStatus("CHARACTER_SELECTED", `${record.name} を選択しました。`, "success");
+    // The notice sits at the top of the list; bring it into view from wherever the card was.
+    $("viewer-status").scrollIntoView({ block: "center" });
+    return;
   }
   if (action === "tune") { closeActions(); selectSubject(record, "library-tune"); showTuning(record); return; }
   if (action === "edit") { closeActions(); openBuilderCopy(record.id); return; }
@@ -1351,9 +1580,53 @@ $("occupation-clear").addEventListener("click", clearOccupation);
 $("occupation-to-builder").addEventListener("click", handOffCharacterAndOccupation);
 $("run-on-ai-platform").addEventListener("click", showPlatform);
 $("platform-back").addEventListener("click", showHome);
-for (const button of document.querySelectorAll("[data-platform-format]")) {
-  button.addEventListener("click", () => { platformFormat = button.dataset.platformFormat; renderPlatform(); });
+// 「読み込めたか AI に聞く」 (Owner-approved wording, 2026-09-23). A hand-pasted
+// prompt cannot be verified: the AI's answer is its own report, so the result
+// never says 「検証」 — it says 「AI 申告値（検証不能）」, as the speed test does.
+function echoLocale() { return locale() === "en-US" ? "en" : "ja"; }
+function renderEchoRequest() {
+  const slot = $("platform-echo-request");
+  if (slot) slot.value = ECHO_REQUEST[echoLocale()];
 }
+/** The directive lines 03 actually handed over, which is what the AI is asked to echo. */
+function sentDirectiveLines() {
+  const text = $("platform-launch")?.value || "";
+  const from = text.indexOf("## Character directives");
+  if (from < 0) return [];
+  const rest = text.slice(from).split(/\r?\n/);
+  return rest.filter(line => /^ {2}(ALWAYS|NEVER|PREFER|IF|HANDOFF WHEN|OUTPUT)\b/.test(line)).map(line => line.trim());
+}
+function showEchoResult(result) {
+  const slot = $("platform-echo-result");
+  if (!slot) return;
+  slot.hidden = false;
+  const english = echoLocale() === "en";
+  const label = ECHO_CHECK_LABEL[echoLocale()];
+  const complete = result.state === "REPORTED_COMPLETE";
+  const body = complete
+    ? (english ? "This AI reports that it loaded all of the instructions above. (This is a report, not verification.)" : "この AI は上の指示をすべて読み込んだと申告しています。（申告であって検証ではありません）")
+    : (english ? "This AI's report does not include part of the instructions above. Paste them again, or use AMU." : "この AI の申告には、上の指示の一部が含まれていません。貼り直すか、AMU をお使いください。");
+  setStatus(slot, label, [" ", body], complete ? "info" : "warning");
+  slot.dataset.echoState = result.state;
+  slot.title = `sent ${result.sent} / reported ${result.matched}${result.missing.length ? ` / missing ${result.missing.length}` : ""}${result.extra.length ? ` / extra ${result.extra.length}` : ""}`;
+}
+// The shell's language buttons only translate text nodes; a textarea's value is
+// not one, so the request is re-rendered when the shell switches language.
+if (typeof MutationObserver === "function") {
+  new MutationObserver(() => renderEchoRequest()).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+}
+
+$("platform-echo-copy")?.addEventListener("click", async () => {
+  const text = $("platform-echo-request")?.value;
+  if (!text) return;
+  const say = message => { const slot = $("platform-echo-copy-state"); if (slot) slot.textContent = message; };
+  try { await navigator.clipboard.writeText(text); say("コピーしました。AIの入力欄に貼り付けてください。"); }
+  catch { say("コピーできませんでした。依頼文を選んでコピーしてください。"); }
+});
+$("platform-echo-check")?.addEventListener("click", () => {
+  showEchoResult(compareEchoedDirectives(sentDirectiveLines(), $("platform-echo-answer")?.value || ""));
+});
+
 $("platform-copy").addEventListener("click", async () => {
   const text = $("platform-launch").value;
   if (!text) return;
@@ -1443,9 +1716,15 @@ for (const name of ["dragenter", "dragover"]) dropZone.addEventListener(name, ev
 for (const name of ["dragleave", "drop"]) dropZone.addEventListener(name, event => { event.preventDefault(); dropZone.classList.remove("active"); });
 dropZone.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); choosePackage(); } });
 if (tauri?.event?.listen) tauri.event.listen("tauri://drag-drop", event => importPath(event.payload?.paths?.[0]));
-localizePlaceholders(); if (!await applyStartupRoute()) refreshState();
-// The Builder's 「キャラクターを選択」 asks for the selection screen, not Home.
-if (new URLSearchParams(location.search).get("open") === "select") showViewer();
+// Wait for the working copy to be bound before a screen reads the list.
+localizePlaceholders(); if (!await applyStartupRoute()) await refreshState();
+// The Builder's 「キャラクターを選択」 asks for the selection screen, not Home;
+// its 「AIプラットフォームで動作確認」 asks for 03 with the Active SAKU it just set.
+{
+  const open = new URLSearchParams(location.search).get("open");
+  if (open === "select") showViewer();
+  else if (open === "platform") showPlatform();
+}
 
 
 
@@ -1453,6 +1732,7 @@ if (new URLSearchParams(location.search).get("open") === "select") showViewer();
 // native host reporting a Workspace, which a browser harness cannot provide.
 // Exposing the render entry point lets the states be exercised for real rather
 // than asserted from the source text.
+if (typeof window !== "undefined") window.__saku_workspace_state = WorkspaceState;
 if (typeof window !== "undefined") window.__saku_home = { renderState, renderActiveSaku, renderHomeGuidance, importCharacterFiles, renderLibrary, loadOccupationFile, handOffCharacterAndOccupation, occupationMapping, parseOccupationCsv, platformLaunchText, characterPromptText, formatLocalTimestamp };
 
 // Build provenance, shown so the Owner can confirm which Candidate is installed.

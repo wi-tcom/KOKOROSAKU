@@ -29,9 +29,10 @@ Uninstall removes application files. It does not remove the independently select
 
 The OSS Sample3 source is pinned to GitHub revision `f3186855c8bed6100108346384b3a73b44f7ea5b`, blob `1be479e14eef13653c58029a8c03509cbc3c6acf`, and SHA-256 `e1bb49bc1165d60430e97d3435c9a63ed372bfefa57c2a58e8fe9880c2c1fd0c`. Its own metadata retains `publication_authorization=false`.
 
-## WIT package candidate
+## WIT package candidate — retired (2026-09-21)
 
-The end-user distribution is one ZIP archive that remains intact during download and import. Its root contains exactly `wit-package.json` and `payload.json`:
+**Retired.** The two-file Builder package (`.witpkg`: `wit-package.json` + `payload.json`) never had a producer and is no longer read; the host imports the signed SAKU Character Pack (`character-pack.json` ZIP, Package 3.0.0 `saku-unified-v1`) only. A ZIP whose root `wit-package.json` declares `package_type: WIT_PACKAGE` with `kind: AMU_CHARACTER` is the **AMU Character File** (`.amupkg`, KOKOROAMU-STUDIO); the Builder names it and points the user to AMU Studio's 「この編集内容を SAKU へ戻す」 instead of reading it. A bare Character JSON/YAML on the package route is pointed at 個別インポート. The workspace record `imports/<dir>/wit-package.json` keeps its name so existing imports stay readable. The historical shape is kept below for the record only:
+
 
 ```json
 {

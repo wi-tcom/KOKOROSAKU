@@ -16,6 +16,9 @@
 // anything.
 
 import { blankUnifiedCharacter } from "./unified-schema.mjs";
+// The list belongs to the open workspace: every write is reported so it is
+// written through, and a window that does not hold the workspace writes nothing.
+import { isReadOnly, noteChanged } from "./workspace-state.mjs";
 
 const KEY = "saku.workspace.library";
 const VERSION = 1;
@@ -33,7 +36,8 @@ function read() {
 }
 
 function write(state) {
-  try { localStorage.setItem(KEY, JSON.stringify(state)); return { ok: true }; }
+  if (isReadOnly()) return { ok: false, reason: "WORKSPACE_READ_ONLY" };
+  try { localStorage.setItem(KEY, JSON.stringify(state)); noteChanged(KEY); return { ok: true }; }
   catch (error) { return { ok: false, reason: String(error && error.message || error) }; }
 }
 

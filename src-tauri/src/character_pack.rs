@@ -29,6 +29,9 @@ const SHA256SUMS: &str = "SHA256SUMS";
 const PACK_JSON: &str = "character-pack.json";
 const CATALOG_RELEASE_JSON: &str = "catalog-release.v1.json";
 const OPERATION_CLASSES: [&str; 3] = ["A", "B", "C"];
+/// The per-Character directive glossary a pack may carry beside character.json
+/// (統制卓 2026-09-23). Optional: a pack without it still imports.
+const DIRECTIVES_JSON: &str = "directives.json";
 
 #[derive(Debug, Clone, Serialize)]
 pub struct PackEntryImport {
@@ -46,8 +49,14 @@ pub struct PackEntryImport {
     pub manifest_digest_recomputed: bool,
     pub schema_id: String,
     pub schema_version: String,
+    /// Whether this entry shipped its own directive glossary beside character.json.
+    pub has_directives: bool,
     #[serde(skip_serializing)]
     pub character_json: String,
+    /// directives.json when the entry carries one. It is covered by the same
+    /// manifest digest check as character.json, so nothing extra is verified here.
+    #[serde(skip_serializing)]
+    pub directives_json: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -281,7 +290,7 @@ pub fn parse_character_pack(entries: HashMap<String, Vec<u8>>) -> Result<Charact
         // One nesting level only, root-only names, small budget.
         let inner = archive_entries_with(
             archive,
-            &ArchiveShape { max_entries: MAX_INNER_ARCHIVE_ENTRIES, max_total_bytes: MAX_INNER_ARCHIVE_TOTAL_BYTES, allow_directory_prefix: false },
+            &ArchiveShape { max_entries: MAX_INNER_ARCHIVE_ENTRIES, max_total_bytes: MAX_INNER_ARCHIVE_TOTAL_BYTES, allow_directory_prefix: false, peek_only: false },
         )
         .map_err(|failure| invalid(format!("{file}: {}", failure.reason)))?;
         let manifest_bytes = inner.get("portable-manifest.json").ok_or_else(|| invalid(format!("{file}: portable-manifest.json is missing.")))?;
@@ -319,6 +328,7 @@ pub fn parse_character_pack(entries: HashMap<String, Vec<u8>>) -> Result<Charact
         // files[]: every listed file present with the listed digest; character.json must be listed.
         let files = manifest.get("files").and_then(Value::as_array).ok_or_else(|| invalid(format!("{file}: portable-manifest.json files is missing.")))?;
         let mut character_listed = false;
+        let mut directives_bytes: Option<Vec<u8>> = None;
         for item in files {
             let path = required(item, "path", &format!("{file}: files entry"))?;
             let digest = required(item, "digest", &format!("{file}: files entry"))?;
@@ -328,6 +338,9 @@ pub fn parse_character_pack(entries: HashMap<String, Vec<u8>>) -> Result<Charact
             }
             if path == "character.json" {
                 character_listed = true;
+            }
+            if path == DIRECTIVES_JSON {
+                directives_bytes = Some(bytes.clone());
             }
         }
         if !character_listed {
@@ -356,6 +369,12 @@ pub fn parse_character_pack(entries: HashMap<String, Vec<u8>>) -> Result<Charact
             None => return Err(package_failure("INVALID", "CHARACTER_PACK_CATALOG_MISMATCH", format!("{slug} is not a member of the catalog release."))),
         }
         let character_json = String::from_utf8(character_bytes.clone()).map_err(|_| invalid(format!("{file}: character.json must be UTF-8.")))?;
+        // A pack may ship the directive glossary its Character needs. The digest
+        // check above already covered it; only the encoding is checked here.
+        let directives_json = match directives_bytes {
+            Some(bytes) => Some(String::from_utf8(bytes).map_err(|_| invalid(format!("{file}: {DIRECTIVES_JSON} must be UTF-8.")))?),
+            None => None,
+        };
         imports.push(PackEntryImport {
             slug,
             character_id,
@@ -371,7 +390,9 @@ pub fn parse_character_pack(entries: HashMap<String, Vec<u8>>) -> Result<Charact
             manifest_digest_recomputed,
             schema_id: entry_schema_id,
             schema_version: entry_schema_version,
+            has_directives: directives_json.is_some(),
             character_json,
+            directives_json,
         });
     }
     // Every archive in the pack must be a declared entry (no stowaways).

@@ -144,13 +144,19 @@ export function packVerification(result, signatures) {
 }
 
 /** Per-Character provenance, keyed by character_id (= slug in a pack). */
-export function packEntryMeta(pack, signatures) {
+export function packEntryMeta(pack, signatures, directivesByCharacterId = null) {
   const meta = new Map();
   for (const entry of pack?.entries || []) {
+    // A pack may ship the directive glossary its Character needs. The host
+    // digest-checked it with the rest of the entry; it is kept beside the
+    // Character so 03 can prefer it over the copy bundled with the app.
+    const directives = entry.has_directives && directivesByCharacterId ? (directivesByCharacterId[entry.character_id] ?? null) : null;
     meta.set(entry.slug, {
       pack_id: pack.pack_id,
       pack_version: pack.pack_version,
       operation_class: entry.operation_class,
+      has_directives: Boolean(entry.has_directives),
+      ...(directives ? { directives } : {}),
       character_digest: entry.character_digest,
       archive_digest: entry.archive_digest,
       publisher_key_id: entry.publisher_key_id,
@@ -171,6 +177,100 @@ export function signatureStateText(state, locale = "ja", fingerprint = null) {
   const ja = { PASS: `署名検証 PASS（発行者 fingerprint${short}）`, FAIL: "署名検証 FAIL", DIGEST_ONLY: "digest 一致・署名は未検証" };
   const en = { PASS: `signature verified (publisher fingerprint${short})`, FAIL: "signature FAILED", DIGEST_ONLY: "digests match · signature not verified" };
   return (locale === "en" ? en : ja)[state] || state;
+}
+
+// ── AMU Studio 「SAKU へ戻す」 (.saku-return.zip) ────────────────────────────
+//
+// The host cross-checked the four files (request ↔ character.json ↔ signed
+// portable-manifest ↔ enclosed archive).  Here: the manifest's Ed25519
+// signature with the pinned keys (PASS / FAIL→refuse / DIGEST_ONLY), and how the
+// returned Character relates to what the Library already holds.
+export const SAKU_RETURN_SCHEMA = "AMU-SAKU-RETURN/1.0.0";
+
+/** Signature assessment for a host `saku_return` summary: one manifest, one key. */
+export async function assessReturnSignature(ret, { publishers = TRUSTED_PUBLISHERS } = {}) {
+  if (!ret || typeof ret !== "object") return { signature_state: "FAIL", detail: "no return summary", fingerprints: {} };
+  const outcome = await verifyEd25519({ publisher_key_id: ret.publisher_key_id, digest: ret.manifest_digest, signature: ret.signature, publishers });
+  if (outcome.state === "PASS") return { signature_state: "PASS", detail: `portable-manifest signature verified under ${ret.publisher_key_id}`, fingerprints: { [ret.publisher_key_id]: await publisherFingerprint(ret.publisher_key_id, publishers) } };
+  if (outcome.state === "UNAVAILABLE") return { signature_state: "DIGEST_ONLY", detail: outcome.detail, fingerprints: {} };
+  return { signature_state: "FAIL", detail: outcome.detail, state: outcome.state, fingerprints: {} };
+}
+
+/**
+ * How the returned Character relates to the Library.  `entries` are Library
+ * entries (not deleted).  Compared by character_id, then by the pack
+ * provenance's character_digest and the revision — never by content guessing.
+ */
+export function compareReturnWithLibrary(ret, entries) {
+  const same = (entries || []).filter(entry => String(entry?.character?.identity?.character_id || "") === ret.character_id);
+  if (!same.length) return { relation: "NOT_IN_LIBRARY", matches: [], others: [] };
+  const matches = same.filter(entry => entry?.provenance?.character_digest === ret.character_digest);
+  const others = same.filter(entry => entry?.provenance?.character_digest !== ret.character_digest).map(entry => ({
+    entry_id: entry.entry_id,
+    revision: String(entry?.character?.identity?.character_revision || ""),
+    character_digest: entry?.provenance?.character_digest || null,
+    source: entry.source || "",
+  }));
+  if (matches.length) return { relation: "SAME_AS_LIBRARY", matches: matches.map(entry => entry.entry_id), others };
+  return { relation: "DIFFERS_FROM_LIBRARY", matches: [], others };
+}
+
+export function returnRelationText(comparison, ret, locale = "ja") {
+  const ja = {
+    NOT_IN_LIBRARY: `一覧に同じ character_id（${ret.character_id}）の Character はありません。`,
+    SAME_AS_LIBRARY: `一覧の現行（rev ${ret.character_revision}）と同じ Character です。`,
+    DIFFERS_FROM_LIBRARY: `一覧の同じ character_id は別の改訂です（一覧: ${comparison.others.map(item => `rev ${item.revision || "?"}`).join("、")} ／ 戻し: rev ${ret.character_revision}）。`,
+  };
+  const en = {
+    NOT_IN_LIBRARY: `No Character with character_id ${ret.character_id} is in the list.`,
+    SAME_AS_LIBRARY: `Same Character as the list's current rev ${ret.character_revision}.`,
+    DIFFERS_FROM_LIBRARY: `The list holds a different revision of this character_id (list: ${comparison.others.map(item => `rev ${item.revision || "?"}`).join(", ")} / return: rev ${ret.character_revision}).`,
+  };
+  return (locale === "en" ? en : ja)[comparison.relation] || comparison.relation;
+}
+
+/** The verification record stored with a Library batch from a return. */
+export function returnVerification(result, signatures) {
+  const ret = result.saku_return || {};
+  return {
+    status: result.status,
+    code: result.code,
+    product: ret.character_id || "",
+    schema_id: ret.schema_id || "",
+    schema_version: ret.schema_version || "",
+    saku_return: {
+      schema: ret.schema || SAKU_RETURN_SCHEMA,
+      character_digest: ret.character_digest || "",
+      character_json_sha256: ret.character_json_sha256 || "",
+      digest_state: ret.digest_state || "",
+      signature_state: signatures.signature_state,
+      signature_detail: signatures.detail,
+      publisher_key_id: ret.publisher_key_id || "",
+      publisher_fingerprints: signatures.fingerprints || {},
+      archive_present: Boolean(ret.archive_present),
+      created_at: ret.created_at || "",
+    },
+  };
+}
+
+/** Per-Character provenance for a return: the edit request travels with the Character. */
+export function returnEntryMeta(ret, signatures, comparison) {
+  return {
+    source: "AMU_STUDIO_RETURN",
+    character_digest: ret.character_digest,
+    publisher_key_id: ret.publisher_key_id,
+    publisher_fingerprint: signatures.fingerprints?.[ret.publisher_key_id] || null,
+    signature_state: signatures.signature_state,
+    edit_request: {
+      schema: ret.schema,
+      note: ret.note,
+      fields: [...(ret.fields || [])],
+      created_at: ret.created_at,
+      from_instance: ret.from_instance || null,
+      character_revision: ret.character_revision,
+    },
+    library_relation: comparison.relation,
+  };
 }
 
 export const OPERATION_CLASS_TEXT = Object.freeze({

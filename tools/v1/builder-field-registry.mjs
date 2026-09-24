@@ -3,7 +3,7 @@
 // this registry means NOT_DETERMINED, never permission to infer a location.
 
 export const BUILDER_FIELD_REGISTRY_VERSION = 'saku.builder-field-registry@1';
-export const REGISTRY_BUILDER_REVISION = 'tools/saku-builder.html@sha256:D4ECD2C447ACFC458E2385AAD1B6DD1D7C0A6359BAD1E016B555E16FDFC2E2A6';
+export const REGISTRY_BUILDER_REVISION = 'tools/saku-builder.html@sha256:697EB146AB9BAEC19629FF149DA564FC3B97D6B358E7B6220E4208BB4418E2D3';
 
 export const BUILDER_FIELD_REGISTRY = Object.freeze([
   Object.freeze({

@@ -7,8 +7,10 @@ import {
 } from './trainer-ux3.mjs';
 import { createSession as frozenSession, stableStringify } from './trainer-contract.mjs';
 import { TUNING_KNOWLEDGE } from '../lib/tuning-projection.mjs';
+import { HANDOFF_FORMAT, PROMPT_CONSTRUCTION, TRAINING_MENU_SEPARATOR, platformLaunchText, trainerHandoffText } from './platform-prompt.mjs';
 
 export { NAMESPACE, CHOICES, CHOICE_VERSION, VALIDATION_RULE_VERSION_R4, current, digest, newId, legacyReference };
+export { PROMPT_CONSTRUCTION, TRAINING_MENU_SEPARATOR };
 
 export const UX4_CONTRACT = 'saku.trainer.ux4@1';
 export const MENU_POOL_VERSION = 'saku.trainer.menu-pool@1';
@@ -116,7 +118,21 @@ export function menuCompletion(session, menuId) {
   return { state:'済', code:evaluation.choices.conclusion==='NOT_ASSESSED'?'NOT_ASSESSED':'COMPLETE', result_id:result.id, evaluation_id:evaluation.id };
 }
 
-export function copyPayloads(session, menuId, locale = 'ja') {
+/**
+ * What the Trainer gives an external AI, and what it keeps for the record.
+ *
+ * `character` and `both` are composed exactly as 03 composes its paste text
+ * (Owner 2026-09-23): the Trainer measures behaviour, so it has to measure the
+ * configuration that ships. Until β.4 it handed over `snapshot` — the raw JSON
+ * — which carried neither the shared base layer nor the directive blocks, so
+ * its records were not evidence about what ships.
+ *
+ * `snapshot` stays: a record of what was tested is exactly where that JSON
+ * belongs. `handoff` is the options the text is composed with; without a base
+ * layer that checks out, `character` and `both` come back empty and the screen
+ * hands over nothing (fail closed).
+ */
+export function copyPayloads(session, menuId, locale = 'ja', handoff = {}) {
   const s = normalizeR4(session), training = s.r4.active_training;
   const qid = training?.question_attempt_by_menu?.[menuId];
   const q = qid && s.questions[qid], execution = q && s.executions[q.execution_id];
@@ -127,10 +143,38 @@ export function copyPayloads(session, menuId, locale = 'ja') {
     requireThat(item, 'MENU_ITEM_SNAPSHOT_MISSING');
     return { id:item.id, name:localized(item.name,locale)||item.id, question:localized(item.prompt,locale) };
   });
-  const character = stableStringify(execution.source.snapshot);
+  const snapshot = stableStringify(execution.source.snapshot);
   const menu = items.map((item,index)=>`${index+1}. ${item.name} [${item.id}]\n${item.question}`).join('\n\n');
-  const separator = '\n\n===== SAKU TRAINING MENU =====\n\n';
-  return { character, menu, both:`${character}${separator}${menu}`, separator, menu_item_ids:ids };
+  const character = platformLaunchText(execution.source.snapshot, HANDOFF_FORMAT, handoff);
+  const both = trainerHandoffText(execution.source.snapshot, { ...handoff, menu });
+  return { character, menu, both, snapshot, separator:TRAINING_MENU_SEPARATOR, menu_item_ids:ids };
+}
+
+/**
+ * Mark the executions this operation created with the construction their prompt
+ * was composed under (Owner 2026-09-23, decision 3). Nothing already stored is
+ * rewritten and nothing is removed: records made before the Trainer changed
+ * carry no mark, and `promptConstructionOf` reads them for what they were.
+ */
+function stampHandoff(session, existingIds, handoff) {
+  if (!handoff || !session?.executions) return session;
+  for (const [id, execution] of Object.entries(session.executions)) {
+    if (existingIds.has(id) || execution.handoff) continue;
+    execution.handoff = clone(handoff);
+  }
+  return session;
+}
+
+/**
+ * Which construction an execution was measured under. An unmarked execution is
+ * one from before the change, and what it handed over then was the Character
+ * snapshot itself — so the digest already in the record is the digest of the
+ * text that went to the AI. Nothing is guessed and nothing is rewritten.
+ */
+export function promptConstructionOf(execution) {
+  const stamped = execution?.handoff;
+  if (stamped?.construction) return { ...clone(stamped), stamped:true };
+  return { construction:PROMPT_CONSTRUCTION.rawSnapshot, prompt_sha256:execution?.character_sha256 || null, base_layer:null, glossary_sha256:null, stamped:false };
 }
 
 export function conflictingRecommendations(recommendations = []) {
@@ -167,13 +211,13 @@ async function deterministicRecommendation(s, result) {
   };
 }
 
-async function createExecution(s, groupInfo, stamp, retestOf = null) {
+async function createExecution(s, groupInfo, stamp, retestOf = null, handoff = null) {
   const eid = newId('execution'), pack = groupInfo.pack;
   const execution = {
     id:eid, session_id:s.session_id, group:groupInfo.group, preparation:clone(s.preparation), source:clone(s.source),
     character_sha256:await digest(s.source.snapshot), pack:clone(pack.execution_pack), evaluation_pack:clone(pack.evaluation_pack),
     pack_sha256:await digest(pack.execution_pack), status:'PREPARED', provider_identity:'UNKNOWN', run_identity:'UNKNOWN',
-    question_attempt_ids:[], retest_of:retestOf, created_at:stamp,
+    question_attempt_ids:[], retest_of:retestOf, created_at:stamp, ...(handoff ? { handoff:clone(handoff) } : {}),
   };
   for (const menuId of pack.execution_pack.question_ids) {
     const snapshot = pack.questions.find(item=>item.id===menuId);
@@ -261,7 +305,7 @@ async function customOperation(input, op) {
       s.selected={group:e.group,execution:e.id,question:q.id};ids.training_id=s.r4.active_training.training_id;
     }else{
       const byGroup=new Map(), questionByMenu={}, executionIds=[];
-      for(const menuId of idsInOrder){const info=await groupFor(s,menuId);if(!byGroup.has(info.group)){const execution=await createExecution(s,info,stamp);byGroup.set(info.group,execution);executionIds.push(execution.id);}const e=byGroup.get(info.group);questionByMenu[menuId]=e.question_attempt_ids.find(id=>s.questions[id].snapshot.id===menuId);}
+      for(const menuId of idsInOrder){const info=await groupFor(s,menuId);if(!byGroup.has(info.group)){const execution=await createExecution(s,info,stamp,null,p.handoff||null);byGroup.set(info.group,execution);executionIds.push(execution.id);}const e=byGroup.get(info.group);questionByMenu[menuId]=e.question_attempt_ids.find(id=>s.questions[id].snapshot.id===menuId);}
       const trainingId=newId('training');s.r4.active_training={training_id:trainingId,generation_id:s.r4.generation.generation_id,preparation_sha256:preparationSha,
         menu_item_ids:[...idsInOrder],question_attempt_by_menu:questionByMenu,execution_ids:executionIds,created_at:stamp};
       const q=s.questions[questionByMenu[idsInOrder[0]]],e=s.executions[q.execution_id];s.selected={group:e.group,execution:e.id,question:q.id};ids.training_id=trainingId;
@@ -306,7 +350,10 @@ const CUSTOM_OPERATIONS=new Set(['menu-generate','menu-more','menu-selection','m
 
 export async function operate(input, op) {
   const s=normalizeR4(input);
-  if(CUSTOM_OPERATIONS.has(op.type))return customOperation(s,op);
+  // Executions the operation is about to create are the ones that get the mark;
+  // everything already in the session keeps whatever it has (or has none).
+  const existingIds=new Set(Object.keys(s.executions||{}));
+  if(CUSTOM_OPERATIONS.has(op.type)){const outcome=await customOperation(s,op);stampHandoff(outcome.session,existingIds,op.payload?.handoff);return outcome;}
   const payload=clone(op.payload||{});
   if(op.type==='evaluate'||op.type==='evaluate-whole-r4'){
     payload.validation_rule_version=VALIDATION_RULE_VERSION_R4;payload.stay_stage=2;
@@ -320,6 +367,7 @@ export async function operate(input, op) {
     const e=next.executions[outcome.result.execution_id];next.r4.active_training.execution_ids=[...next.r4.active_training.execution_ids.filter(id=>next.executions[id]?.group!==e.group),e.id];
     for(const qid of e.question_attempt_ids)next.r4.active_training.question_attempt_by_menu[next.questions[qid].snapshot.id]=qid;
   }
+  stampHandoff(next,existingIds,op.payload?.handoff);
   await validateGraph(next);return{...outcome,session:next};
 }
 

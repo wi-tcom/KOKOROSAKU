@@ -120,7 +120,7 @@ function structuralCoverage(character, itemId) {
  * OBSERVED are observations, so they are never derived from a definition.
  *
  * BAND and CATALOG_DISTINCTNESS items are NOT_ASSESSED from a definition alone:
- * a band is a behavioural reading, and the contract forbids inventing one from
+ * a band is a behavioral reading, and the contract forbids inventing one from
  * the presence of a field.
  */
 export function deriveExpectedState(character, itemId) {

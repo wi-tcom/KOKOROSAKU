@@ -2,7 +2,7 @@
 // by the β.1 Package import).
 //
 // Rust side (host): `cargo test --release` in src-tauri covers the pack parser
-// (synthetic pack, digest mismatches, nesting, limits, the unchanged .witpkg
+// (synthetic pack, digest mismatches, nesting, limits, the retired .witpkg
 // path, and the three production packs when the sibling KOKOROAMU-STUDIO
 // fixtures are present).  This gate runs it when RUN_CARGO=1 and otherwise
 // checks the Rust source for the rules by text.
@@ -188,10 +188,10 @@ if (packsPresent) {
 // ── 3. Rust source rules present; cargo test on request ────────────────────
 const mainRs = await read("src-tauri/src/main.rs");
 const packRs = await read("src-tauri/src/character_pack.rs");
-check(mainRs.includes("const MAX_PACK_ENTRIES: usize = 512;") && mainRs.includes("const MAX_WITPKG_ENTRIES: usize = 16;"), "PK-RUST pack ceiling 512, .witpkg ceiling unchanged at 16");
+check(mainRs.includes("const MAX_PACK_ENTRIES: usize = 512;") && !mainRs.includes("MAX_WITPKG_ENTRIES"), "PK-RUST pack ceiling 512; the .witpkg path is retired (2026-09-21)");
 check(mainRs.includes("MAX_ARCHIVE_TOTAL_BYTES") && mainRs.includes("ZIP exceeds the total uncompressed size limit"), "PK-RUST total uncompressed budget enforced");
 check(mainRs.includes("ZIP package files may sit at most one folder deep") && mainRs.includes("ZIP package files must share one folder"), "PK-RUST one folder prefix only");
-check(mainRs.includes("受け付ける形式: SAKU Character Pack（character-pack.json を含む ZIP）"), "PK-RUST unknown format names the accepted formats in Japanese");
+check(mainRs.includes("受け付ける形式: SAKU Character Pack（character-pack.json を含む署名付き ZIP）"), "PK-RUST unknown format names the accepted formats in Japanese");
 check(packRs.includes("does not match SHA256SUMS") && packRs.includes("does not match its archiveDigest") && packRs.includes("does not match portable-manifest.json") && packRs.includes("CHARACTER_PACK_CATALOG_MISMATCH") && packRs.includes("package.digest does not match the canonical manifest"), "PK-RUST digest rules: SHA256SUMS, archive, files, catalog, signed-manifest digest");
 check(packRs.includes("nested archives inside a Character archive are not accepted") && packRs.includes("MAX_INNER_ARCHIVE_ENTRIES"), "PK-RUST nesting depth 1 and inner archive limits");
 check(packRs.includes('signature_state: "NOT_VERIFIED_BY_HOST"') && !packRs.includes('"SIGNED"'), "PK-RUST host never reports a signature as verified");
@@ -242,6 +242,8 @@ try{
  button.click();
  await until(()=>doc.body.innerText.includes('CHARACTER_PACK_IMPORTED')||doc.body.innerText.includes('取り込みませんでした')||doc.body.innerText.includes('SIGNATURE'));
  check(doc.body.innerText.includes('CHARACTER_PACK_IMPORTED'),'PK-UI pack import status shown');
+ // The pack status is shown first; the list is written after the adopted schema has checked each Character.
+ await until(()=>/15件を一覧に追加しました|15件を追加|取り込めませんでした/.test(doc.body.innerText)).catch(()=>{});
  check(/15件を一覧に追加しました|15件を追加/.test(doc.body.innerText),'PK-UI the list reports 15 Characters added');
  const history=JSON.parse(win.localStorage.getItem('saku.workspace.importHistory')||'[]');
  check(history.some(item=>item.kind==='PACKAGE'&&item.code==='CHARACTER_PACK_IMPORTED'),'PK-UI import history records the pack import');
@@ -314,7 +316,7 @@ try{
     } finally {
       socket?.close(); child.kill();
       await new Promise(resolve => child.exitCode !== null ? resolve() : child.once("exit", resolve));
-      server.close(); await rm(profile, { recursive: true, force: true });
+      server.close(); await rm(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }).catch(error => console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code || error}`));
     }
     const match = output.match(/<pre id="report" data-status="(PASS|FAIL)">([\s\S]*?)<\/pre>/);
     if (!match) { console.error(output.slice(0, 2000), stderr.slice(-1000)); process.exit(1); }

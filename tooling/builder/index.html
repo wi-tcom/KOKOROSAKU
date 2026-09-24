@@ -202,7 +202,7 @@
   <p class="eyebrow">SAKU BUILDER — KOKOROSAKU 1+7 CHARACTER SYSTEM</p>
   <h1 class="charname" id="heroName"><span class="ph">無名</span></h1>
   <p class="tagline">一人に見える。然あらず。</p>
-  <p class="subtitle">心が咲く — 表人格・1+7構造・境界・黒子接続・試験までを一枚で設計し、<code>character.yaml</code>／Character File JSON／外部AIプロンプト／Guild概要を出力する</p>
+  <p class="subtitle">心が咲く — 表人格・1+7構造・境界・黒子接続・試験までを一枚で設計し、<code>character.yaml</code>／Character File（署名・パック化の元になる正本 Unified V1 JSON）を出力する</p>
   <div class="weave"></div>
 </header>
 
@@ -222,6 +222,8 @@
     <button class="btn-sm" id="desktopPackageImport" type="button" title="WIT Package ZIPを展開せずに読み込む" hidden>Package ZIPを読み込む</button>
     <a class="btn-sm trainer-link" id="openTrainer" href="./trainer.html">Trainer</a>
     <button class="btn-sm" id="saveUnifiedCharacter" type="button" hidden>この内容で保存する</button>
+    <button class="btn-sm" id="runOnPlatform" type="button" hidden>AIプラットフォームで動作確認</button>
+    <button class="btn-sm" id="trainCharacter" type="button" hidden>トレーニングする</button>
     <a class="btn-sm desktop-home-link" id="openDesktopHome" href="./index.html" hidden>ホーム</a>
   </div>
   <span class="subtitle" style="margin:0">項目は空欄のままでも生成できます</span>
@@ -495,7 +497,7 @@
       <h2><span class="num">十</span>黒子／キャラバック接続前提</h2>
       <p class="note">このキャラクターが黒子（人間の確認・承認）なしで動けるかを定める。
         詳細な黒子情報は AMU Studio 側で管理し、ここでは<b>接続前提だけ</b>を定義する。
-        本章の内容は <code>character.yaml</code> には出さず、Character File JSON（AMU/MACHI連携）にのみ出力する。</p>
+        本章の内容は <code>character.yaml</code> には出さず、Character File（署名・パック化の元になる正本 Unified V1 JSON）にのみ出力する。AMU/MACHI は署名付きパック経由でのみ受け取る。</p>
       <div class="field"><label class="toggle" style="font-size:14px">
         <input type="checkbox" data-path="charback.required" data-type="bool"> 黒子（人間の確認・承認）が必要なキャラクター</label>
         <p class="hint">黒子がいない場合、承認領域は下書き・保留までとし公開しない（§8）。</p></div>
@@ -979,12 +981,15 @@ function highlight(y){
 }
 
 /* ---------------- validation ---------------- */
+function fieldLabel(path,fallback){ return (typeof window!=="undefined"&&window.SAKU_FIELD_LABEL&&window.SAKU_FIELD_LABEL(path))||fallback; }
 function validate(d){
   const miss=[];
-  if(!d.meta.name.trim())miss.push("キャラクター名");
-  if(!d.meta.slug.trim())miss.push("slug");
-  else if(!/^[a-z0-9-]+$/.test(d.meta.slug.trim()))miss.push("slug（英小文字・数字・ハイフンのみ）");
-  if(!d.meta.field.trim())miss.push("活動分野");
+  /* 画面にある欄名で言う（semantic registry）。旧フォームの呼び名（slug・活動分野）は
+     今の画面に無く、利用者は探せない（全体点検 2026-09-23）。 */
+  if(!d.meta.name.trim())miss.push(fieldLabel("identity.display_name","Character名"));
+  if(!d.meta.slug.trim())miss.push(fieldLabel("identity.character_id","Character ID"));
+  else if(!/^[a-z0-9-]+$/.test(d.meta.slug.trim()))miss.push(fieldLabel("identity.character_id","Character ID")+"（英小文字・数字・ハイフンのみ）");
+  if(!d.meta.field.trim())miss.push(fieldLabel("character_core.character_role","このCharacterが担う役割"));
   const warn=[];
   if(!((d.persona_rationale||{}).core_thesis||"").trim())
     warn.push("設計の芯が未記入（注入までの人格の唯一の基準）");
@@ -1284,14 +1289,20 @@ function beginWorkingCharacter(source){
    として書き出すと、直前まで編集していた SAKU を空で上書きしてしまい、復元側は
    その空を読む。だから復元が済むまで publish しない。 */
 let workingPublishArmed=false;
-function armWorkingCharacterPublish(){ workingPublishArmed=true; }
+let openedWorkingShape=null;
+/* 書き出しを始める時点（復元が済んだ直後）のフォームを「開いた時点」とする。最初の
+   書き出しは最初の編集で起きるので、そこで取ると編集後の形を記録してしまう。 */
+function armWorkingCharacterPublish(){ workingPublishArmed=true; openedWorkingShape=JSON.parse(JSON.stringify(workingCharacterShape(data))); }
 if(typeof window!=="undefined") window.armWorkingCharacterPublish=armWorkingCharacterPublish;
 
+/* 下書きには、開いた時点のフォームの形（armWorkingCharacterPublish で記録）を添える。
+   未保存かどうかは同じ形どうし（フォーム対フォーム）で比べる。開いただけで
+   「未保存の変更あり」にならないように（β.6 打鍵 2026-09-23）。 */
 function publishWorkingCharacter(){
   if(!workingPublishArmed) return false;
   const api=activeSakuApi();
   if(!api||!api.getActive()) return false;
-  return api.updateDraft(workingCharacterShape(data));
+  return api.updateDraft(workingCharacterShape(data),{openedShape:openedWorkingShape});
 }
 
 /* モジュール側から呼ばれ、前回の続きを復元する。 */
@@ -1501,7 +1512,7 @@ function applyRoleCsv(text){
 /* ==================================================================
    SAKU Builder 拡張モジュール
    八 境界クイック設定 / 九 黒子接続前提 / 十 ペルソナ試験 /
-   テンプレート / character.yaml 取り込み / 4種の出力（タブ）
+   テンプレート / character.yaml 取り込み / 出力（タブ: character.yaml・Character File・試験記録）
    character.yaml の出力形式は character-builder.html と同一
    （charback と試験結果は yaml に出さない。JSON・試験記録にのみ出る）。
    ================================================================== */
@@ -1818,44 +1829,13 @@ function contactGuard(text){
   rules.forEach(([name,re])=>{ if(re.test(t)&&!hits.includes(name)) hits.push(name); });
   return {safe:hits.length===0,hits};
 }
-function toPrompt(d){
-  /* 外部AIプロンプトは、書き出す Character と同じ意味から作る。
-     画面の値から別に組み立てない（両者がずれないようにするため）。 */
-  const api=(typeof window!=="undefined")?window.SAKU_UNIFIED:null;
-  if(!api) return "";
-  const character=api.toUnifiedCharacter(d,d._unified_source||null);
-  return api.unifiedPrompt(character);
-}
-
-/* ---------------- MACHI Guild 登録用概要 ---------------- */
-function toGuildJson(d){
-  const h=d.saku.seats.seat8_human||{};
-  const obj={
-    schema:"MACHI-GUILD-SUMMARY",
-    version:"1.0",
-    source_artifact_class:"authoring_export",
-    execution_eligible:false,
-    publisher_signature_status:"absent",
-    slug:d.meta.slug,name:d.meta.name,field:d.meta.field,
-    operation_class:d.meta.operation_class,
-    seat8:"human",
-    target_users:d.identity.target_users,value:d.identity.value,
-    allowed:uniq(d.activity.routine).slice(0,8),
-    human_approval_required:uniq([].concat(h.escalation_when||[],d.activity.risk_examples.red||[])).slice(0,8),
-    disallowed:uniq([].concat(d.identity.out_of_scope||[],d.activity.crossing_prohibited||[])).slice(0,8),
-    charback_required:!!(d.charback&&d.charback.required),
-    handoff:d.activity.handoff||"",
-  };
-  const org=normalizedOrganizationParticipation(d);if(org)obj.organization_participation=org;
-  return JSON.stringify(obj,null,2)+"\n";
-}
-
 /* ---------------- 出力タブ ---------------- */
+/* 2026-09-22（Owner）: 外部AIプロンプトはデスクトップ 03「AIプラットフォームで動作確認」に
+   一本化し、Guild概要（MACHI-GUILD-SUMMARY）は廃止。AMU/MACHI は署名付きパック経由でのみ
+   Character を受け取るので、この画面の出力は正本 JSON と character.yaml と試験記録だけ。 */
 const TABS=[
   ["yaml","character.yaml"],
   ["json","Character File"],
-  ["prompt","外部AIプロンプト"],
-  ["guild","Guild概要"],
   ["test","試験記録"],
   ["help","Help"],
 ];
@@ -1867,14 +1847,8 @@ const TAB_PURPOSE={
     ja:"編集を続けるためのファイル。次回はこれを読み込みます。",
     en:"The file to keep editing. Load this one next time."},
   json:{reimport:false,
-    ja:"受け渡し用。AMU / MACHI へ渡す形式です。ここへは読み戻せません。",
-    en:"For handover to AMU / MACHI. It cannot be loaded back here."},
-  prompt:{reimport:false,
-    ja:"外部AIに貼るための表示用。ここへは読み戻せません。",
-    en:"To paste into an external AI. It cannot be loaded back here."},
-  guild:{reimport:false,
-    ja:"Guild登録用の要約。ここへは読み戻せません。",
-    en:"A summary for Guild registration. It cannot be loaded back here."},
+    ja:"署名・パック化の元になる正本（Unified V1）JSON。AMU/MACHI は署名付きパック経由でのみ受け取る。ここへは読み戻せません。",
+    en:"The canonical Unified V1 JSON that signing and packing start from. AMU / MACHI receive it only through a signed pack. It cannot be loaded back here."},
   test:{reimport:false,
     ja:"試験結果の記録。ここへは読み戻せません。",
     en:"A record of test results. It cannot be loaded back here."},
@@ -1925,6 +1899,7 @@ function guideText(value){
   return value[locale]||value.ja||"";
 }
 
+let FIELD_GUIDE_DATA=null;
 async function loadFieldGuide(){
   /* dist では help/ 、リポジトリでは manual/ に置かれる。両方試す。 */
   for(const url of ["./manual/saku-field-guide.data.json","./manual/saku-field-guide.data.json"]){
@@ -1939,6 +1914,15 @@ async function loadFieldGuide(){
         FIELD_GUIDE.set(entry.canonicalPath,entry);
         if(bridge[entry.canonicalPath]) FIELD_GUIDE.set(bridge[entry.canonicalPath],entry);
       });
+      /* U3: the frozen chapters label enum values from the guide (option names,
+         reason_class meanings when the guide carries them). The guide arrives
+         after the first render, so the labels are filled in place, without
+         re-drawing the surface. */
+      FIELD_GUIDE_DATA=data;
+      window.SAKU_FIELD_GUIDE_OPTION_NAME=(path,value)=>{const l=(window.SAKU_GOLDEN_UI?.getLocale?.()==="en-US")?"en":"ja";const entry=FIELD_GUIDE.get(path);const option=(entry?.help?.optionDetails||[]).find(o=>String(o.value)===String(value));return option?.name?.[l]||option?.name?.ja||"";};
+      window.SAKU_FIELD_GUIDE_CANDIDATES=path=>FIELD_GUIDE.get(path)?.candidates||null;
+      window.SAKU_FIELD_GUIDE_ENUM_MEANING=(key,value)=>{const option=(FIELD_GUIDE_DATA?.structured_enums?.[key]?.options||[]).find(o=>String(o.value)===String(value));return option?.meaning?.ja||"";};
+      try{ window.SAKU_FROZEN_IA?.decorateFromGuide?.(); }catch(error){ console.warn("guide decoration failed", error); }
       return true;
     }catch(error){ /* 次の候補を試す */ }
   }
@@ -1975,14 +1959,97 @@ function attachFieldHelp(){
     button.addEventListener("click",()=>showFieldHelp(key));
     label.appendChild(button);
     added+=1;
+    /* U2: the guide's 「現在の内容」 sits right under the label, with the one
+       link into the help tree. Select fields also show the meaning of the
+       value currently chosen (kept in step by the change listener below). */
+    if(!field.querySelector(":scope > .field-current-note")){
+      const note=document.createElement("p");
+      note.className="field-current-note"; note.dataset.currentNote=entry.canonicalPath||"";
+      const noteText=currentNoteText(entry);
+      if(noteText){ const span=document.createElement("span"); span.className="field-current-note-text"; span.textContent=noteText; note.append(span); }
+      const meaning=document.createElement("span"); meaning.className="field-option-meaning"; meaning.dataset.optionMeaning=entry.canonicalPath||""; note.append(meaning);
+      const link=document.createElement("button"); link.type="button"; link.className="field-help-link"; link.dataset.helpLink=entry.canonicalPath||"";
+      link.textContent=HELP_UI("detailLink"); link.addEventListener("click",()=>showFieldHelp(key));
+      note.append(link);
+      label.insertAdjacentElement("afterend",note);
+      updateOptionMeaning(entry.canonicalPath);
+    }
   });
   return added;
 }
 
+/* ── U2 help tree wiring ─────────────────────────────────────────────────── */
+const HELP_UI_STRINGS={
+  ja:{detailLink:"詳細はヘルプ参照 →",enPending:"EN 準備中",syncedTo:"ヘルプを同期しました"},
+  en:{detailLink:"See help →",enPending:"EN pending",syncedTo:"Help synced"},
+};
+function HELP_UI(key){return HELP_UI_STRINGS[currentHelpLocale()][key]||HELP_UI_STRINGS.ja[key]||key;}
+function currentNoteText(entry){
+  const note=entry?.currentNote||{}; const en=currentHelpLocale()==="en";
+  if(en) return note.en||(note.ja?note.ja+"（"+HELP_UI("enPending")+"）":"");
+  return note.ja||"";
+}
+let HELP_TREE=null, HELP_TREE_LOCALE=null, HELP_TREE_SHOWN=null;
+function refreshHelpHighlights(){
+  if(!HELP_TREE||!FIELD_GUIDE_DATA) return;
+  for(const entry of FIELD_GUIDE_DATA.fields||[]) if(Array.isArray(entry.help?.optionDetails)&&entry.help.optionDetails.length) HELP_TREE.highlightOption(entry.canonicalPath,currentValueOfCanonical(entry.canonicalPath));
+}
+function canonicalOf(key){ const entry=guideEntryFor(key); return entry?.canonicalPath||null; }
+function formPathOfCanonical(path){ return FIELD_GUIDE_DATA?.registry_projection?.form_path_by_canonical?.[path]||null; }
+function currentValueOfCanonical(path){
+  const fp=formPathOfCanonical(path); if(!fp) return null;
+  try{ return getPath(data,fp); }catch{ return null; }
+}
+function optionMeaningFor(path,value){
+  const entry=guideEntryFor(path); const details=entry?.help?.optionDetails||[];
+  const option=details.find(o=>String(o.value)===String(value)); if(!option) return "";
+  const en=currentHelpLocale()==="en"; return guideText(option.meaning)||guideText(option.name)||"";
+}
+function updateOptionMeaning(path){
+  const slot=document.querySelector(`[data-option-meaning="${CSS.escape(path||"")}"]`); if(!slot) return;
+  const value=currentValueOfCanonical(path);
+  if(Array.isArray(value)){ slot.textContent=value.length?" — "+value.map(v=>`${v}${optionMeaningFor(path,v)?"（"+optionMeaningFor(path,v)+"）":""}`).join(" / "):""; return; }
+  const meaning=value!==null&&value!==undefined&&String(value)!==""?optionMeaningFor(path,value):"";
+  slot.textContent=meaning?" — "+meaning:"";
+}
+function focusFieldInput(path){
+  const host=document.querySelector(`main.form [data-canonical-path="${CSS.escape(path)}"]`); if(!host) return false;
+  const section=host.closest("section.chapter"); if(section&&section.classList.contains("is-closed")){ section.classList.remove("is-closed"); section.querySelector("h2")?.setAttribute("aria-expanded","true"); }
+  host.scrollIntoView({block:"center",behavior:"smooth"});
+  host.classList.remove("help-target-pulse"); void host.offsetWidth; host.classList.add("help-target-pulse");
+  const control=host.querySelector("input:not([type=checkbox]),select,textarea")||host.querySelector("input,button"); control?.focus({preventScroll:true});
+  return true;
+}
+function ensureHelpTree(){
+  const target=document.getElementById("contextHelp");
+  if(!target||!FIELD_GUIDE_DATA||!window.SAKU_HELP_TREE) return null;
+  const locale=currentHelpLocale();
+  if(HELP_TREE&&HELP_TREE_LOCALE===locale&&target.dataset.helpTree) return HELP_TREE;
+  const model=window.SAKU_HELP_TREE.buildHelpTreeModel(FIELD_GUIDE_DATA,locale);
+  HELP_TREE=window.SAKU_HELP_TREE.mountHelpTree(target,model,{
+    onNavigate:path=>focusFieldInput(path),
+    onHash:path=>{ try{ history.replaceState(null,"",path?window.SAKU_HELP_TREE.hashFor(path):location.pathname+location.search); }catch{} },
+    currentValue:path=>currentValueOfCanonical(path),
+  });
+  HELP_TREE_LOCALE=locale; HELP_TREE_SHOWN=null;
+  refreshHelpHighlights();   /* every select / checkbox group starts highlighted at its current value */
+  return HELP_TREE;
+}
+/* left → right: a changed select or checkbox group highlights its option node and refreshes the field note */
+if(typeof document.addEventListener==="function") document.addEventListener("change",event=>{
+  const target=event.target;
+  const host=target.closest?.("[data-canonical-path]"); if(!host) return;
+  const path=host.dataset.canonicalPath; if(!path) return;
+  updateOptionMeaning(path);   /* the tree highlights follow through render() → refreshHelpHighlights() */
+});
+/* the frozen surface is re-drawn on hand-off adoption and locale change; the per-field notes come back with it */
+if(typeof window!=="undefined"&&typeof window.addEventListener==="function") window.addEventListener("saku-frozen-surface-rendered",()=>{ if(!FIELD_GUIDE) return; for(const step of [()=>window.SAKU_FROZEN_IA?.decorateFromGuide?.(),attachFieldHelp,refreshHelpHighlights]){ try{ step(); }catch(error){ console.warn("surface decoration step failed", error); } } });
+if(typeof window!=="undefined"&&typeof window.addEventListener==="function") window.addEventListener("hashchange",()=>{ const path=window.SAKU_HELP_TREE?.pathFromHash(location.hash); if(path){ currentFieldHelp=path; HELP_TREE_SHOWN=null; curTab="help"; buildTabs(); renderPreview(); } });
+
 function showFieldHelp(key){
   const entry=guideEntryFor(key);
   if(!entry) return;
-  currentFieldHelp=key;
+  currentFieldHelp=entry.canonicalPath||key; HELP_TREE_SHOWN=null;
   curTab="help";
   buildTabs();
   renderPreview();
@@ -2061,7 +2128,7 @@ function applyPreviewSyncPosition(text,filename){
   return true;
 }
 function syncChapterToPreview(index){
-  currentSyncChapter=index;
+  currentSyncChapter=index; currentFieldHelp=null; HELP_TREE_SHOWN=null;
   setCurrentHelpChapter(index);
   document.querySelectorAll("[data-chapter-sync]").forEach(button=>
     button.classList.toggle("is-synced",Number(button.dataset.chapterSync)===index));
@@ -2072,6 +2139,28 @@ function syncChapterToPreview(index){
 }
 function renderContextHelp(){
   const target=document.getElementById("contextHelp");
+  /* U2: with the field guide loaded the Help tab is the tree 章 › 項目 › 選択肢.
+     A field help request expands that node; a chapter sync expands the chapter.
+     Without the guide (no data.json reachable) the old chapter text remains. */
+  const tree=ensureHelpTree();
+  if(tree){
+    const pv=document.getElementById("pvPath");
+    /* render() runs on every keystroke; the tree only moves when the target
+       (field or chapter) changed — otherwise it just refreshes the highlights. */
+    const entry=currentFieldHelp?guideEntryFor(currentFieldHelp):null;
+    if(currentFieldHelp&&!entry) currentFieldHelp=null;
+    const key=entry?"f:"+entry.canonicalPath:"c:"+currentHelpChapter+":"+(currentSyncChapter??"");
+    if(key!==HELP_TREE_SHOWN){
+      HELP_TREE_SHOWN=key;
+      if(entry){ tree.expandField(entry.canonicalPath); if(pv) pv.textContent=guideText(entry.uiLabel||entry.label)+" · #help="+entry.canonicalPath; return; }
+      tree.expandChapter(currentHelpChapter,{scroll:currentSyncChapter!=null});
+      const item=CHAPTER_HELP[currentHelpChapter]?.[currentHelpLocale()];
+      if(pv) pv.textContent=item?item[0]:"Help";
+      return;
+    }
+    refreshHelpHighlights();
+    return;
+  }
   if(currentFieldHelp){
     const entry=guideEntryFor(currentFieldHelp);
     if(entry){ renderFieldHelp(target,entry);
@@ -2085,6 +2174,7 @@ function renderContextHelp(){
     ?["What this chapter means","What to enter","Example","Note"]
     :["この章について","何を書く項目か","入力例","注意点"];
   const bodies=[item[1],item[1],item[2],item[3]];
+  delete target.dataset.helpTree; HELP_TREE=null;
   target.innerHTML=`<h3>${escapeHtml(item[0])}</h3>${labels.map((label,index)=>`<h4>${label}</h4><p>${escapeHtml(bodies[index])}</p>`).join("")}`;
   const pv=document.getElementById("pvPath");if(pv)pv.textContent=item[0];
 }
@@ -2094,15 +2184,11 @@ function payloadFor(tab,d){
   const slug=(d.meta.slug||"character").trim().replace(/[^a-z0-9-]/g,"")||"character";
   if(tab==="json")   return {text:toSakuJson(d), filename:slug+".saku-character.json",
     mime:"application/json;charset=utf-8"};
-  if(tab==="prompt") return {text:toPrompt(d), filename:slug+"-prompt.txt",
-    mime:"text/plain;charset=utf-8"};
-  if(tab==="guild")  return {text:toGuildJson(d), filename:slug+"-guild.json",
-    mime:"application/json;charset=utf-8"};
   if(tab==="test")   return {text:toTestLog(d), filename:slug+"-persona-test.md",
     mime:"text/markdown;charset=utf-8"};
   return {text:toYaml(d), filename:slug+".character.yaml", mime:"application/yaml;charset=utf-8"};
 }
-function isExternalOutput(tab){return ["json","prompt","guild"].includes(tab);}
+function isExternalOutput(tab){return tab==="json";}
 
 /* 承認した「内容そのもの」を控える。
    ★ チェックを入れた後に本文を編集すると、確認していない内容が
@@ -2568,12 +2654,21 @@ if(typeof window!=="undefined") window.rerenderBuilder=()=>{
    出力そのものを見ないゲートは、画面が壊れていても通ってしまうため。 */
 if(typeof window!=="undefined") window.__saku_data=()=>data;
 buildAccordion();wireAccordionToolbar();wireExportApproval();render();
-loadFieldGuide().then(()=>{ if(attachFieldHelp()>0) enhanceFieldAccessibility(); });
+loadFieldGuide().then(()=>{
+  if(attachFieldHelp()>0) enhanceFieldAccessibility();
+  const wanted=window.SAKU_HELP_TREE?.pathFromHash(location.hash);
+  if(wanted&&guideEntryFor(wanted)){ currentFieldHelp=wanted; curTab="help"; buildTabs(); }
+  if(curTab==="help") renderPreview();
+});
 
 </script>
 <script type="module">
 import * as ActiveSaku from "./lib/active-character.mjs";
 window.SAKU_ACTIVE = ActiveSaku;
+/* 変換用の API は、続きを開く前に置く。後に置くと、選んだばかりの Unified V1 Character
+   を旧フォームとして読み、02 が空のフォームで開いた（全体点検 2026-09-24）。import は
+   巻き上げられるので、ここで使える。 */
+window.SAKU_UNIFIED = UnifiedAuthoring;
 /* 直前まで編集していた SAKU があれば、その続きから開く。 */
 const working = ActiveSaku.getWorkingCharacter();
 if (working && typeof window.adoptWorkingCharacter === "function") {
@@ -2595,6 +2690,7 @@ window.SAKU_ADOPTED_VALIDATE = async character => {
   return validateCompleteAdoptedCharacter(character, schema);
 };
 window.SAKU_FORMAT_VALIDATION_ISSUE = issue => formatValidationIssue(issue, SEMANTIC_FIELDS, document.documentElement.lang === "en" ? "en" : "ja");
+window.SAKU_FIELD_LABEL = path => SEMANTIC_FIELDS.find(item => item.canonicalPath === path)?.label?.[document.documentElement.lang === "en" ? "en" : "ja"] || "";
 /* 分類ずみの module が載る前に一度描画されているので、載った時点で描き直す。 */
 if (typeof window.rerenderBuilder === "function") window.rerenderBuilder();
 /* Desktop Character handoff is validated, consumed once, and adopted by
@@ -2603,13 +2699,18 @@ if (typeof window.rerenderBuilder === "function") window.rerenderBuilder();
 /* 保存は明示操作でだけ起きる。画面を開いた、移動した、では何も書かない。
    取り込み元の Character を上書きせず、次の revision として一覧へ入れる。 */
 import * as CharacterLibrary from "./lib/character-library.mjs";
+import { storeHandoff } from "./lib/handoff-binding.mjs";
+import * as HelpTree from "./lib/help-tree.mjs";
+window.SAKU_HELP_TREE = HelpTree;
 {
   const button = document.getElementById("saveUnifiedCharacter");
   if (button) {
     let trainerAwareSaveInProgress = false;
     button.hidden = false;
-    button.addEventListener("click", async () => {
-      if (trainerAwareSaveInProgress) return;
+    /* The save is one function so the hand-off buttons below can run it and
+       learn whether it succeeded; the button itself only calls it. */
+    const performSave = async () => {
+      if (trainerAwareSaveInProgress) return { saved: false, code: "SAVE_IN_PROGRESS" };
       trainerAwareSaveInProgress = true;
       const wasDisabled = button.disabled;
       button.disabled = true;
@@ -2724,11 +2825,66 @@ import * as CharacterLibrary from "./lib/character-library.mjs";
       if (trainerLinkFailed) window.alert(savedMessage);
       else if (typeof window.toast === "function") window.toast(savedMessage);
       else window.alert(savedMessage);
+      return { saved: true, character };
       } finally {
         trainerAwareSaveInProgress = false;
         button.disabled = wasDisabled;
       }
-    });
+    };
+    button.addEventListener("click", () => { void performSave(); });
+    window.SAKU_SAVE_UNIFIED_CHARACTER = performSave;
+
+    /* 03 AIプラットフォームで動作確認 / 04 トレーニングする (Owner 2026-09-22).
+       Both hand over the Character being edited.  Unsaved edits are not
+       handed over silently: the person is asked, the save runs through the
+       same performSave, and only a saved Character travels.  03 reads the
+       Active SAKU; 04 receives the bound handoff the Viewer also uses. */
+    const english = () => window.SAKU_GOLDEN_UI?.getLocale?.() === "en-US";
+    const unsavedEdits = () => {
+      const form = typeof window.__saku_data === "function" ? window.__saku_data() : null;
+      if (!form) return false;
+      const source = form._unified_source || null;
+      if (!source) return true;
+      try { return JSON.stringify(UnifiedAuthoring.toUnifiedCharacter(form, source, { bumpRevision: false })) !== JSON.stringify(source); }
+      catch { return true; }
+    };
+    const settledCharacter = async () => {
+      if (unsavedEdits()) {
+        const question = english()
+          ? "There are unsaved changes. Save this Character and continue? (Cancel = stay on this screen)"
+          : "未保存の変更があります。この内容で保存してから進みますか？（キャンセル＝この画面に留まります）";
+        if (!window.confirm(question)) return null;
+        const outcome = await performSave();
+        if (!outcome?.saved) return null;
+        return outcome.character;
+      }
+      const form = window.__saku_data();
+      return form._unified_source || null;
+    };
+    const platformButton = document.getElementById("runOnPlatform");
+    const trainButton = document.getElementById("trainCharacter");
+    const desktop = Boolean(window.__TAURI__?.core?.invoke);
+    if (platformButton) {
+      platformButton.hidden = !desktop;
+      platformButton.addEventListener("click", async () => {
+        const character = await settledCharacter();
+        if (!character) return;
+        window.SAKU_ACTIVE?.setActive(character, { source: "builder-platform" });
+        location.assign("../index.html?stay=1&open=platform");
+      });
+    }
+    if (trainButton) {
+      trainButton.hidden = !desktop;
+      trainButton.addEventListener("click", async () => {
+        const character = await settledCharacter();
+        if (!character) return;
+        window.SAKU_ACTIVE?.setActive(character, { source: "builder-train" });
+        storeHandoff(localStorage, "trainer", character);
+        const id = encodeURIComponent(character.identity?.character_id || "");
+        const revision = encodeURIComponent(String(character.identity?.character_revision ?? ""));
+        location.assign(`./trainer.html?desktop=builder&character_id=${id}&character_revision=${revision}&source=builder`);
+      });
+    }
   }
 }
 

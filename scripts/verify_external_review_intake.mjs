@@ -25,6 +25,7 @@ const equal = (actual, expected, label) => { assert.equal(actual, expected, `${l
 const MODULE = "tools/v1/external-review-intake.mjs";
 const Intake = await import(pathToFileURL(path.join(ROOT, MODULE)).href);
 const Contract = await import(pathToFileURL(path.join(ROOT, "tools/v1/trainer-frozen-ia.mjs")).href);
+const UX4 = await import(pathToFileURL(path.join(ROOT, "tools/v1/trainer-ux4.mjs")).href);
 const Tuning = await import(pathToFileURL(path.join(ROOT, "tools/unified-v1/tuning/tuning-projection.mjs")).href);
 
 function storage() {
@@ -197,12 +198,23 @@ const gitShow = (revision, relative) => new Promise(resolve => {
   let out = ""; child.stdout.on("data", chunk => out += chunk); child.on("close", code => resolve(code === 0 ? out : null));
 });
 const baseline = "9b0af0e56cb6cd7459e39f6d6e585cb487566c58";
-for (const relative of ["tools/v1/trainer-frozen-ia.mjs", "scripts/verify_frozen_trainer_ia.mjs", "tools/unified-v1/handoff-binding.mjs", "tools/v1/trainer-ux4.mjs", "tools/v1/trainer-ux3.mjs"]) {
+for (const relative of ["tools/v1/trainer-frozen-ia.mjs", "scripts/verify_frozen_trainer_ia.mjs", "tools/unified-v1/handoff-binding.mjs", "tools/v1/trainer-ux3.mjs"]) {
   const shown = await gitShow(baseline, relative);
   if (shown === null) { cases.push(`XR-FROZEN ${relative} baseline unavailable (git), skipped`); continue; }
   equal(sha256(await read(relative)), sha256(shown), `XR-FROZEN ${relative} byte-identical to main ${baseline.slice(0, 8)}`);
 }
+// `tools/v1/trainer-ux4.mjs` left the git-baseline list on 2026-09-23: Owner
+// decided that the Trainer must hand an external AI the same text 03 hands it
+// (the raw JSON snapshot carried neither the shared base layer nor the directive
+// blocks, so its records were not evidence about what ships). The file is pinned
+// by content instead, so an unreviewed edit still trips this gate. What changed:
+// `copyPayloads` composes through the boundary module and returns the snapshot
+// separately for the record, and executions carry a construction mark. The
+// contract itself — operations, validation, the frozen-ia session — is untouched,
+// and `scripts/verify_trainer_ux4.mjs` covers it at 115/115.
+equal(sha256(await read("tools/v1/trainer-ux4.mjs")), "7cc3a92db8f996614cd5d167558d1697e90003915075fe4c7d6f8212d6927633", "XR-FROZEN tools/v1/trainer-ux4.mjs matches the reviewed content (composed hand-off, 2026-09-23)");
 equal(Contract.TRAINER_CONTRACT_ID, "saku.trainer.frozen-ia@1", "XR-FROZEN frozen-ia contract id unchanged");
+equal(UX4.UX4_CONTRACT, "saku.trainer.ux4@1", "XR-FROZEN the Trainer UX4 contract id is unchanged by the hand-off change");
 
 // ── 7. falsification: disable one rule at a time in a temporary copy ───────
 const falsifications = [
@@ -218,7 +230,8 @@ const tempDir = await mkdtemp(path.join(tmpdir(), "saku-xr-falsify-"));
 try {
   for (const [label, from, to, fixture] of falsifications) {
     check(moduleText.includes(from), `${label}: target rule present`);
-    const mutatedPath = path.join(ROOT, "tools/v1", `__xr_falsify_${cases.length}.mjs`);
+    // The process id keeps two runs of this gate from removing each other's file.
+    const mutatedPath = path.join(ROOT, "tools/v1", `__xr_falsify_${process.pid}_${cases.length}.mjs`);
     await writeFile(mutatedPath, moduleText.replace(from, to), "utf8");
     try {
       const mutated = await import(pathToFileURL(mutatedPath).href);
@@ -330,7 +343,7 @@ try {
 } finally {
   socket?.close(); child.kill();
   await new Promise(resolve => child.exitCode !== null ? resolve() : child.once("exit", resolve));
-  server.close(); await rm(profile, { recursive: true, force: true });
+  server.close(); await rm(profile, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 }).catch(error => console.warn(`CLEANUP_SKIPPED browser profile left at ${profile}: ${error?.code || error}`));
 }
 const match = output.match(/<pre id="report" data-status="(PASS|FAIL)">([\s\S]*?)<\/pre>/);
 if (!match) { console.error(output.slice(0, 2000), stderr.slice(-1000)); process.exit(1); }

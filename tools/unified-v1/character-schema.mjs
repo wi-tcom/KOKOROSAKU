@@ -21,7 +21,23 @@
 // schema it is written in is UNKNOWN — never inferred from its shape, never
 // defaulted to either family, and never admitted.
 
-import { UNIFIED_SCHEMA_V1, LEGACY_STATUS, validateUnifiedV1 } from "./unified-schema-v1.mjs";
+import { UNIFIED_SCHEMA_V1, LEGACY_STATUS, validateUnifiedV1, conformanceLocatorMismatches, describeLocatorMismatch, LOCATOR_MISMATCH_CODE } from "./unified-schema-v1.mjs";
+import { validateCompleteAdoptedCharacter } from "../v1/adopted-schema-validator.mjs";
+
+/** admit() was given no adopted schema, so it could not ask the one question that decides a Unified V1 Character. */
+export const ADOPTED_SCHEMA_REQUIRED = "ADOPTED_SCHEMA_REQUIRED";
+/** The Character does not satisfy the adopted Unified V1 schema (structure or its reference rules). */
+export const ADOPTED_SCHEMA_VALIDATION_FAILED = "ADOPTED_SCHEMA_VALIDATION_FAILED";
+
+// What the loaders hand back: the identity marker loadAdoptedSchema() checks,
+// and the extension schema wired in for the root's absolute `$ref`. An object
+// without both is not the adopted schema, whatever else it contains.
+function isAdoptedSchema(schema) {
+  if (!schema || typeof schema !== "object") return false;
+  if (schema?.properties?.schema?.$ref !== "#/$defs/schemaIdentity") return false;
+  const extensionId = String(schema?.properties?.extensions?.$ref || "").split("#")[0];
+  return Boolean(extensionId && schema.__externalSchemas?.[extensionId]);
+}
 
 // SAKU_UNIFIED_SCHEMA_V1 is the sole active Character schema, adopted in the
 // Canonical repository. The other two remain readable because the adoption did
@@ -170,8 +186,17 @@ const VALIDATORS = { UNIFIED_V1_CHARACTER: character => validateUnifiedV1(charac
  *
  * There is deliberately no fallback branch: an unclassified Character has no
  * validator, so it cannot be admitted by omission.
+ *
+ * A Unified V1 Character is admitted only against the adopted schema
+ * (Owner 2026-09-23). The hand checks in `validateUnifiedV1` ask whether the
+ * keys are there; on β.6 they let in an axis value outside its enum, a number
+ * where the enum holds names and a key the schema does not have, and only the
+ * edit screen's save ever asked the schema. `options.schema` is what
+ * `loadAdoptedSchema()` (browser) or `loadAdoptedSchemaFromRepository()` (Node)
+ * returns; without it the Character is refused rather than admitted on the hand
+ * checks alone. `options.describe(issue)` words a schema issue for the screen.
  */
-export function admit(character) {
+export function admit(character, { schema = null, describe = null } = {}) {
   const verdict = classify(character);
   if (!verdict.supported) return { accepted: false, kind: UNKNOWN, ...verdict, errors: [verdict.reason] };
   const validator = VALIDATORS[verdict.kind];
@@ -179,6 +204,39 @@ export function admit(character) {
   const result = validator(character);
   if (!result.ok) {
     return { accepted: false, kind: UNKNOWN, ...verdict, code: "SCHEMA_VALIDATION_FAILED", reason: result.errors.join("; "), errors: result.errors };
+  }
+  // Schema shape is settled; now the references inside it. A conformance ref
+  // whose locator lands on a different requirement than it names is refused
+  // here, for every import route, because the schema says such a Character
+  // fails closed and nothing downstream re-checks it.
+  const mismatches = conformanceLocatorMismatches(character);
+  if (mismatches.length) {
+    const errors = mismatches.map(item => describeLocatorMismatch(item, "ja"));
+    return {
+      accepted: false, kind: UNKNOWN, ...verdict, code: LOCATOR_MISMATCH_CODE, mismatches,
+      reason: `conformance_expectations の参照先が ${mismatches.length} 件一致しません: ${errors.join(" / ")}`,
+      errors,
+    };
+  }
+  if (verdict.kind === ACTIVE_SCHEMA_KIND) {
+    if (!isAdoptedSchema(schema)) {
+      return {
+        accepted: false, kind: UNKNOWN, ...verdict, code: ADOPTED_SCHEMA_REQUIRED,
+        reason: "The adopted Unified V1 schema was not available, so this Character was not checked against it and is not admitted.",
+        errors: ["adopted Unified V1 schema not supplied"],
+      };
+    }
+    const full = validateCompleteAdoptedCharacter(character, schema);
+    if (!full.ok) {
+      const word = issue => { try { return typeof describe === "function" ? String(describe(issue)) : ""; } catch { return ""; } };
+      const errors = full.errors.map(issue => word(issue) || `${issue.path || "/"} ${issue.message} (${issue.keyword})`);
+      const shown = errors.slice(0, 3).join(" / ");
+      return {
+        accepted: false, kind: UNKNOWN, ...verdict, code: ADOPTED_SCHEMA_VALIDATION_FAILED,
+        reason: (errors.length > 3 ? `${shown} (+${errors.length - 3})` : shown).slice(0, 600),
+        errors, issues: full.errors,
+      };
+    }
   }
   return { accepted: true, ...verdict, errors: [] };
 }

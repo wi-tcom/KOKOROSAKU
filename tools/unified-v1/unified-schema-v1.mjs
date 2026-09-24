@@ -225,6 +225,88 @@ export function sentinelViolations(character) {
   return found;
 }
 
+// ── conformance_expectations locator resolution ─────────────────────────────
+//
+// Every `*_refs[]` entry names a requirement by `requirement_id` and may carry a
+// `locator`, a JSON Pointer (RFC 6901) into the same Character. The schema says
+// what the locator is for: "requirement_id is normative identity; locator is
+// optional convenience only. Resolution or locator mismatch fails closed."
+// Until 2026-09-21 nothing here resolved it — a locator pointing at the wrong
+// invariant passed as long as it was a well-formed string, and four individually
+// generated Characters shipped with their hard_invariants locators swapped.
+// The check below resolves each locator and refuses the Character unless the
+// object it lands on carries `id === requirement_id`. An unresolvable locator
+// is a mismatch too, never a pass.
+
+export const LOCATOR_MISMATCH_CODE = "CONFORMANCE_LOCATOR_MISMATCH";
+
+/**
+ * Resolve an RFC 6901 JSON Pointer against a document.
+ * Returns { ok: true, value } or { ok: false, reason }. "" is the whole document.
+ */
+export function resolveJsonPointer(document, pointer) {
+  if (typeof pointer !== "string") return { ok: false, reason: "locator is not a string" };
+  if (pointer === "") return { ok: true, value: document };
+  if (!pointer.startsWith("/")) return { ok: false, reason: "locator does not start with /" };
+  let current = document;
+  for (const rawToken of pointer.slice(1).split("/")) {
+    const token = rawToken.replace(/~1/g, "/").replace(/~0/g, "~");
+    if (Array.isArray(current)) {
+      if (!/^(0|[1-9][0-9]*)$/.test(token)) return { ok: false, reason: `"${token}" is not an array index` };
+      const index = Number(token);
+      if (index >= current.length) return { ok: false, reason: `index ${index} is out of range (length ${current.length})` };
+      current = current[index];
+    } else if (current && typeof current === "object") {
+      if (!Object.prototype.hasOwnProperty.call(current, token)) return { ok: false, reason: `key "${token}" does not exist` };
+      current = current[token];
+    } else {
+      return { ok: false, reason: `cannot descend into a ${current === null ? "null" : typeof current} at "${token}"` };
+    }
+  }
+  return { ok: true, value: current };
+}
+
+/**
+ * Every locator under conformance_expectations, resolved. Returns one record
+ * per mismatch: { group, index, requirement_id, locator, resolved_id, resolvable, reason }.
+ * A Character without conformance_expectations, or whose refs carry no locator,
+ * yields []. Nothing is inferred from the shape: a ref with a locator is checked,
+ * a ref without one is left to the requirement_id alone, exactly as the schema says.
+ */
+export function conformanceLocatorMismatches(character) {
+  const found = [];
+  const expectations = character && typeof character === "object" ? character.conformance_expectations : null;
+  if (!expectations || typeof expectations !== "object" || Array.isArray(expectations)) return found;
+  for (const [group, refs] of Object.entries(expectations)) {
+    if (!Array.isArray(refs)) continue;
+    refs.forEach((ref, index) => {
+      if (!ref || typeof ref !== "object" || Array.isArray(ref) || !("locator" in ref)) return;
+      const requirementId = typeof ref.requirement_id === "string" ? ref.requirement_id : null;
+      const resolved = resolveJsonPointer(character, ref.locator);
+      const target = resolved.ok ? resolved.value : undefined;
+      const resolvedId = target && typeof target === "object" && !Array.isArray(target) && typeof target.id === "string" ? target.id : null;
+      if (!resolved.ok) {
+        found.push({ group, index, requirement_id: requirementId, locator: ref.locator, resolved_id: null, resolvable: false, reason: resolved.reason });
+      } else if (requirementId === null || resolvedId === null || resolvedId !== requirementId) {
+        found.push({ group, index, requirement_id: requirementId, locator: ref.locator, resolved_id: resolvedId, resolvable: true, reason: resolvedId === null ? "target carries no id" : "id differs" });
+      }
+    });
+  }
+  return found;
+}
+
+/** One Japanese line per mismatch: which group[index] pointed where, and what it found there. */
+export function describeLocatorMismatch(item, locale = "ja") {
+  const where = `conformance_expectations.${item.group}[${item.index}]`;
+  const rid = item.requirement_id === null ? "(requirement_id なし)" : item.requirement_id;
+  if (locale === "en") {
+    if (!item.resolvable) return `${where}: requirement_id ${rid} — locator ${JSON.stringify(item.locator)} does not resolve (${item.reason})`;
+    return `${where}: requirement_id ${rid} — locator ${JSON.stringify(item.locator)} points at ${item.resolved_id === null ? "an object without id" : `id ${item.resolved_id}`}`;
+  }
+  if (!item.resolvable) return `${where}: requirement_id ${rid} の locator ${JSON.stringify(item.locator)} は解決できません（${item.reason}）`;
+  return `${where}: requirement_id ${rid} の locator ${JSON.stringify(item.locator)} は ${item.resolved_id === null ? "id を持たない要素" : `id ${item.resolved_id}`} を指しています`;
+}
+
 /** Runtime values that belong to AMU and must not sit in a Character. */
 export function runtimeValueViolations(character) {
   const found = [];

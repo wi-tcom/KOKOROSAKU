@@ -1,6 +1,6 @@
 {
   "name": "saku-builder-desktop-candidate",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.8",
   "private": true,
   "description": "Candidate Tauri 2 thin desktop host for SAKU Builder and Trainer",
   "engines": {
@@ -20,6 +20,25 @@
     "external-review:verify": "node scripts/verify_external_review_intake.mjs",
     "speed-test:verify": "node scripts/verify_speed_test.mjs",
     "pack:verify": "node scripts/verify_pack_import.mjs",
+    "locators:verify": "node scripts/verify_conformance_locators.mjs",
+    "intake:verify": "node scripts/verify_strict_intake.mjs",
+    "workspace:verify": "node scripts/verify_workspace_state.mjs",
+    "schema:keywords:verify": "node scripts/verify_schema_keywords.mjs",
+    "gates:hygiene:verify": "node scripts/verify_gate_hygiene.mjs",
+    "fixes:no-wording:verify": "node scripts/verify_no_wording_fixes.mjs",
+    "findings:beta7:verify": "node scripts/verify_hands_on_findings.mjs",
+    "formats:verify": "node scripts/verify_package_formats.mjs",
+    "return:verify": "node scripts/verify_saku_return.mjs",
+    "authoring:roundtrip:verify": "node scripts/verify_authoring_roundtrip.mjs",
+    "locator-repair:verify": "node scripts/verify_locator_repair.mjs",
+    "editor:handoff:verify": "node scripts/verify_editor_handoff.mjs",
+    "docs:verify": "node scripts/verify_docs_version.mjs",
+    "input:widgets:verify": "node scripts/verify_input_widgets.mjs",
+    "help:tree:verify": "node scripts/verify_help_tree.mjs",
+    "screen:help:verify": "node scripts/verify_screen_help.mjs",
+    "platform:boundary:verify": "node scripts/verify_platform_prompt_boundary.mjs",
+    "catalog:facets:verify": "node scripts/verify_catalog_facets.mjs",
+    "en:spelling:verify": "node scripts/verify_en_spelling.mjs",
     "desktop:e2e:verify": "node scripts/verify_desktop_e2e_readiness.mjs",
     "delivery:manifests:verify": "node scripts/verify_delivery_manifests.mjs",
     "golden-ui:verify": "node scripts/verify_golden_ui.mjs",
@@ -27,7 +46,8 @@
     "beta1:verify": "node scripts/verify_beta1_owner_fixes.mjs",
     "round3:verify": "node scripts/verify_round3_owner_fixes.mjs",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build --bundles nsis"
+    "tauri:build": "tauri build --bundles nsis",
+    "wording:verify": "node scripts/verify_pending_wording.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "2.11.4"

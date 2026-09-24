@@ -78,14 +78,28 @@ assert.equal(brandEvidence.copyright_scope_ja, "著作権が及ぶ範囲にお�
 assert.equal(sha256(await readFile(path.join(ROOT, "desktop/icon.svg"))), brandEvidence.sources["saku.svg"].sha256);
 assert.equal(sha256(await readFile(path.join(ROOT, "desktop/resources/source/saku-favicon.ico"))), brandEvidence.sources["saku-favicon.ico"].sha256);
 const iconHashes = {
-  "32x32.png": "0ae130a5cc5234411f33cda0cdc92a3a03adec4a54cdb847a46332f4aa7c0d45",
-  "64x64.png": "e4db553f8b8a2b6aaa0714d9fe3a09d591ead2d7ad0d1ef039699d098ed15b51",
-  "128x128.png": "23bd748a2f58532e6f06c474b6437e428400e071e1033eae8d4b56ff5b585ba6",
-  "128x128@2x.png": "04a043ba1e5c635a64178faa1c1972b53c949c29280ff2452e28f316ce696ba3",
-  "icon.ico": "4c4b92e70e89070bddfc0574b3e861d11ec8a6b27ce882b47f0beb8e2ee278db",
-  "icon.icns": "a2a307d14ae6fcff891beb641dc54f299ea437b0864c37d5b6ad153ee1cc52dd",
-  "icon.png": "ba3034896bda39de057be49ed48bcffd4ebdc70103022c55c7617d2bc459af5f",
+  "32x32.png": "e7257de4af581411e8368c3c05efb047ccfe7028b2abf7db795b22f2bc1a4127",
+  "64x64.png": "a52f15156bf1d3f415e7cd4dfae3585651edf1e348b016ad50506bb4efe4201d",
+  "128x128.png": "44931459cd57df174a5ad44db092d4f4fa47c6439fcc7ac17310d047f7ea5097",
+  "128x128@2x.png": "9fdf782b698c4cdebcfa4dc02185dd5064ac58a19d9b3e176fd4fced6035462b",
+  "icon.png": "ed5cc1d4fdbc8c8a4728fac52ff64c524764ef8df8c7d3e45dd2e169ae165def",
+  "icon.ico": "fb8b522e90452f924956cec5ca56eb437c9b3e218739e55b091b252feb9e14e0",
+  "icon.icns": "8bd5b82edefa1b9396adbb9646911ba0bf8287b98295daceb2f33bab2b535282",
 };
+// App icon (Owner adoption 2026-09-21): the six Windows targets are byte copies of the Wi-t_Site files at the
+// recorded revision; the evidence block names the source and says where a generative model was used.
+assert.equal(brandEvidence.app_icon.source_repository, "wi-tcom/Wi-t_Site");
+assert.equal(brandEvidence.app_icon.source_revision, "512f0363078bb8a6529483a8b8a47923ca10ed08");
+assert.equal(brandEvidence.app_icon.source_path, "site-content/brand/app-icon/saku-builder");
+assert.match(brandEvidence.app_icon.provenance, /Gemini 生成画像由来/);
+assert.equal(brandEvidence.app_icon.rights_statement_owner_confirmed, "背景（和紙地）のみ Gemini 生成由来。クレジット表記の義務なし・商用利用可・背景単体には著作権を主張しない。マークの幾何は当社の公式 SVG（人間創作）。商標は付与しない。ロゴ本体の「生成モデル不使用」証跡は不変。");
+assert.equal(brandEvidence.app_icon.background_rights.copyright_claimed, false);
+assert.match(brandEvidence.app_icon.license, /^CC-BY-4\.0 — マークおよびアイコン全体/);
+assert.equal(brandEvidence.app_icon.trademark_rights_granted, false);
+for (const [name, target] of Object.entries(brandEvidence.app_icon.tauri_targets)) {
+  assert.equal(iconHashes[name], target.sha256, `app icon evidence ${name}`);
+  if (name !== "icon.icns") assert.equal(brandEvidence.app_icon.sources[target.source_file].sha256, target.sha256, `app icon source ${name}`);
+}
 for (const [name, expected] of Object.entries(iconHashes)) {
   assert.equal(sha256(await readFile(path.join(ROOT, "src-tauri/icons", name))), expected, `brand icon hash ${name}`);
 }
@@ -154,7 +168,11 @@ assert.match(mainRs, /windows_subsystem = "windows"/);
 for (const state of ["INVALID", "UNSUPPORTED", "NOT_CONFIGURED", "IMPORTED"]) assert.ok(mainRs.includes(`\"${state}\"`));
 for (const field of ["package_type", "product", "package_version", "schema_version", "minimum_app_version", "content_type", "distribution_channel", "license_state", "payload_hash"]) assert.ok(mainRs.includes(field));
 assert.match(mainRs, /workspace\s*\.join\("imports"\)/);
-assert.match(mainRs, /parse_zip_package/);
+// 2026-09-21: the two-file Builder package reader (parse_zip_package) is retired; the host reads signed
+// SAKU Character Packs only and names the AMU Character File instead of reading it.
+assert.doesNotMatch(mainRs, /parse_zip_package/);
+assert.match(mainRs, /parse_character_pack/);
+assert.match(mainRs, /PACKAGE_FORMAT_AMU_CHARACTER_FILE/);
 assert.match(mainRs, /wit-package\.json/);
 assert.match(mainRs, /payload\.json/);
 assert.match(mainRs, /PACKAGE_ARCHIVE_INVALID/);

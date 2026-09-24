@@ -5,11 +5,32 @@
 <meta name="robots" content="noindex,nofollow">
 <title>SAKU Trainer</title>
 <link rel="stylesheet" href="./trainer.css">
+<link rel="stylesheet" href="./help-pane.css">
 <link rel="icon" href="./favicon.ico">
 <meta name="saku-build-revision" content="UNRELEASED_STATIC_CANDIDATE">
 </head>
 <body>
+<div class="screen-with-help">
 <main id="trainer-root" aria-live="polite">Trainerを読み込み中 / Loading Trainer…</main>
+<aside id="trainer-help" class="help-pane" aria-label="ヘルプ"></aside>
+</div>
 <script type="module" src="./lib/trainer-ui.mjs"></script>
+<script type="module">
+/* U4: the shared help tree beside the Trainer. The guide names the section each node explains.
+   The stage headings carried a 「同期」 button as well; Owner removed it on 2026-09-23 as a
+   duplicate — the pane is already beside the stages, and 「入力欄へ」 still walks back to them.
+   The page re-draws its root, so the pane only has to follow the locale. */
+import { mountScreenHelp } from "./lib/screen-help.mjs";
+const aside = document.getElementById("trainer-help");
+const localeOf = () => (document.documentElement.lang || "ja").startsWith("en") || document.getElementById("locale")?.value === "en" ? "en" : "ja";
+const help = await mountScreenHelp({ aside, guideUrls: ["./manual/trainer-guide.data.json", "./manual/trainer-guide.data.json"], locale: localeOf() });
+if (help) {
+  window.__saku_trainer_help = help;
+  const root = document.getElementById("trainer-root");
+  new MutationObserver(() => { help.setLocale(localeOf()); }).observe(root, { childList: true, subtree: true });
+  help.fromHash();
+  window.addEventListener("hashchange", () => help.fromHash());
+}
+</script>
 </body>
 </html>
