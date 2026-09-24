@@ -1,20 +1,29 @@
-# SAKU Builder 0.1.0-beta.8 Public Build Envelope (candidate)
+# SAKU Builder 0.1.0-beta.8 Public Build Envelope (candidate, rebuilt)
 
 Machine-readable record: [BUILD_ENVELOPE.json](BUILD_ENVELOPE.json). Exact public inputs beside it:
 `build-metadata.json`, `resource-profile.json`, `tauri.public.override.json` (unchanged from β.7). Installer identity: [SHA256SUMS](SHA256SUMS).
 
 | Artifact | Bytes | SHA-256 | Authenticode |
 | --- | ---: | --- | --- |
-| `SAKU Builder_0.1.0-beta.8_x64-setup.exe` | 2,169,165 | `66b8c28d537f8387f2df511ee61f709959d95ea4f9f98958ddf812c68411b0c6` | NotSigned |
-| installer-embedded `saku-builder-desktop.exe` | 4,270,080 | `1119108e859c22618c277e037685ba9f8c1ac2a1c310283042cc35e227ff3812` | NotSigned |
-| `release/saku-builder-desktop.exe` (post-bundle) | 4,270,080 | `6e44c2c9914c5772fa2ca615ab397ed222f6e92d76d14050c73a1c0024371ed1` | NotSigned |
+| `SAKU Builder_0.1.0-beta.8_x64-setup.exe` | 2,169,969 | `db0f544dcab30d7dd4517bc0a77f6e98ec12579a65dad2932d0ce8def8a314c9` | NotSigned |
+| installer-embedded `saku-builder-desktop.exe` | 4,271,104 | `02d5615caaf79bb81573fa2c35a00e00ad5516a6e185d445023a0261e37df2ee` | NotSigned |
+| `release/saku-builder-desktop.exe` (post-bundle) | 4,271,104 | `98c5f4646666e2daaa37a4c10dfecea65dd21eb8148183dc890d78aae296dc0f` | NotSigned |
 | bundled `saku-base-directives.v1.txt` | 4,397 | `ab4745a3617e5b8e49125146a47ee99d1adde7ad8436c953431518ac23358654` | — |
 
-- Source: `wi-tcom/-SAKU-builder` commit `16a79a719a10b55b47ddffde6568d74b77ee2c34` (tree `eb3895ceac8a256df13ddb4df0a371807f98abd5`), branch `claude/saku-beta8-20260924`, off `main` `6cc904f` after PR #78 merged. The version bump is committed before the build, so the commit and tree named here are the ones the binary was made from.
-- Toolchain and environment: identical to the β.2 – β.7 envelopes — rustc/cargo 1.97.1, Tauri CLI 2.11.4, Node 24.21.0, `CARGO_ENCODED_RUSTFLAGS` remap-path-prefix ×4 (U+001F separated), `CARGO_NET_OFFLINE=true`, jobs 1, incremental 0, `--locked`; target label `tauri-exact-1.97.1-beta8-public-oss-16a79a7-001`. Build time 7m 45s. Source mutation by the build: 0 files.
-- Embedded vs post-bundle executable: 3 differing byte(s) at offsets 3969594–3969596 — the Tauri bundle-type stamp, `NSIS` against `UNKNOWN`, as in β.3 – β.7.
+- Source: `wi-tcom/-SAKU-builder` commit `6e5112a0f9b849b2d5dc934c6f849f617f203cbc` (tree `9527b5c3aeb10cd8d88b23192d7b614e312ffa55`), branch `claude/saku-beta8-help-20260924`, off `main` `368ab8d` after PR #79 merged. The help change is committed before the build, so the commit and tree named here are the ones the binary was made from.
+- Toolchain and environment: identical to the β.2 – β.7 envelopes — rustc/cargo 1.97.1, Tauri CLI 2.11.4, Node 24.21.0, `CARGO_ENCODED_RUSTFLAGS` remap-path-prefix ×4 (U+001F separated), `CARGO_NET_OFFLINE=true`, jobs 1, incremental 0, `--locked`; target label `tauri-exact-1.97.1-beta8-public-oss-6e5112a-001`. Build time 7m 43s. Source mutation by the build: 0 files.
+- Embedded vs post-bundle executable: 3 differing byte(s) at offsets 3970514–3970516 — the Tauri bundle-type stamp, `NSIS` against `UNKNOWN`, as in β.3 – β.7.
 - Host-path / user-name scan of both executables (UTF-8 and UTF-16LE): **0 hits**.
 - Generated NSIS: `verify_generated_nsis.mjs` PASS. The installer was digested again after being copied to `SAKU-verify\beta8\`.
+
+## Why β.8 was built again
+
+Owner 2026-09-24: the help changes go into β.8 and it is rebuilt under the same version. **The first β.8 candidate (PR #79: installer `66b8c28d…`, 2,169,165 bytes; embedded `1119108e…`) was never published and is void.** This build adds:
+
+- **Help ①** The manual badge shows the version, the day it was last checked on the installed window and the environment: `対応バージョン v0.1.0-beta.8 ／ 最終確認 2026-09-24（Windows 11 Home 10.0.26200・WebView2 Runtime 153.0.4234.48）` / `Applies to v0.1.0-beta.8 / Last checked 2026-09-24 (…)`.
+- **Help ②** 「困ったとき」 opens with 「この版で分かっている問題」 (Known issues in this version): three issues, each as 症状 / いまどうなるか / どうすればよいか (Symptom / Impact / What to do).
+
+The Japanese is the ライター&SNS approved text (`9be2c32`), the English the 英語翻訳チーム delivery (Q1–Q8).
 
 ## What this build carries that β.7 did not
 
