@@ -1,0 +1,10 @@
+{
+  "profile": "saku.desktop.build-metadata@1",
+  "resource_profile": "public-oss",
+  "internal_content_count": 0,
+  "local_server": false,
+  "one_drive_runtime_dependency": false,
+  "approved_checkout_build_source_only": true,
+  "code_signing": "UNSIGNED",
+  "publication": false
+}

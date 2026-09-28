@@ -52,7 +52,102 @@ const guide = JSON.parse(read("manual/saku-field-guide.data.json"));
   const strings = read("tools/v1/help-tree.mjs");
   check(strings.includes("詳細") === false || true, "HT-MODEL visible strings centralised in STRINGS");
   check(Object.keys(T.STRINGS.ja).sort().join() === Object.keys(T.STRINGS.en).sort().join(), "HT-MODEL JA and EN string tables have the same keys");
-  equal(T.STRINGS.ja.effectNotice, "※ 傾向であり断定ではありません。AI プラットフォームや事前のメモリー・学習・知識により、思いどおりの傾向にならないことがあります。Trainer で実際の応答を確認してください。", "HT-MODEL the Owner-fixed effect notice is verbatim");
+  equal(T.STRINGS.ja.effectNotice, "※ 傾向であり断定ではありません。AI プラットフォームや事前のメモリー・学習・知識により、思いどおりの傾向にならないことがあります。実際の応答は、AI プラットフォームの新しい会話で確かめてください。", "HT-MODEL the Owner-fixed effect notice is verbatim");
+  // Owner 2026-09-27 「注記は(c)」: the notice's last sentence points at the new AI conversation
+  // (the Trainer left the screens). The English sentence waits for 英語翻訳チーム (依頼 Z30); until
+  // then the EN notice only drops the sentence that named the Trainer.
+  {
+    const OLD_TAIL = "Trainer で実際の応答を確認してください。";
+    const noticeFiles = ["tools/v1/help-tree.mjs", "manual/platform-guide.data.json", "manual/trainer-guide.data.json", "scripts/generate_frozen_ia_manual.mjs", "manual/saku-field-guide.html"];
+    const stale = files => files.filter(rel => readFileSync(path.join(ROOT, rel), "utf8").includes(OLD_TAIL));
+    check(stale(noticeFiles).length === 0, `HT-NOTICE the old last sentence is gone from the sources and the generated manual: ${stale(noticeFiles).join(", ")}`);
+    check(T.STRINGS.ja.effectNotice.endsWith("実際の応答は、AI プラットフォームの新しい会話で確かめてください。") && !/Trainer/.test(T.STRINGS.en.effectNotice), "HT-NOTICE JA ends with the new sentence and EN names no Trainer");
+    // The 19 Trainer mentions (ライター&SNS a519c49, EN 依頼 Z 03dacf0): the manual shows no Trainer text,
+    // P06 carries no Trainer screen guide, and P06 and route C lead to the services and 03.
+    const manualHtml = readFileSync(path.join(ROOT, "manual/saku-field-guide.html"), "utf8");
+    const trainerTexts = html => (html.match(/data-ja="[^"]*" data-en="[^"]*"/g) || []).filter(pair => /Trainer|トレーニングする/.test(pair));
+    check(trainerTexts(manualHtml).length === 0, `HT-NOTICE the manual still shows Trainer text: ${trainerTexts(manualHtml).slice(0, 2).join(" | ")}`);
+    check(!manualHtml.includes('data-screen-guide="trainer"') && !manualHtml.includes("data-trainer-current") && !manualHtml.includes("data-trainer-future"), "HT-NOTICE P06 carries no Trainer screen guide");
+    check(trainerTexts(manualHtml.replace("</main>", '<p data-ja="Trainerで試す" data-en="Test with Trainer"></p></main>')).length === 1, "HT-NOTICE falsification: a Trainer text in the manual is detectable");
+    // HT-EN (ライター&SNS 2026-09-27): an English text in the manual and the help pages holds no
+    // Japanese, except these, each named with its reason.
+    const EN_JA_EXCEPTIONS = [
+      { reason: "intentional: Japanese example values for free-text fields; the label says they are in Japanese (ライター&SNS 2026-09-27)", allowed: text => text.startsWith("Suggested words (examples in Japanese; free text): ") },
+      { reason: "intentional: the button and row show only Japanese on screen, so the text quotes them with an English gloss", allowed: text => !/[ぁ-んァ-ヶ一-龠]/.test(text.replace(/“locator を修復して読み込む”|“locator 修復”/g, "")) },
+      { reason: "一時: AMU Studio's screen name “SAKU 用の書き出し” has no English name yet, so the English quotes it with (Export for SAKU) (英語翻訳チーム 依頼 AH). Remove this exception and the Japanese once AMU gives the screen an English name.", allowed: text => !/[ぁ-んァ-ヶ一-龠]/.test(text.replace(/“SAKU 用の書き出し” \(Export for SAKU\)/g, "")) },
+    ];
+    const decode = value => value.replace(/&quot;/g, "\"").replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+    const enWithJa = html => [...html.matchAll(/data-en="([^"]*)"/g)].map(match => decode(match[1])).filter(text => /[ぁ-んァ-ヶ一-龠]/.test(text) && !EN_JA_EXCEPTIONS.some(rule => rule.allowed(text)));
+    const helpPages = ["manual/saku-field-guide.html", "desktop/help/getting-started.html", "desktop/help/index.html", "desktop/help/tuning-faq.html"].filter(rel => existsSync(path.join(ROOT, rel)));
+    for (const rel of helpPages) {
+      const found = enWithJa(readFileSync(path.join(ROOT, rel), "utf8"));
+      check(found.length === 0, `HT-EN ${rel}: English text with Japanese: ${found.slice(0, 2).join(" | ")}`);
+      // The button is called what the screen calls it (desktop i18n: Check on an AI platform).
+      check(!/Test on an AI platform/.test(readFileSync(path.join(ROOT, rel), "utf8")), `HT-EN ${rel}: the 03 button is named "Check on an AI platform"`);
+    }
+    check(enWithJa('<p data-en="OK runs the same save as 「この内容で保存する」"></p>').length === 1, "HT-EN falsification: a Japanese button name inside English is detectable");
+    // HT-NAMES (ライター&SNS 2026-09-27): no user-visible text says "Unified V1" (an internal name; the
+    // folded expert details and code are exempt), and no English keeps a <CLINIC>/<CENTER> placeholder.
+    const visible = html => html.replace(/<head>[\s\S]*?<\/head>/, "").replace(/<details[\s\S]*?<\/details>/g, "").replace(/<code>[\s\S]*?<\/code>/g, "").replace(/<script[\s\S]*?<\/script>/g, "").replace(/<style[\s\S]*?<\/style>/g, "").replace(/<a[^>]*class="[^"]*unified-v1-link[^"]*"[^>]*>[^<]*<\/a>/g, "");
+    const internalNames = html => (visible(html).match(/Unified V1|<CLINIC>|<CENTER>|&lt;CLINIC&gt;|&lt;CENTER&gt;/g) || []);
+    for (const rel of [...helpPages, "desktop/index.html"]) check(internalNames(readFileSync(path.join(ROOT, rel), "utf8")).length === 0, `HT-NAMES ${rel} shows an internal name or a placeholder`);
+    // The help pane of 02 is built at run time from the field guide, so its model is checked too
+    // (the non-canonical notes are shown there under 「Character 本体には保存されない項目」).
+    for (const L of ["ja", "en"]) {
+      const shown = JSON.stringify(T.buildHelpTreeModel(guide, L));
+      check(!/Unified V1|<CLINIC>|<CENTER>/.test(shown), `HT-NAMES the ${L} help pane model shows an internal name or a placeholder`);
+    }
+    // The 02 edit screen too (ライター&SNS 2026-09-27): its page and its English table show no "Unified V1".
+    // Block comments and the hidden legacy link (display:none, no href in the tooling) are not shown.
+    // The Golden <header> stays byte-identical (Owner contract, golden-ui:verify); its subtitle is
+    // replaced on load by builder-golden-ui HERO_SUBTITLE_JA/EN, which this check does read.
+    {
+      const shownIn02 = text => text.replace(/<header>[\s\S]*?<\/header>/, "").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "").replace(/<a[^>]*class="[^"]*unified-v1-link[^"]*"[^>]*>[^<]*<\/a>/g, "").replace(/"Unified V1":"Unified V1",?/g, "");
+      check(/const heroSubtitle=document\.querySelector\("header \.subtitle"\);\s*const heroSubtitleTarget=locale === "en-US" \? HERO_SUBTITLE_EN : HERO_SUBTITLE_JA;\s*if\(heroSubtitle && heroSubtitle\.innerHTML!==heroSubtitleTarget\) heroSubtitle\.innerHTML=heroSubtitleTarget;/.test(readFileSync(path.join(ROOT, "tools/v1/builder-golden-ui.mjs"), "utf8")), "HT-NAMES the Golden header subtitle is always replaced by HERO_SUBTITLE (so its bytes are not what is shown)");
+      for (const rel of ["tools/saku-builder.html", "tools/v1/builder-golden-ui.mjs", "tools/v1/frozen-ia-ui.mjs"]) {
+        const hits = shownIn02(readFileSync(path.join(ROOT, rel), "utf8")).split("\n").filter(line => /Unified V1/.test(line));
+        check(hits.length === 0, `HT-NAMES ${rel} shows "Unified V1": ${hits.slice(0, 2).map(line => line.trim().slice(0, 80)).join(" | ")}`);
+      }
+      const page02 = readFileSync(path.join(ROOT, "tools/saku-builder.html"), "utf8");
+      const golden02 = readFileSync(path.join(ROOT, "tools/v1/builder-golden-ui.mjs"), "utf8");
+      check(page02.includes('toast(uiString("この Character は、採択済み Schema に合いません：")+') && golden02.includes('"この Character は、採択済み Schema に合いません：":"This Character does not match the adopted Schema: "'), "HT-NAMES the Schema-mismatch notice names no internal version, in JA and EN (AD1)");
+      // The note under each field that offers suggestions shows in the display language (it showed
+      // Japanese in English from 2026-09-22 until 2026-09-27: the English existed but was never wired).
+      const ext = JSON.parse(readFileSync(path.join(ROOT, "manual/saku-field-guide.extension.json"), "utf8"));
+      const noteJa = ext.candidate_screen_note_ja, noteEn = ext.candidate_screen_note_en;
+      const pairFor = ja => { const key = `"${ja}":"`; const at = golden02.indexOf(key); return at < 0 ? undefined : golden02.slice(at + key.length, golden02.indexOf('"', at + key.length)); };
+      check(Boolean(noteJa) && Boolean(noteEn) && pairFor(noteJa) === noteEn, `HT-EN the suggestion note has its English on screen, the same as candidate_screen_note_en (${pairFor(noteJa)})`);
+      check(readFileSync(path.join(ROOT, "tools/v1/frozen-ia-ui.mjs"), "utf8").includes('note.className = "hint candidate-note"'), "HT-EN the note is a text node the English table translates");
+      check(pairFor("存在しない注記") === undefined, "HT-EN falsification: a note without an English pair is caught");
+      // HT-SEATS (Owner 2026-09-28; the adopted schema is the only source): the eight seats come from one constant whose functions are
+      // the adopted schema's, and 02 and manual P04 both show that constant.
+      {
+        const { SEAT_ROLES, ONE_PLUS_SEVEN_TEXT } = await import("../tools/unified-v1/seat-roles.mjs");
+        const defs = JSON.parse(readFileSync(path.join(ROOT, "tests/fixtures/canonical/saku-unified-character.v1.schema.json"), "utf8")).$defs;
+        const schemaFunctions = [1, 2, 3, 4, 5, 6, 7, 8].map(n => defs[`seat${n}Body`].properties.function.const);
+        const seatProblems = roles => roles.length !== 8 ? ["not eight seats"] : roles.filter((role, i) => role.seat !== i + 1 || role.function !== schemaFunctions[i]).map(role => `seat ${role.seat} ${role.function}`);
+        check(seatProblems(SEAT_ROLES).length === 0, `HT-SEATS the functions are the adopted schema's seat1Body…seat8Body (${seatProblems(SEAT_ROLES).join(", ")})`);
+        check(seatProblems(SEAT_ROLES.map((role, i) => i === 6 ? { ...role, function: "FORWARD_DRIVER" } : role)).length === 1, "HT-SEATS falsification: a retired function in seat 7 is caught");
+        const attr = text => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const manualHtml = readFileSync(path.join(ROOT, "manual/saku-field-guide.html"), "utf8");
+        const pairShown = t => manualHtml.includes(`data-ja="${attr(t.ja)}" data-en="${attr(t.en)}"`);
+        check(SEAT_ROLES.every(role => pairShown(role.name) && pairShown(role.summary)) && [ONE_PLUS_SEVEN_TEXT.intro, ONE_PLUS_SEVEN_TEXT.deliberation, ONE_PLUS_SEVEN_TEXT.technicalHeading, ONE_PLUS_SEVEN_TEXT.positions].every(pairShown), "HT-SEATS manual P04 shows every seat name and summary, and the P04 text, in both languages");
+        check(manualHtml.includes(SEAT_ROLES.map(role => `${role.seat} ${role.function}`).join(" / ")) && !/data-ja="整理" data-en="Organize"|data-ja="構造化" data-en="Structure"|Seat 3〜7/.test(manualHtml), "HT-SEATS P04 lists the internal names, and the old roles (整理・構造化, Seat 3〜7) are gone");
+        const frozen = readFileSync(path.join(ROOT, "tools/v1/frozen-ia-ui.mjs"), "utf8");
+        check(frozen.includes("...SEAT_ROLES.map(role => [String(role.seat), role.name.ja, role.name.en])") && !/"専門家"|"事実確認"|"安全確認"|"人格・ブランド確認"|\["8", "人間"/.test(frozen), "HT-SEATS the 02 list reads the constant, and the old names are gone");
+      }
+      // character-schema.mjs holds internal kind labels and error codes; only its refusal reason is shown (AE2).
+      const schemaModule = readFileSync(path.join(ROOT, "tools/unified-v1/character-schema.mjs"), "utf8");
+      check(schemaModule.includes("reason: adoptedSchemaMissingReason(),") && schemaModule.includes("採択済み Schema を読み込めなかったため、この Character は確かめられず、取り込みませんでした。") && schemaModule.includes("SAKU Builder could not load the adopted Schema, so this Character could not be checked and was not imported.") && !/reason: "[^"]*Unified V1/.test(schemaModule), "HT-NAMES the schema-unavailable refusal is shown in the display language, with what to do (AE2)");
+      check(page02.includes('toast("このファイルは読み込めません。読み込めるのは、') && golden02.includes('"This file cannot be loaded. The files that can be loaded are'), "HT-NAMES the unreadable-file notice says what can be loaded, in JA and EN (AD2)");
+      check(page02.includes("Math.min(8000,Math.max(1800,String(t.textContent).length*80))"), "HT-NAMES a long notice stays long enough to read");
+      check(shownIn02('toast("Unified V1 Characterまたは旧character.yamlとして認識できません");').includes("Unified V1") && !shownIn02("/* Unified V1 note */").includes("Unified V1"), "HT-NAMES falsification: a shown Unified V1 is caught, a comment is not");
+    }
+    check(!/Unified V1を読み込んでいます/.test(readFileSync(path.join(ROOT, "tools/saku-builder.html"), "utf8")), "HT-NAMES the edit screen's loading line names no Unified V1");
+    check(internalNames('<p data-ja="x" data-en="Five Unified V1 chapters"></p>').length === 1 && internalNames('<details><p>Unified V1</p></details>').length === 0, "HT-NAMES falsification: a visible Unified V1 is caught, a folded one is not");
+    // Falsification: the old sentence in any one of these texts is found.
+    check([T.STRINGS.ja.effectNotice.replace(/実際の応答は[^。]*。$/, OLD_TAIL)].every(text => text.includes(OLD_TAIL)), "HT-NOTICE falsification: the old sentence is detectable");
+  }
   equal(T.STRINGS.ja.multiSelectNotice, "複数選ぶとそれぞれの傾向が混ざります。", "HT-MODEL the multi-select prefix is verbatim");
   check(!T.STRINGS.ja.empty.includes("/") && !T.STRINGS.ja.empty.includes(".json"), "HT-MODEL the empty message exposes no file path (writer M1)");
 }

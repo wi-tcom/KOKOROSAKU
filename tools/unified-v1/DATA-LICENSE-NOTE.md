@@ -5,7 +5,8 @@ SAKU Builder に同梱される **Character Data** は、Builder の **コード
 
 | 同梱データ | 種別 | License |
 |---|---|---|
-| `tools/unified-v1/sample-pack/sample-characters.json` | Built-in Sample Pack（3 Full Character） | **CC0-1.0**（Owner D-B3、2026-09-14）|
+| `tools/unified-v1/sample-pack/sample-characters.json` | Built-in Sample Pack（3 Full Character） | **CC0-1.0**（Owner D-B3、2026-09-14）。配布しません（次の版以降。試験の素材としてのみ残します） |
+| `desktop/resources/samples/saku-pack-sample-1.1.0.zip` | サンプルモードの Character 3 体 | **LicenseRef-WIT-Sample-1.0**（評価・動作確認・学習のみ。再配布・改変や転用・商用利用は不可。OSS ではありません） |
 | `tools/unified-v1/preview/catalog-preview-index.json` | Commercial 64 の Preview Index（discovery のみ・LOCKED） | **`NOT_SPECIFIED`**（別 scope）|
 | `tools/unified-v1/fixtures/*.json` | synthetic テスト入力（実 Character ではない） | コード（MPL-2.0）に従うテストデータ |
 

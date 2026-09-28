@@ -1,6 +1,6 @@
 {
   "profile": "saku.field-guide-extension@1",
-  "applies_to_app_version": "0.1.0-beta.8",
+  "applies_to_app_version": "0.1.0-beta.9",
   "purpose": "manual/saku-field-guide.data.json に合成される追加内容（項目下の「現在の内容」、選択肢の効果と出典、候補語の方針、正本外項目の注記）。画面と manual の両方がこの合成結果を読む。",
   "content_review": {
     "current_note_ja": {
@@ -82,11 +82,6 @@
       "wording": "c_intelligence_vector は特性→振る舞いに翻訳した記述（v2、Owner 承認）。対応表の section と source_rev は生成時に付与。",
       "source_rev": "generated: tools/unified-v1/derived-profile-engine.mjs の sha256（生成時に付与）"
     },
-    "AMU_CONFIRMED_2026-09-22": {
-      "kind": "fact",
-      "from": "統制卓による KOKOROAMU-STUDIO main の確認（2026-09-22、設計書 §9）",
-      "section": "DESIGN_2026-09-22_saku_builder_input_ux_help_tree.md#9"
-    },
     "NOT_MEASURED": {
       "kind": "none",
       "wording": "未確認（設計上の意図のみ）"
@@ -106,7 +101,8 @@
     },
     "OPERATION_FACT": {
       "kind": "fact",
-      "from": "利用時に何が起きるか（運用区分・理由区分）。統制卓確認 2026-09-22。"
+      "from": "利用時に何が起きるか（運用区分・理由区分）。根拠は Character 定義の指示文（directive）。2026-09-25 に、2026-09-22 の AMU Studio での確認を根拠から外しました（版・試験・結果の記録がなく、対象の AMU も作り直し中のため）。",
+      "from_en": "What happens in use (operation class and reason category). The basis is the directive in the Character definition. On 2026-09-25, the check made in AMU Studio on 2026-09-22 was removed from the basis (there is no record of the version, the test or the result, and the AMU in question is being rebuilt)."
     }
   },
   "trait_labels_ja": {
@@ -1515,8 +1511,8 @@
     },
     "character_core.hard_invariants": {
       "ui_label_ja": "必ず守ること",
-      "current_note_ja": "どんな場面でも守る条件を一つずつ決めます。逸脱の検知と Trainer の確認項目に影響します。",
-      "current_note_en": "Lists, one by one, the conditions kept in every situation. Affects the detection of deviations and the check items in the Trainer."
+      "current_note_ja": "どんな場面でも守る条件を一つずつ決めます。AI へ渡す文の中で、最優先の条件として扱われます。",
+      "current_note_en": "Lists, one by one, the conditions kept in every situation. In the text passed to the AI, they are treated as the top-priority conditions."
     },
     "character_core.expressive_range.allowed_variation": {
       "ui_label_ja": "変わってよい範囲",
@@ -1674,7 +1670,7 @@
       "path": "meta.operation_class",
       "ui_label_ja": "運用区分",
       "canonical_output": false,
-      "goes_to": "SAKU Character Pack のカタログ（catalog-release.v1.json、02B 判定記録つき）。Unified V1 Character 本体には入らない。",
+      "goes_to": "SAKU Character Pack のカタログ（catalog-release.v1.json）に入ります。Character File には入りません。",
       "current_note_ja": "人（Seat 8）の確認なしで使えるか（A／B／C）を決めます。パックのカタログに載り、AMU の使用前確認に影響します。",
       "options": {
         "A": {
@@ -1694,7 +1690,7 @@
           "effect_ja": "使う前に人（Seat 8）の確認が毎回入ります。確認の画面が出る環境では画面が出るまで応答を始めず、確認の画面が無い AI プラットフォームでは、応答の前に人の確認を求めます。",
           "effect_en": "A check by a person (Seat 8) is made every time before use. In environments that show a check screen, no response starts until the screen appears; on AI platforms with no check screen, the Character asks the person to confirm before answering.",
           "effect_source": "OPERATION_FACT",
-          "source_note_ja": "確認の画面を出す環境（KOKOROAMU-STUDIO の使用前確認ダイアログ）では画面が出るまで応答を始めない。統制卓確認 2026-09-22。",
+          "source_note_ja": "根拠は区分 B の指示文（directive 欄の「HANDOFF WHEN a confirmation screen is pending」ほか）。製品の画面での実機確認ではない。2026-09-25 に、2026-09-22 の AMU Studio での確認（KOKOROAMU-STUDIO の使用前確認ダイアログ、統制卓）を根拠から外した。",
           "directive": [
             "HANDOFF WHEN a confirmation screen is pending",
             "NEVER start the answer before the person confirms",
@@ -1714,7 +1710,7 @@
         }
       },
       "ui_label_en": "Operation class",
-      "goes_to_en": "The SAKU Character Pack catalog (catalog-release.v1.json, with the 02B decision record). Not included in the Unified V1 Character itself.",
+      "goes_to_en": "It goes into the SAKU Character Pack catalog (catalog-release.v1.json). It is not included in the Character File.",
       "current_note_en": "Sets whether the Character can be used without a check by a person (Seat 8) (A / B / C). Listed in the Pack catalog and affects the pre-use check in AMU."
     },
     {
@@ -1732,10 +1728,10 @@
       "ui_label_ja": "章 三（使命）",
       "canonical_output": false,
       "goes_to": "どこにも出ない（Character File 2.0 系の名残、authoring 補助）。",
-      "current_note_ja": "作成時の考えを整理する欄です。Canonical（Unified V1）には出ません。",
+      "current_note_ja": "作成時の考えを整理する欄です。書き出す Character File には入りません。",
       "ui_label_en": "Chapter 3 (Mission)",
       "goes_to_en": "Appears nowhere (a remnant of the Character File 2.0 line; authoring aid).",
-      "current_note_en": "A field for organizing your thinking while authoring. Does not appear in the Canonical (Unified V1)."
+      "current_note_en": "A field for organizing your thinking while authoring. It is not included in the Character File you export."
     },
     {
       "path": "role_source.*",
@@ -1785,7 +1781,7 @@
     "empathy": "Empathy",
     "forward_progress": "Forward progress"
   },
-  "candidate_screen_note_en": "Examples. You can write freely.",
+  "candidate_screen_note_en": "Examples are in Japanese. You can write in any language.",
   "fixed_sentences_en": {
     "presentation_only": "Affects only the look and feel; judgments and the content of answers do not change.",
     "tactile_texture": "This is a texture of expression and does not change the content of judgments."
@@ -1821,10 +1817,10 @@
     }
   },
   "last_checked": {
-    "date": "2026-09-24",
+    "date": "2026-09-28",
     "environment_ja": "Windows 11 Home 10.0.26200・WebView2 Runtime 153.0.4234.48",
     "environment_en": "Windows 11 Home 10.0.26200, WebView2 Runtime 153.0.4234.48",
-    "source": "SAKU Builder(4) hands-on on the installed window of the rebuilt 0.1.0-beta.8 (record: docs/releases/0.1.0-beta.8); wording approved by ライター&SNS 9be2c32 (JA) and 英語翻訳チーム 6a28224 (EN Q4)"
+    "source": "SAKU Builder(4) hands-on on the installed window of 0.1.0-beta.9 (record: docs/releases/0.1.0-beta.9; environment unchanged from 0.1.0-beta.8); wording approved by ライター&SNS 9be2c32 (JA) and 英語翻訳チーム 6a28224 (EN Q4)"
   },
   "known_issues": {
     "note": "「困ったとき」の先頭に置く、この版で分かっている問題（Owner 2026-09-24 承認、ライター&SNS 9be2c32、英語翻訳チーム Q1–Q3 6a28224）。見出しと 2 つのラベルの英語は英語翻訳チーム Q6–Q8（Wi-t_Site f1440dd／632021e）。 Markdown の書式（** と `）は画面に出さない。文字は承認文のまま。",
@@ -1846,60 +1842,16 @@
         "en": "What to do"
       }
     },
-    "items": [
+    "items": [],
+    "removed": [
       {
-        "title": {
-          "ja": "英語表示で、括弧が全角のまま出ることがあります",
-          "en": "Full-width parentheses can appear in the English display"
-        },
-        "symptom": {
-          "ja": "英語表示にしたとき、一部の知らせで括弧が全角で出ます（例 AI-reported 6.0 s（unverifiable））。",
-          "en": "When the display is set to English, some notices show full-width parentheses (for example AI-reported 6.0 s（unverifiable）)."
-        },
-        "now": {
-          "ja": "表示だけの問題で、記録した値や計測の結果は変わりません。",
-          "en": "This affects the display only. The values recorded and the results of a measurement do not change."
-        },
-        "todo": {
-          "ja": "そのままお使いいただけます。次の版で直します。",
-          "en": "You can keep using it as it is. This will be fixed in the next version."
-        }
-      },
-      {
-        "title": {
-          "ja": "モデル欄が 1 回目のクリックで入力できないことがあります",
-          "en": "The model field may not take the first click"
-        },
-        "symptom": {
-          "ja": "AI スピードテストで、プロバイダ欄に入力した直後にモデル欄をクリックしても、入力できないことがあります。",
-          "en": "In the AI speed test, clicking the model field right after typing in the provider field sometimes does not start input."
-        },
-        "now": {
-          "ja": "入力が始まらないだけで、ほかの操作には影響しません。",
-          "en": "Only the input does not start; nothing else is affected."
-        },
-        "todo": {
-          "ja": "もう一度クリックすると入力できます。",
-          "en": "Click once more and you can type."
-        }
-      },
-      {
-        "title": {
-          "ja": "英語表示で、記録の表が途中で折り返します",
-          "en": "The records table wraps in the English display"
-        },
-        "symptom": {
-          "ja": "英語表示のスピードテストの記録の表で、「Delete」ボタンと一部の列名が途中で折り返します。",
-          "en": "In the English display of the speed-test records table, the \"Delete\" button and some column names wrap."
-        },
-        "now": {
-          "ja": "見た目だけの問題で、記録の内容と操作は変わりません。",
-          "en": "This affects the appearance only. The contents of the records and what you can do with them do not change."
-        },
-        "todo": {
-          "ja": "ウィンドウの幅を広げると読みやすくなります。次の版で直します。",
-          "en": "Widening the window makes it easier to read. This will be fixed in the next version."
-        }
+        "on": "2026-09-27",
+        "titles_ja": [
+          "英語表示で、括弧が全角のまま出ることがあります",
+          "モデル欄が 1 回目のクリックで入力できないことがあります",
+          "英語表示で、記録の表が途中で折り返します"
+        ],
+        "why": "Owner 2026-09-27: the Trainer and the AI speed test leave the screens (AMU DECISION 2026-09-27-11); all three issues were on those screens. The section is not shown while there are no items; the heading and labels stay for the next issue."
       }
     ]
   }

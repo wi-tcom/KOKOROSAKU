@@ -260,7 +260,7 @@ try{
   d.getElementById("viewer-back").click();
   await wait(200);
   check(d.getElementById("selected-character-name").textContent!=="未選択","TOP now names the selected Character");
-  check(d.getElementById("host-status").textContent.includes("編集やトレーニング")||d.getElementById("host-status").textContent.includes("DESKTOP_HOST"),"TOP moves on from asking for a Character");
+  check(d.getElementById("host-status").textContent.includes("編集するか、AI プラットフォームで動かすか")||d.getElementById("host-status").textContent.includes("DESKTOP_HOST"),"TOP moves on from asking for a Character");
 
   // What just arrived, and what is checked, must be findable among many rows.
   d.getElementById("view-characters").click();

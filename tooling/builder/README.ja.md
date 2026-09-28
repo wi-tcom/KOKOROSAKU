@@ -5,15 +5,10 @@
 repository rootをHTTPで配信し、`/tooling/builder/index.html` を開きます。HTMLをファイルシステムから直接開かないでください。JavaScript moduleと固定されたschemaはHTTP経由で読み込まれます。
 
 - Builder: `index.html`
-- Trainer: `trainer.html`
+- SAKU 診療所・AMU トレーニングセンター: `services.html`
 - 候補状態とlicense: `about.html`
 - 手順: [Builderクイックスタート](../../docs/getting-started/builder-quickstart.ja.md)
 
-## 3体のサンプルCharacterを個別に読み込む
-
-3体のサンプルCharacterはbeta.1 installerには同梱されません。source ZIPまたは
-repositoryの `samples/oss-launch/unified-v1/` にあります。Desktopで
-**01 キャラクターを選択する**を開き、**個別インポート**から1体単位のJSONを
-1本ずつ選択してください。これらの個別JSONにはPackageインポートを使用しません。
+サンプル Character 3 体は、インストーラー版の「01 キャラクターを選択する」→「サンプルを読み込む」から読み込めます（ZIP 版にはありません）。実体は同梱の saku-pack-sample-1.1.0.zip で、公開リポジトリにも同じものがあります。権利条件は LicenseRef-WIT-Sample-1.0 で、OSS ではありません。
 
 このdirectoryは `npm run public:tooling` で生成されます。Character Catalog、Occupation Pack、AMU runtime state、MACHI assignment、credential、permission、Human Apply実行は含みません。

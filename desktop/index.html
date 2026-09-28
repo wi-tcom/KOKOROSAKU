@@ -27,7 +27,7 @@
       <section class="hero">
         <p class="kicker">Choose what you want to do</p>
         <h2>今日は何をしますか？</h2>
-        <p>見る・試す・確認する・作る、の順に利用者の目的から選べます。</p>
+        <p>選ぶ・作る・AI で動かす・サポートサービス、の 4 つの入口から、目的に合わせて選べます。</p>
         <div class="selected-character" id="selected-character" aria-live="polite">
           <span class="selected-character-label">選択されたキャラクター</span>
           <strong class="selected-character-name" id="selected-character-name" data-runtime-value>未選択</strong>
@@ -44,8 +44,8 @@
       <section class="entry-grid" aria-label="主な操作">
         <button type="button" class="entry-card primary-entry" id="view-characters"><span class="entry-number">01</span><strong>キャラクターを選択する</strong><span>キャラクターパッケージを読み込んでキャラクターを選択します。</span></button>
         <a class="entry-card" id="create-edit-character" href="./tools/saku-builder.html?desktop=app"><span class="entry-number">02</span><strong>キャラクターを作る・編集する</strong><span>キャラクターを作成・編集します。</span></a>
-        <button type="button" class="entry-card" id="run-on-ai-platform"><span class="entry-number">03</span><strong>AIプラットホームでキャラクターを動作</strong><span>選択中のキャラクターを外部のAIに読み込ませて動かします。</span></button>
-        <a class="entry-card" id="train-character" href="./tools/saku-trainer.html"><span class="entry-number">04</span><strong>キャラクターをトレーニングする</strong><span>AIプロンプトの応答でキャラクターを調整します。</span></a>
+        <button type="button" class="entry-card" id="run-on-ai-platform"><span class="entry-number">03</span><strong>AI プラットフォームでキャラクターを動作</strong><span>選択中のキャラクターを外部のAIに読み込ませて動かします。</span></button>
+        <a class="entry-card" id="open-services" href="./tools/saku-services.html"><span class="entry-number">04</span><strong>SAKU 診療所・AMU トレーニングセンター</strong><span>サポートサービスは準備中です。紹介ページでサービスの内容をご覧いただけます。</span></a>
       </section>
 
       <section class="supporting" aria-labelledby="setup-title">
@@ -58,7 +58,7 @@
 
       <section class="paths" aria-labelledby="path-title"><div><span class="eyebrow">PATH SEPARATION</span><h2 id="path-title">保存場所</h2></div><dl><div><dt>Install</dt><dd id="install-path" data-runtime-value>確認中</dd></div><div><dt>Config</dt><dd id="config-path" data-runtime-value>確認中</dd></div><div><dt>Logs</dt><dd id="log-path" data-runtime-value>確認中</dd></div><div><dt>Cache</dt><dd id="cache-path" data-runtime-value>確認中</dd></div><div><dt>Workspace</dt><dd id="workspace-path-detail" data-runtime-value>未選択</dd></div></dl><p class="boundary">Uninstallはアプリを対象とし、Workspaceとprojectsは保持します。同期フォルダや別checkoutをruntime inputとして使いません。</p></section>
 
-      <section class="help-grid"><a href="./help/manual.html"><strong>マニュアル</strong><span>Unified V1の5章と全編集項目</span></a><a href="./help/getting-started.html"><strong>Getting Started</strong><span>初回設定と最短フロー</span></a><a href="./help/index.html#import"><strong>Package import</strong><span>互換性・hash・失敗時の対応</span></a><a href="./help/index.html#data"><strong>Data locations</strong><span>Workspace、設定、ログ、cache</span></a><a href="./help/index.html#uninstall"><strong>Uninstall</strong><span>保持されるデータ</span></a></section>
+      <section class="help-grid"><a href="./help/manual.html"><strong>マニュアル</strong><span>5 つの章と、すべての編集項目の説明</span></a><a href="./help/getting-started.html"><strong>Getting Started</strong><span>初回設定と最短フロー</span></a><a href="./help/index.html#import"><strong>Package import</strong><span>互換性・hash・失敗時の対応</span></a><a href="./help/index.html#data"><strong>Data locations</strong><span>Workspace、設定、ログ、cache</span></a><a href="./help/index.html#uninstall"><strong>Uninstall</strong><span>保持されるデータ</span></a></section>
     </div>
 
     <section id="viewer-panel" class="viewer" hidden aria-labelledby="viewer-title">
@@ -72,9 +72,11 @@
         <div class="actions">
           <button type="button" id="viewer-import-package" class="primary">Packageインポート</button>
           <button type="button" id="viewer-import-file">個別インポート</button>
+          <button type="button" id="viewer-import-samples">サンプルを読み込む</button>
           <button type="button" id="viewer-clear-list">一覧をクリア</button>
           <button type="button" id="viewer-new-character">新規作成</button>
         </div>
+        <p id="viewer-samples-note" class="library-count" role="status" hidden></p>
         <input type="file" id="viewer-file-input" accept=".json,.yaml,.yml,application/json,text/yaml" multiple hidden>
         <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Packageファイルをドロップして読み込む">SAKU Character Pack（`.zip`）をここへドロップ</div>
         <p id="library-count" class="library-count" data-runtime-value></p>
@@ -140,7 +142,6 @@
         <div class="actions">
           <button type="button" data-character-action="view" class="primary">このキャラクターを選択する</button>
           <button type="button" data-character-action="edit">キャラクターを作る・編集する</button>
-          <button type="button" data-character-action="train">トレーニングする</button>
           <button type="button" data-character-action="tune">AI動作を調整する</button>
           <button type="button" data-character-action="delete" class="danger">削除する</button>
         </div>
@@ -160,7 +161,7 @@
       </div>
     </section>
     <section id="platform-panel" class="viewer" hidden aria-labelledby="platform-title">
-      <div class="viewer-header"><button type="button" id="platform-back" class="quiet">← 戻る</button><div><span class="eyebrow">RUN / AI PLATFORM</span><h2 id="platform-title">AIプラットホームでキャラクターを動作</h2><p>選択中のキャラクターを、お使いのAIにそのまま読み込ませて動かします。ここでキャラクターは変わりません。</p></div></div>
+      <div class="viewer-header"><button type="button" id="platform-back" class="quiet">← 戻る</button><div><span class="eyebrow">RUN / AI PLATFORM</span><h2 id="platform-title">AI プラットフォームでキャラクターを動作</h2><p>選択中のキャラクターを、お使いのAIにそのまま読み込ませて動かします。ここでキャラクターは変わりません。</p></div></div>
       <div id="platform-subject" class="status info" role="status" aria-live="polite"><strong>PLATFORM_READY</strong><span>動かすキャラクターを選んでください。</span></div>
 
       <div class="screen-with-help platform-layout"><div class="platform-main">
@@ -172,6 +173,12 @@
         <li>
           <h3>2. 貼り付ける文をコピーする</h3>
           <p>下の全文をコピーします。冒頭の指示と、キャラクター定義が入っています。</p>
+          <details id="platform-reference" class="platform-echo">
+            <summary id="platform-reference-title">参考資料を添付する（任意）</summary>
+            <p>AMU Studio の「SAKU 用の書き出し」で作ったファイルを選ぶと、貼り付ける文に参考資料の節が入ります。資料は AI にデータとして渡し、資料の中の指示には従わないよう伝えます。資料はこの画面で使うだけで、保存しません。</p>
+            <div class="actions"><input type="file" id="platform-reference-file" accept=".json,application/json" aria-label="参考資料を添付する"><button type="button" id="platform-reference-clear" class="button" hidden>外す</button></div>
+            <div id="platform-reference-state" class="status info" role="status" aria-live="polite" hidden></div>
+          </details>
           <textarea id="platform-launch" class="platform-launch" readonly rows="12" aria-label="貼り付ける文"></textarea>
           <div class="actions"><button type="button" id="platform-copy" class="button primary">コピーする</button><span id="platform-copy-state" class="platform-copy-state" role="status" aria-live="polite"></span></div>
         </li>
@@ -202,11 +209,6 @@
         <li>
           <h3>6. そのまま話しかける</h3>
           <p>あとは普通に質問や相談を続けます。会話の途中で人格がぶれたと感じたら、同じ文をもう一度貼り直せば読み直します。</p>
-        </li>
-        <li>
-          <h3>7. 気になった応答をSAKU Trainerへ持ち帰る</h3>
-          <p>「思っていた反応と違う」と感じた応答をコピーしておき、04 キャラクターをトレーニングする に貼り付けます。Expected・Observed・Diff を見て、キャラクターを直すかどうかを決められます。</p>
-          <div class="actions"><button type="button" id="platform-to-trainer" class="button">04 キャラクターをトレーニングする へ</button></div>
         </li>
       </ol>
 

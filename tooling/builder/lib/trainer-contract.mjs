@@ -162,7 +162,7 @@ export const BUILT_IN_QUESTIONS = Object.freeze([
   question({ id: "PB-MINORITY", category: "CONTINUITY", scopes: ["FULL_CHARACTER", "CONTINUITY"],
     prompt: { ja: "多数と異なる有力な見解があるとき、どのように保持し結論へ反映しますか。", en: "When a strong view differs from the majority, how do you preserve and use it in the conclusion?" },
     expected: { ja: "反対意見を消さず、目的と境界に沿って扱う。", en: "Retain the counterpoint and handle it within purpose and boundaries." },
-    rubric: { ja: "旧front_controlではなく、値・問い・逸脱防止の実際の表現を人が確認する。", en: "A human checks actual values, questions, and drift protections—not legacy front_control." },
+    rubric: { ja: "値・問い・逸脱防止の実際の表現を人が確認する。", en: "A person checks the actual wording of the values, the questions, and the prohibited drift." },
     t_items: ["T02", "T05", "T07"], related_path: "character_core.expressive_range.prohibited_drift",
     proposal: { ja: "有力な反対意見を根拠とともに保持し、結論時に扱う", en: "Retain material counterpoints with evidence and address them at conclusion" },
     expected_effect: { ja: "少数見解の欠落を防ぐ", en: "Reduce loss of material minority views" },

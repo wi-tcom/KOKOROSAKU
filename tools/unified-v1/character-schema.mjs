@@ -196,6 +196,16 @@ const VALIDATORS = { UNIFIED_V1_CHARACTER: character => validateUnifiedV1(charac
  * returns; without it the Character is refused rather than admitted on the hand
  * checks alone. `options.describe(issue)` words a schema issue for the screen.
  */
+const ADOPTED_SCHEMA_MISSING = Object.freeze({
+  ja: "採択済み Schema を読み込めなかったため、この Character は確かめられず、取り込みませんでした。画面を開き直してください。直らないときは、SAKU Builder を入れ直してください。",
+  en: "SAKU Builder could not load the adopted Schema, so this Character could not be checked and was not imported. Reopen the screen. If that does not fix it, reinstall SAKU Builder.",
+});
+function adoptedSchemaMissingReason() {
+  let english = false;
+  try { english = globalThis.localStorage?.getItem("saku.ui.locale") === "en-US"; } catch { english = false; }
+  return english ? ADOPTED_SCHEMA_MISSING.en : ADOPTED_SCHEMA_MISSING.ja;
+}
+
 export function admit(character, { schema = null, describe = null } = {}) {
   const verdict = classify(character);
   if (!verdict.supported) return { accepted: false, kind: UNKNOWN, ...verdict, errors: [verdict.reason] };
@@ -222,7 +232,8 @@ export function admit(character, { schema = null, describe = null } = {}) {
     if (!isAdoptedSchema(schema)) {
       return {
         accepted: false, kind: UNKNOWN, ...verdict, code: ADOPTED_SCHEMA_REQUIRED,
-        reason: "The adopted Unified V1 schema was not available, so this Character was not checked against it and is not admitted.",
+        // Shown when the tool itself is broken (ライター&SNS 2026-09-27, EN 依頼 AE2): what happened, then what to do.
+        reason: adoptedSchemaMissingReason(),
         errors: ["adopted Unified V1 schema not supplied"],
       };
     }

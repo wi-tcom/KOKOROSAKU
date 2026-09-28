@@ -1,6 +1,6 @@
 {
   "name": "saku-builder-desktop-candidate",
-  "version": "0.1.0-beta.8",
+  "version": "0.1.0-beta.9",
   "private": true,
   "description": "Candidate Tauri 2 thin desktop host for SAKU Builder and Trainer",
   "engines": {
@@ -27,7 +27,11 @@
     "gates:hygiene:verify": "node scripts/verify_gate_hygiene.mjs",
     "fixes:no-wording:verify": "node scripts/verify_no_wording_fixes.mjs",
     "findings:beta7:verify": "node scripts/verify_hands_on_findings.mjs",
+    "regression:beta8:verify": "node scripts/verify_regression_beta8.mjs",
     "formats:verify": "node scripts/verify_package_formats.mjs",
+    "occupation:verify": "node scripts/verify_occupation_template.mjs",
+    "self-made-zip:verify": "node scripts/verify_self_made_zip.mjs",
+    "reference:verify": "node scripts/verify_reference_material.mjs",
     "return:verify": "node scripts/verify_saku_return.mjs",
     "authoring:roundtrip:verify": "node scripts/verify_authoring_roundtrip.mjs",
     "locator-repair:verify": "node scripts/verify_locator_repair.mjs",

@@ -142,12 +142,12 @@ const fail = (label, message) => fails.push(label + ": " + message);
 
 // ── 3/4. 外部AIプロンプト・Guild 概要は 2026-09-22（Owner）にこの画面から外れた ──
 //   プロンプトはデスクトップ 03「AIプラットフォームで動作確認」が持つ。Guild 概要
-//   （MACHI-GUILD-SUMMARY）は廃止: AMU/MACHI は署名付きパック経由でのみ受け取る。
+//   （MACHI-GUILD-SUMMARY）は廃止。渡し方は Character File の用途の行（AC1）が書く。
 {
   ok(api.toPrompt === undefined && api.toGuildJson === undefined, "removed: toPrompt / toGuildJson are no longer page functions");
   ok(api.TABS.map(t => t[0]).join(",") === "yaml,json,test,help", "tabs: character.yaml / Character File / 試験記録 / Help only");
   ok(!api.TABS.some(t => /外部AIプロンプト|Guild概要/.test(t[1])), "tabs: no 外部AIプロンプト / Guild概要 tab");
-  ok(api.TAB_PURPOSE.json.ja.includes("署名・パック化の元になる正本") && api.TAB_PURPOSE.json.ja.includes("署名付きパック経由でのみ受け取る"), "Character File purpose names the canonical JSON and the signed-pack-only hand-over");
+  ok(api.TAB_PURPOSE.json.ja.includes("署名やパックを作るときの元になる JSON") && api.TAB_PURPOSE.json.ja.includes("AMU 用 ZIP をダウンロード") && api.TAB_PURPOSE.json.ja.includes("MACHI へは、署名付きのパックにして渡します"), "Character File purpose names the source JSON, the ZIP for AMU and the signed pack for MACHI");
 }
 
 // ── 4-b. ContactGuard：初版MVPから継承した外部出力前検査 ──

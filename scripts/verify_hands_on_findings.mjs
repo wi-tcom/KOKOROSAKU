@@ -39,11 +39,18 @@ const check = (condition, label) => { assert.ok(condition, label); cases.push(la
     return null;
   };
   const entry = find(guide);
-  check(Boolean(entry), "F2 the speed-test guide entry exists");
+  // Superseded 2026-09-27 (Owner, AMU DECISION 2026-09-27-11): the AI speed test left
+  // the Builder's screens, and its item left the platform guide with it. F2's sentence
+  // is then checked for being gone, not for how it reads.
+  if (!entry) {
+    check(!guide.fields.some(field => field.canonicalPath === "platform.speed_test"), "F2 superseded: the speed-test item left the platform guide (2026-09-27)");
+    check(!read("manual/saku-field-guide.html").includes("統計は手計測だけで出します"), "F2 the regenerated manual carries no trace of the old sentence");
+  } else {
   const texts = [entry.currentNote.ja, entry.help.about.ja, entry.help.caution.ja];
   check(texts.every(text => !/probe|手計測だけ|処理時間: <秒>/.test(text)), "F2 the entry no longer says probe, manual-only statistics or the 処理時間 line");
   check(texts.some(text => text.includes("開始時刻と終了時刻の差")) && texts.some(text => text.includes("集計から外します")), "F2 it describes the clock readings and the mark on a claim longer than the window");
   check(!read("manual/saku-field-guide.html").includes("統計は手計測だけで出します"), "F2 the regenerated manual carries no trace of the old sentence");
+  }
 }
 
 // F5
@@ -65,9 +72,11 @@ const check = (condition, label) => { assert.ok(condition, label); cases.push(la
   const help = read("desktop/help/index.html");
   check(help.includes('data-en="The Character list, the import history, and the Character currently selected are saved in the .saku-builder folder') && !/EN in preparation/.test(help.split("Data locations and uninstall")[1] || ""), "EN F1 the help paragraph carries the delivered English (O1), not the pending marker");
   const guide = JSON.parse(read("manual/platform-guide.data.json"));
-  const entry = JSON.stringify(guide).includes('"canonicalPath":"platform.speed_test"') ? (function find(node) { if (Array.isArray(node)) { for (const item of node) { const hit = find(item); if (hit) return hit; } return null; } if (node && typeof node === "object") { if (node.canonicalPath === "platform.speed_test") return node; for (const value of Object.values(node)) { const hit = find(value); if (hit) return hit; } } return null; })(guide) : null;
+  const entry = guide.fields.some(field => field.canonicalPath === "platform.speed_test") ? (function find(node) { if (Array.isArray(node)) { for (const item of node) { const hit = find(item); if (hit) return hit; } return null; } if (node && typeof node === "object") { if (node.canonicalPath === "platform.speed_test") return node; for (const value of Object.values(node)) { const hit = find(value); if (hit) return hit; } } return null; })(guide) : null;
+  if (entry) {
   check([entry.currentNote.en, entry.help.about.en, entry.help.caution.en].every(text => text && !/[぀-ヿ㐀-鿿]/.test(text.replace(/開始時刻|終了時刻/g, ""))), "EN F2 the three guide fields are English (O2–O4), with only the protected labels in Japanese");
   check((entry.currentNote.en.match(/\./g) || []).length <= 2 && guide.content_review.en.status === "DELIVERED" && !guide.content_review.en.pending, "EN F2 the note keeps two sentences and the guide's English is complete again");
+  } else check(!guide.fields.some(field => field.canonicalPath === "platform.speed_test"), "EN F2 superseded: the speed-test item left the platform guide (2026-09-27)");
   const app = read("desktop/app.mjs");
   check(/export const PACKAGE_EMPTY_EN = "No Package has been imported since the app started\./.test(app) && app.includes('locale() === "en-US" ? PACKAGE_EMPTY_EN : PACKAGE_EMPTY_JA'), "EN F5 the empty import state has its English and follows the locale");
   check(/CHARACTER_INVALID:\['[^']+',"This Character does not match the adopted Schema/.test(read("tools/unified-v1/trainer-ux4-ui.mjs")), "EN F6 the Trainer refusal has its English (the adopted Schema, D-13)");

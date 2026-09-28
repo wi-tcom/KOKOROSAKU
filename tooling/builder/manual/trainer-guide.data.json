@@ -1,7 +1,7 @@
 {
   "profile": "saku.screen-guide@1",
   "screen": "04-trainer",
-  "applies_to_app_version": "0.1.0-beta.8",
+  "applies_to_app_version": "0.1.0-beta.9",
   "content_review": {
     "ja": {
       "status": "APPROVED",
@@ -22,7 +22,7 @@
     }
   },
   "effect_notice": {
-    "ja": "※ 傾向であり断定ではありません。AI プラットフォームや事前のメモリー・学習・知識により、思いどおりの傾向にならないことがあります。Trainer で実際の応答を確認してください。"
+    "ja": "※ 傾向であり断定ではありません。AI プラットフォームや事前のメモリー・学習・知識により、思いどおりの傾向にならないことがあります。実際の応答は、AI プラットフォームの新しい会話で確かめてください。"
   },
   "chapters": [
     {

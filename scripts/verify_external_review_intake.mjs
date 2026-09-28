@@ -198,7 +198,7 @@ const gitShow = (revision, relative) => new Promise(resolve => {
   let out = ""; child.stdout.on("data", chunk => out += chunk); child.on("close", code => resolve(code === 0 ? out : null));
 });
 const baseline = "9b0af0e56cb6cd7459e39f6d6e585cb487566c58";
-for (const relative of ["tools/v1/trainer-frozen-ia.mjs", "scripts/verify_frozen_trainer_ia.mjs", "tools/unified-v1/handoff-binding.mjs", "tools/v1/trainer-ux3.mjs"]) {
+for (const relative of ["scripts/verify_frozen_trainer_ia.mjs", "tools/unified-v1/handoff-binding.mjs", "tools/v1/trainer-ux3.mjs"]) {
   const shown = await gitShow(baseline, relative);
   if (shown === null) { cases.push(`XR-FROZEN ${relative} baseline unavailable (git), skipped`); continue; }
   equal(sha256(await read(relative)), sha256(shown), `XR-FROZEN ${relative} byte-identical to main ${baseline.slice(0, 8)}`);
@@ -212,6 +212,22 @@ for (const relative of ["tools/v1/trainer-frozen-ia.mjs", "scripts/verify_frozen
 // separately for the record, and executions carry a construction mark. The
 // contract itself — operations, validation, the frozen-ia session — is untouched,
 // and `scripts/verify_trainer_ux4.mjs` covers it at 115/115.
+// `tools/v1/trainer-frozen-ia.mjs` left the git-baseline list on 2026-09-24 for one
+// sentence: O-6 of the β.8 regression (Owner: fix in β.9). The 02 「見るポイント」
+// rubric named an internal field (「旧front_control」 / "legacy front_control");
+// the approved wording drops it (JA ライター&SNS e442352, EN 英語翻訳チーム 353d01d).
+// Nothing else in the file moved — the contract id, the stages, the operations —
+// and it is pinned by content so an unreviewed edit still trips this gate.
+equal(sha256(await read("tools/v1/trainer-frozen-ia.mjs")), "152f6af0855028d686cbf998bd24d6be270a75692fb03f4e5ee1b4ae804a2e16", "XR-FROZEN tools/v1/trainer-frozen-ia.mjs matches the reviewed content (O-6 wording, 2026-09-24)");
+{
+  const shown = await gitShow(baseline, "tools/v1/trainer-frozen-ia.mjs");
+  if (shown === null) cases.push("XR-FROZEN trainer-frozen-ia.mjs diff check skipped (git)");
+  else {
+    const before = shown.split("\n"), after = (await read("tools/v1/trainer-frozen-ia.mjs")).split("\n");
+    const changed = after.map((line, index) => line === before[index] ? null : index).filter(index => index !== null);
+    equal(before.length === after.length && changed.length === 1 && /rubric: \{ ja: "値・問い・逸脱防止の実際の表現を人が確認する。"/.test(after[changed[0]]) ? "ONE_RUBRIC_LINE" : `CHANGED_LINES ${changed.join(",")}`, "ONE_RUBRIC_LINE", "XR-FROZEN trainer-frozen-ia.mjs differs from main 9b0af0e5 in the one O-6 rubric line only");
+  }
+}
 equal(sha256(await read("tools/v1/trainer-ux4.mjs")), "7cc3a92db8f996614cd5d167558d1697e90003915075fe4c7d6f8212d6927633", "XR-FROZEN tools/v1/trainer-ux4.mjs matches the reviewed content (composed hand-off, 2026-09-23)");
 equal(Contract.TRAINER_CONTRACT_ID, "saku.trainer.frozen-ia@1", "XR-FROZEN frozen-ia contract id unchanged");
 equal(UX4.UX4_CONTRACT, "saku.trainer.ux4@1", "XR-FROZEN the Trainer UX4 contract id is unchanged by the hand-off change");
@@ -255,7 +271,9 @@ try {
 // ── 8. browser: the real page, served from the repository root ─────────────
 // The packaged copies (public tooling projection, desktop dist when prepared)
 // must boot too: that is what proves the import remapping for each package.
-const packagedPages = ["/tooling/builder/external-review.html"];
+// The ZIP carries no external-review page since 2026-09-27 (Owner: it left the screens); the page source and the
+// installer copy are still exercised here as content, for the separate tool later.
+const packagedPages = [];
 try { await readFile(path.join(ROOT, ".desktop-dist/tools/saku-external-review.html")); packagedPages.push("/.desktop-dist/tools/saku-external-review.html"); }
 catch { cases.push("XR-PACKAGED .desktop-dist not prepared in this run (desktop:prepare) — desktop copy not loaded"); }
 const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";

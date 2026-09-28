@@ -31,7 +31,7 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -236,10 +236,14 @@ const compose = (character, extra = {}) => P.platformLaunchText(character, P.HAN
 {
   const tmp = mkdtempSync(path.join(tmpdir(), "saku-intake-main-"));
   try {
-    for (const rel of ["tools/unified-v1/platform-prompt.mjs", "tools/unified-v1/directive-glossary.mjs"]) {
-      writeFileSync(path.join(tmp, path.basename(rel)), execFileSync("git", ["show", `origin/main:${rel}`], { cwd: ROOT, maxBuffer: 1 << 24 }));
+    // main's modules under tools/, at their own paths, so platform-prompt.mjs finds every module it imports
+    // (since 2026-09-27 it reads ./reference-material.mjs and, through it, ../v1/…; a flat copy of two files broke).
+    const mainModules = execFileSync("git", ["ls-tree", "-r", "--name-only", "origin/main", "tools"], { cwd: ROOT, encoding: "utf8" }).split("\n").filter(rel => rel.endsWith(".mjs"));
+    for (const rel of mainModules) {
+      mkdirSync(path.join(tmp, path.dirname(rel)), { recursive: true });
+      writeFileSync(path.join(tmp, rel), execFileSync("git", ["show", `origin/main:${rel}`], { cwd: ROOT, maxBuffer: 1 << 24 }));
     }
-    const Main = await import(pathToFileURL(path.join(tmp, "platform-prompt.mjs")).href);
+    const Main = await import(pathToFileURL(path.join(tmp, "tools/unified-v1/platform-prompt.mjs")).href);
     let same = 0, withBreak = 0;
     for (const [label, character] of realCharacters) {
       const hasBreak = value => typeof value === "string" ? /[\r\n\u2028\u2029\u0085\u000b\u000c]/.test(value) : value && typeof value === "object" ? Object.values(value).some(hasBreak) : false;

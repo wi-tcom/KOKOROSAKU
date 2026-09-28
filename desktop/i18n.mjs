@@ -3,6 +3,17 @@ const DEFAULT_LOCALE = "ja-JP";
 
 // Static Desktop shell/help resources. Runtime paths and imported Character data are excluded.
 const EN = new Map(Object.entries({
+  // 04 and the older-format notices (英語翻訳チーム 依頼 Z, Wi-t_Site 03dacf0; service names chosen by
+  // the Owner 2026-09-27, Wi-t_Site 4508d58).
+  "SAKU 診療所・AMU トレーニングセンター":"SAKU Repair Desk and AMU Evaluation Center",
+  // 03 reference material (ライター&SNS 324dc60, 英語翻訳チーム 依頼 AH, Wi-t_Site 101e3d8).
+  "参考資料を添付する（任意）":"Attach reference material (optional)",
+  "AMU Studio の「SAKU 用の書き出し」で作ったファイルを選ぶと、貼り付ける文に参考資料の節が入ります。資料は AI にデータとして渡し、資料の中の指示には従わないよう伝えます。資料はこの画面で使うだけで、保存しません。":"Choose a file made with “SAKU 用の書き出し” (Export for SAKU) in AMU Studio, and a reference-material section is added to the text to paste. The material is passed to the AI as data, and the AI is told not to follow any instructions inside it. The material is used only on this screen and is not saved.",
+  "外す":"Remove",
+  "参考資料を添付する":"Attach reference material",
+  "サポートサービスは準備中です。紹介ページでサービスの内容をご覧いただけます。":"The support services are in preparation. You can read about them on the overview page (in Japanese).",
+  "この Character は旧形式（SAKU-CHARACTER）で作られているため、この SAKU Builder では開けません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。":"This Character was made in an older format (SAKU-CHARACTER), so this SAKU Builder cannot open it. To use it, create it again in “02 Create or edit a Character”.",
+  "このファイルには Schema の宣言がないため、取り込めません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。":"This file has no Schema declaration, so it cannot be imported. To use it, create it again in “02 Create or edit a Character”.",
   "読み込めたか AI に聞く（任意）":"Ask the AI what it loaded (optional)",
   "読み込めたかどうかは、AI に申告してもらう以外に確かめる方法がありません。下の依頼文を貼り、返ってきた行をそのまま貼り戻してください。":"There is no way to check what the AI loaded other than to have the AI report it. Paste the request below, and paste the returned lines back here as they are.",
   "依頼文をコピーする":"Copy the request",
@@ -12,7 +23,7 @@ const EN = new Map(Object.entries({
   "AI への依頼文":"The request to the AI",
   "AI の返答":"The AI's reply",
   "日本語":"Japanese","言語 / Language":"Language","はじめに":"Getting Started","ヘルプ":"Help","共通メニュー":"Global navigation",
-  "今日は何をしますか？":"What would you like to do?","見る・試す・確認する・作る、の順に利用者の目的から選べます。":"Choose by your goal: view, test, review, or create.",
+  "今日は何をしますか？":"What would you like to do?","選ぶ・作る・AI で動かす・サポートサービス、の 4 つの入口から、目的に合わせて選べます。":"Pick one of four entry points to suit your goal: choose, create, run on an AI platform, or support services.",
   "主な操作":"Primary actions","現在のSAKU":"Current SAKU","編集中 · 未保存の変更あり":"Editing · unsaved changes","保存済み":"Saved","最初から":"Start over","未保存の変更があります。最初からやり直しますか？":"There are unsaved changes. Start over anyway?","補助メニュー":"Support menu",
   "このキャラクターを選択する":"Choose this Character","新規追加":"Newly added",
   "AI動作の調整":"AI behavior tuning","調整の詳細":"Tuning detail","気になる症状":"What you have noticed",
@@ -25,7 +36,7 @@ const EN = new Map(Object.entries({
   "選択されたキャラクター":"Selected Character","未選択":"Not selected","選択を解除":"Clear selection",
   "キャラクターを選択する":"Choose a Character","Packageを読み込んでキャラクターを選択します。":"Import a Package, then choose a Character.",
   "読み込み・新規作成を行い、一覧から作業するキャラクターを選びます。":"Import or create, then choose the Character to work on from the list.",
-  "キャラクターを読み込む / 新規作成する":"Import or create a Character","Packageインポート":"Import Package","個別インポート":"Import file",
+  "キャラクターを読み込む / 新規作成する":"Import or create a Character","Packageインポート":"Import Package","個別インポート":"Import file","サンプルを読み込む":"Load samples","サンプル":"Sample",
   "選択キャラクター削除":"Delete selected","一覧をクリア":"Clear list","新規作成":"Create new",
   "削除済み":"Deleted","表示しない":"Hide","含めて表示":"Include","削除済みのみ":"Deleted only","選択":"Select",
   "キャラクターを作る・編集する":"Create / edit Character","トレーニングする":"Train","削除する":"Delete","削除を取り消す":"Undo delete","閉じる":"Close",
@@ -59,7 +70,7 @@ const EN = new Map(Object.entries({
   "検索と絞り込みを解除":"Clear search and filters","Character比較":"Character comparison","比較を閉じる":"Close comparison",
   "欠損値は推測せず、SAME / DIFFERENT / UNKNOWN / NOT_AVAILABLEを表示します。":"Missing values are not inferred; comparison shows SAME / DIFFERENT / UNKNOWN / NOT_AVAILABLE.",
   "Character could not be opened. Return to the Catalog and select it again.":"Character could not be opened. Return to the Catalog and select it again.",
-  "マニュアル":"Manual","SAKU Builder フィールドガイドを開く":"Open the SAKU Builder Field Guide","Unified V1の5章と全編集項目":"Five Unified V1 chapters and every editable field",
+  "マニュアル":"Manual","SAKU Builder フィールドガイドを開く":"Open the SAKU Builder Field Guide","5 つの章と、すべての編集項目の説明":"Five chapters and every editable field, explained",
   "最初の3ステップ":"The first three steps",
   "workspaceを選び、サンプル・package・新規作成のいずれかから、BuilderまたはTrainerを開きます。":"Choose a workspace, then open Builder or Trainer from a sample, package, or new Character.",
   "アプリの状態を確認しています。":"Checking the app status.",
@@ -94,7 +105,7 @@ const LONG_EN = new Map(Object.entries({
   "既存HTMLと共有ES moduleをTauri assetとして利用します。localhost、shell、手動PATH設定、cloud backendは使いません。":"Existing HTML and shared ES modules are used as Tauri assets. No localhost server, shell, manual PATH configuration, or cloud backend is used.",
   "キャラクターパッケージを読み込んでキャラクターを選択します。":"Import a Character package, or pick a Character you already have.",
   "キャラクターを作成・編集します。":"Create or edit a Character.",
-  "AIプラットホームでキャラクターを動作":"Run the Character on an AI platform",
+  "AI プラットフォームでキャラクターを動作":"Run the Character on an AI platform",
   "選択中のキャラクターを外部のAIに読み込ませて動かします。":"Load the selected Character into the AI you use, and run it there.",
   "キャラクターをトレーニングする":"Train the Character",
   "AIプロンプトの応答でキャラクターを調整します。":"Adjust the Character using the AI's responses.",
@@ -104,7 +115,8 @@ const LONG_EN = new Map(Object.entries({
   "動かすキャラクターを選んでください。":"Choose the Character to run.",
   "1. 動かすキャラクターを確認する":"1. Confirm which Character you are running",
   "貼り付ける文":"Text to paste",
-  "— キャラクターの編集やトレーニングを選択してください。":" — choose whether to edit or train this Character.",
+  "— 次に、編集するか、AI プラットフォームで動かすかを選んでください。":" — next, choose whether to edit this Character or run it on an AI platform.",
+  "この Character は採択済み Schema に合わないため、02 でも 03 でも開けません。一覧から削除できます。":"This Character does not match the adopted Schema, so it cannot be opened in 02 or 03. You can delete it from the list.",
   "— 貼り付けてもCharacterは変更されません。":" — pasting it does not change the Character.",
   "「01 キャラクターを選択する」からキャラクターを選択してください。":"Choose a Character from “01 Choose a Character”.",
   "「01 キャラクターを選択する」からキャラクターを選んでください。":"Choose a Character from “01 Choose a Character”.",

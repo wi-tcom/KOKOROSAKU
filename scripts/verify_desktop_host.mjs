@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile, readdir, stat } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { prepareDesktopAssets } from "./prepare_desktop_assets.mjs";
@@ -123,7 +124,55 @@ const publicMetadata = await json(".desktop-dist/resources/build-metadata.json")
 assert.equal(publicMetadata.internal_content_count, 0);
 assert.equal(publicMetadata.publication, false, "a public profile candidate is not itself a publication event");
 assert.equal(await exists(".desktop-dist/tools/unified-v1/preview/catalog-preview-index.json"), false);
-assert.equal(await exists(".desktop-dist/tools/unified-v1/sample-pack/sample-characters.json"), true);
+// Owner 2026-09-24: the three OSS samples (sample-general-compass, sample-wit-guide,
+// sample-erabazu-bridge) are retired from the installer. The source files stay as
+// test material that the gates read; they are not shipped.
+const SHIPPED_SAMPLE_PATHS = ["tools/unified-v1/sample-pack/sample-characters.json", "resources/sample-source-evidence.json"];
+const shippedSamples = async root => (await Promise.all(SHIPPED_SAMPLE_PATHS.map(async rel => (await stat(path.resolve(ROOT, root, rel)).then(() => true, () => false) ? rel : null)))).filter(Boolean);
+assert.deepEqual(await shippedSamples(".desktop-dist"), [], "the public installer must not carry the retired OSS samples");
+// In their place, AMU Studio's sample pack (saku-pack-sample 1.1.0) is a bundle
+// resource, and 01 offers it with a button that goes through the pack intake.
+const samplePackWiring = (html, app, conf) => {
+  const problems = [];
+  if (!/id="viewer-import-file">[^<]*<\/button>\s*<button type="button" id="viewer-import-samples">/.test(html)) problems.push("01 has no sample button beside 個別インポート");
+  if (!/\$\("viewer-import-samples"\)\.addEventListener\("click", importSamples\)/.test(app)) problems.push("the sample button is not wired");
+  if (!/async function importSamples\(\) \{\s*try \{ handOffImport\(await invoke\("import_bundled_sample_pack"\)\)/.test(app)) problems.push("the sample button does not use the host's pack intake");
+  if (!/button\.disabled = !\(nativeEnabled && samplesAvailable\)/.test(app)) problems.push("the sample button is not off when imports are off or the pack is missing");
+  if (conf?.bundle?.resources?.["../desktop/resources/samples/saku-pack-sample-1.1.0.zip"] !== "samples/saku-pack-sample-1.1.0.zip") problems.push("the sample pack is not a bundle resource");
+  return problems;
+};
+{
+  const html = await read("desktop/index.html"), app = await read("desktop/app.mjs");
+  assert.deepEqual(samplePackWiring(html, app, config), [], "the bundled sample pack is offered on 01 through the pack intake");
+  for (const [label, broken] of [
+    ["no listener", [html, app.replace('$("viewer-import-samples").addEventListener("click", importSamples)', ""), config]],
+    ["always enabled", [html, app.replace("button.disabled = !(nativeEnabled && samplesAvailable)", "button.disabled = false"), config]],
+    ["not bundled", [html, app, { ...config, bundle: { ...config.bundle, resources: {} } }]],
+  ]) assert.ok(samplePackWiring(...broken).length > 0, `falsification: ${label} is caught`);
+}
+// The sample-mode Characters carry the 「サンプル」 badge (Owner 2026-09-24) on 01's
+// cards and in the detail, decided by the signed pack id, not by the name's 「※」.
+{
+  const app = await read("desktop/app.mjs");
+  const badgeProblems = source => {
+    const problems = [];
+    if (!/const isSampleRecord = record => record\?\.provenance\?\.pack_id === SAMPLE_PACK_ID;/.test(source) || !source.includes('const SAMPLE_PACK_ID = "saku-pack-sample";')) problems.push("the sample test is not the signed pack id");
+    if (!source.includes("if (isSampleRecord(record)) badges.append(sampleBadge());")) problems.push("the card has no sample badge");
+    if (!source.includes("const sampleLine = isSampleRecord(record)")) problems.push("the detail has no sample badge");
+    if (/※/.test(source.match(/const isSampleRecord[^\n]*/)?.[0] || "")) problems.push("the sample test reads the name");
+    return problems;
+  };
+  assert.deepEqual(badgeProblems(app), [], "the sample badge");
+  assert.ok(badgeProblems(app.replace("if (isSampleRecord(record)) badges.append(sampleBadge());", "")).length > 0, "falsification: a card without the badge is caught");
+  assert.ok(badgeProblems(app.replace("record?.provenance?.pack_id === SAMPLE_PACK_ID", 'String(record?.name).endsWith("※")')).length > 0, "falsification: a test on the name is caught");
+}
+{ // falsification: a dist that still carries them is caught
+  const probe = await mkdtemp(path.join(tmpdir(), "saku-samples-"));
+  await mkdir(path.join(probe, "tools/unified-v1/sample-pack"), { recursive: true });
+  await writeFile(path.join(probe, "tools/unified-v1/sample-pack/sample-characters.json"), "{}");
+  assert.deepEqual(await shippedSamples(probe), ["tools/unified-v1/sample-pack/sample-characters.json"], "falsification: a shipped sample must be caught");
+  await rm(probe, { recursive: true, force: true });
+}
 assert.equal(await exists(".desktop-dist/third-party/THIRD_PARTY_LICENSE_MANIFEST.json"), true);
 assert.equal(await exists(".desktop-dist/third-party/LICENSES"), true);
 assert.equal(await exists(".desktop-dist/third-party/NOTICES"), true);
@@ -176,7 +225,24 @@ assert.match(mainRs, /PACKAGE_FORMAT_AMU_CHARACTER_FILE/);
 assert.match(mainRs, /wit-package\.json/);
 assert.match(mainRs, /payload\.json/);
 assert.match(mainRs, /PACKAGE_ARCHIVE_INVALID/);
-assert.doesNotMatch(mainRs, /https?:\/\//);
+// The host makes no network calls. Its only URL is the service-host prefix that
+// open_service_link allows (Owner 2026-09-27, 04 services page); every other URL
+// outside the test module still fails here.
+{
+  const hostCode = mainRs.slice(0, mainRs.indexOf("#[cfg(test)]") >= 0 ? mainRs.indexOf("#[cfg(test)]") : mainRs.length);
+  const urls = hostCode.match(/https?:\/\/[^"\s)]*/g) || [];
+  assert.deepEqual([...new Set(urls)].sort(), ["https://{host}"], "the host's only URL is the service-host prefix");
+  assert.match(hostCode, /const SERVICE_HOSTS: \[&str; 5\] = \["wi-t\.com", "www\.wi-t\.com", "kokoroamu\.jp", "www\.kokoroamu\.jp", "support\.kokoroamu\.jp"\];/, "the host opens only these five hosts, the same as the page and AMU Studio");
+  {
+    const { SERVICE_LINK_HOSTS, isAllowedServiceUrl } = await import("../tools/unified-v1/service-links.mjs");
+    assert.deepEqual([...SERVICE_LINK_HOSTS], ["wi-t.com", "www.wi-t.com", "kokoroamu.jp", "www.kokoroamu.jp", "support.kokoroamu.jp"], "the page opens the same five hosts");
+    assert.ok(isAllowedServiceUrl("https://support.kokoroamu.jp/apply"));
+    // Falsification: a look-alike or another subdomain is refused.
+    for (const bad of ["https://other.kokoroamu.jp/", "https://support.kokoroamu.jp.evil.example/", "https://support.kokoroamu.jp:8443/"]) assert.ok(!isAllowedServiceUrl(bad), bad);
+  }
+  const withOther = hostCode + '\nconst X: &str = "https://example.com/";\n';
+  assert.notDeepEqual([...new Set(withOther.match(/https?:\/\/[^"\s)]*/g))].sort(), ["https://{host}"], "falsification: any other URL is caught");
+}
 
 const desktopApp = await read("desktop/app.mjs");
 assert.match(desktopApp, /tauri:\/\/drag-drop/);
@@ -196,7 +262,83 @@ assert.match(desktopIndex, /href="\.\/tools\/saku-builder\.html\?desktop=app"/);
 assert.match(desktopIndex, /data-desktop-locale="ja-JP"/);
 assert.match(desktopIndex, /data-desktop-locale="en-US"/);
 assert.match(desktopIndex, /src="\.\/i18n\.mjs"/);
-for (const id of ["view-characters", "create-edit-character", "run-on-ai-platform", "train-character", "viewer-panel"]) assert.match(desktopIndex, new RegExp(`id="${id}"`));
+for (const id of ["view-characters", "create-edit-character", "run-on-ai-platform", "open-services", "viewer-panel"]) assert.match(desktopIndex, new RegExp(`id="${id}"`));
+// Owner 2026-09-27 (AMU DECISION 2026-09-27-11): 04 is the services page, and no Home control leads to the Trainer.
+assert.match(desktopIndex, /id="open-services" href="\.\/tools\/saku-services\.html"/);
+assert.doesNotMatch(desktopIndex, /saku-trainer\.html|platform-to-trainer|data-character-action="train"/);
+// β.9 hands-on (2026-09-28): three sentences still pointed at the Trainer after it left — the status line on
+// choosing a Character, the note on an inadmissible one, and the Home subtitle (試す・確認する). Visible Home and
+// 01 text names no training except the AMU トレーニングセンター (ライター&SNS 2026-09-28, EN 依頼 AJ).
+for (const [name, source] of [["desktop/index.html", desktopIndex], ["desktop/app.mjs", desktopApp]]) {
+  const visible = source.split(/\r?\n/).filter(line => !/^\s*\/\//.test(line)).join(" ").replace(/AMU トレーニングセンター/g, "");
+  assert.doesNotMatch(visible, /トレーニング[をにのでし]|トレーニングする|試す・確認する/, `${name} still points at the Trainer`);
+}
+assert.match(desktopApp, /次に、編集するか、AI プラットフォームで動かすかを選んでください。/);
+assert.match(desktopApp, /この Character は採択済み Schema に合わないため、02 でも 03 でも開けません。一覧から削除できます。/);
+assert.match(desktopIndex, /選ぶ・作る・AI で動かす・サポートサービス、の 4 つの入口から、目的に合わせて選べます。/);
+{
+  // The services page: the Owner-confirmed v2 texts (AMU DECISION 2026-09-27-14), no prices,
+  // no 「認定」, no guarantee sentence on the screen, and every application without a URL
+  // shown as 「準備中」 (Owner 2026-09-28 via 統括: 「SAKU診療所とAMUトレーニングセンター、
+  // ERABAZU工房は準備中としてください。」; until then the buttons were hidden while all were unset).
+  const { servicesMarkup, SERVICES_WORDING } = await import("../tools/unified-v1/services-ui.mjs");
+  const { SERVICE_LINKS } = await import("../tools/unified-v1/service-links.mjs");
+  const w = SERVICES_WORDING.ja;
+  const pending = servicesMarkup("ja-JP", SERVICE_LINKS);
+  // Owner 2026-09-27: the introduction page (support.kokoroamu.jp) is public; the five applications are not yet.
+  assert.equal(SERVICE_LINKS.links[0].id, "service_intro");
+  assert.equal(SERVICE_LINKS.links[0].url, "https://support.kokoroamu.jp/");
+  assert.ok(SERVICE_LINKS.links.slice(1).every(link => link.url === null), "no application URL is set yet");
+  assert.match(pending, /data-services-state="ALL_PENDING"/);
+  assert.ok(pending.includes(w.allPending) && w.allPending === "受付の開始は kokoroamu.jp でお知らせします。");
+  const applications = SERVICE_LINKS.links.filter(link => link.id !== "service_intro");
+  // Owner 2026-09-28: the services read as 準備中 in words too (ライター&SNS 3c02160, EN 依頼 AL c1a87fe) —
+  // the intro says so, what a plan includes is 「含まれます」 / "included", and nothing reads as usable now.
+  assert.ok(w.intro.endsWith("いまは準備中です。") && SERVICES_WORDING.en.intro.endsWith("and they are currently in preparation."), "the 04 intro says the services are in preparation");
+  for (const [lang, text] of [["ja", JSON.stringify(SERVICES_WORDING.ja)], ["en", JSON.stringify(SERVICES_WORDING.en)]]) assert.doesNotMatch(text, /ご利用いただけます|利用できます|is also available|you can use/i, `04 (${lang}) reads as usable now`);
+  assert.match(desktopIndex, /サポートサービスは準備中です。紹介ページでサービスの内容をご覧いただけます。/);
+  assert.doesNotMatch(desktopIndex, /登録・ログインと、\.amupkg への署名の申し込みができます/);
+  { const manual = await read("manual/saku-field-guide.html"); const p06 = manual.slice(manual.indexOf('id="P06"'), manual.indexOf('id="P07"'));
+    assert.ok(p06.includes("いまは準備中です（登録・申し込みはできません）") && p06.includes("currently in preparation (registration and applications are not yet open)"), "manual P06 says the services are in preparation");
+    assert.doesNotMatch(p06, /から行います|apply for a signature on an \.amupkg, from 04/, "manual P06 reads as usable now"); }
+  assert.equal((pending.match(/data-service-state="PENDING" disabled/g) || []).length, applications.length, "while every application URL is unset, each application shows as a button that cannot be pressed");
+  for (const link of applications) assert.ok(pending.includes(`data-service-link="${link.id}" data-service-state="PENDING" disabled>${link.label_ja}<span class="service-pending">準備中</span></button>`), `${link.id} reads 準備中`);
+  assert.equal((pending.match(/<button(?![^>]*disabled)/g) || []).length, 1, "the only button that can be pressed is the introduction page");
+  assert.ok(pending.includes(w.hosts), "a button can be pressed, so the page says where the links open (ライター&SNS 2026-09-27)");
+  // Falsification: with no URL at all, no button can be pressed and there is no hosts line.
+  { const none = servicesMarkup("ja-JP", { ...SERVICE_LINKS, links: SERVICE_LINKS.links.map(link => ({ ...link, url: null })) }); assert.ok(!/<button(?![^>]*disabled)/.test(none) && !none.includes(w.hosts) && (none.match(/class="service-pending">準備中</g) || []).length === SERVICE_LINKS.links.length); }
+  assert.match(pending, /data-service-link="service_intro" data-service-url="https:\/\/support\.kokoroamu\.jp\/"/);
+  assert.ok(pending.includes("サービスの内容は、kokoroamu.jp の紹介ページでご覧いただけます。") && pending.includes(">紹介ページを見る<"), "the introduction line and button are the confirmed wording");
+  for (const text of [w.intro, w.commonNote, ...w.sections.flatMap(section => section.items.flatMap(item => item.lines))]) assert.ok(pending.includes(text), `the page shows: ${text.slice(0, 20)}`);
+  assert.ok(w.sections.find(section => section.id === "subscriptions").items[0].lines[0].startsWith("「診療」はソフトウェアの調査と修復のたとえ"), "the clinic text opens with the 診療 sentence");
+  assert.equal(w.sections[0].id, "intro", "the introduction page comes first (Owner 2026-09-27)");
+  assert.ok(pending.includes("フォルダーの場所には、Windows のユーザー名が含まれることがあります。"));
+  assert.doesNotMatch(pending, /認定|保証|[0-9０-９][0-9０-９,，]*\s*円|¥|￥|\$[0-9]/, "no 認定, no guarantee sentence, no price");
+  const ready = servicesMarkup("ja-JP", { ...SERVICE_LINKS, links: SERVICE_LINKS.links.map(link => link.id === "saku_clinic" ? { ...link, url: "https://kokoroamu.jp/clinic" } : link) });
+  assert.ok(ready.includes(w.hosts) && !ready.includes(w.allPending));
+  assert.equal((ready.match(/data-service-url="https:\/\/kokoroamu\.jp\/clinic"/g) || []).length, 1);
+  assert.equal((ready.match(/data-service-state="PENDING" disabled/g) || []).length, SERVICE_LINKS.links.length - 2, "once an application URL is set, the other applications show 準備中");
+  // Falsification: a URL on another host stays 準備中.
+  const foreign = servicesMarkup("ja-JP", { ...SERVICE_LINKS, links: SERVICE_LINKS.links.map(link => link.id === "saku_clinic" ? { ...link, url: "https://kokoroamu.jp.evil.example/clinic" } : link) });
+  assert.ok(!foreign.includes("kokoroamu.jp.evil.example"), "a URL on another host is never offered");
+  // English (依頼 Y/Z with the names the Owner chose on 2026-09-27): the same shape, no Japanese,
+  // no placeholder, no 「診療」 disclaimer (the English name does not say Clinic), no prices.
+  const e = SERVICES_WORDING.en;
+  assert.ok(e && e.title === "SAKU Repair Desk and AMU Evaluation Center" && e.pending === "In preparation");
+  assert.deepEqual(e.sections.map(section => [section.id, section.items.map(item => item.link)]), w.sections.map(section => [section.id, section.items.map(item => item.link)]), "EN has the same sections and links as JA");
+  assert.deepEqual(Object.keys(e.linkLabels).sort(), SERVICE_LINKS.links.map(link => link.id).sort(), "EN labels every link");
+  const enPages = [servicesMarkup("en-US", SERVICE_LINKS), servicesMarkup("en-US", { ...SERVICE_LINKS, links: SERVICE_LINKS.links.map(link => ({ ...link, url: "https://kokoroamu.jp/x" })) })];
+  for (const page of enPages) {
+    assert.doesNotMatch(page, /[ぁ-んァ-ヶ一-龠]/, "the English page holds no Japanese");
+    const shown = page.replace(/<[^>]+>/g, " ");   // the text on screen, not ids such as saku_clinic
+    assert.doesNotMatch(shown, /&lt;CLINIC&gt;|&lt;CENTER&gt;|Clinic|certif|guarantee|[$¥￥][0-9]/i, "no placeholder, no Clinic, no certify or guarantee, no price");
+  }
+  assert.ok(enPages[1].includes("Register for SAKU Repair Desk") && enPages[1].includes("Register for AMU Evaluation Center"));
+  assert.ok(enPages[0].includes(e.allPending) && (enPages[0].match(/<button(?![^>]*disabled)/g) || []).length === 1 && (enPages[0].match(/<span class="service-pending">In preparation<\/span>/g) || []).length === 5, "EN: five applications read In preparation, one button can be pressed");
+  assert.ok(enPages[0].includes(">View the overview page<") && enPages[0].includes("(in Japanese).") && enPages[0].includes(e.hosts), "EN: the overview page button, its note that the page is Japanese, and where the links open (AG1–AG3)");
+  // Falsification: a Japanese label leaking into the English page is caught.
+  assert.match(servicesMarkup("en-US", SERVICE_LINKS).replace(e.intro, w.intro), /[ぁ-んァ-ヶ一-龠]/);
+}
 for (const id of ["catalog-search", "viewer-results", "compare-panel"]) assert.match(desktopIndex, new RegExp(`id="${id}"`));
 const gettingStarted = await read("desktop/help/getting-started.html");
 assert.match(gettingStarted, /rel="icon" href="\.\.\/icon\.svg"/);
@@ -235,8 +377,14 @@ assert.match(goldenUi, /aria-hidden/);
 assert.match(await read("tools/saku-builder-desktop-additions.css"), /\.unified-v1-link\s*\{\s*display:\s*none\s*!important;/);
 assert.match(desktopApp, /UNIFIED_V1_CHARACTER/);
 assert.match(desktopApp, /MANIFEST_SCHEMA_ID_MISSING/);
-assert.match(desktopApp, /SAKU Converter/);
-assert.match(desktopApp, /Conversion Receipt/);
+// ライター&SNS 2026-09-27: a refused v1 or undeclared file names the way on (recreate it in 02,
+// by 02's real label) and never SAKU Converter, which is not in this product.
+assert.doesNotMatch(desktopApp, /SAKU Converter|Conversion Receipt|Unified V1 の (Trainer|Builder)/);
+assert.ok(desktopIndex.includes("キャラクターを作る・編集する"), "02's label, which the recreate guidance names");
+assert.equal((desktopApp.match(/で新しく作り直してください。/g) || []).length, 2, "the v1 note and the undeclared-schema refusal both say to recreate it in 02");
+assert.match(desktopApp, /const V1_RECREATE_NOTE = "この Character は旧形式（SAKU-CHARACTER）で作られているため、この SAKU Builder では開けません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。";/);
+assert.match(desktopApp, /このファイルには Schema の宣言がないため、取り込めません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。/);
+assert.equal((desktopApp.match(/V1_RECREATE_NOTE/g) || []).length, 3, "the v1 note is used on the detail card and in the status line");
 const hostSource = await read("src-tauri/src/main.rs");
 assert.match(hostSource, /SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE/);
 assert.match(hostSource, /final-delta-recovery-closure-2026-09-04/);

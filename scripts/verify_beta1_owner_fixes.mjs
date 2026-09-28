@@ -63,10 +63,12 @@ try{
   await new Promise(resolve=>frame.addEventListener("load",resolve,{once:true}));
   let w=frame.contentWindow,d=frame.contentDocument;
   await poll(()=>w.SAKU_GOLDEN_UI&&w.SAKU_FROZEN_IA&&d.querySelectorAll(".frozen-chapter").length===5&&!d.querySelector("#openDesktopHome").hidden);
-  w.confirm=()=>true;
+  ((w,fn)=>{w.__sakuAnswer=fn;if(w.__sakuObs)return;w.__sakuObs=new w.MutationObserver(()=>{for(const g of w.document.querySelectorAll("dialog.saku-confirm")){if(g.dataset.answered)continue;g.dataset.answered="1";const q=(g.querySelector("p")||{}).textContent||"";(w.__sakuAnswer(q)?g.querySelector("[data-confirm-action]"):g.querySelector("[data-confirm-cancel]")).click();}});w.__sakuObs.observe(w.document.documentElement,{childList:true,subtree:true});})(w,()=>true);
   w.alert=message=>{w.__BETA1_ALERT=String(message)};
 
   click(d.querySelector("#loadExample"));
+  // O-11: 「記入例から新規作成」 may ask first (the app's own dialog, answered above); wait for it to settle.
+  await wait(50);await poll(()=>!d.querySelector("dialog.saku-confirm"));await wait(150);
   input(d.querySelector('[data-path="meta.name"]'),"テスト人物");
   input(d.querySelector('[data-path="meta.slug"]'),"beta-one");
   const yamlBeforeHelp=d.querySelector("#yaml").textContent;
@@ -108,6 +110,8 @@ try{
   check(d.querySelector("#saveFeedback").textContent==="保存しました\\n"+${JSON.stringify(exactSavePath)},"Japanese success shows exact destination");
 
   click(d.querySelector("#resetAll"));
+  // O-11: 全消去の確認 is the app's own dialog now (answered above); wait for it to settle.
+  await wait(50);await poll(()=>!d.querySelector("dialog.saku-confirm"));await wait(50);
   check(d.querySelector('[data-path="meta.name"]').value==="","Start over clears Character before navigation");
   check(d.querySelector("#qsRows")===null,"retired Boundary Quick Setup cannot retain residual state");
   check(d.querySelector("#yaml").hidden===false&&d.querySelector("#contextHelp").hidden===true,"Start over resets preview and Help state");

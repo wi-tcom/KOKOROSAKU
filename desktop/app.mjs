@@ -10,7 +10,10 @@ import { OPERATION_CLASS_TEXT, assessPackSignatures, assessReturnSignature, comp
 import { presentationTokens, absentAxes } from "../tools/unified-v1/axis-renderer.mjs";
 import { diagnose as diagnoseLocators, repairLocators } from "../tools/unified-v1/locator-repair.mjs";
 import { mountScreenHelp } from "../tools/unified-v1/screen-help.mjs";
+import { confirmDialog } from "../tools/unified-v1/confirm-dialog.mjs";
+import { confirmWording, fill } from "../tools/unified-v1/confirm-wording.mjs";
 import { HANDOFF_FORMAT, characterPromptText, loadBaseLayer, platformLaunchText } from "../tools/unified-v1/platform-prompt.mjs";
+import { referenceRefusalKind, verifyReferenceExport } from "../tools/unified-v1/reference-material.mjs";
 import { ECHO_CHECK_LABEL, ECHO_REQUEST, buildDirectiveLookup, compareEchoedDirectives, glossaryFallbackText } from "../tools/unified-v1/directive-glossary.mjs";
 import { BASE_DIRECTIVES_UNUSABLE, handoffOptions } from "../tools/unified-v1/handoff-context.mjs";
 import * as TuningUI from "./tuning-ui.mjs";
@@ -84,10 +87,49 @@ function setStatus(target, code, reason, kind = "info") {
     target.append(span);
   }
 }
+// O-11: the app's own confirmation (the WebView's confirm() is titled 「tauri.localhost の内容」).
+const ask = (key, message, vars) => { const w = confirmWording(key, locale() === "en-US" ? "en" : "ja"); return confirmDialog({ title: w.title, message: message ?? fill(w.body, vars), confirmLabel: w.confirm, cancelLabel: w.cancel }); };
 const showStatus = (code, reason, kind = "info") => setStatus($("host-status"), code, reason, kind);
 const showViewerStatus = (code, reason, kind = "info") => setStatus($("viewer-status"), code, reason, kind);
 
+// Owner 2026-09-24: the installer carries AMU Studio's sample pack (saku-pack-sample
+// 1.1.0) in place of the retired OSS samples. The button stays off unless the host
+// finds the pinned file, and off whenever the other import controls are off.
+// Why the button is off is said in text right under it, not only in a tooltip
+// (ライター&SNS 2026-09-24, 8e14189). A read-only Workspace says so in the status
+// line, as for the other import buttons, and adds nothing here.
+const SAMPLE_PACK_WORDING_JA = Object.freeze({
+  SAMPLE_PACK_NOT_BUNDLED: "サンプルがこのインストールに入っていないため、読み込めません。インストールし直すと戻ります。（SAMPLE_PACK_UNAVAILABLE / SAMPLE_PACK_NOT_BUNDLED）",
+  SAMPLE_PACK_DIGEST_MISMATCH: "同梱のサンプルの中身が同梱時と違うため、読み込みませんでした。インストールし直してください。（SAMPLE_PACK_UNAVAILABLE / SAMPLE_PACK_DIGEST_MISMATCH）",
+});
+// English: 英語翻訳チーム, request S (S2, S3), via ライター&SNS e442352.
+const SAMPLE_PACK_WORDING_EN = Object.freeze({
+  SAMPLE_PACK_NOT_BUNDLED: "The samples are not part of this installation, so they cannot be loaded. Reinstalling brings them back. (SAMPLE_PACK_UNAVAILABLE / SAMPLE_PACK_NOT_BUNDLED)",
+  SAMPLE_PACK_DIGEST_MISMATCH: "The contents of the bundled samples are not the same as when they were bundled, so they were not loaded. Reinstall the app. (SAMPLE_PACK_UNAVAILABLE / SAMPLE_PACK_DIGEST_MISMATCH)",
+});
+const sampleWording = reason => { const table = locale() === "en-US" ? SAMPLE_PACK_WORDING_EN : SAMPLE_PACK_WORDING_JA; return table[reason] || table.SAMPLE_PACK_NOT_BUNDLED; };
+let nativeEnabled = true;
+let samplesAvailable = false;
+let samplesReason = null;
+function applySampleButton() {
+  const button = $("viewer-import-samples"); if (button) button.disabled = !(nativeEnabled && samplesAvailable);
+  const note = $("viewer-samples-note"); if (!note) return;
+  const say = Boolean(invoke) && !samplesAvailable;
+  note.hidden = !say; note.textContent = say ? sampleWording(samplesReason) : "";
+}
+async function refreshSampleButton() {
+  if (!invoke) { samplesAvailable = false; applySampleButton(); return; }
+  try { const state = await invoke("bundled_sample_pack"); samplesAvailable = Boolean(state?.available); samplesReason = state?.reason || null; }
+  catch { samplesAvailable = false; samplesReason = null; }
+  applySampleButton();
+}
+async function importSamples() {
+  try { handOffImport(await invoke("import_bundled_sample_pack")); }
+  catch (error) { showStatus("SAMPLE_PACK_UNAVAILABLE", sampleWording(String(error)), "error"); }
+}
+
 function setNativeEnabled(enabled) {
+  nativeEnabled = enabled; applySampleButton();
   for (const id of ["choose-workspace", "viewer-import-package", "viewer-import-file", "host-retry-workspace", "host-retry-import"]) { const control = $(id); if (control) control.disabled = !enabled; }
   $("drop-zone").toggleAttribute("hidden", !enabled);
 }
@@ -153,7 +195,7 @@ function renderHomeGuidance(workspace) {
   const subject = ActiveSaku.summary();
   if (!subject) { showStatus("CHARACTER_REQUIRED", "「01 キャラクターを選択する」からキャラクターを選択してください。", "info"); return; }
   const name = subject.identity.display_name || subject.identity.character_id || "選択中のキャラクター";
-  showStatus("CHARACTER_SELECTED", [{ data: name }, " — キャラクターの編集やトレーニングを選択してください。"], "success");
+  showStatus("CHARACTER_SELECTED", [{ data: name }, " — 次に、編集するか、AI プラットフォームで動かすかを選んでください。"], "success");
 }
 
 async function refreshState() {
@@ -182,7 +224,7 @@ async function applyStartupRoute() {
 // Pick the folder, ask about an unsaved draft, then switch: the list, the
 // import history and the selected Character become the new workspace's.
 async function chooseWorkspace() {
-  const result = await WorkspaceState.switchWorkspace({ confirm: () => window.confirm(workspaceWording("discardDraft")) });
+  const result = await WorkspaceState.switchWorkspace({ confirm: () => ask("discardDraftAndSwitch", workspaceWording("discardDraft")) });
   if (result.status === "SWITCHED") {
     renderState(result.runtime);
     renderImportHistory(); renderLibrary(); renderActiveSaku();
@@ -235,12 +277,15 @@ function handoffUrl(record, target) {
   return `./tools/saku-builder.html?desktop=viewer-copy&character_id=${id}&character_revision=${revision}&source=viewer`;
 }
 
+// A v1 (SAKU-CHARACTER) Character cannot be opened here (ライター&SNS 2026-09-27).
+const V1_RECREATE_NOTE = "この Character は旧形式（SAKU-CHARACTER）で作られているため、この SAKU Builder では開けません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。";
+
 function importRecovery(code, reason) {
   if (code === "MANIFEST_SCHEMA_ID_MISSING") {
     return `${reason} このPackageは内容からSchemaを推測せず拒否しました。Source Ownerから、Active Unified Schema identityと変換来歴をmanifestへ結び付けたReplacement Packageを取得してください。`;
   }
   if (code === "PAYLOAD_SCHEMA_NOT_DECLARED" || code === "SCHEMA_NOT_DECLARED") {
-    return `${reason} Schema未宣言のCharacterを直接Unified Characterとして扱いません。Legacy Characterの場合はSAKU ConverterとConversion Receiptを経由してください。`;
+    return `${reason} このファイルには Schema の宣言がないため、取り込めません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。`;
   }
   if (code === "CONFORMANCE_LOCATOR_MISMATCH") {
     return `${reason} conformance_expectations の locator が requirement_id と別の要件を指しているため、このCharacterは取り込みません（Schema の規則: 参照不一致は fail closed）。Builder側では内容を書き換えず、作成元／配布元から修正版を入手してください。`;
@@ -275,11 +320,12 @@ function renderV1Detail(record, detail) {
   addDetailRow(dl, "第0層", record.expertise);
   addDetailRow(dl, "15軸", record.axes_summary, false);
   addDetailRow(dl, "Schema", `${record.technical.schema_id} ${record.technical.schema_version}`, false);
-  // Trainer and the Unified V1 editor read the other schema. Offering them here
-  // would hand v1 to a screen that cannot read it, so they are stated as
-  // unavailable rather than shown and left to fail.
+  // The editor reads the other schema. Offering it here would hand v1 to a
+  // screen that cannot read it, so it is stated as unavailable, with the way
+  // on: recreate it in 02 (ライター&SNS 2026-09-27; the converter is not in
+  // this product, so it is not named).
   const note = document.createElement("p"); note.className = "schema-note";
-  note.textContent = "この Character は v1 Schema です。Unified V1 の Trainer / Builder では開けません。";
+  note.textContent = V1_RECREATE_NOTE;
   detail.append(title, badge, overview, dl, note);
 }
 
@@ -296,7 +342,7 @@ function renderDetail(record) {
     addDetailRow(dl, "宣言されたSchema", `${record.technical.schema_id} ${record.technical.schema_version}`, false);
     addDetailRow(dl, "取り込み経路", record.technical.provenance, false);
     const note = document.createElement("p"); note.className = "schema-note";
-    note.textContent = "この Character は表示・編集・トレーニングのいずれにも渡せません。一覧から削除できます。";
+    note.textContent = "この Character は採択済み Schema に合わないため、02 でも 03 でも開けません。一覧から削除できます。";
     detail.append(title, badge, why, dl, note);
     return;
   }
@@ -380,10 +426,12 @@ function renderDetail(record) {
   selectionSection.append(groundNote);
 
   const actions = document.createElement("div"); actions.className = "actions viewer-handoff";
-  const trainer = document.createElement("a"); trainer.className = "button"; trainer.href = handoffUrl(record, "trainer"); trainer.dataset.trainerHandoff = record.id; trainer.textContent = "トレーニングする";
   const platform = document.createElement("button"); platform.type = "button"; platform.className = "button"; platform.dataset.platformFrom = record.id; platform.textContent = "AIプラットフォームで動作確認";
   const builder = document.createElement("button"); builder.type = "button"; builder.className = "primary"; builder.dataset.builderCopy = record.id; builder.textContent = "編集する";
-  actions.append(builder, platform, trainer); detail.append(title, overview, dl, selectionSection, technical, actions);
+  // Owner 2026-09-27: 04 Trainer left the screens (AMU DECISION 2026-09-27-11), so no 「トレーニングする」 here.
+  actions.append(builder, platform);
+  const sampleLine = isSampleRecord(record) ? (() => { const line = document.createElement("p"); line.className = "catalog-badges"; line.append(sampleBadge()); return line; })() : null;
+  detail.append(title, ...(sampleLine ? [sampleLine] : []), overview, dl, selectionSection, technical, actions);
 }
 
 function createCompareToggle(record) {
@@ -391,6 +439,13 @@ function createCompareToggle(record) {
   const input = document.createElement("input"); input.type = "checkbox"; input.dataset.compareId = record.id; input.checked = compareSelection.has(record.id); input.setAttribute("aria-label", `${copy().selectCompare}: ${record.name}`);
   const span = document.createElement("span"); span.textContent = "選択"; label.append(input, span); return label;
 }
+
+// Owner 2026-09-24: the sample-mode Characters carry AMU's 「サンプル」 badge. A
+// Character is a sample when it came from the signed pack saku-pack-sample (the
+// pack id is part of what the signature covers), not from its name's 「※」.
+const SAMPLE_PACK_ID = "saku-pack-sample";
+const isSampleRecord = record => record?.provenance?.pack_id === SAMPLE_PACK_ID;
+function sampleBadge(tag = "span") { const badge = document.createElement(tag); badge.className = "catalog-badge catalog-sample-badge"; badge.dataset.sample = "true"; badge.textContent = "サンプル"; return badge; }
 
 function createCatalogCard(record) {
   const card = document.createElement("article"); card.className = "catalog-card"; card.dataset.availability = record.availability;
@@ -413,6 +468,7 @@ function createCatalogCard(record) {
   if (latestBatch && record.batch === latestBatch && !record.deleted) {
     const badge = document.createElement("span"); badge.className = "catalog-badge"; badge.textContent = "新規追加"; badges.append(badge);
   }
+  if (isSampleRecord(record)) badges.append(sampleBadge());
   if (badges.children.length) card.append(badges);
   return card;
 }
@@ -479,7 +535,7 @@ function renderComparison() {
     row.cells.forEach((cell, index) => { const td = document.createElement("td"); td.textContent = row.field === "axes" && cell.state === "VALUE" ? selected[index].axes_summary : cell.value; td.dataset.runtimeValue = ""; tr.append(td); }); body.append(tr);
   }
   const actions = document.createElement("tr"); const actionLabel = document.createElement("th"); actionLabel.scope = "row"; actionLabel.textContent = labels.handoff; actions.append(actionLabel);
-  for (const record of selected) { const td = document.createElement("td"); const group = document.createElement("div"); group.className = "compare-handoff"; const trainer = document.createElement("a"); trainer.href = handoffUrl(record, "trainer"); trainer.dataset.trainerHandoff = record.id; trainer.textContent = labels.test; const review = document.createElement("a"); review.href = handoffUrl(record, "review"); review.dataset.trainerHandoff = record.id; review.textContent = labels.review; const builder = document.createElement("button"); builder.type = "button"; builder.dataset.builderCopy = record.id; builder.textContent = labels.edit; group.append(trainer, review, builder); td.append(group); actions.append(td); } body.append(actions);
+  for (const record of selected) { const td = document.createElement("td"); const group = document.createElement("div"); group.className = "compare-handoff"; const builder = document.createElement("button"); builder.type = "button"; builder.dataset.builderCopy = record.id; builder.textContent = labels.edit; group.append(builder); td.append(group); actions.append(td); } body.append(actions);
   table.append(head, body); output.append(table);
 }
 
@@ -661,12 +717,13 @@ function charactersOf(payloadJson) {
 // The Owner decides what happens to a name that is already in the list. Two
 // outcomes, because those are the two the spec asks for; cancelling the prompt
 // keeps both rather than dropping the import on the floor.
-function resolveConflicts(characters) {
+async function resolveConflicts(characters) {
   const conflicts = Library.nameConflicts(characters);
   if (!conflicts.length) return { onConflict: "KEEP_BOTH", conflicts };
   const names = [...new Set(conflicts.map(item => item.name))];
   const shown = names.slice(0, 5).join("、") + (names.length > 5 ? ` ほか${names.length - 5}件` : "");
-  const replace = window.confirm(`同じ名前のキャラクターが既にあります: ${shown}\n\nOK = 置き換える / キャンセル = 両方残す`);
+  // The buttons now say 「置き換える」 / 「両方残す」, so the body no longer spells out what OK and Cancel mean.
+  const replace = await ask("replaceSameName", undefined, { names: shown });
   return { onConflict: replace ? "REPLACE" : "KEEP_BOTH", conflicts };
 }
 
@@ -772,7 +829,7 @@ async function addToLibrary(characters, source, verification, entryMeta = null) 
   let added = 0, replaced = 0, failure = "";
   for (const [key, group] of accepted) {
     const schema = JSON.parse(key);
-    const { onConflict } = resolveConflicts(group);
+    const { onConflict } = await resolveConflicts(group);
     const outcome = Library.importCharacters(group, source, { onConflict, verification, schema, entryMeta });
     if (!outcome.saved) { failure = outcome.reason; continue; }
     added += outcome.added; replaced += outcome.replaced;
@@ -1142,7 +1199,7 @@ function handOffCharacterAndOccupation() {
 
 function showHome() { $("viewer-panel").hidden = true; $("tuning-panel").hidden = true; $("platform-panel").hidden = true; $("home-content").hidden = false; renderActiveSaku(); $("view-characters").focus(); }
 
-// ── 03 AIプラットホームでキャラクターを動作 ────────────────────────────────
+// ── 03 AI プラットフォームでキャラクターを動作 ────────────────────────────────
 //
 // SAKU is a Character definition, not a runtime. This screen hands the Owner
 // the exact text to paste into whichever AI they use, and says plainly what a
@@ -1193,6 +1250,37 @@ function ensurePlatformDirectives() {
 // product was built with. If it does not check out, 03 hands over nothing at all
 // (設計 2026-09-23 §9) — so the screen has to say why, plainly.
 let baseLayer = null;
+// Reference material attached on 03 (DECISION 2026-09-27-04, -08): held here for this hand-over only.
+// It is never written to the Workspace, localStorage or the library, and opening 03 again starts empty.
+let platformReference = null;
+const REFERENCE_FILE_MAX_BYTES = 1024 * 1024;
+// What the person is told (ライター&SNS 2026-09-27, 324dc60). The digests only show the file is intact:
+// they are compared with values in the same file, so nothing is said about who made it or whether it
+// was changed after export. English: 英語翻訳チーム 依頼 AH4–AH11 (Wi-t_Site 101e3d8).
+const REFERENCE_TEXT_EN = Object.freeze({
+  attached: count => `Reference material attached: ${count}. The file was checked for damage; who made it, and whether it was changed after it was exported, were not checked.`,
+  refused: "This material could not be attached (nothing was attached). ",
+  reasons: Object.freeze({
+    a: "This file was not made with “SAKU 用の書き出し” (Export for SAKU) in AMU Studio. Choose a file made with it.",
+    b: "The contents of the file do not match what is recorded in the file itself. Export it again in AMU Studio.",
+    c: "The material exceeds the limits (12,000 characters in total, 20 items, 3,000 characters per item). Narrow down the material in AMU Studio and export it again.",
+    d: "The file contains material that is not in the folder shared with the 8 seats (AMU's memory). In AMU Studio, export again with only the material in the folder shared with the 8 seats.",
+    e: "An item contains a line identical to a line used as a section boundary, or has two or more title lines. Fix that item in AMU Studio, then export again.",
+    f: "The file is too large (up to about 1 MB). Narrow down the material in AMU Studio and export it again.",
+  }),
+});
+const REFERENCE_TEXT = Object.freeze({
+  attached: count => `参考資料 ${count} 件を添付しました。ファイルが壊れていないことは確かめましたが、作った人や、書き出した後に手が加えられていないかは確かめていません。`,
+  refused: "この資料は添付できませんでした（何も添付していません）。",
+  reasons: Object.freeze({
+    a: "AMU Studio の「SAKU 用の書き出し」で作ったファイルではありません。そのファイルを選んでください。",
+    b: "ファイルの中身が、ファイルに記録された内容と食い違っています。AMU Studio で書き出し直してください。",
+    c: "資料が上限を超えています（合計 12,000 字・20 件・1 件 3,000 字まで）。AMU Studio で資料を絞って書き出し直してください。",
+    d: "8 席との共有フォルダーにない資料（AMU の記憶）が入っています。AMU Studio で、8 席との共有フォルダーの資料だけを書き出し直してください。",
+    e: "資料の中に、区切りに使う行と同じ行があるか、題名が 2 行以上あります。AMU Studio でその資料を直してから、書き出し直してください。",
+    f: "ファイルが大きすぎます（約 1 MB まで）。AMU Studio で資料を絞って書き出し直してください。",
+  }),
+});
 let baseLayerProblems = [];
 let baseLayerLoad = null;
 function ensureBaseLayer() {
@@ -1232,6 +1320,8 @@ function renderPlatform() {
   setStatus($("platform-subject"), "PLATFORM_SUBJECT", [{ data: name }, " — 貼り付けてもCharacterは変更されません。"], "info");
   if (nameSlot) nameSlot.textContent = `${name}（${revision}）`;
   const { options, glossaryProblems } = handoffOptions({ baseLayer, directives: platformDirectives, glossaryDigest: platformGlossaryDigest }, libraryEntryForPlatform());
+  // handoffOptions builds a new object each time, so the attachment rides on this hand-over only.
+  if (platformReference) options.reference = platformReference;
   if (launch) launch.value = platformLaunchText(character, HANDOFF_FORMAT, options);
   // A base layer that does not check out yields no text (fail closed): nothing to copy then either.
   if ($("platform-copy")) $("platform-copy").disabled = !launch?.value;
@@ -1273,9 +1363,62 @@ function showPlatform() {
   $("viewer-panel").hidden = true;
   $("tuning-panel").hidden = true;
   $("platform-panel").hidden = false;
+  clearPlatformReference();
   renderPlatform();
   $("platform-back").focus();
   void ensurePlatformHelp();
+}
+
+// The text in the display language; a notice already shown is shown again when the language changes.
+const referenceText = () => (window.SAKU_DESKTOP_I18N?.getLocale?.() === "en-US" ? REFERENCE_TEXT_EN : REFERENCE_TEXT);
+let referenceNotice = null;   // { kind: "attached", count } | { kind: "refused", reason }
+function renderReferenceNotice() {
+  const t = referenceText();
+  if (!referenceNotice) return showReferenceState("info", "");
+  if (referenceNotice.kind === "attached") return showReferenceState("info", t.attached(referenceNotice.count));
+  return showReferenceState("error", `${t.refused}${t.reasons[referenceNotice.reason]}`);
+}
+if (typeof window !== "undefined") window.addEventListener("saku-ui-locale-changed", renderReferenceNotice);
+
+function showReferenceState(kind, message) {
+  const slot = $("platform-reference-state");
+  if (!slot) return;
+  slot.hidden = !message;
+  slot.className = `status ${kind}`;
+  slot.textContent = message || "";
+}
+
+function clearPlatformReference() {
+  platformReference = null;
+  if ($("platform-reference-file")) $("platform-reference-file").value = "";
+  if ($("platform-reference-clear")) $("platform-reference-clear").hidden = true;
+  referenceNotice = null;
+  showReferenceState("info", "");
+}
+
+async function attachPlatformReference(file) {
+  platformReference = null;
+  if ($("platform-reference-clear")) $("platform-reference-clear").hidden = true;
+  if (!file) { showReferenceState("info", ""); renderPlatform(); return; }
+  let verdict;
+  if (file.size > REFERENCE_FILE_MAX_BYTES) verdict = { ok: false, errors: [`REFERENCE_FILE_TOO_LARGE: ${file.size} bytes`] };
+  else {
+    try { verdict = await verifyReferenceExport(await file.text()); }
+    catch (error) { verdict = { ok: false, errors: [`REFERENCE_UNREADABLE: ${error?.message || error}`] }; }
+  }
+  if (verdict.ok) {
+    platformReference = verdict.reference;
+    if ($("platform-reference-clear")) $("platform-reference-clear").hidden = false;
+    referenceNotice = { kind: "attached", count: verdict.reference.excerpts.length };
+    renderReferenceNotice();
+  } else {
+    if ($("platform-reference-file")) $("platform-reference-file").value = "";
+    // The technical reason stays out of the text; it is kept on the element for support.
+    referenceNotice = { kind: "refused", reason: referenceRefusalKind(verdict.errors) };
+    renderReferenceNotice();
+    if ($("platform-reference-state")) $("platform-reference-state").dataset.reason = verdict.errors[0] || "";
+  }
+  renderPlatform();
 }
 
 function handOffImport(result) {
@@ -1527,7 +1670,7 @@ function runCharacterAction(action) {
   if (record.schema_kind === "V1_CHARACTER" && (action === "edit" || action === "train")) {
     closeActions();
     showViewerStatus("SCHEMA_ROUTE_UNAVAILABLE",
-      `${record.name} は v1 Schema（SAKU-CHARACTER）です。Unified V1 の Builder / Trainer は別 Schema のため開けません。`, "warning");
+      V1_RECREATE_NOTE, "warning");
     return;
   }
   if (action === "view") {
@@ -1539,11 +1682,6 @@ function runCharacterAction(action) {
   }
   if (action === "tune") { closeActions(); selectSubject(record, "library-tune"); showTuning(record); return; }
   if (action === "edit") { closeActions(); openBuilderCopy(record.id); return; }
-  if (action === "train") {
-    selectSubject(record, "library-train");
-    storeBoundCharacter("saku.desktop.pendingTrainerCharacter", record.source_character);
-    closeActions(); location.href = handoffUrl(record, "trainer"); return;
-  }
   if (action === "delete") {
     const outcome = Library.setDeleted([record.id], !record.deleted);
     closeActions(); renderLibrary();
@@ -1554,6 +1692,7 @@ function runCharacterAction(action) {
 }
 
 $("choose-workspace").addEventListener("click", chooseWorkspace); $("viewer-import-package").addEventListener("click", choosePackage);
+$("viewer-import-samples").addEventListener("click", importSamples); refreshSampleButton();
 $("host-retry-workspace").addEventListener("click", chooseWorkspace); $("host-retry-import").addEventListener("click", choosePackage);
 $("view-characters").addEventListener("click", showViewer); $("viewer-back").addEventListener("click", showHome);
 $("tuning-back").addEventListener("click", () => { $("tuning-panel").hidden = true; showViewer(); });
@@ -1627,6 +1766,8 @@ $("platform-echo-check")?.addEventListener("click", () => {
   showEchoResult(compareEchoedDirectives(sentDirectiveLines(), $("platform-echo-answer")?.value || ""));
 });
 
+$("platform-reference-file")?.addEventListener("change", event => { void attachPlatformReference(event.target.files?.[0] || null); });
+$("platform-reference-clear")?.addEventListener("click", () => { clearPlatformReference(); renderPlatform(); });
 $("platform-copy").addEventListener("click", async () => {
   const text = $("platform-launch").value;
   if (!text) return;
@@ -1641,7 +1782,7 @@ $("platform-copy").addEventListener("click", async () => {
     say("コピーできませんでした。選択したので、手動でコピーしてください。");
   }
 });
-$("platform-to-trainer").addEventListener("click", () => { location.href = "./tools/saku-trainer.html"; });
+// 03 → 04 (O-9) is gone with 04 Trainer (Owner 2026-09-27, AMU DECISION 2026-09-27-11).
 TuningUI.wire();
 
 $("viewer-import-file").addEventListener("click", () => $("viewer-file-input").click());
@@ -1660,10 +1801,10 @@ $("viewer-delete-selected").addEventListener("click", () => {
 });
 
 // The one destructive action on this screen, so it asks first.
-$("viewer-clear-list").addEventListener("click", () => {
+$("viewer-clear-list").addEventListener("click", async () => {
   const totals = Library.summary();
   if (!totals.total) { showViewerStatus("LIST_ALREADY_EMPTY", "一覧は既に空です。", "info"); return; }
-  if (!window.confirm(`一覧の${totals.total}件をすべて消去します。クリアーしてよいですか？\n\nこの操作は元に戻せません。`)) return;
+  if (!await ask("clearList", undefined, { count: totals.total })) return;
   const outcome = Library.clear();
   compareSelection.clear(); selectedViewerId = ""; renderLibrary();
   showViewerStatus("LIST_CLEARED", `${outcome.removed}件を消去しました。`, outcome.saved ? "success" : "error");
@@ -1686,9 +1827,9 @@ $("character-actions").addEventListener("click", event => {
 $("character-actions-close").addEventListener("click", closeActions);
 $("character-actions").addEventListener("cancel", closeActions);
 const clearButton = $("active-saku-clear");
-if (clearButton) clearButton.addEventListener("click", () => {
+if (clearButton) clearButton.addEventListener("click", async () => {
   const summary = ActiveSaku.summary();
-  if (summary && summary.dirty && !window.confirm("未保存の変更があります。最初からやり直しますか？")) return;
+  if (summary && summary.dirty && !await ask("clearSelection")) return;
   ActiveSaku.clearActive();
   renderActiveSaku();
 });
@@ -1699,17 +1840,12 @@ $("catalog-reset").addEventListener("click", () => { $("catalog-search").value =
 $("viewer-results").addEventListener("click", event => { const open = event.target.closest("[data-open-id]"); if (open) openActionsFor(open.dataset.openId); });
 $("viewer-results").addEventListener("change", event => { const input = event.target.closest("[data-compare-id]"); if (!input) return; if (input.checked) compareSelection.add(input.dataset.compareId); else compareSelection.delete(input.dataset.compareId); const card = input.closest(".catalog-card"); if (card) card.dataset.checked = input.checked ? "true" : "false"; updateCompareStatus(); if (!$("compare-panel").hidden) renderComparison(); });
 $("viewer-panel").addEventListener("click", event => {
-  const trainer = event.target.closest("[data-trainer-handoff]");
-  if (trainer) {
-    const record = viewerRecords.find(item => item.id === trainer.dataset.trainerHandoff);
-    if (record) storeBoundCharacter("saku.desktop.pendingTrainerCharacter", record.source_character);
-  }
   const button = event.target.closest("[data-builder-copy]"); if (button) openBuilderCopy(button.dataset.builderCopy);
 });
 $("compare-open").addEventListener("click", () => { renderComparison(); $("compare-panel").hidden = false; $("compare-close").focus(); });
 $("compare-close").addEventListener("click", () => { $("compare-panel").hidden = true; $("compare-open").focus(); });
 $("compare-clear").addEventListener("click", () => { compareSelection.clear(); $("compare-panel").hidden = true; renderCatalog(); });
-window.addEventListener("saku-ui-locale-changed", () => { localizePlaceholders(); renderRecovery(); packageFields(packageSummary(currentImportResult || {})); updateFacets(); renderCatalog(); renderLibraryCount(); renderImportHistory(); if (!$("compare-panel").hidden) renderComparison(); });
+window.addEventListener("saku-ui-locale-changed", () => { localizePlaceholders(); applySampleButton(); renderRecovery(); packageFields(packageSummary(currentImportResult || {})); updateFacets(); renderCatalog(); renderLibraryCount(); renderImportHistory(); if (!$("compare-panel").hidden) renderComparison(); });
 
 const dropZone = $("drop-zone");
 for (const name of ["dragenter", "dragover"]) dropZone.addEventListener(name, event => { event.preventDefault(); dropZone.classList.add("active"); });
@@ -1737,14 +1873,18 @@ if (typeof window !== "undefined") window.__saku_home = { renderState, renderAct
 
 // Build provenance, shown so the Owner can confirm which Candidate is installed.
 // Technical identity only: not a version, not Canonical, not a Release.
+// O-5 (2026-09-24 regression): an unstamped build no longer says 「BUILD UNSTAMPED」.
+// The app version from the host is always shown; a build revision, when a build
+// stamps one, is added beside it.
 {
   const meta = document.querySelector('meta[name="saku-build-revision"]');
   const revision = meta ? (meta.getAttribute("content") || "") : "";
-  const label = revision ? "BUILD " + revision.slice(0, 12) : "BUILD UNSTAMPED";
-  for (const id of ["build-revision-head", "build-revision-view"]) {
-    const slot = $(id);
-    if (slot) slot.textContent = label;
-  }
+  const paint = version => {
+    const label = [version ? "v" + version : "", revision ? "BUILD " + revision.slice(0, 12) : ""].filter(Boolean).join(" · ");
+    for (const id of ["build-revision-head", "build-revision-view"]) { const slot = $(id); if (slot) { slot.textContent = label; slot.hidden = !label; } }
+  };
+  paint("");
+  if (invoke) invoke("get_runtime_state").then(state => paint(state?.app_version || "")).catch(() => {});
 }
 
 if (typeof window !== "undefined") { window.loadOccupationFile = loadOccupationFile; window.handOffCharacterAndOccupation = handOffCharacterAndOccupation; }

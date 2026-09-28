@@ -52,6 +52,7 @@ function project(text, source) {
     ["./v1/adopted-schema-validator.mjs", "./lib/adopted-schema-validator.mjs"],
     ["./v1/semantic-registry.mjs", "./lib/semantic-registry.mjs"],
     ["./unified-v1/character-library.mjs", "./lib/character-library.mjs"],
+    ["./unified-v1/self-made-character-zip.mjs", "./lib/self-made-character-zip.mjs"],
     ["./unified-v1/handoff-binding.mjs", "./lib/handoff-binding.mjs"],
     ["./unified-v1/tuning/tuning-projection.mjs", "./lib/tuning-projection.mjs"],
     ["./v1/builder-golden-ui.mjs", "./lib/builder-ui.mjs"],
@@ -65,16 +66,21 @@ function project(text, source) {
     ["./saku-external-review.html", "./external-review.html"],
     ["./unified-v1/speed-test-ui.mjs", "./lib/speed-test-ui.mjs"],
     ["./unified-v1/speed-test.css", "./speed-test.css"],
+    ["./unified-v1/services-ui.mjs", "./lib/services-ui.mjs"],
+    ["./unified-v1/services.css", "./services.css"],
     ["../v1/speed-test-store.mjs", "./speed-test-store.mjs"],
     ["../v1/speed-test.mjs", "./speed-test.mjs"],
     ["./external-review-intake.mjs", "./external-review-intake.mjs"],
     ["./saku-speed-test.html", "./speed-test.html"],
     ["./saku-trainer.html", "./trainer.html"],
     ["../unified-v1/unified-schema-v1.mjs", "./unified-schema.mjs"],
+    ["../unified-v1/seat-roles.mjs", "./seat-roles.mjs"],
     ["../unified-schema-v1.mjs", "./unified-schema.mjs"],
     ["./unified-schema-v1.mjs", "./unified-schema.mjs"],
     ["../unified-v1/tuning/tuning-projection.mjs", "./tuning-projection.mjs"],
     ["../unified-v1/handoff-binding.mjs", "./handoff-binding.mjs"],
+    ["../unified-v1/confirm-dialog.mjs", "./confirm-dialog.mjs"],
+    ["../unified-v1/confirm-wording.mjs", "./confirm-wording.mjs"],
     ["../v1/help-tree.mjs", "./help-tree.mjs"],
     ["../v1/trainer-ux4.mjs", "./trainer-ux4.mjs"],
     ["../unified-v1/platform-prompt.mjs", "./platform-prompt.mjs"],
@@ -91,6 +97,18 @@ function project(text, source) {
     ["tools/unified-v1/tuning/tuning-projection.mjs#translate", "tooling/builder/lib/tuning-projection.mjs#translate"],
   ];
   for (const [from, to] of replacements) output = output.replaceAll(from, to);
+  // O-3 (2026-09-24 regression): in the static tree the base layer is at ./base/,
+  // so the Trainer looks there only instead of trying the desktop places first (404 ×2).
+  if (source === "tools/unified-v1/trainer-ux4-ui.mjs") output = output.replaceAll("baseDirs:['../help/','../desktop/resources/','./']", "baseDirs:['./']");
+  // D-1 (2026-09-24 regression, サイト構築): the Builder's 「ヘルプ」 pointed at the
+  // desktop layout (../help/), which the static tree does not have. Help and the
+  // manual are projected into ./help/ and the links follow them there.
+  if (source === "tools/v1/builder-golden-ui.mjs") output = output.replaceAll('help.href = "../help/index.html";', 'help.href = "./help/index.html";');
+  if (source.startsWith("desktop/help/") || source === "manual/saku-field-guide.html") {
+    output = output.replaceAll('href="../icon.svg"', 'href="../favicon.ico"')
+      .replaceAll('href="../docs/BUILDER_MANUAL_UNIFIED_V1.md"', 'href="../../../docs/unified-v1/BUILDER_MANUAL_UNIFIED_V1.md"')
+      .replaceAll('href="../docs/TRAINER_MANUAL_UNIFIED_V1.md"', 'href="../../../docs/unified-v1/TRAINER_MANUAL_UNIFIED_V1.md"');
+  }
 
   if (source === "tools/v1/adopted-schema-validator.mjs") {
     for (const name of ["saku-unified-character.v1.schema.json", "character-extension.v1.schema.json"]) {
@@ -103,7 +121,7 @@ function project(text, source) {
     output = output.replaceAll('href="../index.html?stay=1"', 'href="./index.html"');
     output = output.replace("</head>", '<link rel="icon" href="./favicon.ico">\n</head>');
     output = output.replace("</head>", '<meta name="saku-character-selection" content="disabled">\n</head>');
-    output = output.replace(/\s*<a class="btn-sm unified-v1-link"[^>]*>Unified V1<\/a>/, "\n    <a class=\"btn-sm trainer-link\" id=\"openTrainer\" href=\"./trainer.html\">Trainer</a>");
+    output = output.replace(/\s*<a class="btn-sm unified-v1-link"[^>]*>Unified V1<\/a>/, "\n    <a class=\"btn-sm services-link\" id=\"openServices\" href=\"./services.html\">SAKU 診療所・AMU トレーニングセンター</a>");
     output = output.replace("</nav>", "<a class=\"btn-sm\" href=\"./about.html\">About</a></nav>");
   }
   if (source === "tools/saku-speed-test.html") {
@@ -114,7 +132,8 @@ function project(text, source) {
   }
   if (source === "tools/saku-trainer.html") {
     output = output.replace("</head>", '<link rel="icon" href="./favicon.ico">\n</head>');
-    output = output.replace("</head>", '<meta name="saku-build-revision" content="UNRELEASED_STATIC_CANDIDATE">\n</head>');
+    // O-5 (2026-09-24 regression): no stand-in revision — the Trainer printed it cut
+    // to 12 characters as 「BUILD UNRELEASED_S」. Without one it shows none.
   }
   if (source === "TRADEMARK.md") {
     output = output.replaceAll("](SECURITY.md)", "](../../SECURITY.md)");
@@ -141,7 +160,7 @@ const about = `<!doctype html>
 <body><h1>KOKOROSAKU v0.1.0β (Pre-release)</h1><p>Pre-release static build for evaluation. / 評価用のプレリリース静的buildです。Release、Canonical Adoption、Authority、Approval、Productionを示しません。</p>
 <dl><dt>Current schema state</dt><dd><code>Adopted by D-13</code></dd><dt>Active schema artifact</dt><dd><code>schemas/saku-unified-character.v1.schema.json</code></dd><dt>Canonical source revision</dt><dd><code>c442a1a04e876dc7d0a6941b500ce7b1ff94bf0c</code></dd><dt>Schema SHA-256</dt><dd><code>48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817</code></dd></dl>
 <p>Builder/Trainer code: MPL-2.0. Documentation: CC BY 4.0. Trademarks are not licensed. Character Catalog and Occupation Pack are not included in this candidate.</p>
-<div class="actions"><a href="./index.html">Builder</a><a href="./trainer.html">Trainer</a><a href="./LICENSING.md">Licensing overview</a><a href="./BRAND-ASSET-NOTICE.md">Brand asset notice</a><a href="./LICENSE">Code license</a><a href="./LICENSE-DOCS.md">Documentation license</a><a href="./TRADEMARK.md">Trademark</a></div></body></html>\n`;
+<div class="actions"><a href="./index.html">Builder</a><a href="./services.html">SAKU 診療所・AMU トレーニングセンター</a><a href="./LICENSING.md">Licensing overview</a><a href="./BRAND-ASSET-NOTICE.md">Brand asset notice</a><a href="./LICENSE">Code license</a><a href="./LICENSE-DOCS.md">Documentation license</a><a href="./TRADEMARK.md">Trademark</a></div></body></html>\n`;
 await writeFile(path.join(TARGET, "about.html"), about, "utf8");
 
 const readme = `# KOKOROSAKU static beta candidate
@@ -152,7 +171,7 @@ Serve the repository root over HTTP, then open \`/tooling/builder/index.html\`.
 Do not open the HTML directly from the filesystem; JavaScript modules and the pinned schema are loaded through HTTP.
 
 - Builder: \`index.html\`
-- Trainer: \`trainer.html\`
+- SAKU Repair Desk and AMU Evaluation Center: \`services.html\`
 - Candidate status and licenses: \`about.html\`
 - Quickstart: [Builder quickstart](../../docs/getting-started/builder-quickstart.md)
 
@@ -167,7 +186,7 @@ const readmeJa = `# KOKOROSAKU 静的ベータ候補
 repository rootをHTTPで配信し、\`/tooling/builder/index.html\` を開きます。HTMLをファイルシステムから直接開かないでください。JavaScript moduleと固定されたschemaはHTTP経由で読み込まれます。
 
 - Builder: \`index.html\`
-- Trainer: \`trainer.html\`
+- SAKU 診療所・AMU トレーニングセンター: \`services.html\`
 - 候補状態とlicense: \`about.html\`
 - 手順: [Builderクイックスタート](../../docs/getting-started/builder-quickstart.ja.md)
 
@@ -193,6 +212,8 @@ const allowedOutsideBuilder = new Set([
   path.join(ROOT, "SECURITY.md"),
   path.join(ROOT, "docs", "getting-started", "builder-quickstart.md"),
   path.join(ROOT, "docs", "getting-started", "builder-quickstart.ja.md"),
+  path.join(ROOT, "docs", "unified-v1", "BUILDER_MANUAL_UNIFIED_V1.md"),
+  path.join(ROOT, "docs", "unified-v1", "TRAINER_MANUAL_UNIFIED_V1.md"),
 ]);
 async function verifyRelativeReferences(file, source) {
   let count = 0;

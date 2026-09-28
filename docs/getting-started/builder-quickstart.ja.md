@@ -43,12 +43,7 @@ PowerShellウィンドウは開いたままにしてください。`python` が�
 
 固定1+7構造は読み取り専用です。runtime設定、AMU state、MACHI assignment、credential、permission、実際のHuman routingはCharacter fieldではありません。
 
-### 公開サンプル3体を読み込む
-
-beta.1 installerには3体のサンプルCharacterを同梱しません。source ZIPまたは
-repositoryの `samples/oss-launch/unified-v1/` を開いてください。Desktopアプリの
-**01 キャラクターを選択する**から**個別インポート**を選び、1体単位のJSONを
-1本ずつ読み込みます。これらのファイルにはPackageインポートを使用しません。
+サンプル Character 3 体は、インストーラー版の「01 キャラクターを選択する」→「サンプルを読み込む」から読み込めます（ZIP 版にはこのボタンはありません）。
 
 ### locator のずれを修復して読み込む
 

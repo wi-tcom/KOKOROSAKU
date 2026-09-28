@@ -198,7 +198,7 @@ try{
  // 03
  await load('/index.html?stub=1&stay=1&open=platform');await until(()=>win.__saku_platform_help&&doc.querySelector('#platform-help[data-screen-help]'),600);await wait(300);
  const pane=doc.getElementById('platform-help');check(pane.dataset.screenHelp==='saku.screen-help@1'&&doc.getElementById('platform-panel').hidden===false,'SH-03 the pane is mounted beside the platform panel');
- check(pane.querySelectorAll('[data-help-chapter]').length===4&&pane.querySelectorAll('[data-help-field]').length===4,'SH-03 4 chapters / 4 fields from the platform guide');
+ check(pane.querySelectorAll('[data-help-chapter]').length===3&&pane.querySelectorAll('[data-help-field]').length===4&&pane.querySelector('[data-help-field="platform.reference"]'),'SH-03 3 chapters / 4 fields from the platform guide (the speed-test item left with the speed test; the reference-material item came, 2026-09-27)');
  check(pane.dataset.helpSynced==='false'&&!pane.querySelector('.help-tree-lead').textContent.includes('同期'),'SYNC-LEAD 03 does not claim to be synced with the input fields — it passes no current value');
  for(const id of GUIDE_SECTIONS.platform) check(doc.getElementById(id),'SECTION 03 the section '+id+' the guide points at exists on the screen');
  check(!doc.querySelector('[data-platform-format]')&&!doc.body.textContent.includes('渡し方を選ぶ'),'SH-03 the screen offers one way to hand the Character over, and no step that chooses between forms');
@@ -271,7 +271,9 @@ try{
  check(win.__saku_trainer.getHandoffText('both').startsWith(handed),'SH-04 「両方をコピー」 is that same text followed by the menu');
  // speed test page mounts the platform guide at the speed chapter
  await load('/tools/saku-speed-test.html?stub=1');await until(()=>win.__saku_speed_test_help&&doc.querySelector('#speed-test-help[data-screen-help]'),600);await wait(300);
- check(doc.querySelector('#speed-test-help .help-field.is-current')?.dataset.helpField==='platform.speed_test','SH-ST the speed test page opens the pane at the speed-test node');
+ // The speed test left the Builder's screens on 2026-09-27 (Owner, AMU DECISION 2026-09-27-11) and waits to
+ // become a separate tool; its guide item went with it, so the pane has no node to open at. The page itself still renders.
+ checks.push('SH-ST skipped: the speed-test guide item left with the speed test (2026-09-27); waits for the separate tool');
  check(doc.getElementById('speed-test-help').dataset.helpSynced==='false','SYNC-LEAD the speed test does not claim to be synced');
  check(doc.body.innerText.includes('AI スピードテスト（貼り付けモード）'),'SH-ST speed test page still renders (its heading; the pane no longer says AI 申告値 since F2)');
  document.getElementById('report').textContent=JSON.stringify({status:'PASS',checks});document.getElementById('report').dataset.status='PASS';

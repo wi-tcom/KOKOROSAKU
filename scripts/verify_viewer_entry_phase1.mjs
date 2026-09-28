@@ -17,13 +17,14 @@ const i18n = await read("desktop/i18n.mjs");
 const profile = JSON.parse(await read("desktop/resources/profiles/public-oss.json"));
 const sample = JSON.parse(await read("desktop/resources/source/oss-sample-characters.json"));
 
-for (const id of ["view-characters", "create-edit-character", "run-on-ai-platform", "train-character"]) ok(html.includes(`id="${id}"`), `missing home entry ${id}`);
-ok(/saku-trainer\.html/.test(html), "Trainer route missing");
+for (const id of ["view-characters", "create-edit-character", "run-on-ai-platform", "open-services"]) ok(html.includes(`id="${id}"`), `missing home entry ${id}`);
+// Owner 2026-09-27: 04 Trainer left the screens; 04 is the services page (AMU DECISION 2026-09-27-11).
+ok(!/saku-trainer\.html/.test(html), "no Home route to the Trainer");
 ok(/saku-builder\.html\?desktop=app/.test(html), "Builder route missing");
 // Review Results is no longer its own Home entry: 「AIで試す」 and 「結果を確認する」
 // were two doors into one Trainer. There is now one door, and Review Results
 // lives inside the Trainer it opens. The deep route still has to work.
-ok(/id="train-character" href="\.\/tools\/saku-trainer\.html"/.test(html), "single Trainer entry on Home");
+ok(/id="open-services" href="\.\/tools\/saku-services\.html"/.test(html), "04 on Home is the services page");
 for (const id of ["viewer-panel", "viewer-empty", "viewer-import-package", "viewer-results", "viewer-detail", "viewer-package-fields"]) ok(html.includes(`id="${id}"`), `missing Viewer control ${id}`);
 ok(/表示できるCharacterがまだありません/.test(html), "empty state missing");
 ok(/@media\(max-width:900px\).*\.entry-grid.*grid-template-columns:1fr/s.test(css), "one-column responsive rule missing");
@@ -52,7 +53,7 @@ ok(/localStorage\.getItem\("saku\.desktop\.pendingCharacter"\)/.test(app), "exis
 // The screen is no longer a read-only view of the last import: the Owner asked
 // for a list they build up, so it now imports, deletes and creates. What must
 // still hold is that nothing destroys work silently.
-ok(/window\.confirm\([^)]*クリアー/.test(app), "clearing the list must be confirmed first");
+ok(/await ask\("clearList"/.test(app), "clearing the list must be confirmed first (the app's own dialog, O-11)");
 ok(/Library\.setDeleted\(/.test(app) && !/entries\.splice|entries\.filter\(entry => !ids/.test(app), "deleting a Character must set a flag, not remove the row");
 ok(/currentImportResult = result/.test(app), "current import validation result is not retained for Viewer entry");
 ok((app.match(/dataset\.runtimeValue/g) || []).length >= 4, "Character/package runtime values are not protected from UI translation");
