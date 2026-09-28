@@ -269,6 +269,17 @@ assert.doesNotMatch(desktopIndex, /saku-trainer\.html|platform-to-trainer|data-c
 // β.9 hands-on (2026-09-28): three sentences still pointed at the Trainer after it left — the status line on
 // choosing a Character, the note on an inadmissible one, and the Home subtitle (試す・確認する). Visible Home and
 // 01 text names no training except the AMU トレーニングセンター (ライター&SNS 2026-09-28, EN 依頼 AJ).
+// β.9 (Owner 2026-09-28 「直してから公開」): LICENSING.md travels in the installer and the public tree. It named
+// the retired CC0 samples as the bundled sample pack and was bound to β.3's installer; the confirmed text
+// (ライター&SNS / 英語翻訳チーム 依頼 AP, Wi-t_Site f2e446f) names the sample pack 1.1.0 and binds each version
+// through docs/releases/<version>/ instead.
+{
+  const licensing = await read("LICENSING.md");
+  assert.equal(licensing, await read("tooling/builder/LICENSING.md"), "tooling/builder/LICENSING.md is the root file");
+  assert.match(licensing, /\| Built-in Sample Pack \| INCLUDED \| The installer bundles sample pack 1\.1\.0 [^|\n]*LicenseRef-WIT-Sample-1\.0/);
+  assert.match(licensing, /\| Sample3 \| NOT_INCLUDED \|/);
+  assert.doesNotMatch(licensing, /0\.1\.0-beta\.\d|4b277ead|D-B3 authorizes the exact three/, "LICENSING.md is bound to one version or names the retired samples as bundled");
+}
 for (const [name, source] of [["desktop/index.html", desktopIndex], ["desktop/app.mjs", desktopApp]]) {
   const visible = source.split(/\r?\n/).filter(line => !/^\s*\/\//.test(line)).join(" ").replace(/AMU トレーニングセンター/g, "");
   assert.doesNotMatch(visible, /トレーニング[をにのでし]|トレーニングする|試す・確認する/, `${name} still points at the Trainer`);

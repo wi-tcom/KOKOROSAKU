@@ -5,8 +5,8 @@
     "version": "0.1.0-beta.9",
     "filename": "SAKU Builder_0.1.0-beta.9_x64-setup.exe",
     "relative_path": "release/bundle/nsis/SAKU Builder_0.1.0-beta.9_x64-setup.exe",
-    "sha256": "9a2fb5df01b814d4f694668f8465f7a68dbd295e66e99e47e3a3d127ab220009",
-    "bytes": 2208735,
+    "sha256": "d6474dd66f04834500a7ffa079e856f6c372e52d7459596f2f15ba1f4bb7b533",
+    "bytes": 2208616,
     "code_signing": "UNSIGNED"
   },
   "application_artifact": {
@@ -14,10 +14,10 @@
     "version": "0.1.0-beta.9",
     "filename": "saku-builder-desktop.exe",
     "relative_path": "release/saku-builder-desktop.exe",
-    "sha256": "43b11c17cec2b1acb1388d852085614cda279936faf804a3b8fd50e57c7081ae",
-    "embedded_sha256": "43b11c17cec2b1acb1388d852085614cda279936faf804a3b8fd50e57c7081ae",
-    "post_bundle_release_sha256": "892df07e2e6c47f7d6f517d56962f0bde6654a3db3ab815efb02262a5fb7250f",
-    "bundle_type_stamp_note": "The installer-embedded application and the post-bundle release executable differ at 3 byte(s) (offsets 3996458–3996460, the Tauri bundle-type stamp: \"NSIS\" against \"UNKNOWN\"). sha256 is the installer-embedded identity.",
+    "sha256": "0a91ec621711abc84d2a9bb787e21400df8e652a53229968b4ef832d06f83721",
+    "embedded_sha256": "0a91ec621711abc84d2a9bb787e21400df8e652a53229968b4ef832d06f83721",
+    "post_bundle_release_sha256": "270acfaecb9223c9005fc646c4b765309cdf695ef8d27d135f89f7a86a044352",
+    "bundle_type_stamp_note": "The installer-embedded application and the post-bundle release executable differ at 3 byte(s) (offsets 3996610–3996612, the Tauri bundle-type stamp: \"NSIS\" against \"UNKNOWN\"). sha256 is the installer-embedded identity.",
     "bytes": 4297216,
     "code_signing": "UNSIGNED",
     "host_path_scan": {
@@ -41,16 +41,16 @@
   },
   "source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "commit": "6223843701835a016afd6b183c5ff8cbdb43a157",
-    "tree": "3761055990c7dbb47556b5f8f52301cd9f84fcd9",
+    "commit": "db47704d7893c70e61ddab0bd6ade31e857e74cc",
+    "tree": "fc58b6e2ce6f364af53772508f40f4c2a93aab85",
     "branch": "claude/saku-beta9-20260928",
     "note": "the version bump is committed before the build, so this commit and tree are the ones the binary was made from",
     "base": {
-      "commit": "7b42aad986f689f095af98e7fb60aa24b03a8ec9",
+      "commit": "5138e35bd19e74dd1e268df6d70abd52ce506e4b",
       "branch": "main",
-      "note": "main after PR #90 merged"
+      "note": "main after PR #91 merged (the β.9 candidate 6223843); this build adds the LICENSING.md fix on top"
     },
-    "revision": "6223843"
+    "revision": "db47704"
   },
   "resource_profile": {
     "name": "public-oss",
@@ -66,7 +66,7 @@
   "bundled_notice_binding": {
     "mode": "SHA_INDEPENDENT_EXTERNAL_RELEASE_ASSET_MANIFEST",
     "files": {
-      "LICENSING.md": "5ca061a2f5a2bcec8f64ae8f569bf85946e6ec40cb7791fd53e300c20a55b5b7",
+      "LICENSING.md": "20e2ff04dec462ef55d65a1dfb8aa379768ae95a2729fb492f6998fd77ef4813",
       "THIRD_PARTY_NOTICES.md": "2168f1a7acb03af839f718403679984b9a12bb4220a7c5d953eff1096bcd17c8",
       "third-party/THIRD_PARTY_LICENSE_MANIFEST.json": "ac683f2dba75f35aa9c0fcc8a2e94e481f13b831ef946f3f9d3dcda236c34964"
     },
@@ -97,9 +97,9 @@
   "target": {
     "triple": "x86_64-pc-windows-msvc",
     "cargo_target_label": "tauri-exact-1.97.1-beta8-public-oss-6e5112a-001",
-    "label": "tauri-exact-1.97.1-beta9-public-oss-6223843-001"
+    "label": "tauri-exact-1.97.1-beta9-public-oss-db47704-001"
   },
-  "build_revision": "6223843",
+  "build_revision": "db47704",
   "tools": {
     "node": "24.21.0",
     "npm": "11.19.0",
@@ -117,7 +117,7 @@
   "build": {
     "cwd": "<REPOSITORY_ROOT>",
     "environment": {
-      "CARGO_TARGET_DIR": "<REPOSITORY_ROOT>/src-tauri/target/tauri-exact-1.97.1-beta9-public-oss-6223843-001",
+      "CARGO_TARGET_DIR": "<REPOSITORY_ROOT>/src-tauri/target/tauri-exact-1.97.1-beta9-public-oss-db47704-001",
       "CARGO_ENCODED_RUSTFLAGS": "construct from rust_flags.CARGO_ENCODED_RUSTFLAGS.arguments using U+001F",
       "CARGO_NET_OFFLINE": "true",
       "CARGO_BUILD_JOBS": "1",
@@ -132,7 +132,7 @@
     "locked": true,
     "jobs": 1,
     "source_mutation": 0,
-    "duration": "7m 08s total",
+    "duration": "7m 11s total",
     "builder": "Claude Code (SAKU Builder Active Writer). Owner held β.9 「AMU 側が落ち着いてから」; 統括 2026-09-28: AMU settled, start β.9"
   },
   "webview2": {
@@ -162,8 +162,8 @@
     "first_bundled_in": "0.1.0-beta.4"
   },
   "superseded": {
-    "supersedes": "0.1.0-beta.8 (published 2026-09-24, installer db0f544d…, embedded 02d5615c…) and two earlier β.9 candidates, never published: 87195c6 (installer b234b550…, embedded 1db88853…) and b4acb61 (installer a7456fbb…, embedded ffb03f21…)",
-    "note": "β.9 carries everything merged to main after β.8 (-SAKU-builder PRs #81–#90). The first candidate (87195c6) still had three sentences pointing at the Trainer (found on its installed window); the second (b4acb61) fixed them. On 2026-09-28 the Owner then asked that SAKU 診療所 and AMU トレーニングセンター read as 準備中; this build (6223843) does so. Both earlier candidates are void; the version is unchanged."
+    "supersedes": "0.1.0-beta.8 (published 2026-09-24, installer db0f544d…, embedded 02d5615c…) and three earlier β.9 candidates, never published: 87195c6 (installer b234b550…, embedded 1db88853…), b4acb61 (installer a7456fbb…, embedded ffb03f21…) and 6223843 (installer 9a2fb5df…, embedded 43b11c17…)",
+    "note": "β.9 carries everything merged to main after β.8 (-SAKU-builder PRs #81–#90). The first candidate (87195c6) still had three sentences pointing at the Trainer (found on its installed window); the second (b4acb61) fixed them. On 2026-09-28 the Owner then asked that SAKU 診療所 and AMU トレーニングセンター read as 準備中; 6223843 does so. Its LICENSING.md still named the retired CC0 samples as the bundled sample pack and was bound to β.3; the Owner chose 「直してから公開」, and this build (db47704) carries the corrected LICENSING.md. The three earlier candidates are void; the version is unchanged."
   },
   "contents_since_beta8": [
     "the three OSS samples leave the installer; the sample pack 1.1.0 (3 Characters, the same bytes as AMU) is bundled and loaded from 01 (#81)",
@@ -177,7 +177,8 @@
     "the 1+7 seat names and manual P04 follow the adopted schema (#90)",
     "the resource profile names the bundled sample pack and no longer claims the OSS samples (this build)",
     "the Home status line, the Home subtitle and the note on a Character that does not match the adopted Schema no longer point at the Trainer (b4acb61; ライター&SNS, EN 依頼 AJ)",
-    "04, the Home card 04 and manual P06 read as 準備中 / in preparation: every application shows as a button that cannot be pressed with the pending mark, and nothing reads as usable now (this build; Owner 2026-09-28, ライター&SNS, EN 依頼 AL)"
+    "04, the Home card 04 and manual P06 read as 準備中 / in preparation: every application shows as a button that cannot be pressed with the pending mark, and nothing reads as usable now (6223843; Owner 2026-09-28, ライター&SNS, EN 依頼 AL)",
+    "LICENSING.md names the bundled sample pack 1.1.0 (LicenseRef-WIT-Sample-1.0), marks the retired CC0 samples NOT_INCLUDED, and is no longer bound to one version (this build; Owner 2026-09-28 「直してから公開」, 依頼 AP)"
   ],
   "provisional_wording": {
     "state": "NONE",

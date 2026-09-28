@@ -12,14 +12,14 @@ components must not be treated as one license scope.
 | Third-party components | Per-component licenses | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) |
 | SAKU/KOKOROSAKU/KOKOROAMU/WI-T names and marks | Not licensed by the code/document licenses | [TRADEMARK.md](TRADEMARK.md) |
 
-## SAKU Builder 0.1.0-beta.3 Public Preview scope
+## SAKU Builder Public Preview scope
 
-This section is bound to:
+The source commit, the installer SHA-256 and the resource profile of each
+version are recorded in `docs/releases/<version>/` (`SHA256SUMS`,
+`resource-profile.json` and `BUILD_ENVELOPE.json`). This document is
+included in the installer, so it cannot state the SHA-256 of the installer
+that contains it.
 
-- source commit: `2200704a8b4a7dfe521cda0e42e15cd202ef48cb`
-- source tree: `f2773c3d7eb300c44b39d141352c81a5629f5d93`
-- public installer SHA-256:
-  `4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63`
 - resource profile: `public-oss`
 - distribution boundary: `PUBLIC_OSS_CANDIDATE`
 
@@ -27,14 +27,14 @@ The public artifact contains the public Builder/Trainer/desktop-host code,
 approved offline help, public manuals, and public license/notice documents.
 Its resource profile has `internal_content_count = 0`.
 
-### Explicitly not included
+### Resources included in or excluded from the public artifact
 
 | Resource | Public Preview status | Reason |
 |---|---|---|
-| Built-in Sample Pack | INCLUDED | D-B3 authorizes the exact three synthetic CC0-1.0 samples. |
+| Built-in Sample Pack | INCLUDED | The installer bundles sample pack 1.1.0 (three sample-mode Characters) under `LicenseRef-WIT-Sample-1.0`, which is not an OSS license; the terms are in the `LICENSE.md` inside the pack ZIP (decision `D-20260924-sample-pack-1-1-0`). It is not included in the ZIP version you try without installing. |
 | 64 Preview Index | NOT_INCLUDED | Character Catalog licensing/publication scope is separate. |
 | commercial-preview | NOT_INCLUDED | License/publication authority is not specified. |
-| Sample3 | INCLUDED | Owner publication authorization D-B3 is recorded for this artifact. |
+| Sample3 | NOT_INCLUDED | `Sample3` is the three open-source sample Characters (CC0-1.0, D-B3), which are no longer distributed as samples (decision `D-20260924-oss-samples-retired`) and are not in the installer. Their data remains in the source and the public tree as test material and stays under CC0-1.0. |
 | Full Commercial 64 Character Catalog | NOT_INCLUDED | License is `NOT_SPECIFIED`; separately managed. |
 | Owner Packs (ERABAZU 5 / WI-T.COM 3) | NOT_INCLUDED | Separately managed; not part of this public artifact. |
 | Commercial AMU | NOT_INCLUDED | Separate product and license scope. |

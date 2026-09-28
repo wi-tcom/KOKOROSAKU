@@ -4,25 +4,25 @@
   "state": "CANDIDATE_NOT_RELEASED",
   "publication_source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "exact_revision": "5138e35bd19e74dd1e268df6d70abd52ce506e4b",
-    "tree": "4fa613542d6cb5965fd4285f94ab7b77dc015ebc"
+    "exact_revision": "ebe91d16e55685f3c1e583fb743ec685a84867b1",
+    "tree": "471ad8319d716f4aa14a3071bc7866788caf0792"
   },
   "binary_build_source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "exact_revision": "6223843701835a016afd6b183c5ff8cbdb43a157",
-    "tree": "3761055990c7dbb47556b5f8f52301cd9f84fcd9"
+    "exact_revision": "db47704d7893c70e61ddab0bd6ade31e857e74cc",
+    "tree": "fc58b6e2ce6f364af53772508f40f4c2a93aab85"
   },
   "build_envelope": {
     "source_repository": "wi-tcom/-SAKU-builder",
-    "source_revision": "5138e35bd19e74dd1e268df6d70abd52ce506e4b",
+    "source_revision": "ebe91d16e55685f3c1e583fb743ec685a84867b1",
     "path": "docs/releases/0.1.0-beta.9/BUILD_ENVELOPE.json",
-    "sha256": "dfd7016e1c2e493d58b789631e2191d12eb8e68879acef2e9ac4aa9960b5d936"
+    "sha256": "f68d40f2e657585646bf3b2143c169a0b17be7d6432ed87d365fc87424a6cb82"
   },
   "assets": [
     {
       "filename": "SAKU Builder_0.1.0-beta.9_x64-setup.exe",
-      "bytes": 2208735,
-      "sha256": "9a2fb5df01b814d4f694668f8465f7a68dbd295e66e99e47e3a3d127ab220009",
+      "bytes": 2208616,
+      "sha256": "d6474dd66f04834500a7ffa079e856f6c372e52d7459596f2f15ba1f4bb7b533",
       "authenticode": "NotSigned",
       "release_asset": true
     }
@@ -30,11 +30,11 @@
   "embedded_application": {
     "filename": "saku-builder-desktop.exe",
     "bytes": 4297216,
-    "sha256": "43b11c17cec2b1acb1388d852085614cda279936faf804a3b8fd50e57c7081ae",
+    "sha256": "0a91ec621711abc84d2a9bb787e21400df8e652a53229968b4ef832d06f83721",
     "authenticode": "NotSigned",
     "release_asset": false,
     "location": "INSIDE_INSTALLER",
-    "post_bundle_release_sha256": "892df07e2e6c47f7d6f517d56962f0bde6654a3db3ab815efb02262a5fb7250f"
+    "post_bundle_release_sha256": "270acfaecb9223c9005fc646c4b765309cdf695ef8d27d135f89f7a86a044352"
   },
   "superseded_installer": {
     "bytes": 2169969,
@@ -55,5 +55,5 @@
     "tree": "907a451b07dff9edcce7cf85c01911a1852a3cea"
   },
   "generated_by": "Claude Code SAKU Builder(4), public tree for v0.1.0-beta.9 (Owner 2026-09-28), with the β.8 tree as the model",
-  "release_asset_manifest_id": "sha256:8c294b63641ef630a0651d064b14403ea7ccb2895e4bf01fe5d8b7a11b5ff3fc"
+  "release_asset_manifest_id": "sha256:5d137cb14c53da538791a2fffb34f6b9407584703188c6e534e92fbb706ab121"
 }
