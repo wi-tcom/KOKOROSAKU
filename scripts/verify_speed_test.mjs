@@ -364,7 +364,9 @@ for (const [label, file, from, to, probeFn] of falsifications) {
 }
 
 // ── 6. browser ─────────────────────────────────────────────────────────────
-const packagedPages = ["/tooling/builder/speed-test.html"];
+// The ZIP carries no speed-test page since 2026-09-27 (Owner: it left the screens); the page source and the
+// installer copy are still exercised here as content, for the separate tool later.
+const packagedPages = [];
 try { await readFile(path.join(ROOT, ".desktop-dist/tools/saku-speed-test.html")); packagedPages.push("/.desktop-dist/tools/saku-speed-test.html"); }
 catch { cases.push("ST-PACKAGED .desktop-dist not prepared in this run — desktop copy not loaded"); }
 const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";

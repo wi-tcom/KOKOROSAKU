@@ -17,12 +17,15 @@ for (const manifest of manifests) {
   const sources = new Set(manifest.files.map(([source]) => source));
   for (const source of [
     "tools/saku-builder.html",
-    "tools/saku-trainer.html",
     "tools/unified-v1/active-saku.mjs",
     "tools/unified-v1/handoff-binding.mjs",
     "tools/unified-v1/character-library.mjs",
   ]) check(sources.has(source), `${manifest.target} maps shared source ${source}`);
 }
+// Owner 2026-09-27: the Trainer, speed test and external-review pages left the screens. The installer
+// keeps their files (no entry reaches them); the ZIP, whose folder a user can browse, carries none.
+check(nativeManifest.files.some(([source]) => source === "tools/saku-trainer.html"), "native-public keeps the Trainer page file (no entry reaches it)");
+for (const page of ["tools/saku-trainer.html", "tools/saku-speed-test.html", "tools/saku-external-review.html"]) check(!staticManifest.files.some(([source]) => source === page), `static-public carries no ${page}`);
 
 const expectedNamespaces = Object.freeze([
   "saku.workspace.active",

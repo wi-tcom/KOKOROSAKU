@@ -25,8 +25,8 @@ export const STRINGS = Object.freeze({
     title: "ヘルプ", lead: "章 › 項目 › 選択肢。左の入力欄と同期します。", leadNoSync: "章 › 項目 › 選択肢。", toInput: "入力欄へ", currentNote: "現在の内容", currentValue: "現在の選択：", notSelected: "未選択",
     options: "選択肢", meaning: "意味", effect: "効果", source: "出典", notMeasured: "未確認（設計上の意図のみ）", presentationOnly: "表示専用", details: "詳しい説明",
     nonCanonical: "Character 本体には保存されない項目", enPending: "EN 準備中", empty: "ヘルプ情報を読み込めませんでした。アプリを再起動しても直らない場合は、サポートにお知らせください。",
-    effectNotice: "※ 傾向であり断定ではありません。AI プラットフォームや事前のメモリー・学習・知識により、思いどおりの傾向にならないことがあります。Trainer で実際の応答を確認してください。", multiSelectNotice: "複数選ぶとそれぞれの傾向が混ざります。", expert: "専門情報",
-    sourceNames: Object.freeze({ PARAMETER_BEHAVIOR_MAP: "設計上の対応表から生成", "AMU_CONFIRMED_2026-09-22": "AMU での動作を確認済み（2026-09-22）", OPERATION_FACT: "利用時の動作（確認済み）", "PROMPT_INCLUDED_03 + DESIGN_INTENT": "03 のプロンプトに含まれる項目（設計上の意図）", DESIGN_INTENT: "設計上の意図", PRESENTATION_ONLY: "表示専用（見た目・雰囲気のみ）", NOT_MEASURED: "出典なし" }),
+    effectNotice: "※ 傾向であり断定ではありません。AI プラットフォームや事前のメモリー・学習・知識により、思いどおりの傾向にならないことがあります。実際の応答は、AI プラットフォームの新しい会話で確かめてください。", multiSelectNotice: "複数選ぶとそれぞれの傾向が混ざります。", expert: "専門情報",
+    sourceNames: Object.freeze({ PARAMETER_BEHAVIOR_MAP: "設計上の対応表から生成", OPERATION_FACT: "指示文に基づく動作", "PROMPT_INCLUDED_03 + DESIGN_INTENT": "03 のプロンプトに含まれる項目（設計上の意図）", DESIGN_INTENT: "設計上の意図", PRESENTATION_ONLY: "表示専用（見た目・雰囲気のみ）", NOT_MEASURED: "出典なし" }),
     rows: Object.freeze({ humanQuestion: "人が答える問い", about: "この項目について", why: "なぜ今決めるか", what: "何を書くか", example: "入力例", caution: "注意点", relatedAiBehavior: "関連する AI の動き", relatedItems: "関連項目", usedAt: "どこで使うか", persistence: "保存・書き出し", boundary: "境界" }),
   }),
   en: Object.freeze({
@@ -34,8 +34,9 @@ export const STRINGS = Object.freeze({
     title: "Help", lead: "Chapter › Item › Option. Synced with the input fields on the left.", leadNoSync: "Chapter › Item › Option.", toInput: "Go to input", currentNote: "Current content", currentValue: "Current selection: ", notSelected: "Not selected",
     options: "Options", meaning: "Meaning", effect: "Effect", source: "Source", notMeasured: "Not confirmed (design intent only)", presentationOnly: "Display only", details: "Details",
     nonCanonical: "Item not saved in the Character itself", enPending: "EN in preparation", empty: "Help information could not be loaded. If restarting the app does not fix this, please let Support know.",
-    effectNotice: "* These are tendencies, not certainties. Depending on the AI platform and on prior memory, training or knowledge, the tendency may not turn out as intended. Check the actual responses in the Trainer.", multiSelectNotice: "If you select more than one, their tendencies mix.", expert: "Expert information",
-    sourceNames: Object.freeze({ PARAMETER_BEHAVIOR_MAP: "Generated from the design correspondence table", "AMU_CONFIRMED_2026-09-22": "Behavior confirmed in AMU (2026-09-22)", OPERATION_FACT: "Behavior in use (confirmed)", "PROMPT_INCLUDED_03 + DESIGN_INTENT": "Item included in the 03 prompt (design intent)", DESIGN_INTENT: "Design intent", PRESENTATION_ONLY: "Display only (look and feel only)", NOT_MEASURED: "No source" }),
+    effectNotice: "* These are tendencies, not certainties. Depending on the AI platform and on prior memory, training or knowledge, the tendency may not turn out as intended. Check the actual responses in a new conversation on the AI platform.", multiSelectNotice: "If you select more than one, their tendencies mix.", expert: "Expert information",
+    sourceNames: Object.freeze({ PARAMETER_BEHAVIOR_MAP: "Generated from the design correspondence table", // OPERATION_FACT: 英語翻訳チーム request W (d173ddd); the former "confirmed" name is gone (D-20260925-operation-fact-basis).
+    OPERATION_FACT: "Behavior stated in the directive", "PROMPT_INCLUDED_03 + DESIGN_INTENT": "Item included in the 03 prompt (design intent)", DESIGN_INTENT: "Design intent", PRESENTATION_ONLY: "Display only (look and feel only)", NOT_MEASURED: "No source" }),
     rows: Object.freeze({ humanQuestion: "Question for a person to answer", about: "About this item", why: "Why decide it now", what: "What to write", example: "Example input", caution: "Points to note", relatedAiBehavior: "Related AI behavior", relatedItems: "Related items", usedAt: "Where it is used", persistence: "Saving and export", boundary: "Boundary" }),
   }),
 });
@@ -70,6 +71,9 @@ export function buildHelpTreeModel(guide, locale = "ja") {
       path: field.canonicalPath, label: text(field.uiLabel || field.label, L) || text(field.label, L), kind: field.kind, manualType: field.manualType, requiredness: field.requiredness,
       note: L === "en" ? (noteEn || noteJa) : noteJa, notePending: L === "en" && !noteEn && Boolean(noteJa),
       options, candidates: field.candidates || null,
+      // O-8 (2026-09-24 regression): a field whose input is on another screen says so
+      // in the guide ("toInput": false) and gets no 「入力欄へ」; its text names where it is done.
+      toInput: field.toInput !== false,
       detail: Object.fromEntries(["humanQuestion", "about", "why", "what", "example", "caution", "relatedAiBehavior", "relatedItems", "usedAt", "persistence", "boundary"].map(key => [key, text(key === "humanQuestion" || key === "boundary" ? field[key] : field.help?.[key], L)])),
       examples: (field.help?.examples || []).map(value => text(value, L)),
       structured: field.help?.structuredGuide ? { entryMeaning: text(field.help.structuredGuide.entryMeaning, L), addWhen: text(field.help.structuredGuide.addWhen, L), separateRule: text(field.help.structuredGuide.separateRule, L), examples: (field.help.structuredGuide.examples || []).map(value => text(value, L)) } : null,
@@ -128,9 +132,11 @@ export function mountHelpTree(root, model, hooks = {}) {
       fd.append(summary);
       const body = el("div", { class: "help-field-body" });
       if (field.note) body.append(el("p", { class: "help-current-note" }, el("strong", { text: `${S.currentNote}: ` }), document.createTextNode(field.note), field.notePending ? el("span", { class: "help-tag", text: ` ${S.enPending}` }) : null));
-      const go = el("button", { type: "button", class: "btn-sm help-to-input", "data-help-to-input": field.path, text: S.toInput });
-      go.addEventListener("click", () => hooks.onNavigate?.(field.path));
-      body.append(el("p", { class: "help-actions" }, go));
+      if (field.toInput) {
+        const go = el("button", { type: "button", class: "btn-sm help-to-input", "data-help-to-input": field.path, text: S.toInput });
+        go.addEventListener("click", () => hooks.onNavigate?.(field.path));
+        body.append(el("p", { class: "help-actions" }, go));
+      }
       if (field.options.length) {
         const current = el("p", { class: "help-current-value", "data-help-current": field.path }, el("strong", { text: S.currentValue }), el("span", { class: "help-current-value-text", text: S.notSelected }));
         body.append(current);

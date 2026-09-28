@@ -13,3 +13,7 @@
 # checkout must never rewrite their line endings. A CRLF here stops 03 outright.
 desktop/resources/base/*.txt -text
 tests/fixtures/platform-prompt-golden/** -text
+# The bundled sample pack is pinned by sha256 (main.rs SAMPLE_PACK_SHA256); a
+# checkout must never touch its bytes.
+desktop/resources/samples/** binary
+*.zip binary

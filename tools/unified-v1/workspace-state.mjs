@@ -136,8 +136,9 @@ async function keepCopy(workspace, keys, reason) {
  *   MIGRATED    first start after this change: the working copy held a list and
  *               the workspace none; it is moved in once, a copy kept (D2)
  *   STRAY_KEPT  the working copy belonged to another workspace that this one
- *               has never seen: a copy is kept here and this workspace starts
- *               from its own files
+ *               has never seen: it stays with that workspace (which holds it),
+ *               nothing of it is written here, and this workspace starts from
+ *               its own files
  *   READ_ONLY   another window holds this workspace (D6)
  */
 export async function bindAtStartup(runtime) {
@@ -156,9 +157,16 @@ export async function bindAtStartup(runtime) {
   if (workspaceHasState) { restore(held); setBound(workspace); return { status: "RESTORED", workspace }; }
   const working = snapshot();
   if (isEmpty(working)) { setBound(workspace); return { status: "BOUND", workspace }; }
-  try { await keepCopy(workspace, working, bound ? "WORKING_COPY_OF_ANOTHER_WORKSPACE" : "FIRST_START_AFTER_WORKSPACE_SCOPING"); }
-  catch (error) { lastError = String(error?.message || error); return { status: "FAILED", reason: lastError }; }
-  if (!bound) { setBound(workspace); await writeAll(); return { status: "MIGRATED", workspace }; }
+  if (!bound) {
+    try { await keepCopy(workspace, working, "FIRST_START_AFTER_WORKSPACE_SCOPING"); }
+    catch (error) { lastError = String(error?.message || error); return { status: "FAILED", reason: lastError }; }
+    setBound(workspace); await writeAll(); return { status: "MIGRATED", workspace };
+  }
+  // O-10 (2026-09-24 regression): the working copy is another workspace's, which
+  // already holds it (every change is written through). Nothing of it is written
+  // here — a copy used to go into this folder's migration/, with the other
+  // folder's path, which leaks a list into a shared folder. D2 keeps a copy only
+  // at the first start after workspace scoping (MIGRATED above).
   restore({}); setBound(workspace);
   return { status: "STRAY_KEPT", workspace };
 }

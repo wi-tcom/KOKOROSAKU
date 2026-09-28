@@ -1,26 +1,26 @@
-# KOKOROSAKU v0.1.0-beta.8
+# KOKOROSAKU v0.1.0-beta.9
 
 Japanese documentation: [README.ja.md](README.ja.md)
 
-KOKOROSAKU is the public SAKU Builder/Trainer source and evaluation package. Builder and Trainer output remains a Candidate and does not become Canonical Authority or approval.
+KOKOROSAKU is the public SAKU Builder source and evaluation package. Builder output remains a Candidate and does not become Canonical Authority or approval.
 
 ## Install and use
 
-Download the Release asset `SAKU Builder_0.1.0-beta.8_x64-setup.exe` only from the future official GitHub Release. This beta is unsigned and Windows SmartScreen may display a warning. Before running it, verify:
+Download the Release asset `SAKU Builder_0.1.0-beta.9_x64-setup.exe` only from the future official GitHub Release. This beta is unsigned and Windows SmartScreen may display a warning. Before running it, verify:
 
 ```powershell
-(Get-FileHash -Algorithm SHA256 -LiteralPath '.\SAKU Builder_0.1.0-beta.8_x64-setup.exe').Hash.ToLower()
+(Get-FileHash -Algorithm SHA256 -LiteralPath '.\SAKU Builder_0.1.0-beta.9_x64-setup.exe').Hash.ToLower()
 ```
 
-Expected SHA-256: `db0f544dcab30d7dd4517bc0a77f6e98ec12579a65dad2932d0ce8def8a314c9` (2,169,969 bytes). The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
+Expected SHA-256: `9a2fb5df01b814d4f694668f8465f7a68dbd295e66e99e47e3a3d127ab220009` (2,208,735 bytes). The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
 
-## What is new in v0.1.0-beta.8
+## What is new in v0.1.0-beta.9
 
-- Input and help were rebuilt. Fields with fixed values are now chosen from a list, and the conformance references (must-preserve, prohibited-drift, continuity) are built automatically from the check boxes on each line. Help is now a Chapter › Item › Option tree on the right, and every option shows its meaning, effect and source (an effect describes a tendency, not a certainty). The manual is rebuilt from the same data and shows the version it applies to.
-- The text sent to an external AI is assembled in three layers. The Base Directives shared by every Character (`saku.base-directives@1` v1.0, sha256 `ab4745a3…`) come first, and their digest is checked at startup and before any text is built; when it does not match, no text is built at all. An echo-back check, in which the AI reports what it loaded, is also available (off by default; a report, not verification).
-- The AI speed test uses the difference between the start time and the end time the AI writes at the beginning and the end of its answer; those two lines are labeled `開始時刻` and `終了時刻`, which stay in Japanese in every language because the app matches them exactly. Manual timing is recorded separately for reference. Pasting an answer records it, and saved records can be compared.
-- The Character list, the import history and the Character currently selected are held per Workspace. Deleting the app data does not lose them: open the same Workspace and they come back. Opening the same Workspace in a second window makes that window read-only.
-- Import and save are judged against the adopted Schema, and anything that does not match is stopped with the reason shown. A file returned from AMU Studio (`.saku-return.zip`) can be opened as a starting point for editing. Three sample Characters (CC0-1.0) are included in the installer.
+- The samples were replaced. The three open-source sample Characters (CC0-1.0) are no longer distributed; instead, the installer bundles sample 1.1.0 (three sample-mode Characters, `LicenseRef-WIT-Sample-1.0`, not OSS). Choose them with "Load samples" in "01 Choose a Character".
+- 04 is now "SAKU Repair Desk and AMU Evaluation Center". Both are in preparation, and registration and applications are not open yet. The Trainer, the AI speed test and importing external reviews have been removed from the screens (their contents are kept and are planned to become a separate tool; no date has been set).
+- Your own Character can be exported as a ZIP for AMU Studio ("Download ZIP for AMU"; it carries no signature). In 03, reference material exported from AMU Studio can be attached to the text passed to the AI as a "reference material (data)" section (the material is not saved).
+- The names of the 1+7 seats and the manual's explanations were aligned with the adopted Schema, and the help source name was changed to "Behavior stated in the directive".
+- Bugs in beta.8 were fixed (for example, the help could not be found in the version you try without installing, the version field showed "BUILD UNSTAMPED", and confirmation dialogs showed "tauri.localhost" in the title).
 
 ## Try without installing
 
@@ -28,7 +28,7 @@ Serve the source archive root over local HTTP and open `tooling/builder/index.ht
 
 ## Developers
 
-Clone the repository, use Node 24.19.0, run `npm ci`, `npm run desktop:prepare:public`, and then `npm run tauri:build`. See `docs/releases/0.1.0-beta.8/BUILD_ENVELOPE.json` for the exact accepted beta toolchain and build boundary.
+Clone the repository, use Node 24.19.0, run `npm ci`, `npm run desktop:prepare:public`, and then `npm run tauri:build`. See `docs/releases/0.1.0-beta.9/BUILD_ENVELOPE.json` for the exact accepted beta toolchain and build boundary.
 
 ## Licensing and brand
 

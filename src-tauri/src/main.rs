@@ -15,7 +15,7 @@ mod saku_return;
 use character_pack::{CharacterPackImport, looks_like_character_pack, parse_character_pack};
 use saku_return::{SakuReturnImport, looks_like_saku_return, parse_saku_return};
 
-const APP_VERSION: &str = "0.1.0-beta.8";
+const APP_VERSION: &str = "0.1.0-beta.9";
 const CONFIG_FILE: &str = "desktop-host.json";
 const MAX_PACKAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_ARCHIVE_ENTRY_BYTES: usize = 32 * 1024 * 1024;
@@ -174,12 +174,16 @@ fn valid_export_filename(filename: &str) -> bool {
 }
 
 fn write_export_file(path: &Path, filename: &str, content: &str) -> SaveFileResult {
-    match fs::write(path, content.as_bytes()) {
+    write_export_bytes(path, filename, content.as_bytes())
+}
+
+fn write_export_bytes(path: &Path, filename: &str, content: &[u8]) -> SaveFileResult {
+    match fs::write(path, content) {
         // A successful write is not yet proof for the user. The Owner must never be
         // told a file was saved unless it is actually on disk with the expected size,
         // so the result is confirmed by reading the metadata back.
         Ok(()) => match fs::metadata(path) {
-            Ok(metadata) if metadata.len() == content.as_bytes().len() as u64 => SaveFileResult {
+            Ok(metadata) if metadata.len() == content.len() as u64 => SaveFileResult {
                 status: "SAVED",
                 path: Some(path_string(path)),
                 filename: filename.to_string(),
@@ -193,7 +197,7 @@ fn write_export_file(path: &Path, filename: &str, content: &str) -> SaveFileResu
                 bytes: 0,
                 reason: Some(format!(
                     "FILE_SIZE_MISMATCH: wrote {} bytes, found {}",
-                    content.as_bytes().len(),
+                    content.len(),
                     metadata.len()
                 )),
             },
@@ -232,6 +236,53 @@ fn save_builder_file(filename: String, content: String, dialog_title: String) ->
         .save_file();
     match selection {
         Some(path) => write_export_file(&path, &filename, &content),
+        None => SaveFileResult {
+            status: "CANCELLED",
+            path: None,
+            filename,
+            bytes: 0,
+            reason: None,
+        },
+    }
+}
+
+// The self-made Character ZIP (Owner 2026-09-27: 「SAKU に ZIP 書き出しを足す」). The page builds
+// the bytes; the host only saves them, and only a file that is named `<slug>.saku-character.zip`,
+// starts as a ZIP and stays under a small size, so this command cannot write anything else.
+const SELF_MADE_ZIP_SUFFIX: &str = ".saku-character.zip";
+const SELF_MADE_ZIP_MAX: usize = 4 * 1024 * 1024;
+
+fn self_made_zip_acceptable(filename: &str, bytes: &[u8]) -> Result<(), &'static str> {
+    let stem = filename.strip_suffix(SELF_MADE_ZIP_SUFFIX).ok_or("EXPORT_FILENAME_INVALID")?;
+    if !valid_export_filename(filename)
+        || stem.is_empty()
+        || !stem.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+    {
+        return Err("EXPORT_FILENAME_INVALID");
+    }
+    if bytes.len() < 4 || bytes[..4] != [0x50, 0x4b, 0x03, 0x04] || bytes.len() > SELF_MADE_ZIP_MAX {
+        return Err("EXPORT_ZIP_INVALID");
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn save_self_made_zip(filename: String, bytes: Vec<u8>, dialog_title: String) -> SaveFileResult {
+    if let Err(reason) = self_made_zip_acceptable(&filename, &bytes) {
+        return SaveFileResult {
+            status: "ERROR",
+            path: None,
+            filename,
+            bytes: 0,
+            reason: Some(reason.to_string()),
+        };
+    }
+    let selection = rfd::FileDialog::new()
+        .set_title(dialog_title)
+        .set_file_name(&filename)
+        .save_file();
+    match selection {
+        Some(path) => write_export_bytes(&path, &filename, &bytes),
         None => SaveFileResult {
             status: "CANCELLED",
             path: None,
@@ -1059,6 +1110,89 @@ fn import_package_path(app: AppHandle, path: String) -> ImportResult {
     import_package(&app, Path::new(&path))
 }
 
+// ── Bundled sample pack ──────────────────────────────────────────────────────
+//
+// Owner 2026-09-24: the three OSS samples are retired and the installer carries
+// the same sample pack as AMU Studio instead: saku-pack-sample 1.1.0, three
+// sample-mode Characters signed with the production keys
+// (LicenseRef-WIT-Sample-1.0). It is a bundle resource, and it goes through
+// exactly the intake a chosen pack goes through — digests, the catalog
+// release, the adopted schema, and the signature check on the page. The pinned
+// digest only makes a swapped or damaged file stop before that intake runs.
+const SAMPLE_PACK_RESOURCE: &str = "samples/saku-pack-sample-1.1.0.zip";
+const SAMPLE_PACK_SHA256: &str = "1e5a20855371f1f4e90a52f0142c8154fd787034f6e0babee1e9b9419b277c8c";
+
+#[derive(Debug, Serialize)]
+struct BundledSamplePack {
+    available: bool,
+    reason: Option<String>,
+}
+
+fn bundled_sample_pack_file(app: &AppHandle) -> Result<PathBuf, String> {
+    let path = app
+        .path()
+        .resolve(SAMPLE_PACK_RESOURCE, tauri::path::BaseDirectory::Resource)
+        .map_err(|_| "SAMPLE_PACK_NOT_BUNDLED".to_string())?;
+    let bytes = fs::read(&path).map_err(|_| "SAMPLE_PACK_NOT_BUNDLED".to_string())?;
+    if sha256_hex(&bytes) != SAMPLE_PACK_SHA256 {
+        return Err("SAMPLE_PACK_DIGEST_MISMATCH".to_string());
+    }
+    Ok(path)
+}
+
+#[tauri::command]
+fn bundled_sample_pack(app: AppHandle) -> BundledSamplePack {
+    match bundled_sample_pack_file(&app) {
+        Ok(_) => BundledSamplePack { available: true, reason: None },
+        Err(reason) => BundledSamplePack { available: false, reason: Some(reason) },
+    }
+}
+
+#[tauri::command]
+fn import_bundled_sample_pack(app: AppHandle) -> Result<ImportResult, String> {
+    let path = bundled_sample_pack_file(&app)?;
+    Ok(import_package(&app, &path))
+}
+
+// ── wi-t.com service links ───────────────────────────────────────────────────
+//
+// Owner 2026-09-27 (AMU DECISION 2026-09-27-11): 04 Trainer leaves the screens
+// and a page of links to wi-t.com's services takes its place. The page cannot
+// navigate the app window to an outside site, so the host opens the default
+// browser — for https on wi-t.com and kokoroamu.jp only, checked here again whatever the page
+// sends. No new dependency: explorer.exe opens a URL in the default browser,
+// and the URL is passed as one argument, never through a shell.
+const SERVICE_URL_MAX: usize = 500;
+/// The hosts a link may open: the same list as the page's SERVICE_LINK_HOSTS and
+/// AMU Studio's (SAKU 診療所 and AMU トレーニングセンター live on kokoroamu.jp; the
+/// subscription site on support.kokoroamu.jp, Owner 2026-09-27, AMU @eb2ccec).
+const SERVICE_HOSTS: [&str; 5] = ["wi-t.com", "www.wi-t.com", "kokoroamu.jp", "www.kokoroamu.jp", "support.kokoroamu.jp"];
+
+/// The same rule as the page's isAllowedServiceUrl (and AMU Studio's): at most
+/// 500 characters from [A-Za-z0-9:/._~%?=&#+-], https, one of SERVICE_HOSTS
+/// exactly, then the end or '/'. No '@' is possible, so no credentials; ':' after
+/// the host would be a port and is refused, and so is a look-alike host.
+fn allowed_service_url(url: &str) -> bool {
+    if url.is_empty() || url.len() > SERVICE_URL_MAX { return false; }
+    if !url.chars().all(|c| c.is_ascii_alphanumeric() || ":/._~%?=&#+-".contains(c)) { return false; }
+    SERVICE_HOSTS.iter().any(|host| {
+        let origin = format!("https://{host}");
+        url == origin || url.starts_with(&format!("{origin}/"))
+    })
+}
+
+#[tauri::command]
+fn open_service_link(url: String) -> Result<(), String> {
+    if !allowed_service_url(&url) {
+        return Err("SERVICE_URL_NOT_ALLOWED".to_string());
+    }
+    std::process::Command::new("explorer.exe")
+        .arg(&url)
+        .spawn()
+        .map(|_| ())
+        .map_err(|error| format!("SERVICE_URL_OPEN_FAILED: {error}"))
+}
+
 // ── Durable Character store ──────────────────────────────────────────────────
 //
 // The Character Library index lives in WebView2 Local Storage under
@@ -1480,7 +1614,11 @@ fn main() {
             write_workspace_migration_backup,
             choose_and_import_package,
             import_package_path,
+            bundled_sample_pack,
+            import_bundled_sample_pack,
+            open_service_link,
             save_builder_file,
+            save_self_made_zip,
             list_workspace_characters,
             save_workspace_character
         ])
@@ -1501,6 +1639,20 @@ mod tests {
     use std::fs;
     use std::io::Write;
     use std::path::{Path, PathBuf};
+
+    #[test]
+    fn self_made_zip_saves_only_its_own_file() {
+        use super::self_made_zip_acceptable;
+        let zip = [0x50u8, 0x4b, 0x03, 0x04, 0, 0];
+        assert!(self_made_zip_acceptable("sample-general-compass.saku-character.zip", &zip).is_ok());
+        for bad in ["x.saku-character.json", ".saku-character.zip", "../x.saku-character.zip", "C:\\x.saku-character.zip",
+                    "Upper.saku-character.zip", "x y.saku-character.zip", "x.kokorosaku.zip", "x.saku-character.zip.exe"] {
+            assert_eq!(self_made_zip_acceptable(bad, &zip), Err("EXPORT_FILENAME_INVALID"), "{bad}");
+        }
+        assert_eq!(self_made_zip_acceptable("x.saku-character.zip", b"{}"), Err("EXPORT_ZIP_INVALID"));
+        let big = vec![0x50u8, 0x4b, 0x03, 0x04].into_iter().chain(std::iter::repeat(0).take(4 * 1024 * 1024)).collect::<Vec<u8>>();
+        assert_eq!(self_made_zip_acceptable("x.saku-character.zip", &big), Err("EXPORT_ZIP_INVALID"));
+    }
 
     #[test]
     fn sha256_is_lowercase_hex_of_exact_bytes() {
@@ -2267,6 +2419,50 @@ mod tests {
             assert!(parsed.pack_manifest_digest_recomputed && parsed.entries.iter().all(|entry| entry.manifest_digest_recomputed), "{name}: manifest digests recompute");
             assert_eq!(parsed.schema_id, "SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE");
             assert!(parsed.entries.iter().all(|entry| ["A", "B", "C"].contains(&entry.operation_class.as_str())));
+        }
+    }
+
+    /// The bundled sample pack (Owner 2026-09-24): the committed file is the
+    /// pinned one, the bundle maps it where the command looks, and it passes the
+    /// same host intake as a chosen pack. One flipped byte is refused.
+    #[test]
+    fn bundled_sample_pack_is_pinned_and_passes_intake() {
+        use super::{parse_package, ParsedPackage, SAMPLE_PACK_RESOURCE, SAMPLE_PACK_SHA256};
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
+        let file = root.join("desktop/resources/samples/saku-pack-sample-1.1.0.zip");
+        let bytes = std::fs::read(&file).expect("the sample pack is committed");
+        assert_eq!(sha256_hex(&bytes), SAMPLE_PACK_SHA256);
+        let conf: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(root.join("src-tauri/tauri.conf.json")).unwrap()).unwrap();
+        assert_eq!(conf["bundle"]["resources"]["../desktop/resources/samples/saku-pack-sample-1.1.0.zip"], SAMPLE_PACK_RESOURCE);
+        match parse_package(&file, &bytes) {
+            Ok(ParsedPackage::CharacterPack(pack)) => {
+                assert_eq!(pack.pack_version, "1.1.0");
+                assert_eq!(pack.entries.len(), 3);
+                let mut slugs: Vec<&str> = pack.entries.iter().map(|entry| entry.slug.as_str()).collect();
+                slugs.sort();
+                assert_eq!(slugs, ["aimi-meguru-sample", "fumikura-shiori-sample", "tsukuda-yu-sample"]);
+            }
+            _ => panic!("the bundled sample pack must pass the host intake"),
+        }
+        let mut damaged = bytes.clone();
+        let middle = damaged.len() / 2;
+        damaged[middle] ^= 0x01;
+        assert_ne!(sha256_hex(&damaged), SAMPLE_PACK_SHA256);
+        assert!(!matches!(parse_package(&file, &damaged), Ok(ParsedPackage::CharacterPack(_))), "a damaged pack must not pass");
+    }
+
+    /// Only https on wi-t.com opens; anything else is refused before a process starts.
+    #[test]
+    fn service_links_open_wi_t_com_only() {
+        use super::allowed_service_url;
+        for ok in ["https://wi-t.com/", "https://www.wi-t.com/saku-clinic", "https://wi-t.com/apply?plan=set", "https://wi-t.com",
+                   "https://kokoroamu.jp/clinic", "https://www.kokoroamu.jp/", "https://support.kokoroamu.jp/apply"] {
+            assert!(allowed_service_url(ok), "{ok}");
+        }
+        for bad in ["http://wi-t.com/", "https://wi-t.com.evil.example/", "https://evil.example/?https://wi-t.com/",
+                    "https://wi-t.comx/", "https://kokoroamu.jp.evil.example/", "https://evil-kokoroamu.jp/", "https://other.kokoroamu.jp/", "https://support.kokoroamu.jp.evil.example/", "https://user@wi-t.com/", "https://wi-t.com/ & calc", "https://wi-t.com/\"x",
+                    "file:///C:/Windows/System32/calc.exe", "https://wi-t.com:8443/"] {
+            assert!(!allowed_service_url(bad), "{bad}");
         }
     }
 }

@@ -10,12 +10,11 @@
   "files": [
     ["tools/saku-builder.html", "index.html"],
     ["tools/saku-builder-desktop-additions.css", "builder.css"],
-    ["tools/saku-trainer.html", "trainer.html"],
-    ["tools/saku-external-review.html", "external-review.html"],
     ["tools/v1/external-review-intake.mjs", "lib/external-review-intake.mjs"],
+    ["tools/unified-v1/self-made-character-zip.mjs", "lib/self-made-character-zip.mjs"],
     ["tools/unified-v1/external-review-ui.mjs", "lib/external-review-ui.mjs"],
     ["tools/unified-v1/external-review.css", "external-review.css"],
-    ["tools/saku-speed-test.html", "speed-test.html"],
+    ["tools/saku-services.html", "services.html"],
     ["tools/v1/speed-test.mjs", "lib/speed-test.mjs"],
     ["tools/v1/speed-test-store.mjs", "lib/speed-test-store.mjs"],
     ["tools/unified-v1/speed-test-ui.mjs", "lib/speed-test-ui.mjs"],
@@ -30,6 +29,7 @@
     ["tools/unified-v1/character-library.mjs", "lib/character-library.mjs"],
     ["tools/unified-v1/workspace-state.mjs", "lib/workspace-state.mjs"],
     ["tools/v1/frozen-ia-ui.mjs", "lib/frozen-ia-ui.mjs"],
+    ["tools/unified-v1/seat-roles.mjs", "lib/seat-roles.mjs"],
     ["tools/unified-v1/handoff-binding.mjs", "lib/handoff-binding.mjs"],
     ["tools/v1/semantic-registry.mjs", "lib/semantic-registry.mjs"],
     ["tools/v1/trainer-frozen-ia.mjs", "lib/trainer-contract.mjs"],
@@ -41,6 +41,11 @@
     ["tools/v1/unified-authoring.mjs", "lib/unified-authoring.mjs"],
     ["tools/v1/help-tree.mjs", "lib/help-tree.mjs"],
     ["tools/unified-v1/screen-help.mjs", "lib/screen-help.mjs"],
+    ["tools/unified-v1/confirm-dialog.mjs", "lib/confirm-dialog.mjs"],
+    ["tools/unified-v1/service-links.mjs", "lib/service-links.mjs"],
+    ["tools/unified-v1/services-ui.mjs", "lib/services-ui.mjs"],
+    ["tools/unified-v1/services.css", "services.css"],
+    ["tools/unified-v1/confirm-wording.mjs", "lib/confirm-wording.mjs"],
     ["tools/unified-v1/platform-prompt.mjs", "lib/platform-prompt.mjs"],
     ["tools/unified-v1/directive-glossary.mjs", "lib/directive-glossary.mjs"],
     ["tools/unified-v1/handoff-context.mjs", "lib/handoff-context.mjs"],
@@ -59,7 +64,11 @@
     ["LICENSE-DOCS.md", "LICENSE-DOCS.md"],
     ["NOTICE", "NOTICE"],
     ["THIRD_PARTY_NOTICES.md", "THIRD_PARTY_NOTICES.md"],
-    ["TRADEMARK.md", "TRADEMARK.md"]
+    ["TRADEMARK.md", "TRADEMARK.md"],
+    ["desktop/help/index.html", "help/index.html"],
+    ["desktop/help/getting-started.html", "help/getting-started.html"],
+    ["desktop/help/tuning-faq.html", "help/tuning-faq.html"],
+    ["manual/saku-field-guide.html", "help/manual.html"]
   ],
   "directories": []
 }

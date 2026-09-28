@@ -111,7 +111,9 @@ const trainerUx4Contract = await read("tools/v1/trainer-ux4.mjs");
 const trainerCss = await read("tools/unified-v1/trainer-ux4.css");
 const profile = JSON.parse(await read("desktop/resources/profiles/public-oss.json"));
 ok(!/id="review-results"/.test(desktopHtml) && !/id="test-with-ai"/.test(desktopHtml), "Single Trainer entry retained");
-ok((desktopHtml.match(/href="\.\/tools\/saku-trainer\.html/g) || []).length === 1, "Home offers exactly one Trainer entry");
+// Owner 2026-09-27 (AMU DECISION 2026-09-27-11): the Trainer left the screens and waits to become a separate tool;
+// its page and modules stay and are still checked below, but Home no longer leads to it.
+ok((desktopHtml.match(/href="\.\/tools\/saku-trainer\.html/g) || []).length === 0, "Home offers no Trainer entry (04 is the services page)");
 ok(trainerHtml.includes('trainer-ux4-ui.mjs'), "Actual Trainer entry loads Revision 4");
 ok(trainerUi.includes("history-dialog") && trainerUi.includes("renderSummary") && trainerUi.includes("menu-result"), "Saved per-menu result, overall summary, and history are reachable");
 ok(trainerUi.includes("current(session)") && trainerContract.includes("evaluation_snapshot"), "Results resolve selected exact lineage with immutable evaluation snapshot");
@@ -150,6 +152,19 @@ check(sha256(await read("tools/unified-v1/derived-profile-engine.mjs")), "1f4ff5
 // `write_workspace_migration_backup`, every revision kept on save, and a pack
 // import that writes only with the lock. Covered by workspace:verify and five
 // cargo tests.
+// Advanced 2026-09-24 for the bundled sample pack (Owner 「廃止(b)」, AMU's
+// saku-pack-sample 1.1.0 in place of the OSS samples): `bundled_sample_pack` and
+// `import_bundled_sample_pack` resolve the pinned bundle resource and hand it to
+// the unchanged `import_package`. Covered by one cargo test (pinned digest,
+// intake passes, one flipped byte refused).
+// Advanced 2026-09-27 for the services page (Owner, AMU DECISION 2026-09-27-11):
+// `open_service_link` opens the default browser for https on wi-t.com, kokoroamu.jp and support.kokoroamu.jp only
+// (explorer.exe, one argument, no shell) and leaves import untouched. Covered by
+// one cargo test (allowed and refused URLs) and desktop:verify (the host's only URLs).
+// Advanced 2026-09-27 for the self-made Character ZIP (Owner 「SAKU に ZIP 書き出しを足す」):
+// `save_self_made_zip` saves page-built bytes only as `<slug>.saku-character.zip` starting
+// as a ZIP, through the same write-and-confirm as the text export (`write_export_bytes`),
+// and leaves import untouched. Covered by one cargo test and self-made-zip:verify.
 //
 // The pin is taken with APP_VERSION normalised away (2026-09-23). It had gone
 // stale twice for that one line alone — at β.4, where it reached main unnoticed
@@ -161,9 +176,12 @@ check(sha256(await read("tools/unified-v1/derived-profile-engine.mjs")), "1f4ff5
 const hostSource = await read("src-tauri/src/main.rs");
 const APP_VERSION_LINE = /const APP_VERSION: &str = "[^"]+";/;
 ok(APP_VERSION_LINE.test(hostSource), "the host still declares APP_VERSION (the normalisation below must have something to remove)");
-check(sha256(hostSource.replace(APP_VERSION_LINE, 'const APP_VERSION: &str = "<VERSION>";')), "99545217afb014d71cce485aa5898de8bef4c7e6927b4788fe528c029e6b14f0", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
+check(sha256(hostSource.replace(APP_VERSION_LINE, 'const APP_VERSION: &str = "<VERSION>";')), "2b3bf46a06649752c33fa36145a211080d0a6b52ea7eb4071f6448f9eb37b408", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
 ok(/SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE/.test(await read("src-tauri/src/main.rs")), "Package Import host does not recognise the active Unified schema");
-check(sha256(await read("desktop/resources/profiles/public-oss.json")), "6a3ae8a7faeaa719d24f0aff70d816fb8a27d99c03b47bbd4a31f2ad7a0984a4", "Public profile changed");
+// Re-pinned 2026-09-28 (β.9): the profile named the three OSS samples as bundled after they left the
+// installer (D-20260924-oss-samples-retired) and did not name the sample pack 1.1.0 that replaced them
+// (D-20260924-sample-pack-1-1-0). oss-sample3 is now bundled: false; saku-pack-sample-1.1.0 is listed.
+check(sha256(await read("desktop/resources/profiles/public-oss.json")), "4a2374dbcc7bb50b9288f196a3cb868a48700569f62013a153f697751d4341ae", "Public profile changed");
 
 console.log(`TRAINER_REVIEW_RESULTS_VERIFY PASS ${count}/${count}`);
 console.log("REVIEW_STATES MATCH DIFFERENT UNKNOWN NOT_TESTED INVALID PASS");

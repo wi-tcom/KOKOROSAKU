@@ -2,6 +2,7 @@ import {
   CHAPTERS, FIELDS, FIELD_BY_PATH, FORM_PATH_BY_CANONICAL,
   HANDOFF_REASON_OPTIONS, TUNING_ITEMS, EFFECT_STATES, localized,
 } from "./semantic-registry.mjs";
+import { SEAT_ROLES } from "./seat-roles.mjs";
 import {
   TRAINER_BUILDER_CONTEXT_KEY,
   applyBuilderCandidates,
@@ -601,9 +602,8 @@ function axisControls() {
 
 function fixedSystemMarkup() {
   const seats = [
-    ["1", "Character本人", "The Character"], ["2", "専門家", "Specialist"], ["3", "事実確認", "Fact checking"],
-    ["4", "安全確認", "Safety checking"], ["5", "利用者視点", "User viewpoint"], ["6", "反対意見", "Counterpoint"],
-    ["7", "人格・ブランド確認", "Persona and brand guard"], ["8", "人間", "Human"],
+    // The seat names come from tools/unified-v1/seat-roles.mjs, shared with manual P04 (Owner 2026-09-28).
+    ...SEAT_ROLES.map(role => [String(role.seat), role.name.ja, role.name.en]),
   ];
   return `<section class="fixed-system-info" aria-labelledby="one-seven-title"><p class="eyebrow">1+7 CHARACTER SYSTEM</p>
     <h2 id="one-seven-title">${ui("考えを支える助手（1+7 Character System）", "Assistants that support thinking (1+7 Character System)")}</h2>
@@ -653,7 +653,7 @@ function renderSurface() {
       <div id="referenceEditors" class="reference-editors"></div>`,
   };
   for (const chapter of CHAPTERS) form.insertAdjacentHTML("beforeend", chapterMarkup(chapter, bodies[chapter.id]));
-  form.insertAdjacentHTML("beforeend", fixedSystemMarkup() + tuningMarkup() + `<details class="advanced-settings"><summary>${ui("詳細設定 — Expert / Advanced", "Expert / Advanced settings")}</summary><p>${ui("現在、通常入力とは別に編集すべきSAKU-owned Expert項目はありません。Runtime、AMU、MACHI、旧Unified V1項目はここへ移していません。", "There are currently no separate SAKU-owned expert fields to edit. Runtime, AMU, MACHI, and legacy Unified V1 controls are not moved here.")}</p></details>`);
+  form.insertAdjacentHTML("beforeend", fixedSystemMarkup() + tuningMarkup() + `<details class="advanced-settings"><summary>${ui("詳細設定 — Expert / Advanced", "Expert / Advanced settings")}</summary><p>${ui("この欄で編集できる項目は、いまはありません。実行環境（Runtime）・AMU・MACHI の設定は、それぞれのツールで行います。", "There are no fields to edit here at the moment. Settings for the runtime environment (Runtime), AMU and MACHI are made in each of those tools.")}</p></details>`);
 
   window.bindInputs?.();
   window.renderAllLists?.();

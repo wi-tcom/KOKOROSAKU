@@ -303,7 +303,7 @@ try{
   // would have reported and read the announcement that follows from it.
   const runtime={workspace:"C:/ws",first_run:false,install_dir:"i",config_dir:"c",log_dir:"l",cache_dir:"ca"};
   hw.__saku_home.renderState(runtime);
-  check((hd.getElementById("host-status").textContent||"").includes("編集やトレーニング"),"the announcement points at what to do next");
+  check((hd.getElementById("host-status").textContent||"").includes("編集するか、AI プラットフォームで動かすか"),"the announcement points at what to do next");
   hd.getElementById("view-characters").click();
   hd.getElementById("viewer-back").click();
   check(hw.localStorage.getItem("saku.workspace.active")!==null,"returning to TOP keeps the current SAKU");

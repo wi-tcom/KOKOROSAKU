@@ -1,4 +1,6 @@
 import { consumeHandoff } from "../unified-v1/handoff-binding.mjs";
+import { confirmDialog } from "../unified-v1/confirm-dialog.mjs";
+import { confirmWording, fill } from "../unified-v1/confirm-wording.mjs";
 
 const STORAGE_KEY = "saku.ui.locale";
 const DEFAULT_LOCALE = "ja-JP";
@@ -13,8 +15,8 @@ function storeImportedCharacter(payload) {
     content_digest: (hash >>> 0).toString(16).padStart(8, "0"),
   }));
 }
-const HERO_SUBTITLE_JA = '心が咲く — 表人格・1+7構造・境界・黒子接続・試験までを一枚で設計し、<code>character.yaml</code>／Character File（署名・パック化の元になる正本 Unified V1 JSON）を出力する';
-const HERO_SUBTITLE_EN = 'Design the public persona, 1+7 structure, boundaries, Human-backstage prerequisites, and tests on one screen; export <code>character.yaml</code> and the Character File (the canonical Unified V1 JSON that signing and packing start from).';
+const HERO_SUBTITLE_JA = '心が咲く — 表人格・1+7構造・境界・黒子接続・試験までを一枚で設計し、<code>character.yaml</code> と Character File（署名やパックを作るときの元になる JSON）を書き出す';
+const HERO_SUBTITLE_EN = 'Design the public persona, 1+7 structure, boundaries, Human-backstage prerequisites, and tests on one screen; export <code>character.yaml</code> and the Character File (the JSON used as the source when you make a signature or a pack).';
 
 // The Golden Japanese strings are stable resource keys. Character/user data is never passed here.
 const EN = new Map(Object.entries({
@@ -129,7 +131,7 @@ const EN = new Map(Object.entries({
   "逸脱を確認する項目":"Checked for drift",
   "継続性を確認する項目":"Checked for continuity",
   "この内容で保存する":"Save this Character",
-  "心が咲く — 表人格・1+7構造・境界・黒子接続・試験までを一枚で設計し、character.yaml／Character File（署名・パック化の元になる正本 Unified V1 JSON）を出力する":"Design the public persona, 1+7 structure, boundaries, Human-backstage prerequisites, and tests on one screen; export character.yaml and the Character File (the canonical Unified V1 JSON that signing and packing start from).",
+  "心が咲く — 表人格・1+7構造・境界・黒子接続・試験までを一枚で設計し、character.yaml と Character File（署名やパックを作るときの元になる JSON）を書き出す":"Design the public persona, 1+7 structure, boundaries, Human-backstage prerequisites, and tests on one screen; export character.yaml and the Character File (the JSON used as the source when you make a signature or a pack).",
   "お品書き":"Tools","すべて畳む":"Collapse all","すべて広げる":"Expand all","同期":"Sync",
   "職能CSVを読み込む":"Import role CSV","この項目の詳しい説明":"Detailed help for this field","記入例（星野ルカ）を読み込む":"Load example (Hoshino Luka)",
   "テンプレート…":"Template…","テンプレートを読み込む":"Load template","character.yaml を読み込む":"Import character.yaml",
@@ -209,7 +211,13 @@ const EN = new Map(Object.entries({
   "許可する行為ID":"Permitted action IDs","追加の禁止行為ID":"Additional prohibited action IDs","追加の人間承認必須行為ID":"Additional Human-approval-required action IDs",
   "現在配置と移行先を別オブジェクトとして管理する。空欄の配置は出力しない。":"Current and target assignments are separate; empty assignments are not exported.",
   "RACI参照":"RACI references","＋ RACI行を追加":"+ Add RACI row","正本":"Canonical source","道中手形":"Character File","安全指図書":"External AI prompt","街割り":"Guild summary","見立て帳":"Test record",
-  "コピー":"Copy","ダウンロード":"Download","外部利用向け出力は、内容とContactGuardの結果を人が確認した":"A Human reviewed the external-use content and ContactGuard result",
+  "コピー":"Copy","ダウンロード":"Download","AMU 用 ZIP をダウンロード":"Download ZIP for AMU",
+  // The note under the 11 fields that offer suggestions (frozen-ia-ui candidate-note). Its English is
+  // manual/saku-field-guide.extension.json candidate_screen_note_en; help:tree:verify keeps the two equal.
+  "例です。自由に書けます":"Examples are in Japanese. You can write in any language.",
+  // 02 import notices (ライター&SNS 2026-09-27, EN 英語翻訳チーム 依頼 AD, Wi-t_Site 60f1d41).
+  "この Character は、採択済み Schema に合いません：":"This Character does not match the adopted Schema: ",
+  "このファイルは読み込めません。読み込めるのは、この SAKU Builder の character.yaml（または同じ内容の JSON）と、以前の版の編集画面で作った character.yaml です。":"This file cannot be loaded. The files that can be loaded are a character.yaml from this SAKU Builder (or a JSON with the same content) and a character.yaml made on the edit screen of an earlier version.","外部利用向け出力は、内容とContactGuardの結果を人が確認した":"A Human reviewed the external-use content and ContactGuard result",
   "内部成果物：外部利用ゲート対象外":"Internal artifact: external-use gate does not apply","必須未入力":"Required missing","記入完了":"Complete","記載完了":"Complete","未記入":"Not entered","記入途中":"In progress","反映待ち":"Ready to apply","反映済み":"Applied","対象外":"Not applicable",
   "生成できます":"Ready to generate","Draftはvalidationを通過し、シリアライズできます（未承認）":"Draft passes validation and can be serialized (not approved)","リセットしました":"Reset complete","記入例を読み込みました":"Example loaded","コピーしました":"Copied","コピーに失敗しました":"Copy failed",
   "この行を削除":"Remove this row","削除":"Remove","項目を編集":"Edit item","項目を削除":"Remove item","区分":"Category","質問":"Question","期待する挙動":"Expected behavior","結果":"Result","メモ":"Notes",
@@ -248,7 +256,7 @@ const EN = new Map(Object.entries({
   "区分Cは有資格者の席8と、組織責任を持つ別の人間が埋まっていないと稼働できない。":"Class C cannot operate until a qualified Human in Seat 8 and a separate Human with organizational responsibility are assigned.",
   "このキャラクターが黒子（人間の確認・承認）なしで動けるかを定める。 詳細な黒子情報は AMU Studio 側で管理し、ここでは":"Define whether this Character can operate without Human backstage review and approval. Detailed backstage data is managed in AMU Studio; define only",
   "を定義する。 本章の内容は":"here. This chapter is not included in",
-  "には出さず、Character File（署名・パック化の元になる正本 Unified V1 JSON）にのみ出力する。AMU/MACHI は署名付きパック経由でのみ受け取る。":"and is exported only in the Character File (the canonical Unified V1 JSON that signing and packing start from). AMU / MACHI receive it only through a signed pack.",
+  "には出さず、Character File（署名やパックを作るときの元になる JSON）にだけ書き出す。":"and is exported only in the Character File (the JSON used as the source when you make a signature or a pack).",
   "作って終わりにしない。定義から試験質問を自動生成し、実機（Claude Code / Codex）で 1問ずつ確かめて結果を記録する。婉曲・役割の偽装・経由・設定への攻撃の回避パターンは":"Do not stop at authoring. Generate test questions from the definition and verify them one by one in Claude Code / Codex. Evasion patterns for indirect requests, role impersonation, routing, and configuration attacks follow",
   "の分類に従う。":".",
   "（頻度重みを持たない）。":"(no frequency weighting).",
@@ -286,6 +294,13 @@ const sourceAttrs = new WeakMap();
 const appliedAttrs = new WeakMap();
 let applying = false;
 let locale = DEFAULT_LOCALE;
+// O-11: confirmations in the display language, for this module and for the
+// Golden page's classic script (window.sakuConfirmFor).
+function askFor(key, message, vars) {
+  const wording = confirmWording(key, locale === "en-US" ? "en" : "ja");
+  return confirmDialog({ title: wording.title, message: message ?? fill(wording.body, vars), confirmLabel: wording.confirm, cancelLabel: wording.cancel });
+}
+if (typeof window !== "undefined") window.sakuConfirmFor = askFor;
 
 function normalizeLocale(value){ return value === "en-US" ? "en-US" : DEFAULT_LOCALE; }
 function translateStatusPart(value){
@@ -618,11 +633,13 @@ function buildAuthoringTop() {
     nav = document.createElement("div");
     nav.id = "builderTopNav";
     nav.className = "builder-top-nav";
-    // The host reveals these two; moving them does not change when they appear.
-    for (const id of ["runOnPlatform", "trainCharacter"]) {
-      const control = document.getElementById(id);
-      if (control) nav.append(control);
-    }
+    // The host reveals this one; moving it does not change when it appears.
+    const platformControl = document.getElementById("runOnPlatform");
+    if (platformControl) nav.append(platformControl);
+    // 04 Trainer left the screens (Owner 2026-09-27, AMU DECISION 2026-09-27-11).
+    // The Golden page still carries its 「トレーニングする」 (the page is byte-locked),
+    // so it is taken out here, not hidden, and cannot come back if the CSS is lost.
+    document.getElementById("trainCharacter")?.remove();
     const language = document.querySelector(".language-control");
     if (language) nav.append(language);
     const help = document.createElement("a");
@@ -673,12 +690,15 @@ function buildAuthoringTop() {
   if (example) {
     example.textContent = "記入例から新規作成";
     example.classList.add("btn-sm");
-    const guard = event => {
+    // O-11: the app's own confirmation is asynchronous, so the click is held,
+    // and repeated once the Owner chooses 「上書きする」.
+    let confirmed = false;
+    const guard = async event => {
+      if (confirmed) { confirmed = false; return; }
       if (!authoringHasContent()) return;
-      if (!window.confirm("現在の入力内容を上書きしてもよいですか？")) {
-        event.stopImmediatePropagation();
-        event.preventDefault();
-      }
+      event.stopImmediatePropagation();
+      event.preventDefault();
+      if (await askFor("overwriteWithExample")) { confirmed = true; example.click(); }
     };
     example.addEventListener("click", guard, true);
     actions.append(example);
@@ -687,13 +707,8 @@ function buildAuthoringTop() {
   if (reset) {
     reset.textContent = "入力内容のクリア";
     reset.classList.add("btn-sm");
-    reset.addEventListener("click", event => {
-      if (!authoringHasContent()) return;
-      if (!window.confirm("入力内容を消してもよいですか？")) {
-        event.stopImmediatePropagation();
-        event.preventDefault();
-      }
-    }, true);
+    // O-11: no question of its own here any more. The page's own 「入力内容のクリア」
+    // asks (全消去の確認); this one used to ask first, so the Owner was asked twice.
     actions.append(reset);
   }
   for (const id of ["saveUnifiedCharacter", "collapseAll", "expandAll"]) {

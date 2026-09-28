@@ -220,7 +220,7 @@
     <button class="btn-sm" id="expandAll" type="button">すべて広げる</button>
     <button class="btn-sm" id="desktopWorkspaceSelect" type="button" hidden>作業場所を選択</button>
     <button class="btn-sm" id="desktopPackageImport" type="button" title="WIT Package ZIPを展開せずに読み込む" hidden>Package ZIPを読み込む</button>
-    <a class="btn-sm trainer-link" id="openTrainer" href="./trainer.html">Trainer</a>
+    <a class="btn-sm services-link" id="openServices" href="./services.html">SAKU 診療所・AMU トレーニングセンター</a>
     <button class="btn-sm" id="saveUnifiedCharacter" type="button" hidden>この内容で保存する</button>
     <button class="btn-sm" id="runOnPlatform" type="button" hidden>AIプラットフォームで動作確認</button>
     <button class="btn-sm" id="trainCharacter" type="button" hidden>トレーニングする</button>
@@ -497,7 +497,7 @@
       <h2><span class="num">十</span>黒子／キャラバック接続前提</h2>
       <p class="note">このキャラクターが黒子（人間の確認・承認）なしで動けるかを定める。
         詳細な黒子情報は AMU Studio 側で管理し、ここでは<b>接続前提だけ</b>を定義する。
-        本章の内容は <code>character.yaml</code> には出さず、Character File（署名・パック化の元になる正本 Unified V1 JSON）にのみ出力する。AMU/MACHI は署名付きパック経由でのみ受け取る。</p>
+        本章の内容は <code>character.yaml</code> には出さず、Character File（署名やパックを作るときの元になる JSON）にだけ書き出す。</p>
       <div class="field"><label class="toggle" style="font-size:14px">
         <input type="checkbox" data-path="charback.required" data-type="bool"> 黒子（人間の確認・承認）が必要なキャラクター</label>
         <p class="hint">黒子がいない場合、承認領域は下書き・保留までとし公開しない（§8）。</p></div>
@@ -540,6 +540,7 @@
       <div class="pv-actions">
         <button class="pv-btn" id="copyBtn">コピー</button>
         <button class="pv-btn primary" id="downloadBtn">ダウンロード</button>
+        <button class="pv-btn" id="downloadZipBtn" hidden>AMU 用 ZIP をダウンロード</button>
       </div>
       <div class="save-feedback" id="saveFeedback" role="status" aria-live="polite" hidden></div>
     </div>
@@ -955,7 +956,7 @@ function yamlLines(value,indent=0){
 }
 function toYaml(d){
   const api=window.SAKU_UNIFIED;
-  if(!api)return "# SAKU Unified V1を読み込んでいます…\n";
+  if(!api){let en=false;try{en=localStorage.getItem("saku.ui.locale")==="en-US"}catch{}return en?"# Loading…\n":"# 読み込んでいます…\n";}
   const character=api.toUnifiedCharacter(d,d._unified_source||null);
   return yamlLines(character).join("\n")+"\n";
 }
@@ -1179,8 +1180,11 @@ function render(){
 
 /* ---------------- actions ---------------- */
 function uiString(value){return window.SAKU_GOLDEN_UI?.translateSource?.(value)||value;}
+/* A longer notice stays longer, so it can be read to the end (ライター&SNS 2026-09-27): 1.8 s for
+   a short one, about 80 ms a character for a long one, at most 8 s. */
 function toast(msg){const t=document.getElementById("toast");t.textContent=uiString(msg);
-  t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),1800);}
+  const ms=Math.min(8000,Math.max(1800,String(t.textContent).length*80));
+  t.classList.add("show");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("show"),ms);}
 
 function setSaveFeedback(kind,message){
   const el=document.getElementById("saveFeedback");
@@ -1235,6 +1239,48 @@ document.getElementById("downloadBtn").addEventListener("click",async()=>{
   const message=saveMessage(`ブラウザへダウンロードを要求しました\n${p.filename}`,`Download requested in browser\n${p.filename}`);
   setSaveFeedback("requested",message);toast(message);
 });
+/* 自作の Character を ZIP で書き出す（Owner 2026-09-27「SAKU に ZIP 書き出しを足す」）。JSON タブと
+   同じ関門（採択済み Schema・ContactGuard・組織参加・人の確認）を通ったときだけ、同じ JSON の
+   バイト列を character.json として包む。署名はない（目録に "signature": "NONE"）。 */
+document.getElementById("downloadZipBtn").addEventListener("click",async()=>{
+  if(curTab!=="json")return;
+  if(!(await validateAdoptedOutput()))return;
+  const gate=exportCheck("json",data);
+  if(!gate.ok){
+    toast(gate.blockers&&gate.blockers.length?gate.blockers[0]:(gate.hits.length?"ContactGuard検知項目を除去してください":"人の確認チェックが必要です"));return;
+  }
+  const api=window.SAKU_SELF_MADE_ZIP;
+  if(!api){toast(saveMessage("ZIP を作る準備ができていません。画面を開き直してください。直らないときは、SAKU Builder を入れ直してください。","SAKU Builder is not ready to create the ZIP. Reopen the screen. If that does not fix it, reinstall SAKU Builder."));return;}
+  const invoke=window.__TAURI__?.core?.invoke;
+  let appVersion=null;
+  if(invoke){try{appVersion=(await invoke("get_runtime_state"))?.app_version||null;}catch{}}
+  const zip=await api.buildSelfMadeCharacterZip({
+    slug:data.meta.slug,characterText:payloadFor("json",data).text,appVersion,
+    exportChecks:{adopted_schema:"PASS",contact_guard:"PASS",human_confirmation:true}});
+  if(invoke){
+    try{
+      const dialogTitle=saveMessage("SAKU Builderの出力を保存","Save SAKU Builder output");
+      const result=await invoke("save_self_made_zip",{filename:zip.filename,bytes:Array.from(zip.bytes),dialogTitle});
+      if(result.status==="SAVED"){
+        setSaveFeedback("success",saveMessage(`保存しました\n${result.path}`,`Saved\n${result.path}`));
+        toast(saveMessage("保存しました","Saved"));
+      }else if(result.status==="CANCELLED"){
+        setSaveFeedback("cancelled",saveMessage("保存をキャンセルしました","Save cancelled"));
+      }else{
+        const reason=result.reason||"UNKNOWN";
+        setSaveFeedback("error",saveMessage(`保存に失敗しました：${reason}`,`Save failed: ${reason}`));
+      }
+    }catch(error){
+      setSaveFeedback("error",saveMessage(`保存に失敗しました：${error}`,`Save failed: ${error}`));
+    }
+    return;
+  }
+  const blob=new Blob([zip.bytes],{type:"application/zip"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download=zip.filename;a.click();URL.revokeObjectURL(a.href);
+  const message=saveMessage(`ブラウザへダウンロードを要求しました\n${zip.filename}`,`Download requested in browser\n${zip.filename}`);
+  setSaveFeedback("requested",message);toast(message);
+});
 document.getElementById("copyBtn").addEventListener("click",async()=>{
   if(!(await validateAdoptedOutput()))return;
   const gate=exportCheck(curTab,data);
@@ -1251,8 +1297,10 @@ function desktopHomeHref(){
 function resetDestination(){
   return window.__TAURI__?.core?.invoke ? desktopHomeHref() : null;
 }
-document.getElementById("resetAll").addEventListener("click",()=>{
-  if(!confirm(uiString("入力内容をすべて消して最初からにしますか？")))return;
+document.getElementById("resetAll").addEventListener("click",async()=>{
+  /* O-11 (Owner 2026-09-24: the Golden page included): the app's own confirmation. */
+  const clearQuestion=uiString("入力内容をすべて消して最初からにしますか？");
+  if(!(window.sakuConfirmFor?await window.sakuConfirmFor("clearInput"):confirm(clearQuestion)))return;
   if(!replaceCharacterData(blank()))return;
   curTab="yaml";currentHelpChapter=0;currentSyncChapter=null;clearApprovalSnapshot();
   document.getElementById("exportApproval").checked=false;
@@ -1764,7 +1812,8 @@ function toSakuJson(d){
      編集の出発点になった Character に重ねるので、この画面が扱わない Canonical
      項目（席の責務、合議契約など）は取り込み→編集→書き出しで落ちない。 */
   const api=(typeof window!=="undefined")?window.SAKU_UNIFIED:null;
-  if(!api) return "// Unified V1 authoring module is still loading";
+  /* The same notice as the YAML tab (ライター&SNS Z47), with the JSON comment mark. */
+  if(!api){let en=false;try{en=localStorage.getItem("saku.ui.locale")==="en-US"}catch{}return en?"// Loading…":"// 読み込んでいます…";}
   return JSON.stringify(api.toUnifiedCharacter(d,d._unified_source||null),null,2);
 }
 
@@ -1831,8 +1880,8 @@ function contactGuard(text){
 }
 /* ---------------- 出力タブ ---------------- */
 /* 2026-09-22（Owner）: 外部AIプロンプトはデスクトップ 03「AIプラットフォームで動作確認」に
-   一本化し、Guild概要（MACHI-GUILD-SUMMARY）は廃止。AMU/MACHI は署名付きパック経由でのみ
-   Character を受け取るので、この画面の出力は正本 JSON と character.yaml と試験記録だけ。 */
+   一本化し、Guild概要（MACHI-GUILD-SUMMARY）は廃止。この画面の出力は正本 JSON と character.yaml と
+   試験記録だけ（AMU 用の自作 ZIP は、同じ JSON を包んだもの）。 */
 const TABS=[
   ["yaml","character.yaml"],
   ["json","Character File"],
@@ -1847,8 +1896,9 @@ const TAB_PURPOSE={
     ja:"編集を続けるためのファイル。次回はこれを読み込みます。",
     en:"The file to keep editing. Load this one next time."},
   json:{reimport:false,
-    ja:"署名・パック化の元になる正本（Unified V1）JSON。AMU/MACHI は署名付きパック経由でのみ受け取る。ここへは読み戻せません。",
-    en:"The canonical Unified V1 JSON that signing and packing start from. AMU / MACHI receive it only through a signed pack. It cannot be loaded back here."},
+    /* The same text as tools/unified-v1/character-file-text.mjs (ライター&SNS, EN 依頼 AC1). */
+    ja:"署名やパックを作るときの元になる JSON です。この SAKU Builder へは読み戻せません。AMU Studio へは「AMU 用 ZIP をダウンロード」で作る ZIP で取り込めます（署名は付かず、署名のない自作の Character として扱われます）。MACHI へは、署名付きのパックにして渡します。",
+    en:"This is the JSON used as the source when you make a signature or a pack. It cannot be loaded back into this SAKU Builder. For AMU Studio, import the ZIP made with “Download ZIP for AMU” (it carries no signature, so AMU treats it as an unsigned Character you made yourself). For MACHI, make it into a signed pack and hand over the pack."},
   test:{reimport:false,
     ja:"試験結果の記録。ここへは読み戻せません。",
     en:"A record of test results. It cannot be loaded back here."},
@@ -2264,6 +2314,7 @@ function renderPreview(){
   const isHelp=curTab==="help";
   el.hidden=isHelp;help.hidden=!isHelp;
   document.querySelector(".pv-actions").hidden=isHelp;
+  const zipButton=document.getElementById("downloadZipBtn");if(zipButton)zipButton.hidden=curTab!=="json";
   document.getElementById("exportGate").hidden=isHelp;
   if(isHelp){renderContextHelp();return;}
   const p=payloadFor(curTab,data);
@@ -2406,7 +2457,7 @@ async function importCharacterYaml(text){
     let verdict;
     try{verdict=await window.SAKU_ADOPTED_VALIDATE(obj);}
     catch(error){toast("採択済みSchemaを確認できないため読込を停止しました："+error.message);return false;}
-    if(!verdict.ok){toast("Unified V1 CharacterがSchemaに適合しません："+window.SAKU_FORMAT_VALIDATION_ISSUE(verdict.errors[0]));return false;}
+    if(!verdict.ok){toast(uiString("この Character は、採択済み Schema に合いません：")+window.SAKU_FORMAT_VALIDATION_ISSUE(verdict.errors[0]));return false;}
     const d=blank();
     deepAdopt(d,window.SAKU_UNIFIED.fromUnifiedCharacter(obj));
     d._unified_source=JSON.parse(JSON.stringify(obj));
@@ -2416,7 +2467,7 @@ async function importCharacterYaml(text){
     return true;
   }
   if(!obj||!obj.meta||typeof obj.meta!=="object"){
-    toast("Unified V1 Characterまたは旧character.yamlとして認識できません");return false;
+    toast("このファイルは読み込めません。読み込めるのは、この SAKU Builder の character.yaml（または同じ内容の JSON）と、以前の版の編集画面で作った character.yaml です。");return false;
   }
   const d=blank();
   deepAdopt(d,obj);
@@ -2683,8 +2734,10 @@ if (typeof window.armWorkingCharacterPublish === "function") window.armWorkingCh
    対応表は tools/v1/unified-authoring.mjs に一箇所だけ置く。 */
 import * as UnifiedAuthoring from "./lib/unified-authoring.mjs";
 import { loadAdoptedSchema, validateCompleteAdoptedCharacter, formatValidationIssue } from "./lib/adopted-schema-validator.mjs";
+import * as SelfMadeZip from "./lib/self-made-character-zip.mjs";
 import { FIELDS as SEMANTIC_FIELDS } from "./lib/semantic-registry.mjs";
 window.SAKU_UNIFIED = UnifiedAuthoring;
+window.SAKU_SELF_MADE_ZIP = SelfMadeZip;
 window.SAKU_ADOPTED_VALIDATE = async character => {
   const schema = await loadAdoptedSchema();
   return validateCompleteAdoptedCharacter(character, schema);
@@ -2851,9 +2904,10 @@ window.SAKU_HELP_TREE = HelpTree;
     const settledCharacter = async () => {
       if (unsavedEdits()) {
         const question = english()
-          ? "There are unsaved changes. Save this Character and continue? (Cancel = stay on this screen)"
-          : "未保存の変更があります。この内容で保存してから進みますか？（キャンセル＝この画面に留まります）";
-        if (!window.confirm(question)) return null;
+          ? "There are unsaved changes. Save this Character and continue?"
+          : "未保存の変更があります。この内容で保存してから進みますか？";
+        // O-11: the buttons say 「保存して進む」 / 「編集に戻る」, so the body no longer explains Cancel.
+        if (!(window.sakuConfirmFor ? await window.sakuConfirmFor("saveAndContinue", question) : window.confirm(question))) return null;
         const outcome = await performSave();
         if (!outcome?.saved) return null;
         return outcome.character;
@@ -2945,7 +2999,7 @@ window.SAKU_HELP_TREE = HelpTree;
     apply.id = "occupationApply";
     apply.className = "btn-sm";
     apply.textContent = "Previewを確認して明示的に反映する";
-    apply.addEventListener("click", () => {
+    apply.addEventListener("click", async () => {
       const mapped = occupation.mapped || [];
       if (!mapped.length) { window.alert("反映できる項目がありません。"); return; }
       const conflicts = [];
@@ -2957,7 +3011,7 @@ window.SAKU_HELP_TREE = HelpTree;
       }
       if (conflicts.length) {
         const message = ["現在の入力内容を職種情報で上書きしてもよいですか？", ...conflicts].join(String.fromCharCode(10));
-        if (!window.confirm(message)) return;
+        if (!(window.sakuConfirmFor ? await window.sakuConfirmFor("overwriteWithOccupation", message) : window.confirm(message))) return;
       }
       for (const item of mapped) {
         if (item.path !== "character_core.character_role") continue;

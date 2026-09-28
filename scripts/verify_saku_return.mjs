@@ -193,7 +193,7 @@ try{
  win.localStorage.clear();win.location.reload();await new Promise(r=>frame.onload=r);doc=frame.contentDocument;win=frame.contentWindow;await until(()=>doc.getElementById('viewer-import-package'));
  await importAs('pack');await until(()=>status().includes('件を一覧に追加しました'));
  check(entries().length===15,'SR-UI B: support pack imported (15)');
- win.confirm=()=>false; // キャンセル = 両方残す
+ ((w,fn)=>{w.__sakuAnswer=fn;if(w.__sakuObs)return;w.__sakuObs=new w.MutationObserver(()=>{for(const g of w.document.querySelectorAll("dialog.saku-confirm")){if(g.dataset.answered)continue;g.dataset.answered="1";const q=(g.querySelector("p")||{}).textContent||"";(w.__sakuAnswer(q)?g.querySelector("[data-confirm-action]"):g.querySelector("[data-confirm-cancel]")).click();}});w.__sakuObs.observe(w.document.documentElement,{childList:true,subtree:true});})(win,()=>false); // 両方残す
  await importAs('return');await until(()=>status().includes('SAKU_RETURN_IMPORTED'));
  check(status().includes('一覧の現行')&&status().includes('と同じ Character です'),'SR-UI B: relation text says SAME_AS_LIBRARY');
  check(entries().length===16,'SR-UI B: 両方残す → 16 entries ('+entries().length+')');
@@ -219,7 +219,7 @@ try{
             "window.__TAURI__={__stub:true,core:{invoke:async(command)=>{",
             "if(command==='choose_and_import_package'||command==='import_package_path')return structuredClone(window.__SR_RESULTS__[window.__SR_MODE__]);",
             "if(command==='save_workspace_character')return{status:'SAVED'};if(command==='list_workspace_characters')return{status:'OK',artifacts:[]};",
-            "if(command==='runtime_state')return{workspace:'C:/ws',app_version:'0.1.0-beta.2',first_run:false};return null;}}};window.confirm=()=>true;",
+            "if(command==='runtime_state')return{workspace:'C:/ws',app_version:'0.1.0-beta.2',first_run:false};return null;}}};((w,fn)=>{w.__sakuAnswer=fn;if(w.__sakuObs)return;w.__sakuObs=new w.MutationObserver(()=>{for(const g of w.document.querySelectorAll('dialog.saku-confirm')){if(g.dataset.answered)continue;g.dataset.answered='1';const q=(g.querySelector('p')||{}).textContent||'';(w.__sakuAnswer(q)?g.querySelector('[data-confirm-action]'):g.querySelector('[data-confirm-cancel]')).click();}});w.__sakuObs.observe(w.document.documentElement,{childList:true,subtree:true});})(window,()=>true);",
             "</script>"].join("");
           response.setHeader("Content-Type", "text/html;charset=utf-8");
           response.end(html.replace("<script>", `${stub}<script>`).replace(/(href|src)="\.\//g, '$1="/.desktop-dist/'));

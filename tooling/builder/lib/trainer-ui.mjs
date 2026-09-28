@@ -203,14 +203,20 @@ function on(id,action){if($(id))$(id).onclick=()=>guard(action);}
 
 async function init(){
   language=localStorage.getItem('saku.trainer.ux4.locale')==='en'?'en':'ja';
-  handoffContext=await loadHandoffContext({baseDirs:['../help/','../desktop/resources/','./'],guideUrls:['./manual/saku-field-guide.data.json','./manual/saku-field-guide.data.json']});
+  handoffContext=await loadHandoffContext({baseDirs:['./'],guideUrls:['./manual/saku-field-guide.data.json','./manual/saku-field-guide.data.json']});
   // A Character is admitted here as the import gate admits it: the hand checks and
   // the adopted schema (2026-09-24). Without the schema nothing is admitted.
   let adoptedSchema=null;try{adoptedSchema=await loadAdoptedSchema();}catch{adoptedSchema=null;}
   const admissible=value=>Boolean(adoptedSchema)&&validateUnifiedV1(value).ok&&validateCompleteAdoptedCharacter(value,adoptedSchema).ok;
   store=await openStore();for(const entry of Library.list())if(admissible(entry.character))characters.set(entry.character.identity.character_id,entry.character);
   const params=new URLSearchParams(location.search),handoff=consumeHandoff(localStorage,'trainer',{character_id:params.get('character_id')||'',character_revision:params.get('character_revision')||''});if(handoff.status==='REJECTED'||(params.get('character_id')&&handoff.status==='EMPTY'))throw new Error(`CHARACTER_HANDOFF_${handoff.reason||'MISSING'}`);
-  const character=handoff.status==='ACCEPTED'?handoff.character:ActiveSaku.getWorkingCharacter();if(character&&!admissible(character))throw new Error('CHARACTER_INVALID');if(character)characters.set(character.identity.character_id,character);
+  // O-1 (2026-09-24 regression): only a Character handed over on purpose is refused
+  // when it does not fit the adopted schema (F6). The Builder's working copy is a
+  // draft that may be half written; when it does not fit, the Trainer opens with
+  // nothing selected instead of stopping, and the list still offers the rest.
+  const handed=handoff.status==='ACCEPTED';const working=handed?null:ActiveSaku.getWorkingCharacter();
+  if(handed&&!admissible(handoff.character))throw new Error('CHARACTER_INVALID');
+  const character=handed?handoff.character:(working&&admissible(working)?working:null);if(character)characters.set(character.identity.character_id,character);
   const activeId=await store.active();if(activeId)session=await store.load(activeId);if(activeId===undefined&&character)session=await store.create(character);if(activeId&&character&&session&&JSON.stringify(session.source.snapshot)!==JSON.stringify(character))session=await store.create(character);if(handoff.status==='ACCEPTED'&&(!session||session.source.character_id!==character.identity.character_id||session.source.character_revision!==String(character.identity.character_revision)||JSON.stringify(session.source.snapshot)!==JSON.stringify(character)))session=await store.create(character);
   if(session){characters.set(session.source.character_id,session.source.snapshot);stage=session.view.stage;draftsFromSession();status=activeId===session.session_id?t('保存したトレーニングを再開しました','Saved training resumed'):t('新しいトレーニング準備を作成しました','New training preparation created');}
   await refreshList();render();window.__saku_trainer={revision:4,getSession:()=>structuredClone(session),getStage:()=>stage,

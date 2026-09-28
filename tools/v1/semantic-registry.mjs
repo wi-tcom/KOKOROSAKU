@@ -42,8 +42,8 @@ const help = (jaLabel, enLabel, jaWhat, enWhat, jaExample, enExample, jaCaution,
     example: { ja: jaExample, en: enExample },
     caution: { ja: jaCaution, en: enCaution },
     relatedAiBehavior: {
-      ja: "関連するAIの動きは期待される傾向です。実際の応答はTrainerのEvidenceで別に確認します。",
-      en: "Related AI behavior is an expected tendency. Actual responses are assessed separately with Trainer evidence.",
+      ja: "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
+      en: "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation.",
     },
     relatedItems: {
       ja: "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -186,7 +186,7 @@ export const READ_ONLY_SEMANTICS = Object.freeze([
   Object.freeze({
     id: "fixed-one-plus-seven", label: { ja: "1+7の固定構造", en: "Fixed 1+7 structure" },
     requiredness: "REQUIRED", editability: "FIXED", classification: "SYSTEM_FIXED",
-    reason: { ja: "Unified V1の固定構造であり、CharacterごとのSeat設定ではないため編集できません。", en: "Not editable because Unified V1 fixes the structure; it is not per-Character Seat configuration." },
+    reason: { ja: "すべての Character に共通の決まった構造で、Character ごとの Seat の設定ではないため、編集できません。", en: "Not editable because this is a fixed structure shared by every Character, not a per-Character Seat configuration." },
     singleHome: "P04", effectState: "CHARACTER_DEFINED",
   }),
 ]);

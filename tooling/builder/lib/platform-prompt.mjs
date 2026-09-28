@@ -18,6 +18,7 @@
 // A bare token never stands alone: its meaning travels as the L2 lines. The
 // five presentation axes (a/i/j/k/l) stay home.
 import { axisLetter, renderDirectiveBlock } from "./directive-glossary.mjs";
+import { REFERENCE_AFTER_LINE, renderReferenceSection } from "./reference-material.mjs";
 
 export const PROMPT_AXES = Object.freeze(["b_companion_domain", "c_intelligence_vector", "d_socratic_angle", "e_vocabulary_tone", "f_acknowledgement", "g_pulse", "h_tactile", "m_error_narrative", "n_crystallization", "o_closing"]);
 export const PROMPT_EXCLUDED_AXES = Object.freeze(["a_motif", "i_thinking_pause_ms", "j_theme_color", "k_whitespace_percent", "l_weathering_presentation"]);
@@ -182,6 +183,16 @@ export function platformLaunchText(rawCharacter, format = HANDOFF_FORMAT, option
     body,
     `--- ${name} のキャラクター定義 ここまで ---`,
   ];
+  // Reference material (data), only when the person attached a checked AMU export (DECISION
+  // 2026-09-27-04, -08): its own section after the definition, then the one line that keeps it out
+  // of the directives, then FOLLOW_LINE. An excerpt that would not stay inside the section stops the
+  // whole text (fail closed), as a base layer that does not check out does.
+  const excerpts = options.reference?.excerpts;
+  if (Array.isArray(excerpts) && excerpts.length) {
+    let section;
+    try { section = renderReferenceSection(excerpts); } catch { return ""; }
+    instruction.push("", section, "", REFERENCE_AFTER_LINE);
+  }
   // FOLLOW_LINE names directives above it, so it is only written when there are
   // some: the base layer, or the Character's own directive block. A Character
   // with no selected token and no base layer gets the definition without the

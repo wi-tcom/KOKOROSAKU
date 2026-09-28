@@ -14,7 +14,7 @@ export function setBehaviorMapSourceRev(rev) { MAP_SOURCE_REV = rev ? String(rev
 
 export const EXTENSION_PROFILE = "saku.field-guide-extension@1";
 export const NOT_MEASURED_TEXT = "未確認（設計上の意図のみ）";  // the 「効果:」 label belongs to the renderer (writer M1)
-export const EFFECT_SOURCE_KINDS = Object.freeze(["PARAMETER_BEHAVIOR_MAP", "AMU_CONFIRMED_2026-09-22", "PROMPT_INCLUDED_03 + DESIGN_INTENT", "DESIGN_INTENT", "PRESENTATION_ONLY", "OPERATION_FACT", "NOT_MEASURED"]);
+export const EFFECT_SOURCE_KINDS = Object.freeze(["PARAMETER_BEHAVIOR_MAP", "PROMPT_INCLUDED_03 + DESIGN_INTENT", "DESIGN_INTENT", "PRESENTATION_ONLY", "OPERATION_FACT", "NOT_MEASURED"]);
 /** Effect bodies never carry these (Owner criterion + 統制卓 2026-09-22: 断定語なし、製品名は出典欄へ). */
 export const EFFECT_FORBIDDEN_WORDS = Object.freeze(["必ず", "常に", "確実に", "保証", "絶対"]);
 export const EFFECT_FORBIDDEN_PRODUCT_NAMES = Object.freeze(["AMU", "MACHI", "ERABAZU", "KOKOROAMU", "KOKOROSAKU", "03 では", "03では", "04 では", "04では"]);

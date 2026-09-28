@@ -185,6 +185,31 @@ const VERSION_SITES = [
     equal(all.length, extension.content_review.effects.counts.total, "DOCS-EFFECT-V2 recorded effects = approval count (80)");
     equal(recorded.filter(r => r.p.startsWith("personality_axes.")).length, 56, "DOCS-EFFECT-V2 56 axis options recorded");
     check(all.every(r => /(傾向|になります|表示されます|扱われます|入ります|始めます|場面です)/.test(r.effect_ja) && /(ます|ません)。$/.test(r.effect_ja.trim()) && X.EFFECT_SOURCE_KINDS.includes(r.effect_source) && r.effect_source !== "NOT_MEASURED" && r.effect_source !== "AMU_CONFIRMED_2026-09-22"), "DOCS-EFFECT-V2 every recorded effect ends in the tendency form and carries one of the four v2 source labels");
+    // 2026-09-25 (Owner: 「指示文に基づく動作」; AMU↔SAKU via 統制卓, ライター&SNS 1acf15f):
+    // nothing may claim the 2026-09-22 AMU Studio check any more — no version, test
+    // or result was recorded, and that AMU is being rebuilt. OPERATION_FACT now rests
+    // on the Character definition's directive, and says so.
+    {
+      const read = rel => readFileSync(path.join(ROOT, rel), "utf8");
+      const surfaces = ["tools/v1/help-tree.mjs", "scripts/generate_frozen_ia_manual.mjs", "tools/v1/field-guide-extension.mjs", "manual/saku-field-guide.extension.json", "manual/saku-field-guide.data.json", "manual/saku-field-guide.html"];
+      const amuProblems = texts => {
+        const problems = [];
+        for (const [rel, text] of Object.entries(texts)) {
+          if (text.includes("AMU_CONFIRMED_2026-09-22")) problems.push(`${rel}: the AMU 2026-09-22 source is still defined`);
+          if (/利用時の動作（確認済み）|Behavior in use \(confirmed\)/.test(text)) problems.push(`${rel}: OPERATION_FACT still says 確認済み / confirmed`);
+        }
+        const ext = JSON.parse(texts["manual/saku-field-guide.extension.json"]);
+        if (!/根拠は Character 定義の指示文/.test(ext.effect_sources.OPERATION_FACT.from) || !/AMU Studio での確認を根拠から外しました/.test(ext.effect_sources.OPERATION_FACT.from)) problems.push("OPERATION_FACT's definition does not name the directive and the removal");
+        if (!texts["tools/v1/help-tree.mjs"].includes('OPERATION_FACT: "Behavior stated in the directive"')) problems.push("the English source name is not the delivered one (request W)");
+        const noteB = ext.non_canonical_fields[0].options.B.source_note_ja || "";
+        if (!/製品の画面での実機確認ではない/.test(noteB) || /統制卓確認 2026-09-22/.test(noteB)) problems.push("class B's note still rests on the 9/22 check");
+        return problems;
+      };
+      const texts = Object.fromEntries(surfaces.map(rel => [rel, read(rel)]));
+      check(amuProblems(texts).length === 0, "DOCS-SOURCE no label or note rests on the 2026-09-22 AMU check; OPERATION_FACT = 「指示文に基づく動作」 on the directive");
+      const back = { ...texts, "tools/v1/help-tree.mjs": texts["tools/v1/help-tree.mjs"].replace('OPERATION_FACT: "指示文に基づく動作",', 'OPERATION_FACT: "利用時の動作（確認済み）",') };
+      check(amuProblems(back).length > 0, "DOCS-SOURCE falsification: the old 「確認済み」 label is caught");
+    }
     check(all.every(r => (typeof r.effect_en === "string" && r.effect_en.trim()) || /^PENDING_RETRANSLATION/.test(r.effect_en_status || "")) && all.filter(r => !r.effect_en).length <= 1 && extension.content_review.effects_en?.status === "DELIVERED" && /@[0-9a-f]{7}/.test(extension.content_review.effects_en.source), "DOCS-EFFECT-V2 EN effect present for all 80 (translation team delivery recorded with source rev)");
     check(!/AMU|MACHI|ERABAZU|KOKOROAMU|KOKOROSAKU/.test(opRec.map(r => r.effect_ja).join("")) && /確認の画面が出る環境では/.test(opRec[1].effect_ja) && opRec[1].source_note_ja, "DOCS-EFFECT-V2 operation class B body has no product name; the product-specific fact sits in the source note (統制卓 2026-09-22)");
     check(/^(必ず|常に|確実に|保証|絶対)$/.test("必ず") && X.EFFECT_FORBIDDEN_WORDS.length === 5 && all.every(r => X.EFFECT_FORBIDDEN_WORDS.every(w => !r.effect_ja.includes(w))), "DOCS-EFFECT-V2 no 断定語 in any recorded effect");

@@ -259,6 +259,18 @@ const names = Library => Library.list().map(e => e.character.identity.display_na
   const r2 = structuredClone(sample[0]); r2.identity.character_revision = "1.1.0";
   for (const c of [r1, r2]) await win.host.invoke("save_workspace_character", { characterId: c.identity.character_id, characterJson: JSON.stringify(c) });
   check(disk.files.has(`C:/ws/A|characters/${r1.identity.character_id}/revisions/1.0.0.json`) && disk.files.has(`C:/ws/A|characters/${r1.identity.character_id}/revisions/1.1.0.json`), "G: both revisions are kept (the stub mirrors main.rs; H checks main.rs does it)");
+
+  // O-10 (2026-09-24 regression): the workspace changed outside the app (the
+  // host config points at a new, empty folder while the working copy is A's).
+  const aListBefore = disk.files.get("C:/ws/A|saku.workspace.library");
+  disk.config.workspace = "C:/ws/C";
+  const outside = await openWindow(disk, "three", local);
+  const outsideBound = await outside.W.bindAtStartup(await outside.host.invoke("get_runtime_state"));
+  equal(outsideBound.status, "STRAY_KEPT", "O-10: a working copy that is another workspace's is recognised as such");
+  equal([...disk.files.keys()].filter(k => k.startsWith("C:/ws/C|")).filter(k => k.includes("migration/")).length, 0, "O-10: nothing of A's list is written into C's migration/ (O-10)");
+  check(![...disk.files.entries()].some(([k, v]) => k.startsWith("C:/ws/C|") && String(v).includes("C:/ws/A")), "O-10: …and no file in C names A's folder");
+  equal(disk.files.get("C:/ws/A|saku.workspace.library"), aListBefore, "O-10: A keeps its list, unchanged");
+  equal(outside.Library.summary().total, 0, "O-10: C starts from its own (empty) files");
 }
 
 // ── H. host source ──────────────────────────────────────────────────────────

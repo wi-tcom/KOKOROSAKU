@@ -6,6 +6,7 @@ import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PUBLIC = path.join(ROOT, "tooling", "builder");
@@ -135,7 +136,7 @@ if (!chrome) { console.error("PUBLIC_TOOLING NOT_AVAILABLE / CHROME_NOT_FOUND");
 const harness = `<!doctype html><meta charset="utf-8"><pre id="result" data-status="RUNNING"></pre><script type="module">
 const result=document.getElementById('result'),checks=[];const ok=(value,label)=>{if(!value)throw new Error(label);checks.push(label)};const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const load=async source=>{const frame=document.createElement('iframe');frame.style='width:1280px;height:900px';frame.src=source;document.body.append(frame);await new Promise(resolve=>frame.addEventListener('load',resolve,{once:true}));await wait(1200);return frame};
-try{localStorage.clear();const builder=await load('/tooling/builder/index.html'),bd=builder.contentDocument,bw=builder.contentWindow;ok(Boolean(bw.SAKU_UNIFIED),'Builder Unified V1 module loaded');ok(Boolean(bw.SAKU_FROZEN_IA),'Builder Frozen IA module loaded');ok(bd.querySelectorAll('[data-canonical-path]').length===47,'Builder exposes exactly 47 authoring homes');ok(bd.querySelector('#openTrainer')?.getAttribute('href')==='./trainer.html','Builder links to the public Trainer');ok(bd.querySelector('meta[name="saku-character-selection"]')?.content==='disabled','Static manifest disables Character selection');ok(!bd.getElementById('authoringPickCharacter'),'Static Builder omits unavailable Character selection');const trainer=await load('/tooling/builder/trainer.html'),td=trainer.contentDocument;await wait(1500);ok(Boolean(td.getElementById('stage-01')),'Trainer preparation stage loaded; body='+td.body.innerText.slice(0,500));ok(td.querySelectorAll('#training-method-fields select').length>=5,'Trainer five preparation selectors loaded');td.getElementById('locale').value='en';td.getElementById('locale').dispatchEvent(new Event('change',{bubbles:true}));await wait(100);ok(td.querySelector('h1')?.textContent==='01 Prepare','Trainer JA/EN switch works');result.textContent=JSON.stringify({status:'PASS',checks});result.dataset.status='PASS'}catch(error){result.textContent=JSON.stringify({status:'FAIL',checks,error:String(error.stack||error)});result.dataset.status='FAIL'}
+try{localStorage.clear();const builder=await load('/tooling/builder/index.html'),bd=builder.contentDocument,bw=builder.contentWindow;ok(Boolean(bw.SAKU_UNIFIED),'Builder Unified V1 module loaded');ok(Boolean(bw.SAKU_FROZEN_IA),'Builder Frozen IA module loaded');ok(bd.querySelectorAll('[data-canonical-path]').length===47,'Builder exposes exactly 47 authoring homes');ok(bd.querySelector('#openServices')?.getAttribute('href')==='./services.html'&&!bd.querySelector('#openTrainer'),'Builder links to the services page, not the Trainer (Owner 2026-09-27)');ok(bd.querySelector('meta[name="saku-character-selection"]')?.content==='disabled','Static manifest disables Character selection');ok(!bd.getElementById('authoringPickCharacter'),'Static Builder omits unavailable Character selection');const gone=await Promise.all(['trainer','speed-test','external-review'].map(name=>fetch('/tooling/builder/'+name+'.html',{cache:'no-store'}).then(r=>r.status)));ok(gone.every(status=>status===404),'The ZIP has no Trainer, speed test or external review page (Owner 2026-09-27); got '+gone.join(','));ok((await fetch('/tooling/builder/services.html',{cache:'no-store'})).status===200,'The ZIP has the services page');result.textContent=JSON.stringify({status:'PASS',checks});result.dataset.status='PASS'}catch(error){result.textContent=JSON.stringify({status:'FAIL',checks,error:String(error.stack||error)});result.dataset.status='FAIL'}
 </script>`;
 const mime = new Map([[".html", "text/html; charset=utf-8"], [".mjs", "text/javascript; charset=utf-8"], [".css", "text/css; charset=utf-8"], [".json", "application/json; charset=utf-8"], [".md", "text/markdown; charset=utf-8"]]);
 const server = createServer(async (request, response) => {
@@ -211,6 +212,39 @@ const runPowerShell = command => new Promise((resolve, reject) => {
   process.on("close", code => code === 0 ? resolve(output) : reject(new Error(`POWERSHELL_${code}: ${errors || output}`)));
 });
 
+// D-1 (2026-09-24 regression, サイト構築): the Builder's 「ヘルプ」 is set in a module,
+// which the HTML link scan does not read. Its target must exist in the static tree.
+{
+  const builderPage = path.join(ROOT, "tooling", "builder", "index.html");
+  const helpTarget = source => {
+    const match = /help\.href = "([^"]+)";/.exec(source);
+    return match ? path.resolve(path.dirname(builderPage), match[1]) : null;
+  };
+  const exists = async file => Boolean(file) && await stat(file).then(() => true, () => false);
+  const builderUi = await readFile(path.join(ROOT, "tooling", "builder", "lib", "builder-ui.mjs"), "utf8");
+  check(await exists(helpTarget(builderUi)), "D-1 the static Builder's help link resolves inside tooling/builder");
+  check(!await exists(helpTarget('help.href = "../help/index.html";')), "D-1 falsification: the desktop-layout link would not resolve and is caught");
+}
+
+// Owner 2026-09-27: the Trainer, the speed test and the external-review intake left the screens, so
+// the ZIP carries none of their pages either; opened from the unpacked folder they would show the
+// removed texts (ライター&SNS). Their modules stay for the separate tool later.
+{
+  const staticManifest = JSON.parse(await readFile(path.join(ROOT, "desktop", "resources", "manifests", "static-public.json"), "utf8"));
+  const removedPages = ["trainer.html", "speed-test.html", "external-review.html"];
+  const listed = staticManifest.files.map(([, target]) => target).filter(target => removedPages.includes(target));
+  check(listed.length === 0, `the ZIP manifest still lists ${listed.join(", ")}`);
+  for (const page of removedPages) check(!existsSync(path.join(ROOT, "tooling", "builder", page)), `tooling/builder/${page} is still in the public tree`);
+  check(staticManifest.files.some(([, target]) => target === "services.html"), "the ZIP carries the services page");
+}
+// O-3: the static Trainer finds the base layer on its first try (no 404s on the way).
+{
+  const trainerUi = await readFile(path.join(ROOT, "tooling", "builder", "lib", "trainer-ui.mjs"), "utf8");
+  const dirs = /baseDirs:\[([^\]]*)\]/.exec(trainerUi)?.[1] || "";
+  check(dirs === "'./'", `O-3 the static Trainer looks for the base layer in ./ only (got ${dirs || "none"})`);
+  check(await stat(path.join(ROOT, "tooling", "builder", "base", "saku-base-directives.v1.txt")).then(() => true, () => false), "O-3 …and ./base/ holds it");
+}
+
 let extractedRelativeLinkCount = 0;
 let zipReport;
 try {
@@ -221,6 +255,10 @@ try {
     await cp(path.join(ROOT, "docs", "getting-started", name), path.join(zipSource, "docs", "getting-started", name));
   for (const name of ["SECURITY.md", "LICENSE-DOCS.md"])
     await cp(path.join(ROOT, name), path.join(zipSource, name));
+  // The projected help (D-1) links the two Unified V1 manuals under docs/unified-v1/.
+  await mkdir(path.join(zipSource, "docs", "unified-v1"), { recursive: true });
+  for (const name of ["BUILDER_MANUAL_UNIFIED_V1.md", "TRAINER_MANUAL_UNIFIED_V1.md"])
+    await cp(path.join(ROOT, "docs", "unified-v1", name), path.join(zipSource, "docs", "unified-v1", name));
 
   await runPowerShell(`Compress-Archive -LiteralPath ${quotePowerShell(zipSource)} -DestinationPath ${quotePowerShell(zipArchive)} -Force`);
   check((await stat(zipArchive)).size > 0, "public ZIP fixture was created");
@@ -263,11 +301,11 @@ try {
     'const rootValidator=await import("/tooling/builder/lib/adopted-schema-validator.mjs?root");const rootSchema=await rootValidator.loadAdoptedSchema();ok(Boolean(rootSchema),"root serve loads exact adopted schema");',
     'const extensionRef=String(rootSchema.properties.extensions.$ref),extensionId=extensionRef.split("#")[0],resolver=rootValidator.ADOPTION_STATUS.resolver_mapping[extensionId];ok(resolver?.bundled_relative_url==="../schemas/character-extension.v1.schema.json","absolute extension $ref has the exact bundled resolver mapping");ok(rootSchema.__externalSchemas?.[extensionId]?.$id===extensionId,"absolute extension $ref resolves to the bundled extension schema");',
     'const rootBuilder=await load("/tooling/builder/index.html");ok(rootBuilder.contentDocument.querySelectorAll("[data-canonical-path]").length===47,"root serve Builder is complete");',
-    'const rootTrainer=document.createElement("iframe");rootTrainer.src="/tooling/builder/trainer.html";document.body.append(rootTrainer);await new Promise(resolve=>rootTrainer.addEventListener("load",resolve,{once:true}));await until(()=>rootTrainer.contentDocument.getElementById("stage-01"));ok(true,"root serve Trainer loads");',
+    'ok((await fetch("/tooling/builder/trainer.html",{cache:"no-store"})).status===404,"root serve has no Trainer page (Owner 2026-09-27)");',
     'const before=await fetch(PREFIX+"/tooling/schemas/saku-unified-character.v1.schema.json",{cache:"no-store"});const after=await fetch(PREFIX+"/tooling/builder/schemas/saku-unified-character.v1.schema.json",{cache:"no-store"});ok(before.status===404,"document-relative legacy schema path is measured as HTTP 404");ok(after.status===200,"module-relative bundled schema path is measured as HTTP 200");',
     'const prefixValidator=await import(PREFIX+"/tooling/builder/lib/adopted-schema-validator.mjs?prefix");const prefixSchema=await prefixValidator.loadAdoptedSchema();ok(Boolean(prefixSchema.__externalSchemas?.[extensionId]),"prefix serve loads schema and its absolute extension mapping");',
     'for(const [label,prefix] of [["root",""],["prefix",PREFIX]]){',
-    'localStorage.clear();const frame=await load(prefix+"/tooling/builder/index.html"),d=frame.contentDocument,w=frame.contentWindow;w.alert=()=>{};w.confirm=()=>true;d.getElementById("loadExample").click();await wait(500);',
+    'localStorage.clear();const frame=await load(prefix+"/tooling/builder/index.html"),d=frame.contentDocument,w=frame.contentWindow;w.alert=()=>{};((w,fn)=>{w.__sakuAnswer=fn;if(w.__sakuObs)return;w.__sakuObs=new w.MutationObserver(()=>{for(const g of w.document.querySelectorAll("dialog.saku-confirm")){if(g.dataset.answered)continue;g.dataset.answered="1";const q=(g.querySelector("p")||{}).textContent||"";(w.__sakuAnswer(q)?g.querySelector("[data-confirm-action]"):g.querySelector("[data-confirm-cancel]")).click();}});w.__sakuObs.observe(w.document.documentElement,{childList:true,subtree:true});})(w,()=>true);d.getElementById("loadExample").click();await wait(500);',
     'const entries=()=>JSON.parse(localStorage.getItem("saku.workspace.library")||"{}").entries||[];const countBefore=entries().length;ok(!w.__TAURI__,label+" uses browser persistence without a native bridge mock");d.getElementById("saveUnifiedCharacter").click();await until(()=>entries().length===countBefore+1);ok(entries().length===countBefore+1,label+" explicit Save persists one Character");',
     'const exportedCharacter=JSON.parse(w.toSakuJson(w.__saku_data()));ok((await w.SAKU_ADOPTED_VALIDATE(exportedCharacter)).ok,label+" export validates against bundled schema");',
     'const yamlTab=[...d.querySelectorAll("#pvTabs button")].find(button=>button.textContent.includes("character.yaml"));yamlTab.click();const approval=d.getElementById("exportApproval");if(!approval.checked)approval.click();let blob,downloadName;w.URL.createObjectURL=value=>{blob=value;return "blob:test-export"};w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=function(){downloadName=this.download};d.getElementById("downloadBtn").click();await until(()=>blob&&downloadName);const exported=await blob.text();ok(downloadName.endsWith(".yaml")&&exported.length>0,label+" Download emits an actual YAML payload");',

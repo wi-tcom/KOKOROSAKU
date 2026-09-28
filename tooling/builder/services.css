@@ -1,0 +1,10 @@
+/* 04 「SAKU 診療所・AMU トレーニングセンター」: links only (Owner 2026-09-27). */
+.service-list { list-style: none; padding: 0; margin: 18px 0; display: grid; gap: 12px; }
+.service-item button { width: 100%; text-align: left; padding: 12px 16px; font-size: 16px; }
+.service-item button[disabled] { opacity: .7; cursor: not-allowed; }
+.service-pending { margin-left: 12px; font-size: 13px; padding: 2px 8px; border: 1px solid currentColor; border-radius: 999px; }
+.service-note { font-size: 14px; margin: 6px 0 0; }
+.service-block { margin-top: 22px; }
+.service-block h2 { font-size: 18px; margin: 0 0 6px; }
+.service-item p { margin: 0 0 8px; line-height: 1.7; }
+.service-all-pending { font-weight: 600; margin: 12px 0 0; }
