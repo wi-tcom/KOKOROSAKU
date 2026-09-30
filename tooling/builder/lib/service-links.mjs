@@ -12,11 +12,18 @@ export const SERVICE_LINKS_SCHEMA = "wi-t.service-links/1";
 
 export const SERVICE_LINKS = Object.freeze({
   schema: SERVICE_LINKS_SCHEMA,
-  updated: "2026-09-27",
+  updated: "2026-09-30",
   links: Object.freeze([
     // The introduction page, already public (Owner 2026-09-27: 「アプリのリンクの表に support.kokoroamu.jp
     // （紹介ページ）を足す」; AMU @90c8a9a, DECISION 2026-09-27-19). The five application links stay 準備中.
     Object.freeze({ id: "service_intro", label_ja: "紹介ページを見る", url: "https://support.kokoroamu.jp/" }),
+    // The 64-Character introduction page and the store, both on wi-t.com (Owner 2026-09-30; the same ids and order as
+    // AMU Studio). The introduction page went public on 2026-09-30 (☆Wi-t.comサイト構築, rev 791; 200). One URL per link,
+    // so English display opens the Japanese page too; whether to split by language is decided with AMU Studio later.
+    Object.freeze({ id: "characters_intro", label_ja: "キャラクター紹介を見る", url: "https://www.wi-t.com/saku-characters" }),
+    // One store link to the whole store (the three packs' category); each pack's own page is reached from the
+    // Character cards on the introduction page (☆Wi-t.comサイト構築 2026-09-30: 200; agreed with AMU Studio).
+    Object.freeze({ id: "store_packs", label_ja: "ストアでパックを見る", url: "https://www.wi-t.com/category/all-products" }),
     Object.freeze({ id: "saku_clinic", label_ja: "SAKU 診療所に登録する", url: null }),
     Object.freeze({ id: "amu_training", label_ja: "AMU トレーニングセンターに登録する", url: null }),
     Object.freeze({ id: "set_plan", label_ja: "両方に登録する（セット）", url: null }),

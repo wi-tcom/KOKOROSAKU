@@ -254,6 +254,26 @@ assert.match(desktopApp, /choose_and_import_package/);
 assert.doesNotMatch(desktopApp, /location\.replace\("\.\/tools\/saku-builder\.html\?desktop=app"\)/);
 assert.match(desktopApp, /classList\.remove\("boot-pending"\)/);
 const desktopIndex = await read("desktop/index.html");
+{
+  // ライター&SNS review 15 (2026-09-30): messages with run-time values are whole-sentence templates, tr("…", {…}),
+  // and every template has its English in desktop/i18n.mjs EN_FORMAT with the same {placeholders}; the English
+  // carries no Japanese outside quoted screen names (「…」). The strings that showed Japanese in English are in EN.
+  const i18nSource = await read("desktop/i18n.mjs");
+  const pairsOf = block => [...block.matchAll(/^\s*("(?:[^"\\]|\\.)*")\s*:\s*("(?:[^"\\]|\\.)*")/gm)].map(m => [JSON.parse(m[1]), JSON.parse(m[2])]);
+  const formatBlock = i18nSource.slice(i18nSource.indexOf("const EN_FORMAT = new Map"), i18nSource.indexOf("}));", i18nSource.indexOf("const EN_FORMAT = new Map")));
+  const formats = new Map(pairsOf(formatBlock));
+  const templates = [...new Set([...desktopApp.matchAll(/\btr\("((?:[^"\\]|\\.)*)"/g)].map(m => JSON.parse(`"${m[1]}"`)))];
+  assert.ok(templates.length >= 40, `the app uses its message templates (${templates.length})`);
+  const holes = text => [...text.matchAll(/\{(\w+)\}/g)].map(m => m[1]).sort().join(",");
+  for (const template of templates) {
+    assert.ok(formats.has(template), `no English for the template: ${template.slice(0, 40)}`);
+    assert.equal(holes(formats.get(template)), holes(template), `the English keeps the placeholders: ${template.slice(0, 40)}`);
+    assert.doesNotMatch(formats.get(template).replace(/「[^」]*」/g, ""), /[\u3040-\u30ff\u3400-\u9fff]/, `Japanese left in the English: ${template.slice(0, 40)}`);
+  }
+  for (const key of ["キャラクターを読み込む", "読み込み履歴", "職能CSVを読み込む", "席 8（論理上の人）", "項目"]) assert.ok(i18nSource.includes(`${JSON.stringify(key)}:`), `EN has: ${key}`);
+  assert.doesNotMatch(desktopApp, /人間席8|AI席/, "seat 8 is named as in D-20260928-seat-roles");
+  assert.match(i18nSource, /querySelectorAll\("\[aria-label\],\[title\],\[placeholder\]"\)/, "the walker translates placeholder too");
+}
 assert.match(desktopIndex, /rel="icon" href="\.\/icon\.svg"/);
 assert.match(desktopIndex, /data-theme="light"/);
 assert.match(desktopIndex, /class="boot-pending"/);
@@ -293,16 +313,26 @@ assert.match(desktopIndex, /選ぶ・作る・AI で動かす・サポートサ�
   // shown as 「準備中」 (Owner 2026-09-28 via 統括: 「SAKU診療所とAMUトレーニングセンター、
   // ERABAZU工房は準備中としてください。」; until then the buttons were hidden while all were unset).
   const { servicesMarkup, SERVICES_WORDING } = await import("../tools/unified-v1/services-ui.mjs");
-  const { SERVICE_LINKS } = await import("../tools/unified-v1/service-links.mjs");
+  const { SERVICE_LINKS, serviceLinkState } = await import("../tools/unified-v1/service-links.mjs");
+  const { INFORMATION_LINK_IDS } = await import("../tools/unified-v1/services-ui.mjs");
   const w = SERVICES_WORDING.ja;
   const pending = servicesMarkup("ja-JP", SERVICE_LINKS);
   // Owner 2026-09-27: the introduction page (support.kokoroamu.jp) is public; the five applications are not yet.
   assert.equal(SERVICE_LINKS.links[0].id, "service_intro");
   assert.equal(SERVICE_LINKS.links[0].url, "https://support.kokoroamu.jp/");
-  assert.ok(SERVICE_LINKS.links.slice(1).every(link => link.url === null), "no application URL is set yet");
+  const applications = SERVICE_LINKS.links.filter(link => !INFORMATION_LINK_IDS.includes(link.id));
+  assert.equal(applications.length, 5, "five applications");
+  assert.ok(applications.every(link => link.url === null), "no application URL is set yet");
+  // Owner 2026-09-30: the 64-Character introduction page and the store, next to the services' introduction page, with
+  // the same ids and order as AMU Studio. The store is one link to the whole store (☆Wi-t.comサイト構築: 200); the
+  // introduction page went public on 2026-09-30 (rev 791).
+  assert.deepEqual(SERVICE_LINKS.links.slice(0, 3).map(link => link.id), ["service_intro", "characters_intro", "store_packs"]);
+  assert.equal(SERVICE_LINKS.links[1].url, "https://www.wi-t.com/saku-characters");
+  assert.equal(SERVICE_LINKS.links[2].url, "https://www.wi-t.com/category/all-products");
+  const pendingLinks = SERVICE_LINKS.links.filter(link => serviceLinkState(link).state === "PENDING");
+  const readyLinks = SERVICE_LINKS.links.filter(link => serviceLinkState(link).state === "READY");
   assert.match(pending, /data-services-state="ALL_PENDING"/);
   assert.ok(pending.includes(w.allPending) && w.allPending === "受付の開始は kokoroamu.jp でお知らせします。");
-  const applications = SERVICE_LINKS.links.filter(link => link.id !== "service_intro");
   // Owner 2026-09-28: the services read as 準備中 in words too (ライター&SNS 3c02160, EN 依頼 AL c1a87fe) —
   // the intro says so, what a plan includes is 「含まれます」 / "included", and nothing reads as usable now.
   assert.ok(w.intro.endsWith("いまは準備中です。") && SERVICES_WORDING.en.intro.endsWith("and they are currently in preparation."), "the 04 intro says the services are in preparation");
@@ -312,9 +342,21 @@ assert.match(desktopIndex, /選ぶ・作る・AI で動かす・サポートサ�
   { const manual = await read("manual/saku-field-guide.html"); const p06 = manual.slice(manual.indexOf('id="P06"'), manual.indexOf('id="P07"'));
     assert.ok(p06.includes("いまは準備中です（登録・申し込みはできません）") && p06.includes("currently in preparation (registration and applications are not yet open)"), "manual P06 says the services are in preparation");
     assert.doesNotMatch(p06, /から行います|apply for a signature on an \.amupkg, from 04/, "manual P06 reads as usable now"); }
-  assert.equal((pending.match(/data-service-state="PENDING" disabled/g) || []).length, applications.length, "while every application URL is unset, each application shows as a button that cannot be pressed");
-  for (const link of applications) assert.ok(pending.includes(`data-service-link="${link.id}" data-service-state="PENDING" disabled>${link.label_ja}<span class="service-pending">準備中</span></button>`), `${link.id} reads 準備中`);
-  assert.equal((pending.match(/<button(?![^>]*disabled)/g) || []).length, 1, "the only button that can be pressed is the introduction page");
+  assert.equal((pending.match(/data-service-state="PENDING" disabled/g) || []).length, pendingLinks.length, "every link without a URL shows as a button that cannot be pressed");
+  for (const link of pendingLinks) assert.ok(pending.includes(`data-service-link="${link.id}" data-service-state="PENDING" disabled>${link.label_ja}<span class="service-pending">準備中</span></button>`), `${link.id} reads 準備中`);
+  assert.equal((pending.match(/<button(?![^>]*disabled)/g) || []).length, readyLinks.length, "only links with a URL can be pressed");
+  assert.deepEqual(readyLinks.map(link => link.id), ["service_intro", "characters_intro", "store_packs"]);
+  // The characters section (ライター&SNS 2e20567, the same text as AMU Studio): right after the introduction page,
+  // two buttons and no line under them, the packs are paid and the price is on the product pages only.
+  { const section = w.sections[1];
+    assert.equal(section.id, "characters"); assert.equal(section.title, "キャラクター紹介");
+    assert.equal(section.lead, "SAKU Character Pack に収録しているキャラクターを、得意なことと、人に引き継ぐことと一緒に紹介しています。パックは有料です。価格は商品ページに記載しています。");
+    assert.deepEqual(section.items.map(item => [item.link, item.lines.length]), [["characters_intro", 0], ["store_packs", 0]]);
+    const en = SERVICES_WORDING.en.sections[1];
+    assert.ok(en.id === "characters" && en.title === "Character introductions" && en.lead.endsWith("The packs are paid. Prices are shown on the product pages."), "EN characters section (英語翻訳チーム 2026-09-30)");
+    assert.equal(SERVICES_WORDING.en.linkLabels.characters_intro, "See the Character introductions (in Japanese)");
+    assert.equal(SERVICES_WORDING.en.linkLabels.store_packs, "See the packs in the store");
+    assert.ok(pending.includes('data-service-link="characters_intro" data-service-url="https://www.wi-t.com/saku-characters">キャラクター紹介を見る<') && pending.includes('data-service-link="store_packs" data-service-url="https://www.wi-t.com/category/all-products">ストアでパックを見る<')); }
   assert.ok(pending.includes(w.hosts), "a button can be pressed, so the page says where the links open (ライター&SNS 2026-09-27)");
   // Falsification: with no URL at all, no button can be pressed and there is no hosts line.
   { const none = servicesMarkup("ja-JP", { ...SERVICE_LINKS, links: SERVICE_LINKS.links.map(link => ({ ...link, url: null })) }); assert.ok(!/<button(?![^>]*disabled)/.test(none) && !none.includes(w.hosts) && (none.match(/class="service-pending">準備中</g) || []).length === SERVICE_LINKS.links.length); }
@@ -328,7 +370,7 @@ assert.match(desktopIndex, /選ぶ・作る・AI で動かす・サポートサ�
   const ready = servicesMarkup("ja-JP", { ...SERVICE_LINKS, links: SERVICE_LINKS.links.map(link => link.id === "saku_clinic" ? { ...link, url: "https://kokoroamu.jp/clinic" } : link) });
   assert.ok(ready.includes(w.hosts) && !ready.includes(w.allPending));
   assert.equal((ready.match(/data-service-url="https:\/\/kokoroamu\.jp\/clinic"/g) || []).length, 1);
-  assert.equal((ready.match(/data-service-state="PENDING" disabled/g) || []).length, SERVICE_LINKS.links.length - 2, "once an application URL is set, the other applications show 準備中");
+  assert.equal((ready.match(/data-service-state="PENDING" disabled/g) || []).length, pendingLinks.length - 1, "once an application URL is set, the other links without a URL show 準備中");
   // Falsification: a URL on another host stays 準備中.
   const foreign = servicesMarkup("ja-JP", { ...SERVICE_LINKS, links: SERVICE_LINKS.links.map(link => link.id === "saku_clinic" ? { ...link, url: "https://kokoroamu.jp.evil.example/clinic" } : link) });
   assert.ok(!foreign.includes("kokoroamu.jp.evil.example"), "a URL on another host is never offered");
@@ -345,7 +387,7 @@ assert.match(desktopIndex, /選ぶ・作る・AI で動かす・サポートサ�
     assert.doesNotMatch(shown, /&lt;CLINIC&gt;|&lt;CENTER&gt;|Clinic|certif|guarantee|[$¥￥][0-9]/i, "no placeholder, no Clinic, no certify or guarantee, no price");
   }
   assert.ok(enPages[1].includes("Register for SAKU Repair Desk") && enPages[1].includes("Register for AMU Evaluation Center"));
-  assert.ok(enPages[0].includes(e.allPending) && (enPages[0].match(/<button(?![^>]*disabled)/g) || []).length === 1 && (enPages[0].match(/<span class="service-pending">In preparation<\/span>/g) || []).length === 5, "EN: five applications read In preparation, one button can be pressed");
+  assert.ok(enPages[0].includes(e.allPending) && (enPages[0].match(/<button(?![^>]*disabled)/g) || []).length === readyLinks.length && (enPages[0].match(/<span class="service-pending">In preparation<\/span>/g) || []).length === pendingLinks.length, "EN: every link without a URL reads In preparation; only links with a URL can be pressed");
   assert.ok(enPages[0].includes(">View the overview page<") && enPages[0].includes("(in Japanese).") && enPages[0].includes(e.hosts), "EN: the overview page button, its note that the page is Japanese, and where the links open (AG1–AG3)");
   // Falsification: a Japanese label leaking into the English page is caught.
   assert.match(servicesMarkup("en-US", SERVICE_LINKS).replace(e.intro, w.intro), /[ぁ-んァ-ヶ一-龠]/);

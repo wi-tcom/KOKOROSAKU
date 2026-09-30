@@ -59,7 +59,7 @@ ok(/currentImportResult = result/.test(app), "current import validation result i
 ok((app.match(/dataset\.runtimeValue/g) || []).length >= 4, "Character/package runtime values are not protected from UI translation");
 check(viewerCopy("ja-JP").test, "Trainerで試す", "JA Viewer copy");
 check(viewerCopy("en-US").edit, "Create editable copy in Builder", "EN Viewer copy");
-for (const label of ["View Characters", "Test with AI", "Review Results", "Create / Edit Character"]) ok(i18n.includes(label), `missing EN label ${label}`);
+for (const label of ["View Characters", "Test with AI", "Review Results", "Create or edit a Character"]) ok(i18n.includes(label), `missing EN label ${label}`); // 02's entry: the fixed English (英語翻訳チーム R1-026, 2026-09-30)
 ok(/aria-live="polite"/.test(html), "status accessibility announcement missing");
 
 check(profile.internal_content_count, 0, "public profile internal content");

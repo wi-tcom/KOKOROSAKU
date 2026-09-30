@@ -15,7 +15,7 @@ mod saku_return;
 use character_pack::{CharacterPackImport, looks_like_character_pack, parse_character_pack};
 use saku_return::{SakuReturnImport, looks_like_saku_return, parse_saku_return};
 
-const APP_VERSION: &str = "0.1.0-beta.9";
+const APP_VERSION: &str = "0.1.0-beta.10";
 const CONFIG_FILE: &str = "desktop-host.json";
 const MAX_PACKAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_ARCHIVE_ENTRY_BYTES: usize = 32 * 1024 * 1024;

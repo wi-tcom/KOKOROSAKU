@@ -1,4 +1,4 @@
-# KOKOROSAKU v0.1.0-beta.9
+# KOKOROSAKU v0.1.0-beta.10
 
 Japanese documentation: [README.ja.md](README.ja.md)
 
@@ -6,21 +6,19 @@ KOKOROSAKU is the public SAKU Builder source and evaluation package. Builder out
 
 ## Install and use
 
-Download the Release asset `SAKU Builder_0.1.0-beta.9_x64-setup.exe` only from the future official GitHub Release. This beta is unsigned and Windows SmartScreen may display a warning. Before running it, verify:
+Download the Release asset `SAKU Builder_0.1.0-beta.10_x64-setup.exe` only from the future official GitHub Release. This beta is unsigned and Windows SmartScreen may display a warning. Before running it, verify:
 
 ```powershell
-(Get-FileHash -Algorithm SHA256 -LiteralPath '.\SAKU Builder_0.1.0-beta.9_x64-setup.exe').Hash.ToLower()
+(Get-FileHash -Algorithm SHA256 -LiteralPath '.\SAKU Builder_0.1.0-beta.10_x64-setup.exe').Hash.ToLower()
 ```
 
-Expected SHA-256: `d6474dd66f04834500a7ffa079e856f6c372e52d7459596f2f15ba1f4bb7b533` (2,208,616 bytes). The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
+Expected SHA-256: `e763023e4381f4d395983074962df3be0c3b785e0c41b54eee6bf3828974c48c` (2,215,425 bytes). The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
 
-## What is new in v0.1.0-beta.9
+## What is new in v0.1.0-beta.10
 
-- The samples were replaced. The three open-source sample Characters (CC0-1.0) are no longer distributed; instead, the installer bundles sample 1.1.0 (three sample-mode Characters, `LicenseRef-WIT-Sample-1.0`, not OSS). Choose them with "Load samples" in "01 Choose a Character".
-- 04 is now "SAKU Repair Desk and AMU Evaluation Center". Both are in preparation, and registration and applications are not open yet. The Trainer, the AI speed test and importing external reviews have been removed from the screens (their contents are kept and are planned to become a separate tool; no date has been set).
-- Your own Character can be exported as a ZIP for AMU Studio ("Download ZIP for AMU"; it carries no signature). In 03, reference material exported from AMU Studio can be attached to the text passed to the AI as a "reference material (data)" section (the material is not saved).
-- The names of the 1+7 seats and the manual's explanations were aligned with the adopted Schema, and the help source name was changed to "Behavior stated in the directive".
-- Bugs in beta.8 were fixed (for example, the help could not be found in the version you try without installing, the version field showed "BUILD UNSTAMPED", and confirmation dialogs showed "tauri.localhost" in the title).
+- "Character introductions" was added to 04, with buttons to the page that introduces the Characters in the SAKU Character Packs (in Japanese) and to the list of packs in the store (the packs are paid; prices are shown on the product pages). SAKU Repair Desk and AMU Evaluation Center, and applications for them, are still in preparation.
+- Text that still appeared in Japanese on the English screens is now in English, and things that were called by different words are now called by one (for example sign-off, handoff to a person, and Seat 8 — Human (logical)). The remaining Trainer text, removed from the screens in beta.9, is gone too.
+- Japanese text was corrected (「席 8（論理上の人）」, 「人への引き継ぎ」, the list of effect sources, the button names in the save confirmation, the signature section in 04, and more).
 
 ## Try without installing
 
@@ -28,7 +26,7 @@ Serve the source archive root over local HTTP and open `tooling/builder/index.ht
 
 ## Developers
 
-Clone the repository, use Node 24.19.0, run `npm ci`, `npm run desktop:prepare:public`, and then `npm run tauri:build`. See `docs/releases/0.1.0-beta.9/BUILD_ENVELOPE.json` for the exact accepted beta toolchain and build boundary.
+Clone the repository, use Node 24.19.0, run `npm ci`, `npm run desktop:prepare:public`, and then `npm run tauri:build`. See `docs/releases/0.1.0-beta.10/BUILD_ENVELOPE.json` for the exact accepted beta toolchain and build boundary.
 
 ## Licensing and brand
 

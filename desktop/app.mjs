@@ -88,6 +88,10 @@ function setStatus(target, code, reason, kind = "info") {
   }
 }
 // O-11: the app's own confirmation (the WebView's confirm() is titled 「tauri.localhost の内容」).
+// A message with run-time values, as one sentence the dictionary can translate (desktop/i18n.mjs EN_FORMAT).
+const tr = (template, params = {}) => window.SAKU_DESKTOP_I18N?.format
+  ? window.SAKU_DESKTOP_I18N.format(template, params)
+  : template.replace(/\{(\w+)\}/g, (all, name) => Object.hasOwn(params, name) ? String(params[name]) : all);
 const ask = (key, message, vars) => { const w = confirmWording(key, locale() === "en-US" ? "en" : "ja"); return confirmDialog({ title: w.title, message: message ?? fill(w.body, vars), confirmLabel: w.confirm, cancelLabel: w.cancel }); };
 const showStatus = (code, reason, kind = "info") => setStatus($("host-status"), code, reason, kind);
 const showViewerStatus = (code, reason, kind = "info") => setStatus($("viewer-status"), code, reason, kind);
@@ -282,13 +286,13 @@ const V1_RECREATE_NOTE = "この Character は旧形式（SAKU-CHARACTER）で�
 
 function importRecovery(code, reason) {
   if (code === "MANIFEST_SCHEMA_ID_MISSING") {
-    return `${reason} このPackageは内容からSchemaを推測せず拒否しました。Source Ownerから、Active Unified Schema identityと変換来歴をmanifestへ結び付けたReplacement Packageを取得してください。`;
+    return tr("{reason} このPackageは内容からSchemaを推測せず拒否しました。Source Ownerから、Active Unified Schema identityと変換来歴をmanifestへ結び付けたReplacement Packageを取得してください。", { reason });
   }
   if (code === "PAYLOAD_SCHEMA_NOT_DECLARED" || code === "SCHEMA_NOT_DECLARED") {
     return `${reason} このファイルには Schema の宣言がないため、取り込めません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。`;
   }
   if (code === "CONFORMANCE_LOCATOR_MISMATCH") {
-    return `${reason} conformance_expectations の locator が requirement_id と別の要件を指しているため、このCharacterは取り込みません（Schema の規則: 参照不一致は fail closed）。Builder側では内容を書き換えず、作成元／配布元から修正版を入手してください。`;
+    return tr("{reason} conformance_expectations の locator が requirement_id と別の要件を指しているため、このCharacterは取り込みません（Schema の規則: 参照不一致は fail closed）。Builder側では内容を書き換えず、作成元／配布元から修正版を入手してください。", { reason });
   }
   if (code === "PACKAGE_FORMAT_UNRECOGNIZED" || code === "PACKAGE_JSON_INVALID") return reason;
   // Two files this route names but never imports: the AMU Character File
@@ -296,10 +300,10 @@ function importRecovery(code, reason) {
   if (code === "PACKAGE_FORMAT_AMU_CHARACTER_FILE" || code === "PACKAGE_FORMAT_INDIVIDUAL_FILE") return reason;
   if (code === "LOCATOR_REPAIRED") return reason;
   if (String(code || "").startsWith("SAKU_RETURN_")) {
-    return `${reason} AMU Studio の「この編集内容を SAKU へ戻す」で作った .saku-return.zip をそのまま（解凍・編集せずに）選んでください。中身が合わない場合は AMU Studio で作り直してください。`;
+    return tr("{reason} AMU Studio の「この編集内容を SAKU へ戻す」で作った .saku-return.zip をそのまま（解凍・編集せずに）選んでください。中身が合わない場合は AMU Studio で作り直してください。", { reason });
   }
   if (String(code || "").startsWith("CHARACTER_PACK_")) {
-    return `${reason} SAKU Character Pack は ZIP のまま（解凍せずに）選んでください。ファイルが配布元のものと同じかは SHA256SUMS で確認できます。`;
+    return tr("{reason} SAKU Character Pack は ZIP のまま（解凍せずに）選んでください。ファイルが配布元のものと同じかは SHA256SUMS で確認できます。", { reason });
   }
   return reason;
 }
@@ -314,7 +318,7 @@ function renderV1Detail(record, detail) {
   addDetailRow(dl, "運用区分", record.category);
   addDetailRow(dl, "1+7構造", record.one_plus_seven, false);
   addDetailRow(dl, "席7の役割", record.seat7_role);
-  addDetailRow(dl, "人間席8", record.human_seat);
+  addDetailRow(dl, "席 8（論理上の人）", record.human_seat);
   addDetailRow(dl, "運営者", record.operator || "未記入");
   addDetailRow(dl, "黒子", record.charback_required === null ? "未記入" : record.charback_required ? "必要" : "不要", false);
   addDetailRow(dl, "第0層", record.expertise);
@@ -358,7 +362,7 @@ function renderDetail(record) {
     addDetailRow(dl, lang === "en" ? "Locator repair" : "locator 修復", lang === "en"
       ? `rev ${repair.from_revision} → ${repair.to_revision}, ${repair.rewritten} locator(s) re-pointed by id, ${repair.repaired_at}`
       : `rev ${repair.from_revision} → ${repair.to_revision}、locator ${repair.rewritten}件を id で再計算、${repair.repaired_at}`, false);
-    addDetailRow(dl, lang === "en" ? "Content digest" : "内容 digest", `${String(repair.digest_before || "").slice(0, 16)}… → ${String(repair.digest_after || "").slice(0, 16)}…（本文は不変・locator と revision のみ）`, false);
+    addDetailRow(dl, lang === "en" ? "Content digest" : "内容 digest", tr("{before}… → {after}…（本文は不変・locator と revision のみ）", { before: String(repair.digest_before || "").slice(0, 16), after: String(repair.digest_after || "").slice(0, 16) }), false);
   } else if (record.provenance && record.provenance.edit_request) {
     const lang = locale() === "en-US" ? "en" : "ja";
     const request = record.provenance.edit_request;
@@ -453,7 +457,7 @@ function createCatalogCard(record) {
   if (latestBatch && record.batch === latestBatch) card.dataset.new = "true";
   if (compareSelection.has(record.id)) card.dataset.checked = "true";
   const open = document.createElement("button"); open.type = "button"; open.className = "catalog-open"; open.dataset.openId = record.id;
-  const title = document.createElement("strong"); title.textContent = record.deleted ? `${record.name}（削除済み）` : record.name; title.dataset.runtimeValue = "";
+  const title = document.createElement("strong"); title.textContent = record.deleted ? tr("{name}（削除済み）", { name: record.name }) : record.name; title.dataset.runtimeValue = "";
   const role = document.createElement("span"); role.className = "catalog-role"; role.textContent = record.role; role.dataset.runtimeValue = "";
   const summary = document.createElement("span"); summary.className = "catalog-summary"; summary.textContent = record.summary; summary.dataset.runtimeValue = "";
   const meta = document.createElement("span"); meta.className = "catalog-meta"; meta.textContent = `${record.category} · ${record.one_plus_seven}`; meta.dataset.runtimeValue = "";
@@ -570,7 +574,7 @@ function v1Record(character) {
     summary: front.persona || front.public_profile || "UNKNOWN",
     category: character.operation_class ? `運用区分 ${character.operation_class}` : "UNKNOWN",
     revision: NOT_APPLICABLE,
-    one_plus_seven: `${aiSeats}/6 AI席 + 人間席8`,
+    one_plus_seven: tr("席 2〜7：{count}/6 ＋ 席 8（論理上の人）", { count: aiSeats }),
     seat7_role: guard ? (guard.name || "seat7_persona_guard") : "NOT_PRESENT",
     axes: [],
     axes_summary: NOT_APPLICABLE,
@@ -666,7 +670,7 @@ function recordsFromLibrary(entries) {
 function renderLibraryCount() {
   const totals = Library.summary();
   const slot = $("library-count");
-  if (slot) slot.textContent = totals.total ? `一覧 ${totals.active}件（削除済み ${totals.deleted}件）` : "一覧はまだ空です。Packageインポート・個別インポート・新規作成から追加できます。";
+  if (slot) slot.textContent = totals.total ? tr("一覧 {active}件（削除済み {deleted}件）", { active: totals.active, deleted: totals.deleted }) : "一覧はまだ空です。Packageインポート・個別インポート・新規作成から追加できます。";
 }
 
 function renderLibrary() {
@@ -694,7 +698,7 @@ function renderLibrary() {
   // The screen adds and removes rows; it never edits a Character's content.
   // Editing happens in the Builder, which is a different screen on purpose.
   const totals = Library.summary();
-  if (totals.active) showViewerStatus("LIBRARY_READY", `一覧 ${totals.active}件 — この画面でCharacter dataは変更しません（Viewer data mutation: 0）`, "success");
+  if (totals.active) showViewerStatus("LIBRARY_READY", tr("一覧 {active}件 — この画面でCharacter dataは変更しません（Viewer data mutation: 0）", { active: totals.active }), "success");
 }
 
 /** The per-Character glossaries the host carried out of the pack, keyed by character_id. */
@@ -721,7 +725,7 @@ async function resolveConflicts(characters) {
   const conflicts = Library.nameConflicts(characters);
   if (!conflicts.length) return { onConflict: "KEEP_BOTH", conflicts };
   const names = [...new Set(conflicts.map(item => item.name))];
-  const shown = names.slice(0, 5).join("、") + (names.length > 5 ? ` ほか${names.length - 5}件` : "");
+  const shown = names.slice(0, 5).join("、") + (names.length > 5 ? tr(" ほか{count}件", { count: names.length - 5 }) : "");
   // The buttons now say 「置き換える」 / 「両方残す」, so the body no longer spells out what OK and Cancel mean.
   const replace = await ask("replaceSameName", undefined, { names: shown });
   return { onConflict: replace ? "REPLACE" : "KEEP_BOTH", conflicts };
@@ -756,9 +760,9 @@ async function admitCharacters(characters) {
 function reportRefusals(refused, admittedCount) {
   if (!refused.length) return;
   const shown = refused.slice(0, 3).map(item => `${item.name}（${item.code}）`).join(" / ");
-  const more = refused.length > 3 ? ` ほか${refused.length - 3}件` : "";
+  const more = refused.length > 3 ? tr(" ほか{count}件", { count: refused.length - 3 }) : "";
   showViewerStatus("UNSUPPORTED_CHARACTER_SCHEMA",
-    `${refused.length}件は取り込めませんでした: ${shown}${more} — ${importRecovery(refused[0].code, refused[0].reason)}`,
+    tr("{count}件は取り込めませんでした: {names}{more} — {recovery}", { count: refused.length, names: shown, more, recovery: importRecovery(refused[0].code, refused[0].reason) }),
     admittedCount ? "warning" : "error");
 }
 
@@ -835,9 +839,9 @@ async function addToLibrary(characters, source, verification, entryMeta = null) 
     added += outcome.added; replaced += outcome.replaced;
   }
   renderLibrary();
-  if (failure) { showViewerStatus("LIBRARY_SAVE_FAILED", `一覧に保存できませんでした: ${failure}`, "error"); return { added, replaced, saved: false, refused }; }
+  if (failure) { showViewerStatus("LIBRARY_SAVE_FAILED", tr("一覧に保存できませんでした: {failure}", { failure }), "error"); return { added, replaced, saved: false, refused }; }
   if (refused.length) { reportRefusals(refused, added); return { added, replaced, saved: true, refused }; }
-  const detail = replaced ? `${added}件を追加、${replaced}件を置き換えました。` : `${added}件を一覧に追加しました。`;
+  const detail = replaced ? tr("{added}件を追加、{replaced}件を置き換えました。", { added, replaced }) : tr("{added}件を一覧に追加しました。", { added });
   showViewerStatus("CHARACTERS_ADDED", detail, "success");
   mirrorToWorkspace(characters);
   return { added, replaced, saved: true, refused };
@@ -867,7 +871,7 @@ function showTuning(record) {
   $("home-content").hidden = true;
   $("viewer-panel").hidden = true;
   $("tuning-panel").hidden = false;
-  setStatus($("tuning-subject"), "TUNING_SUBJECT", `${record.name} — 推奨は適用するまでCharacterを変更しません。`, "info");
+  setStatus($("tuning-subject"), "TUNING_SUBJECT", tr("{name} — 推奨は適用するまでCharacterを変更しません。", { name: record.name }), "info");
   TuningUI.setSubject(record.source_character, {
     observedStates: readObservedStates(record),
     apply: (character, detail) => {
@@ -878,7 +882,7 @@ function showTuning(record) {
       if (entry) Library.update(entry.entry_id, character);
       mirrorToWorkspace([character]);
       renderLibrary();
-      setStatus($("tuning-subject"), "TUNING_APPLIED", `${record.name} — ${detail.item_id} の内容を適用しました。`, "success");
+      setStatus($("tuning-subject"), "TUNING_APPLIED", tr("{name} — {item} の内容を適用しました。", { name: record.name, item: detail.item_id }), "success");
     },
   });
   $("tuning-back").focus();
@@ -906,9 +910,9 @@ async function showViewer() {
   // state, not an empty Library. Rebuild from the workspace and say so.
   const result = await reconstructFromWorkspace();
   if (result.status === "RECOVERED") {
-    showViewerStatus("LIBRARY_RECOVERED_FROM_WORKSPACE", `${result.recovered}件をworkspaceから復元しました（${result.workspace}）。Character dataは変更していません。`, "success");
+    showViewerStatus("LIBRARY_RECOVERED_FROM_WORKSPACE", tr("{count}件をworkspaceから復元しました（{workspace}）。Character dataは変更していません。", { count: result.recovered, workspace: result.workspace }), "success");
   } else if (result.status === "NOTHING_DURABLE") {
-    showViewerStatus("LIBRARY_EMPTY_NO_DURABLE_COPY", `一覧は空です。workspace（${result.workspace}）にも復元できるCharacterがありません。`, "info");
+    showViewerStatus("LIBRARY_EMPTY_NO_DURABLE_COPY", tr("一覧は空です。workspace（{workspace}）にも復元できるCharacterがありません。", { workspace: result.workspace }), "info");
   }
 }
 function renderActiveSaku() {
@@ -1106,7 +1110,7 @@ function renderOccupation() {
   wrap.hidden = occupationRecords.length === 0;
   if (source) {
     source.hidden = !occupationSource;
-    source.textContent = occupationSource ? "読み込み元: " + occupationSource : "";
+    source.textContent = occupationSource ? tr("読み込み元: {source}", { source: occupationSource }) : "";
   }
   occupationRecords.forEach((record, index) => {
     const tr = document.createElement("tr");
@@ -1438,7 +1442,7 @@ function handOffImport(result) {
     const reason = importRecovery(result.code || result.status, result.reason);
     showStatus(result.code || result.status, reason, result.status === "NOT_CONFIGURED" ? "warning" : "error");
     showRecovery(result.status === "NOT_CONFIGURED" ? "workspace" : "package", result.reason || result.status);
-    showViewerStatus(result.code || result.status, `${reason || "Package is not available."} Packageを選び直すかHelpを確認してください。`, "error");
+    showViewerStatus(result.code || result.status, tr("{reason} Packageを選び直すかHelpを確認してください。", { reason: reason || "Package is not available." }), "error");
     return;
   }
   // The host binds manifest to payload too; re-asking here keeps the browser
@@ -1447,7 +1451,7 @@ function handOffImport(result) {
   const binding = checkManifestBinding(result.manifest, characters);
   if (!binding.ok) {
     showStatus(binding.code, binding.reason, "error");
-    showViewerStatus(binding.code, `${binding.reason} 取り込みは行いませんでした。`, "error");
+    showViewerStatus(binding.code, tr("{reason} 取り込みは行いませんでした。", { reason: binding.reason }), "error");
     showRecovery("package", binding.code);
     return;
   }
@@ -1470,9 +1474,9 @@ async function handOffCharacterPack(result, characters, binding) {
   const pack = result.pack;
   const signatures = await assessPackSignatures(pack);
   if (signatures.signature_state === "FAIL") {
-    const reason = `署名検証に失敗したため取り込みませんでした: ${signatures.detail}`;
+    const reason = tr("署名検証に失敗したため取り込みませんでした: {detail}", { detail: signatures.detail });
     showStatus("CHARACTER_PACK_SIGNATURE_INVALID", reason, "error");
-    showViewerStatus("CHARACTER_PACK_SIGNATURE_INVALID", `${reason} 配布元から入手し直してください。`, "error");
+    showViewerStatus("CHARACTER_PACK_SIGNATURE_INVALID", tr("{reason} 配布元から入手し直してください。", { reason }), "error");
     showRecovery("package", "CHARACTER_PACK_SIGNATURE_INVALID");
     recordImport({ kind: "PACKAGE", source_path: result.source_path || "", status: "REFUSED", code: "CHARACTER_PACK_SIGNATURE_INVALID", fields: [] });
     return;
@@ -1491,7 +1495,7 @@ async function handOffCharacterPack(result, characters, binding) {
   const classes = [...meta.values()].reduce((acc, item) => { acc[item.operation_class] = (acc[item.operation_class] || 0) + 1; return acc; }, {});
   const classText = Object.entries(classes).sort().map(([cls, count]) => `${cls}:${count}`).join(" / ");
   clearRecovery();
-  showStatus("CHARACTER_PACK_IMPORTED", `${pack.pack_id} ${pack.pack_version}: ${pack.character_count}体（運用区分 ${classText}）。${signatureStateText(signatures.signature_state, "ja", signatures.fingerprints?.[pack.pack_publisher_key_id] || null)}。保存先: ${result.imported_path}`, signatures.signature_state === "PASS" ? "success" : "warning");
+  showStatus("CHARACTER_PACK_IMPORTED", tr("{pack} {version}: {count}体（運用区分 {classes}）。{signature}。保存先: {path}", { pack: pack.pack_id, version: pack.pack_version, count: pack.character_count, classes: classText, signature: signatureStateText(signatures.signature_state, "ja", signatures.fingerprints?.[pack.pack_publisher_key_id] || null), path: result.imported_path }), signatures.signature_state === "PASS" ? "success" : "warning");
   await addToLibrary(characters, "PACKAGE", verification, character => meta.get(String(character?.identity?.character_id || "")) || null);
   void binding;
 }
@@ -1506,9 +1510,9 @@ async function handOffSakuReturn(result, characters) {
   const ret = result.saku_return;
   const signatures = await assessReturnSignature(ret);
   if (signatures.signature_state === "FAIL") {
-    const reason = `署名検証に失敗したため取り込みませんでした: ${signatures.detail}`;
+    const reason = tr("署名検証に失敗したため取り込みませんでした: {detail}", { detail: signatures.detail });
     showStatus("SAKU_RETURN_SIGNATURE_INVALID", reason, "error");
-    showViewerStatus("SAKU_RETURN_SIGNATURE_INVALID", `${reason} AMU Studio で作り直すか、元のパックを取り込み直してください。`, "error");
+    showViewerStatus("SAKU_RETURN_SIGNATURE_INVALID", tr("{reason} AMU Studio で作り直すか、元のパックを取り込み直してください。", { reason }), "error");
     showRecovery("package", "SAKU_RETURN_SIGNATURE_INVALID");
     recordImport({ kind: "PACKAGE", source_path: result.source_path || "", status: "REFUSED", code: "SAKU_RETURN_SIGNATURE_INVALID", fields: [] });
     return;
@@ -1519,11 +1523,11 @@ async function handOffSakuReturn(result, characters) {
   const meta = returnEntryMeta(ret, signatures, comparison);
   clearRecovery();
   const noteHead = String(ret.note || "").replace(/\s+/g, " ").slice(0, 80) + (String(ret.note || "").length > 80 ? "…" : "");
-  const fieldsText = (ret.fields || []).length ? `対象: ${ret.fields.join("、")}` : "対象フィールドの指定なし";
-  showStatus("SAKU_RETURN_IMPORTED", `AMU Studio からの戻し: ${ret.display_name || ret.character_id} rev ${ret.character_revision}。編集依頼: ${noteHead}（${fieldsText}）。${returnRelationText(comparison, ret, lang)} ${signatureStateText(signatures.signature_state, lang, signatures.fingerprints?.[ret.publisher_key_id] || null)}。workspace には保存していません。`, signatures.signature_state === "PASS" ? "success" : "warning");
+  const fieldsText = (ret.fields || []).length ? tr("対象: {fields}", { fields: ret.fields.join("、") }) : tr("対象フィールドの指定なし");
+  showStatus("SAKU_RETURN_IMPORTED", tr("AMU Studio からの戻し: {name} rev {revision}。編集依頼: {note}（{fields}）。{relation} {signature}。workspace には保存していません。", { name: ret.display_name || ret.character_id, revision: ret.character_revision, note: noteHead, fields: fieldsText, relation: returnRelationText(comparison, ret, lang), signature: signatureStateText(signatures.signature_state, lang, signatures.fingerprints?.[ret.publisher_key_id] || null) }), signatures.signature_state === "PASS" ? "success" : "warning");
   const outcome = await addToLibrary(characters, "SAKU_RETURN", verification, () => meta);
   if (outcome?.saved && outcome.added + outcome.replaced > 0) {
-    showViewerStatus("SAKU_RETURN_IMPORTED", `${ret.display_name || ret.character_id}（rev ${ret.character_revision}）を一覧に追加しました（workspace には保存していません）。${returnRelationText(comparison, ret, lang)} 詳細の「AMU からの編集依頼」を確認してから編集してください。`, "success");
+    showViewerStatus("SAKU_RETURN_IMPORTED", tr("{name}（rev {revision}）を一覧に追加しました（workspace には保存していません）。{relation} 詳細の「AMU からの編集依頼」を確認してから編集してください。", { name: ret.display_name || ret.character_id, revision: ret.character_revision, relation: returnRelationText(comparison, ret, lang) }), "success");
   }
 }
 
@@ -1536,7 +1540,7 @@ async function importCharacterFiles(files) {
       const parsed = parseCharacterText(await file.text(), file.name);
       const items = Array.isArray(parsed.value) ? parsed.value : (parsed.value && Array.isArray(parsed.value.characters) ? parsed.value.characters : [parsed.value]);
       const usable = items.filter(item => item && typeof item === "object");
-      if (!usable.length) { failures.push(`${file.name}: Characterが見つかりません`); continue; }
+      if (!usable.length) { failures.push(tr("{filename}: Characterが見つかりません", { filename: file.name })); continue; }
       characters.push(...usable);
       for (const warning of parsed.warnings || []) notes.push(`${file.name}: ${warning.message}`);
     } catch (error) {
@@ -1575,16 +1579,16 @@ function offerLocatorRepair(repairable, sourceNames) {
     const name = Library.displayNameOf(character) || String(character?.identity?.character_id || "");
     return diagnoseLocators(character).lines.slice(0, 3).map(line => `${name}: ${line}`);
   });
-  showViewerStatus("CONFORMANCE_LOCATOR_MISMATCH", `${repairable.length}件は取り込めませんでした（locator＝参照位置が要件とずれています）: ${lines.join(" / ")}${lines.length < repairable.length * 3 ? "" : " …"} 「locator を修復して読み込む」は requirement_id から参照位置を計算し直すだけで、本文は変えません（修復後は新しい revision になります）。`, "warning");
+  showViewerStatus("CONFORMANCE_LOCATOR_MISMATCH", tr("{count}件は取り込めませんでした（locator＝参照位置が要件とずれています）: {lines}{more} 「locator を修復して読み込む」は requirement_id から参照位置を計算し直すだけで、本文は変えません（修復後は新しい revision になります）。", { count: repairable.length, lines: lines.join(" / "), more: lines.length < repairable.length * 3 ? "" : " …" }), "warning");
   const button = document.createElement("button");
   button.type = "button"; button.className = "btn-sm"; button.id = "viewer-repair-locators";
-  button.textContent = `locator を修復して読み込む（${repairable.length}件）`;
+  button.textContent = tr("locator を修復して読み込む（{count}件）", { count: repairable.length });
   button.addEventListener("click", async () => {
     button.disabled = true;
     const repaired = []; const meta = new Map(); const stillRefused = [];
     for (const character of repairable) {
       const outcome = await repairLocators(character, { bumpRevision: true });
-      if (outcome.remaining.length) { stillRefused.push(`${Library.displayNameOf(character) || character?.identity?.character_id}: ${outcome.remaining.length}件は requirement_id が見つからず修復できません`); continue; }
+      if (outcome.remaining.length) { stillRefused.push(tr("{name}: {count}件は requirement_id が見つからず修復できません", { name: Library.displayNameOf(character) || character?.identity?.character_id, count: outcome.remaining.length })); continue; }
       repaired.push(outcome.character);
       meta.set(outcome.character, { source: "FILE_REPAIRED", locator_repair: outcome.record });
     }
@@ -1592,7 +1596,7 @@ function offerLocatorRepair(repairable, sourceNames) {
     recordImport({ kind: "FILE", source_path: sourceNames, status: repaired.length ? "IMPORTED" : "REFUSED", code: repaired.length ? "LOCATOR_REPAIRED" : "CONFORMANCE_LOCATOR_MISMATCH", fields: [] });
     if (result?.saved && repaired.length) {
       const detail = repaired.map(character => `${Library.displayNameOf(character)}（rev ${meta.get(character).locator_repair.from_revision} → ${character.identity.character_revision}、locator ${meta.get(character).locator_repair.rewritten}件）`).join(" / ");
-      showViewerStatus("LOCATOR_REPAIRED", `${repaired.length}件の locator を修復して一覧に追加しました: ${detail}。${stillRefused.length ? ` 修復できなかったもの: ${stillRefused.join(" / ")}` : ""} 詳細の「locator 修復」行に記録があります。`, stillRefused.length ? "warning" : "success");
+      showViewerStatus("LOCATOR_REPAIRED", tr("{count}件の locator を修復して一覧に追加しました: {detail}。{unrepaired} 詳細の「locator 修復」行に記録があります。", { count: repaired.length, detail, unrepaired: stillRefused.length ? tr(" 修復できなかったもの: {list}", { list: stillRefused.join(" / ") }) : "" }), stillRefused.length ? "warning" : "success");
     } else if (stillRefused.length) {
       showViewerStatus("CONFORMANCE_LOCATOR_MISMATCH", stillRefused.join(" / "), "error");
     }
@@ -1618,7 +1622,7 @@ function missingForEditing(record) {
 function openBuilderCopy(id) {
   const record = viewerRecords.find(item => item.id === id); if (!record) { showViewerStatus("HANDOFF_SOURCE_NOT_FOUND", "Character could not be opened. Return to the Catalog and select it again.", "error"); return; }
   const missing = missingForEditing(record);
-  if (missing) { showViewerStatus("CHARACTER_NOT_EDITABLE", `${record.name} は ${missing} が未設定のため編集画面へ渡せません。取り込んだファイルに ${missing} を追加してください。`, "warning"); return; }
+  if (missing) { showViewerStatus("CHARACTER_NOT_EDITABLE", tr("{name} は {field} が未設定のため編集画面へ渡せません。取り込んだファイルに {field} を追加してください。", { name: record.name, field: missing }), "warning"); return; }
   // The active contract is SAKU_UNIFIED_SCHEMA_V1 and the UI baseline is V1, so
   // editing goes to the V1-baseline Builder. That surface authors the v1
   // migration-source schema, which shares no field path with Unified V1, so it
@@ -1664,7 +1668,7 @@ function runCharacterAction(action) {
   if (record.schema_kind === UNKNOWN && action !== "delete") {
     closeActions();
     showViewerStatus("UNSUPPORTED_CHARACTER_SCHEMA",
-      `${record.name} は Schema が判定できないため開けません（${record.unsupported_code}）。一覧から削除できます。`, "warning");
+      tr("{name} は Schema が判定できないため開けません（{code}）。一覧から削除できます。", { name: record.name, code: record.unsupported_code }), "warning");
     return;
   }
   if (record.schema_kind === "V1_CHARACTER" && (action === "edit" || action === "train")) {
@@ -1675,7 +1679,7 @@ function runCharacterAction(action) {
   }
   if (action === "view") {
     selectedViewerId = record.id; selectSubject(record, "library-view"); closeActions(); renderCatalog();
-    showViewerStatus("CHARACTER_SELECTED", `${record.name} を選択しました。`, "success");
+    showViewerStatus("CHARACTER_SELECTED", tr("{name} を選択しました。", { name: record.name }), "success");
     // The notice sits at the top of the list; bring it into view from wherever the card was.
     $("viewer-status").scrollIntoView({ block: "center" });
     return;
@@ -1686,7 +1690,7 @@ function runCharacterAction(action) {
     const outcome = Library.setDeleted([record.id], !record.deleted);
     closeActions(); renderLibrary();
     showViewerStatus(record.deleted ? "CHARACTER_RESTORED" : "CHARACTER_DELETED",
-      record.deleted ? `${record.name} を一覧に戻しました。` : `${record.name} を削除しました。「削除済み」フィルタで元に戻せます。`,
+      record.deleted ? tr("{name} を一覧に戻しました。", { name: record.name }) : tr("{name} を削除しました。「削除済み」フィルタで元に戻せます。", { name: record.name }),
       outcome.saved ? "success" : "error");
   }
 }
@@ -1797,7 +1801,7 @@ $("viewer-delete-selected").addEventListener("click", () => {
   if (!ids.length) { showViewerStatus("NOTHING_SELECTED", "削除するキャラクターを一覧のチェックボックスで選択してください。", "warning"); return; }
   const outcome = Library.setDeleted(ids, true);
   compareSelection.clear(); renderLibrary();
-  showViewerStatus("CHARACTERS_DELETED", `${outcome.changed}件を削除しました。「削除済み」を「含めて表示」にすると元に戻せます。`, outcome.saved ? "success" : "error");
+  showViewerStatus("CHARACTERS_DELETED", tr("{count}件を削除しました。「削除済み」を「含めて表示」にすると元に戻せます。", { count: outcome.changed }), outcome.saved ? "success" : "error");
 });
 
 // The one destructive action on this screen, so it asks first.
@@ -1807,7 +1811,7 @@ $("viewer-clear-list").addEventListener("click", async () => {
   if (!await ask("clearList", undefined, { count: totals.total })) return;
   const outcome = Library.clear();
   compareSelection.clear(); selectedViewerId = ""; renderLibrary();
-  showViewerStatus("LIST_CLEARED", `${outcome.removed}件を消去しました。`, outcome.saved ? "success" : "error");
+  showViewerStatus("LIST_CLEARED", tr("{count}件を消去しました。", { count: outcome.removed }), outcome.saved ? "success" : "error");
 });
 
 $("viewer-new-character").addEventListener("click", () => {

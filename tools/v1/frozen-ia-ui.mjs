@@ -626,10 +626,10 @@ function inspectorMarkup() {
 
 function tuningMarkup() {
   return `<section class="tuning-entry" aria-labelledby="tuning-title"><h2 id="tuning-title">${ui("AIの動き方を調整", "Adjust AI behavior")}</h2>
-    <p>${ui("気になる症状から、関係するCharacter設定を確認します。Trainerの観察はCanonicalの真実ではなく、推奨は自動適用されません。", "Start with a symptom and inspect related Character settings. Trainer observations are not Canonical truth, and recommendations are never applied automatically.")}</p>
+    <p>${ui("気になる症状から、関係するCharacter設定を確認します。推奨は自動適用されません。", "Start with a symptom and inspect related Character settings. Recommendations are never applied automatically.")}</p>
     <div class="tuning-symptom-grid">${TUNING_ITEMS.map(item => `<button type="button" data-tuning-symptom="${item.id}" aria-label="${esc(localized(item.symptom, locale()))}">${esc(localized(item.symptom, locale()))}</button>`).join("")}</div>
     <div id="tuningRegistryDetail" class="tuning-registry-detail" role="status" aria-live="polite">${ui("症状を選択してください。", "Select a symptom.")}</div>
-    <p><a href="../index.html?stay=1">${ui("DesktopでCurrent / Expected / Observed / Diff / Recommendationを確認する", "Open Desktop to review Current / Expected / Observed / Diff / Recommendation")}</a></p></section>`;
+    <p><a href="../index.html?stay=1">${ui("DesktopでCurrent / Expected / Recommendationを確認する", "Open Desktop to review Current / Expected / Recommendation")}</a></p></section>`;
 }
 
 function renderSurface() {
@@ -641,7 +641,7 @@ function renderSurface() {
     identity: `<div class="two">${simpleControl("identity.display_name")}${simpleControl("identity.character_id")}</div>${inspectorMarkup()}`,
     purpose: `${simpleControl("purpose.summary")}<div class="two">${simpleControl("purpose.primary_value")}${simpleControl("character_core.character_role")}</div>${listControl("purpose.non_goals")}`,
     work: `${listControl("purpose.target_users")}${enumListMarkup("purpose.work_modes")}
-      <aside class="helper-boundary"><strong>${ui("職能CSVはHelper Contextです", "Occupation CSV is Helper Context")}</strong><p>${ui("直接反映できる既存対応はCharacterの役割だけです。職業から資格・権限・許可・適性を推測しません。Previewと確認を経て明示的に適用します。", "Occupation CSV is helper context. The only existing direct mapping is Character role. It never implies credentials, authority, permission, or proven aptitude, and it requires preview and explicit apply.")}</p></aside>`,
+      <aside class="helper-boundary"><strong>${ui("職能CSVはHelper Contextです", "Occupation CSV is Helper Context")}</strong><p>${ui("直接反映できる既存対応はCharacterの役割だけです。職業から資格・権限・許可・適性を推測しません。Previewと確認を経て明示的に適用します。", "Occupation CSV is helper context. The only existing direct mapping is Character role. It never implies qualifications, authority, the right to act, or proven aptitude, and it requires preview and explicit apply.")}</p></aside>`,
     persona: `${listControl("character_core.values")}<div class="two">${simpleControl("expression_semantics.first_person")}${simpleControl("expression_semantics.address_style")}${simpleControl("expression_semantics.age_expression")}${simpleControl("expression_semantics.voice")}</div>
       ${listControl("expression_semantics.preferred_questions")}${simpleControl("expression_semantics.uncertainty_expression")}${simpleControl("expression_semantics.error_correction_rule")}${simpleControl("expression_semantics.closing_rule")}
       <details class="optional-expression"><summary>${ui("任意の対話・見た目設定", "Optional interaction and appearance settings")}</summary><div class="two">${simpleControl("expression_semantics.interaction_tendencies.encouragement")}${simpleControl("expression_semantics.interaction_tendencies.rapport")}${simpleControl("expression_semantics.interaction_tendencies.metaphor")}${simpleControl("expression_semantics.interaction_tendencies.scaffolding")}</div>${simpleControl("expression_semantics.presentation_intent.appearance")}</details>
@@ -702,7 +702,7 @@ function renderStructuredEditors() {
 // locator is computed at save (unified-authoring: id-resolved, PR #34 rule).
 const REF_GROUPS = Object.freeze([
   ["must_preserve_refs", "保持", "Preserve", "保持を確認する（Trainer が「保たれているか」を見る）", "Checked for preservation"],
-  ["prohibited_drift_refs", "逸脱禁止", "No drift", "逸脱を確認する（外れていないかを見る）", "Checked for drift"],
+  ["prohibited_drift_refs", "逸脱禁止", "Prohibited drift", "逸脱を確認する（外れていないかを見る）", "Checked for drift"],
   ["continuity_refs", "継続性", "Continuity", "継続性を確認する（会話をまたいで続くかを見る）", "Checked for continuity"],
 ]);
 const FIXED_INVARIANT_ID = "INV-INPUT-INTEGRITY";
@@ -728,7 +728,7 @@ function refChecks(getId) {
 function renderRequirements() {
   const host = document.getElementById("invariantsEditor"); if (!host) return;
   const path = "unified.hard_invariants"; const list = normalizeList(path).map((item, i) => typeof item === "string" ? { id: `INV-${i + 1}`, statement: item } : item); set(state(), path, list);
-  host.innerHTML = `<h3>${esc(label("character_core.hard_invariants"))}<span class="req">*</span></h3><p class="ref-legend">${ui("各行の「保持／逸脱禁止／継続性」で、あとで確認する対象を選びます。参照位置（locator）は保存時に自動で付きます。", "Tick 保持 / 逸脱禁止 / 継続性 on a row to make it a conformance check. The locator is added at save.")}</p><div class="fixed-held" data-fixed-invariant><span>${FIXED_INVARIANT_ID} — REQUIRED_INPUT != AI_GENERATED_SUBSTITUTE (${ui("固定・編集不可", "fixed, read only")})</span></div><div class="object-rows"></div><button type="button" class="btn-sm object-add">${ui("不変条件を追加", "Add invariant")}</button>`;
+  host.innerHTML = `<h3>${esc(label("character_core.hard_invariants"))}<span class="req">*</span></h3><p class="ref-legend">${ui("各行の「保持／逸脱禁止／継続性」で、あとで確認する対象を選びます。参照位置（locator）は保存時に自動で付きます。", "Tick Preserve / Prohibited drift / Continuity on a row to make it a conformance check. The locator is added when you save.")}</p><div class="fixed-held" data-fixed-invariant><span>${FIXED_INVARIANT_ID} — REQUIRED_INPUT != AI_GENERATED_SUBSTITUTE (${ui("固定・編集不可", "fixed, read only")})</span></div><div class="object-rows"></div><button type="button" class="btn-sm object-add">${ui("不変条件を追加", "Add invariant")}</button>`;
   host.querySelector("[data-fixed-invariant]").append(refChecks(() => FIXED_INVARIANT_ID));
   const rows = host.querySelector(".object-rows");
   list.forEach((item, index) => {
@@ -782,7 +782,7 @@ function wireFrozenActions() {
   // Ticking keeps the Character's existing order and appends new values; unticking removes.
   for (const host of document.querySelectorAll("[data-enum-list]")) host.addEventListener("change", event => { const box = event.target.closest("input[data-enum-option]"); if (!box) return; const list = normalizeList(host.dataset.enumList); const value = box.dataset.enumOption; const at = list.indexOf(value); if (box.checked && at < 0) list.push(value); if (!box.checked && at >= 0) list.splice(at, 1); window.render?.(); });
   document.querySelector("[data-jump-chapter]")?.addEventListener("click", () => { const target = document.querySelector('[data-frozen-chapter="boundary"]'); const details = target?.closest("details"); if (details) details.open = true; target?.scrollIntoView({ behavior: "smooth" }); target?.querySelector("input,select,textarea,button")?.focus(); });
-  document.querySelector(".tuning-symptom-grid")?.addEventListener("click", event => { const button = event.target.closest("[data-tuning-symptom]"); if (!button) return; const item = TUNING_ITEMS.find(one => one.id === button.dataset.tuningSymptom); const related = FIELDS.filter(one => one.tuning.includes(item.id)); const observed = (() => { try { const id = state()?._unified_source?.identity?.character_id || state()?.meta?.slug || ""; return JSON.parse(localStorage.getItem("saku.trainer.observedTuning") || "{}")[id]?.[item.id] || "NOT_ASSESSED"; } catch { return "NOT_ASSESSED"; } })(); document.getElementById("tuningRegistryDetail").innerHTML = `<strong>${esc(localized(item.symptom, locale()))}</strong><p>Current: ${related.map(one => esc(localized(one.label, locale()))).join(" / ") || "UNKNOWN"}</p><p>Observed: ${esc(observed)}</p><p>Diff: ${observed === "NOT_ASSESSED" ? "UNKNOWN" : ui("TrainerのEvidenceを確認してください", "Review Trainer evidence")}</p><p>${ui("Recommendationは自動適用されません。関連項目のHelpを開き、Previewを確認してから明示的に編集してください。", "Recommendations are not applied automatically. Open the related field Help, preview the change, then edit explicitly.")}</p>`; });
+  document.querySelector(".tuning-symptom-grid")?.addEventListener("click", event => { const button = event.target.closest("[data-tuning-symptom]"); if (!button) return; const item = TUNING_ITEMS.find(one => one.id === button.dataset.tuningSymptom); const related = FIELDS.filter(one => one.tuning.includes(item.id)); document.getElementById("tuningRegistryDetail").innerHTML = `<strong>${esc(localized(item.symptom, locale()))}</strong><p>Current: ${related.map(one => esc(localized(one.label, locale()))).join(" / ") || "UNKNOWN"}</p><p>${ui("実際の応答は、AI プラットフォームの新しい会話で確かめてください。", "Check the actual responses in a new conversation on the AI platform.")}</p><p>${ui("Recommendationは自動適用されません。関連項目のHelpを開き、Previewを確認してから明示的に編集してください。", "Recommendations are not applied automatically. Open the related field Help, preview the change, then edit explicitly.")}</p>`; });
   for (const id of ["resetAll", "loadExample"]) document.getElementById(id)?.addEventListener("click", () => setTimeout(renderStructuredEditors, 0));
 }
 
