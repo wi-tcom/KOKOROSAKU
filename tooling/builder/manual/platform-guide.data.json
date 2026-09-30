@@ -1,7 +1,7 @@
 {
   "profile": "saku.screen-guide@1",
   "screen": "03-ai-platform",
-  "applies_to_app_version": "0.1.0-beta.9",
+  "applies_to_app_version": "0.1.0-beta.10",
   "content_review": {
     "ja": {
       "status": "APPROVED",
@@ -79,7 +79,7 @@
       "numeral": "1",
       "title": {
         "ja": "動かすキャラクターを確認する",
-        "en": "Check the Character to run"
+        "en": "Check which Character you are running"
       },
       "question": {
         "ja": "どのキャラクターを外部 AI に渡しますか？",

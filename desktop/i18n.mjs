@@ -3,6 +3,119 @@ const DEFAULT_LOCALE = "ja-JP";
 
 // Static Desktop shell/help resources. Runtime paths and imported Character data are excluded.
 const EN = new Map(Object.entries({
+  // Strings that showed Japanese in English (ライター&SNS review 15, 2026-09-30; 英語翻訳チーム U1, Wi-t_Site 09a59e4).
+  "席 8（論理上の人）":"Seat 8 — Human (logical)",
+  "キャラクターを読み込む":"Import a Character",
+  "読み込み履歴":"Import history",
+  "キャラクターを探す":"Find a Character",
+  "職能CSVを読み込む":"Import an occupation CSV",
+  "職種の情報はキャラクターの一部です。キャラクター全体を決めるものではありません。資格・権限・許可には結び付けません。":"Occupation information is one part of a Character. It does not define the whole Character. It is not tied to any qualification, authority or right to act.",
+  "読み込んだ職能情報を消す":"Clear the imported occupation information",
+  "職能CSVはまだ読み込まれていません。":"No occupation CSV has been loaded yet.",
+  "大分類":"Major category",
+  "職能名":"Occupation name",
+  "実務内容":"Duties",
+  "Builderへ渡す内容":"What is passed to Builder",
+  "この組み合わせで編集する":"Edit with this combination",
+  "選択中のキャラクター":"Selected Character",
+  "運用区分":"Operation class",
+  "1+7構造":"1+7 structure",
+  "席7の役割":"Role of Seat 7",
+  "運営者":"Operator",
+  "未記入":"Not filled in",
+  "黒子":"Kuroko",
+  "必要":"Required",
+  "不要":"Not required",
+  "第0層":"Layer 0",
+  "15軸":"15 axes",
+  "宣言されたSchema":"Declared Schema",
+  "取り込み経路":"Import route",
+  "このキャラクターの目的":"Purpose of this Character",
+  "提供する価値":"Value provided",
+  "向いている働き方":"Suitable ways of working",
+  "想定する相手":"Intended users",
+  "引き受けない仕事":"Work it does not take on",
+  "大切にすること":"What it values",
+  "人間に期待する寄与":"Contribution expected from a person",
+  "人間へ渡す場面":"When it hands over to a person",
+  "選ぶための情報":"Information for choosing",
+  "このキャラクターは、選ぶ手がかりになる項目をまだ記録していません。":"This Character has not yet recorded any items that help in choosing it.",
+  "ここに出るのはキャラクターに書かれている内容だけです。向き不向きを推測して足すことはしません。":"Only what is written in the Character appears here. Nothing is added by guessing what it is or is not suited for.",
+  "AIプラットフォームで動作確認":"Check on an AI platform",
+  "編集する":"Edit",
+  "この Schema には存在しません":"Does not exist in this Schema",
+  "名称不明":"Unknown name",
+  "この Character の Schema は判定できません。":"The Schema of this Character cannot be determined.",
+  "一覧はまだ空です。Packageインポート・個別インポート・新規作成から追加できます。":"The list is still empty. You can add Characters with Import Package, Import file or Create new.",
+  "読み込めるCharacterがファイルに含まれていません。":"The file contains no Character that can be loaded.",
+  "未命名":"Unnamed",
+  "まだ読み込み履歴はありません。":"There is no import history yet.",
+  "キャラクターパッケージ":"Character package",
+  "個別キャラクター":"Individual Character",
+  "(パス不明)":"(unknown path)",
+  "— この読み込みの内容を表示しています。":" — showing the contents of this import.",
+  "選択中":"Selected",
+  "キャラクター":"Character",
+  "(名称未設定)":"(no name set)",
+  "職能情報":"Occupation information",
+  "(職能名なし)":"(no occupation name)",
+  "読み込み元":"Loaded from",
+  "反映される項目":"Fields that are applied",
+  "なし":"None",
+  "反映されない項目":"Fields that are not applied",
+  "職能情報が読み取れませんでした。列の形式を確認してください。":"The occupation information could not be read. Check the column format.",
+  "件の職能情報を読み込みました。キャラクターと組み合わせる行を選んでください。":" occupation entries were loaded. Choose the row to pair with the Character.",
+  "(display_name 未設定)":"(display_name not set)",
+  "revision 未設定":"revision not set",
+  "取り込み結果に Character Pack の情報がありません。アプリを更新してから読み込み直してください。":"The import result has no Character Pack information. Update the app, then load it again.",
+  "取り込み結果に Character Pack の情報がありません。取り込みは行いませんでした。":"The import result has no Character Pack information. Nothing was imported.",
+  "署名（Ed25519）はこのホストでは未検証です。":"The signature (Ed25519) has not been verified on this host.",
+  "コピーできませんでした。依頼文を選んでコピーしてください。":"Could not copy. Select the request and copy it.",
+  "コピーできませんでした。選択したので、手動でコピーしてください。":"Could not copy. The text has been selected, so copy it by hand.",
+  "削除するキャラクターを一覧のチェックボックスで選択してください。":"Use the checkboxes in the list to select the Characters to delete.",
+  "一覧は既に空です。":"The list is already empty.",
+  "同じ検討を何度も繰り返す":"Repeatedly revisits the same consideration",
+  "結論を急ぎすぎる":"Concludes too quickly",
+  "慎重すぎて進まない":"Becomes too cautious to proceed",
+  "利用者に同意しすぎる":"Agrees with the user too readily",
+  "確認が多すぎる":"Asks too many confirmations",
+  "一つ問題があると全部止まる":"Stops everything because of one issue",
+  "説明が長すぎる":"Explanation becomes unnecessarily long",
+  "低い":"Low",
+  "中くらい":"Medium",
+  "高い":"High",
+  "保護されている":"Protected",
+  "崩れかけている":"At risk",
+  "観察された":"Observed",
+  "個性が保たれている":"Individuality kept",
+  "個性が薄れている":"Individuality fading",
+  "未評価":"Not assessed",
+  "キャラクター未選択":"No Character selected",
+  "気になる症状を選ぶと、現在の状態と推奨される調整を表示します。":"Choose something you have noticed to see the current state and the recommended adjustment.",
+  "先にキャラクターを選択してください。":"Choose a Character first.",
+  "現在の状態（Character の期待）":"Current state (what the Character expects)",
+  "推奨変更":"Recommended change",
+  "期待効果":"Expected effect",
+  "副作用":"Side effects",
+  "職種による違い":"Differences by occupation",
+  "上げてよい場合":"When it is fine to raise it",
+  "この項目は「守る／守れていない」で見るもので、強さを上げ下げする設定ではありません。":"This item is judged as “kept / not kept”; it is not a setting whose strength you raise or lower.",
+  "[SAKU] Character として設定する内容":"[SAKU] What to set in the Character",
+  "[AMU] AMU で設定する内容":"[AMU] What to set in AMU",
+  "これは Character の変更ではありません。ここでは適用しません。":"This is not a change to the Character. It is not applied here.",
+  "追記する内容（この文言がそのまま Character に入ります）":"Text to add (this wording goes into the Character as it is)",
+  "例: 新しい根拠がない再検討は行わない":"Example: Do not reconsider without new grounds",
+  "Before / After を見る":"View Before / After",
+  "この内容で適用する":"Apply this change",
+  "項目":"Field",
+  "（なし）":"(none)",
+  "追記する内容を入力してください。":"Enter the text to add.",
+  "分類ラベルや実行時の値は Character に保存できません。":"Classification labels and runtime values cannot be saved in a Character.",
+  "適用しました。保存すると Character Revision に反映されます。":"Applied. It will be reflected in the Character Revision when you save.",
+  "共通の指示文（すべてのキャラクターに共通の土台）を読み込めませんでした。":"The shared directives (the base common to all Characters) could not be loaded.",
+  "安全のため、貼り付ける文は作っていません。":"For safety, no text to paste has been created.",
+  "アプリを再インストールしてから開き直してください。直らない場合はサポートにお知らせください。":"Reinstall the app, then open it again. If that does not fix it, please contact support.",
+  "作成したキャラクターは、この操作では失われません。":"Characters you created are not lost by this operation.",
   // 04 and the older-format notices (英語翻訳チーム 依頼 Z, Wi-t_Site 03dacf0; service names chosen by
   // the Owner 2026-09-27, Wi-t_Site 4508d58).
   "SAKU 診療所・AMU トレーニングセンター":"SAKU Repair Desk and AMU Evaluation Center",
@@ -39,11 +152,11 @@ const EN = new Map(Object.entries({
   "キャラクターを読み込む / 新規作成する":"Import or create a Character","Packageインポート":"Import Package","個別インポート":"Import file","サンプルを読み込む":"Load samples","サンプル":"Sample",
   "選択キャラクター削除":"Delete selected","一覧をクリア":"Clear list","新規作成":"Create new",
   "削除済み":"Deleted","表示しない":"Hide","含めて表示":"Include","削除済みのみ":"Deleted only","選択":"Select",
-  "キャラクターを作る・編集する":"Create / edit Character","トレーニングする":"Train","削除する":"Delete","削除を取り消す":"Undo delete","閉じる":"Close",
+  "トレーニングする":"Train","削除する":"Delete","削除を取り消す":"Undo delete","閉じる":"Close",
   "キャラクターを見る":"View Characters","読み込まれたCharacterをread-onlyで確認します。":"View imported Characters in read-only mode.",
   "AIで試す":"Test with AI","TrainerでCharacterの傾向を観察します。":"Observe Character tendencies in Trainer.",
   "結果を確認する":"Review Results","Expected・Observed・Diff・SuggestionをEvidenceと一緒に確認します。":"Review Expected, Observed, Diff, and Suggestion together with their evidence.",
-  "キャラクターを作る・編集する":"Create / Edit Character","Builderで作成、編集、validationを行います。":"Create, edit, and validate in Builder.",
+  "キャラクターを作る・編集する":"Create or edit a Character","Builderで作成、編集、validationを行います。":"Create, edit, and validate in Builder.",
   "準備とデータ":"Setup and data","Package / 新規作成":"Package / create new",
   "既存の検証経路でPackageを読み込みます。検証失敗は利用可能へ昇格しません。":"Import Packages through the existing validation path. Failed validation never becomes available.",
   "Packageを読み込む":"Import package","Characterを作る":"Create Character","ヘルプを見る":"View Help",
@@ -103,7 +216,7 @@ const LONG_EN = new Map(Object.entries({
   "はworkspace未選択を示します。理由をGUIに表示し、generic ERRORへまとめません。":" means no workspace is selected. The GUI shows the reason without collapsing distinct states into a generic error.",
   "ダウンロード先、Install、Config、Logs、Cache、Workspaceは別の場所です。workspaceは初回に利用者が選びます。Sampleはapp resourceとしてread-only、検証済みPackageのimport結果はworkspaceへ保存します。Builderの編集中内容はbrowser downloadでworkspaceへ自動保存されません。DownloadはOSへの保存要求を開始するだけなので、保存先と完了を利用者が確認してください。":"Downloads, installation, configuration, logs, cache, and workspace use separate locations. The user chooses the workspace on first run. Samples are read-only app resources, and validated Package imports are stored in the workspace. Content being edited in Builder is not automatically saved to the workspace by a browser download. Download only starts an OS save request; the user must verify the destination and completion.",
   "既存HTMLと共有ES moduleをTauri assetとして利用します。localhost、shell、手動PATH設定、cloud backendは使いません。":"Existing HTML and shared ES modules are used as Tauri assets. No localhost server, shell, manual PATH configuration, or cloud backend is used.",
-  "キャラクターパッケージを読み込んでキャラクターを選択します。":"Import a Character package, or pick a Character you already have.",
+  "キャラクターパッケージを読み込んでキャラクターを選択します。":"Import a Character package and choose a Character.",
   "キャラクターを作成・編集します。":"Create or edit a Character.",
   "AI プラットフォームでキャラクターを動作":"Run the Character on an AI platform",
   "選択中のキャラクターを外部のAIに読み込ませて動かします。":"Load the selected Character into the AI you use, and run it there.",
@@ -113,7 +226,7 @@ const LONG_EN = new Map(Object.entries({
   "調整するキャラクターを選んでください。":"Choose the Character to adjust.",
   "選択中のキャラクターを、お使いのAIにそのまま読み込ませて動かします。ここでキャラクターは変わりません。":"Load the selected Character into the AI you use and run it there. Nothing here changes the Character.",
   "動かすキャラクターを選んでください。":"Choose the Character to run.",
-  "1. 動かすキャラクターを確認する":"1. Confirm which Character you are running",
+  "1. 動かすキャラクターを確認する":"1. Check which Character you are running",
   "貼り付ける文":"Text to paste",
   "— 次に、編集するか、AI プラットフォームで動かすかを選んでください。":" — next, choose whether to edit this Character or run it on an AI platform.",
   "この Character は採択済み Schema に合わないため、02 でも 03 でも開けません。一覧から削除できます。":"This Character does not match the adopted Schema, so it cannot be opened in 02 or 03. You can delete it from the list.",
@@ -137,7 +250,7 @@ const LONG_EN = new Map(Object.entries({
   "「思っていた反応と違う」と感じた応答をコピーしておき、04 キャラクターをトレーニングする に貼り付けます。Expected・Observed・Diff を見て、キャラクターを直すかどうかを決められます。":"Copy any response that was not what you expected and paste it into 04 Train the Character. Expected, Observed and Diff then let you decide whether to change the Character.",
   "04 キャラクターをトレーニングする へ":"Go to 04 Train the Character",
   "この方法でできないこと":"What this way does not give you",
-  "一般のAIサービスに貼り付けて動かす方法です。次のことは保証されません。":"This runs the Character by pasting it into a general AI service. None of the following is guaranteed.",
+  "一般のAIサービスに貼り付けて動かす方法です。次のことは保証されません。":"This runs the Character by pasting it into a general AI service. This way does not provide any of the following.",
   "独立したプロセスとして動き続けること":"That it keeps running as a process of its own",
   "会話をまたいで記憶が残ること":"That memory survives between conversations",
   "ツールや外部システムを操作できること":"That it can operate tools or outside systems",
@@ -164,6 +277,56 @@ const LONG_EN = new Map(Object.entries({
   "ホームのstatus codeとreasonを確認し、ヘルプのPackageの読み込みまたはデータの保存場所を参照してください。秘密情報やprivate conversationをsupport情報へ貼り付けないでください。":"Check the status code and reason on the home screen, then consult Package import or Data locations in Help. Do not include secrets or private conversations in support information."
 }));
 
+// Whole-sentence templates for messages that carry run-time values ({name} is replaced after translation).
+// The key is the Japanese template exactly as desktop/app.mjs writes it; the value is the 英語翻訳チーム's English.
+const EN_FORMAT = new Map(Object.entries({
+  // 英語翻訳チーム U2 (Wi-t_Site c60e232).
+  "{reason} このPackageは内容からSchemaを推測せず拒否しました。Source Ownerから、Active Unified Schema identityと変換来歴をmanifestへ結び付けたReplacement Packageを取得してください。":"{reason} This Package was refused without guessing its Schema from the contents. Get a Replacement Package from the Source Owner in which the Active Unified Schema identity and the conversion provenance are bound to the manifest.",
+  "{reason} conformance_expectations の locator が requirement_id と別の要件を指しているため、このCharacterは取り込みません（Schema の規則: 参照不一致は fail closed）。Builder側では内容を書き換えず、作成元／配布元から修正版を入手してください。":"{reason} This Character is not imported because a locator in conformance_expectations points to a different requirement from its requirement_id (Schema rule: a reference mismatch fails closed). Builder does not rewrite the contents; get a corrected version from the author or distributor.",
+  "{reason} AMU Studio の「この編集内容を SAKU へ戻す」で作った .saku-return.zip をそのまま（解凍・編集せずに）選んでください。中身が合わない場合は AMU Studio で作り直してください。":"{reason} Select the .saku-return.zip made with 「この編集内容を SAKU へ戻す」 (Return these edits to SAKU) in AMU Studio as it is, without unzipping or editing it. If the contents do not match, make it again in AMU Studio.",
+  "{reason} SAKU Character Pack は ZIP のまま（解凍せずに）選んでください。ファイルが配布元のものと同じかは SHA256SUMS で確認できます。":"{reason} Select the SAKU Character Pack as a ZIP, without unzipping it. You can check with SHA256SUMS that the file is the same as the one the distributor published.",
+  "{before}… → {after}…（本文は不変・locator と revision のみ）":"{before}… → {after}… (text unchanged; only the locator and revision)",
+  "{name}（削除済み）":"{name} (deleted)",
+  "一覧 {active}件（削除済み {deleted}件）":"List: {active} (deleted: {deleted})",
+  "一覧 {active}件 — この画面でCharacter dataは変更しません（Viewer data mutation: 0）":"List: {active} — this screen does not change Character data (Viewer data mutation: 0)",
+  " ほか{count}件":" and {count} more",
+  "{count}件は取り込めませんでした: {names}{more} — {recovery}":"Could not import {count}: {names}{more} — {recovery}",
+  "一覧に保存できませんでした: {failure}":"Could not save to the list: {failure}",
+  "{added}件を追加、{replaced}件を置き換えました。":"Added {added} and replaced {replaced}.",
+  "{added}件を一覧に追加しました。":"Added {added} to the list.",
+  "{name} — 推奨は適用するまでCharacterを変更しません。":"{name} — a recommendation does not change the Character until you apply it.",
+  "{name} — {item} の内容を適用しました。":"{name} — applied the contents of {item}.",
+  "{count}件をworkspaceから復元しました（{workspace}）。Character dataは変更していません。":"Restored {count} from the workspace ({workspace}). Character data was not changed.",
+  "一覧は空です。workspace（{workspace}）にも復元できるCharacterがありません。":"The list is empty, and the workspace ({workspace}) has no Characters to restore either.",
+  "{reason} Packageを選び直すかHelpを確認してください。":"{reason} Select a different Package or check Help.",
+  "{reason} 取り込みは行いませんでした。":"{reason} Nothing was imported.",
+  "署名検証に失敗したため取り込みませんでした: {detail}":"Not imported because signature verification failed: {detail}",
+  "{reason} 配布元から入手し直してください。":"{reason} Get it again from the distributor.",
+  "{pack} {version}: {count}体（運用区分 {classes}）。{signature}。保存先: {path}":"{pack} {version}: {count} Characters (operation class {classes}). {signature}. Saved to: {path}",
+  "{reason} AMU Studio で作り直すか、元のパックを取り込み直してください。":"{reason} Make it again in AMU Studio, or import the original pack again.",
+  "対象: {fields}":"Fields: {fields}",
+  "AMU Studio からの戻し: {name} rev {revision}。編集依頼: {note}（{fields}）。{relation} {signature}。workspace には保存していません。":"Returned from AMU Studio: {name} rev {revision}. Edit request: {note} ({fields}). {relation} {signature}. Not saved to the workspace.",
+  "{name}（rev {revision}）を一覧に追加しました（workspace には保存していません）。{relation} 詳細の「AMU からの編集依頼」を確認してから編集してください。":"Added {name} (rev {revision}) to the list (not saved to the workspace). {relation} Check \"Edit request from AMU\" in the details before you edit.",
+  "{filename}: Characterが見つかりません":"{filename}: no Character found",
+  "{count}件は取り込めませんでした（locator＝参照位置が要件とずれています）: {lines}{more} 「locator を修復して読み込む」は requirement_id から参照位置を計算し直すだけで、本文は変えません（修復後は新しい revision になります）。":"Could not import {count} (the locator, the reference position, does not match its requirement): {lines}{more} \"Repair locators and load\" only recalculates the reference positions from requirement_id and does not change the text (after the repair there is a new revision).",
+  "locator を修復して読み込む（{count}件）":"Repair locators and load ({count})",
+  "{name}: {count}件は requirement_id が見つからず修復できません":"{name}: {count} cannot be repaired because their requirement_id is not found",
+  "{count}件の locator を修復して一覧に追加しました: {detail}。{unrepaired} 詳細の「locator 修復」行に記録があります。":"Repaired the locators of {count} and added them to the list: {detail}. {unrepaired} The \"Locator repair\" row in the details keeps a record.",
+  " 修復できなかったもの: {list}":" Not repaired: {list}",
+  "{name} は {field} が未設定のため編集画面へ渡せません。取り込んだファイルに {field} を追加してください。":"{name} cannot be passed to the edit screen because {field} is not set. Add {field} to the imported file.",
+  "{name} は Schema が判定できないため開けません（{code}）。一覧から削除できます。":"{name} cannot be opened because its Schema cannot be determined ({code}). You can delete it from the list.",
+  "{name} を選択しました。":"Selected {name}.",
+  "{name} を一覧に戻しました。":"Restored {name} to the list.",
+  "{name} を削除しました。「削除済み」フィルタで元に戻せます。":"Deleted {name}. You can restore it with the \"Deleted\" filter.",
+  "{count}件を削除しました。「削除済み」を「含めて表示」にすると元に戻せます。":"Deleted {count}. To restore them, set \"Deleted\" to \"Include\".",
+  "{count}件を消去しました。":"Erased {count}.",
+  // Seat 8 follows D-20260928-seat-roles (ライター&SNS 2026-09-30; 英語翻訳チーム).
+  "席 2〜7：{count}/6 ＋ 席 8（論理上の人）":"Seats 2–7: {count}/6 + Seat 8 — Human (logical)",
+  // 英語翻訳チーム U1 (Wi-t_Site 09a59e4).
+  "読み込み元: {source}":"Loaded from: {source}",
+  "対象フィールドの指定なし":"No target fields specified",
+}));
+
 const sources = new WeakMap();
 const attributeSources = new WeakMap();
 let applying = false;
@@ -184,11 +347,11 @@ function applyTree(root = document.body) {
       const trimmed = original.trim();
       if (trimmed) node.nodeValue = original.replace(trimmed, translate(trimmed));
     }
-    const elements = root.nodeType === 1 ? [root, ...root.querySelectorAll("[aria-label],[title]")] : [];
+    const elements = root.nodeType === 1 ? [root, ...root.querySelectorAll("[aria-label],[title],[placeholder]")] : [];
     for (const element of elements) {
       if (!attributeSources.has(element)) attributeSources.set(element, {});
       const original = attributeSources.get(element);
-      for (const attribute of ["aria-label", "title"]) {
+      for (const attribute of ["aria-label", "title", "placeholder"]) {
         if (!element.hasAttribute(attribute)) continue;
         if (!Object.hasOwn(original, attribute)) original[attribute] = element.getAttribute(attribute);
         element.setAttribute(attribute, translate(original[attribute]));
@@ -220,4 +383,9 @@ new MutationObserver(records => {
   for (const record of records) for (const node of record.addedNodes) if (node.nodeType === 1 || node.nodeType === 3) applyTree(node.nodeType === 1 ? node : node.parentElement);
 }).observe(document.body, { subtree: true, childList: true, characterData: true });
 applyTree();
-window.SAKU_DESKTOP_I18N = { setLocale, getLocale: () => locale };
+function format(template, params = {}) {
+  const chosen = locale === "en-US" && EN_FORMAT.has(template) ? EN_FORMAT.get(template) : template;
+  return chosen.replace(/\{(\w+)\}/g, (all, name) => Object.hasOwn(params, name) ? String(params[name]) : all);
+}
+
+window.SAKU_DESKTOP_I18N = { setLocale, getLocale: () => locale, format, hasFormat: template => EN_FORMAT.has(template) };

@@ -1,0 +1,188 @@
+{
+  "profile": "saku.desktop.public-build-envelope@1",
+  "artifact": {
+    "product": "SAKU Builder",
+    "version": "0.1.0-beta.10",
+    "filename": "SAKU Builder_0.1.0-beta.10_x64-setup.exe",
+    "relative_path": "release/bundle/nsis/SAKU Builder_0.1.0-beta.10_x64-setup.exe",
+    "sha256": "e763023e4381f4d395983074962df3be0c3b785e0c41b54eee6bf3828974c48c",
+    "bytes": 2215425,
+    "code_signing": "UNSIGNED"
+  },
+  "application_artifact": {
+    "product": "SAKU Builder",
+    "version": "0.1.0-beta.10",
+    "filename": "saku-builder-desktop.exe",
+    "relative_path": "release/saku-builder-desktop.exe",
+    "sha256": "e0db6efc99aa6dc45e6b70eb9a5607dbac696378196a60e6f2c2b01f7ef70ce9",
+    "embedded_sha256": "e0db6efc99aa6dc45e6b70eb9a5607dbac696378196a60e6f2c2b01f7ef70ce9",
+    "post_bundle_release_sha256": "d0264725211b0754d1b2ad5245da9d1f1259e6a0ea92422e8c0499be14d0a38b",
+    "bundle_type_stamp_note": "The installer-embedded application and the post-bundle release executable differ at 3 byte(s) (offsets 4003082–4003084, the Tauri bundle-type stamp: \"NSIS\" against \"UNKNOWN\"). sha256 is the installer-embedded identity.",
+    "bytes": 4303872,
+    "code_signing": "UNSIGNED",
+    "host_path_scan": {
+      "user_profile_root_backslash": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "user_profile_root_slash": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "build_user_name": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "cloud_sync_folder_name": {
+        "utf8": false,
+        "utf16le": false
+      }
+    }
+  },
+  "source": {
+    "repository": "wi-tcom/-SAKU-builder",
+    "commit": "e849c5a7ed84f76a451c457febfa35b3beddaf1a",
+    "tree": "7b20f5f607275a331092b6730e2bdcb6512442d2",
+    "branch": "claude/saku-beta10-20260930",
+    "note": "the version bump is committed before the build, so this commit and tree are the ones the binary was made from",
+    "base": {
+      "commit": "baad88c6bdd94def7240ed6c79a803942eb86e25",
+      "branch": "main",
+      "note": "main after PR #93 merged (the 04 links to the Character introduction page and the store, and the English review)"
+    },
+    "revision": "e849c5a"
+  },
+  "resource_profile": {
+    "name": "public-oss",
+    "file": "resource-profile.json",
+    "sha256": "4a2374dbcc7bb50b9288f196a3cb868a48700569f62013a153f697751d4341ae",
+    "distribution_boundary": "PUBLIC_OSS_CANDIDATE",
+    "internal_content_count": 0
+  },
+  "build_metadata": {
+    "file": "build-metadata.json",
+    "sha256": "fb2921a6368fd6195b20117ea64f7169c8eb7aa7ba09a68f1338f17cf02a3d63"
+  },
+  "bundled_notice_binding": {
+    "mode": "SHA_INDEPENDENT_EXTERNAL_RELEASE_ASSET_MANIFEST",
+    "files": {
+      "LICENSING.md": "20e2ff04dec462ef55d65a1dfb8aa379768ae95a2729fb492f6998fd77ef4813",
+      "THIRD_PARTY_NOTICES.md": "2168f1a7acb03af839f718403679984b9a12bb4220a7c5d953eff1096bcd17c8",
+      "third-party/THIRD_PARTY_LICENSE_MANIFEST.json": "ac683f2dba75f35aa9c0fcc8a2e94e481f13b831ef946f3f9d3dcda236c34964"
+    },
+    "embedded_installer_sha256_reference_count": 0
+  },
+  "tauri_public_override": {
+    "file": "tauri.public.override.json",
+    "sha256": "fbfdc5edb130c3a82558ca55e77ae8a2844d5f1a3c97b7f661f69c613389a85a",
+    "purpose": "preserve the prepared public resource projection by disabling the default owner-internal beforeBuildCommand"
+  },
+  "rust_flags": {
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": {
+      "encoding": "U+001F-separated argv",
+      "arguments": [
+        "--remap-path-prefix=<BUILD_USER_HOME>\\\\=/host/",
+        "--remap-path-prefix=<BUILD_USER_HOME>/=/host/",
+        "--remap-path-prefix=<CARGO_REGISTRY_SRC>\\\\=/cargo/registry/src/",
+        "--remap-path-prefix=<CARGO_REGISTRY_SRC>/=/cargo/registry/src/"
+      ],
+      "parameters": {
+        "BUILD_USER_HOME": "absolute build-user home on the reproducing host; not published",
+        "CARGO_REGISTRY_SRC": "absolute Cargo registry source root on the reproducing host; not published"
+      },
+      "result_contract": "no build-host absolute path remains in the public application executable"
+    }
+  },
+  "target": {
+    "triple": "x86_64-pc-windows-msvc",
+    "cargo_target_label": "tauri-exact-1.97.1-beta9-public-oss-db47704-001",
+    "label": "tauri-exact-1.97.1-beta10-public-oss-e849c5a-001"
+  },
+  "build_revision": "e849c5a",
+  "tools": {
+    "node": "24.21.0",
+    "npm": "11.19.0",
+    "rustc": "1.97.1 (8bab26f4f 2026-07-14)",
+    "cargo": "1.97.1 (c980f4866 2026-06-30)",
+    "llvm": "22.1.6",
+    "tauri_cli": "2.11.4",
+    "tauri_runtime_crate": "2.11.5",
+    "tauri_build_crate": "2.6.3",
+    "nsis": "3.11",
+    "visual_studio_build_tools": "18.7.1 (18.7.11911.148)",
+    "msvc": "14.51.36231",
+    "deviation_note": "Same host toolchain as β.2 – β.9 (rustc/cargo 1.97.1, Tauri CLI 2.11.4, Node 24.21.0 / npm 11.19.0). No tool changed for this build."
+  },
+  "build": {
+    "cwd": "<REPOSITORY_ROOT>",
+    "environment": {
+      "CARGO_TARGET_DIR": "<REPOSITORY_ROOT>/src-tauri/target/tauri-exact-1.97.1-beta10-public-oss-e849c5a-001",
+      "CARGO_ENCODED_RUSTFLAGS": "construct from rust_flags.CARGO_ENCODED_RUSTFLAGS.arguments using U+001F",
+      "CARGO_NET_OFFLINE": "true",
+      "CARGO_BUILD_JOBS": "1",
+      "CARGO_INCREMENTAL": "0",
+      "RUSTUP_TOOLCHAIN": "1.97.1"
+    },
+    "command": "<NODE_24_21_0>/node.exe node_modules/@tauri-apps/cli/tauri.js build --bundles nsis --config docs/releases/0.1.0-beta.10/tauri.public.override.json -- --locked",
+    "bundles": [
+      "nsis"
+    ],
+    "offline": true,
+    "locked": true,
+    "jobs": 1,
+    "source_mutation": 0,
+    "duration": "7m 56s total",
+    "builder": "Claude Code (SAKU Builder Active Writer). Owner 2026-09-30: 「β.10 の版上げ・ビルド・実機確認を進めてください」"
+  },
+  "webview2": {
+    "install_mode": "downloadBootstrapper",
+    "bootstrapper_url": "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+    "bootstrapper_bundled": false,
+    "runtime_bundled": false
+  },
+  "app_icon": {
+    "source_revision": "512f0363078bb8a6529483a8b8a47923ca10ed08",
+    "icon_ico_sha256": "fb8b522e90452f924956cec5ca56eb437c9b3e218739e55b091b252feb9e14e0",
+    "icon_256_png_embedded_in_executables": {
+      "embedded_exe": true,
+      "post_bundle_exe": true,
+      "installer": true
+    }
+  },
+  "base_layer": {
+    "profile": "saku.base-directives@1",
+    "version": "1.0",
+    "source_file": "desktop/resources/base/saku-base-directives.v1.txt",
+    "bundled_as": "help/base/saku-base-directives.v1.txt",
+    "sha256": "ab4745a3617e5b8e49125146a47ee99d1adde7ad8436c953431518ac23358654",
+    "bytes": 4397,
+    "burned_in_as": "BASE_LAYER_SHA256 (tools/unified-v1/platform-prompt.mjs and src-tauri/src/main.rs)",
+    "checked": "at startup (host, through the asset resolver the WebView reads) and before every hand-off (03). A mismatch stops 03 from producing any text at all.",
+    "first_bundled_in": "0.1.0-beta.4"
+  },
+  "superseded": {
+    "supersedes": "0.1.0-beta.9 (published 2026-09-28, installer d6474dd6…, embedded 0a91ec62…)",
+    "note": "β.10 carries -SAKU-builder PR #93, merged after β.9."
+  },
+  "contents_since_beta9": [
+    "04 has a 「キャラクター紹介」 / \"Character introductions\" section with links to the 64-Character introduction page (https://www.wi-t.com/saku-characters) and the store (https://www.wi-t.com/category/all-products); the same ids, order and updated date as AMU Studio; no price on the screen (#93)",
+    "Desktop strings that stayed Japanese in English now have English: 111 fixed strings and 41 whole-sentence templates for messages with run-time values; placeholders are translated too (#93, ライター&SNS review 15)",
+    "the Trainer's observation and difference left 02's tuning block, the Desktop tuning panel and the manual's tuning page (#93, review 3)",
+    "English fixes from the review: sign-off instead of approval, the right to run anything instead of execution permission, qualifications instead of credentials, names that match the screen, and \"a person\" where \"human\" meant a person (#93, 英語翻訳チーム R1/R2)",
+    "Japanese fixes: the P08 source list, the save confirmation's real button names, 04's signature section reads as not open yet, 「人への引き継ぎ」, seat 8 as 「席 8（論理上の人）」 (#93)",
+    "the Builder page's saved message follows the language (#93, review 17)"
+  ],
+  "provisional_wording": {
+    "state": "NONE",
+    "approved": true,
+    "count": 0,
+    "note": "docs/collaboration/provisional-wording.json has no entries: every user-visible string in this build has been through ライター&SNS 様式チェック, and the English is the 英語翻訳チーム delivery."
+  },
+  "release_state": {
+    "code_signing": "NOT_EXECUTED",
+    "authenticode": "NotSigned",
+    "published": false,
+    "note": "UNSIGNED / NOT_RELEASED. Publication, GitHub Release, the KOKOROSAKU tree and site updates are Owner decisions and have not been taken."
+  }
+}

@@ -10,6 +10,9 @@
 // it again).
 import { SERVICE_LINKS, serviceLinkState } from "./service-links.mjs";
 
+/** Links that introduce something rather than take an application (shared ids with AMU Studio). */
+export const INFORMATION_LINK_IDS = Object.freeze(["service_intro", "characters_intro", "store_packs"]);
+
 // The visible text in one place for the writer team. The service texts are
 // ライター&SNS's v2 (Wi-t_Site 9f31b8b), confirmed by the Owner on 2026-09-27
 // (AMU DECISION 2026-09-27-14), in the same shape as AMU Studio's
@@ -34,6 +37,12 @@ export const SERVICES_WORDING = Object.freeze({
       Object.freeze({ id: "intro", title: "紹介ページ", lead: "", items: Object.freeze([
         Object.freeze({ link: "service_intro", lines: Object.freeze(["サービスの内容は、kokoroamu.jp の紹介ページでご覧いただけます。"]) }),
       ]) }),
+      // The 64 Characters and the store (Owner 2026-09-30; ライター&SNS 2e20567, the same text as AMU Studio). No line
+      // under the buttons: the 10 Characters outside the packs are explained on the introduction page.
+      Object.freeze({ id: "characters", title: "キャラクター紹介", lead: "SAKU Character Pack に収録しているキャラクターを、得意なことと、人に引き継ぐことと一緒に紹介しています。パックは有料です。価格は商品ページに記載しています。", items: Object.freeze([
+        Object.freeze({ link: "characters_intro", lines: Object.freeze([]) }),
+        Object.freeze({ link: "store_packs", lines: Object.freeze([]) }),
+      ]) }),
       Object.freeze({ id: "subscriptions", title: "サブスクリプション", lead: "月額のサービスです。毎月の内容と料金は申込ページに記載しています。", items: Object.freeze([
         Object.freeze({ link: "saku_clinic", lines: Object.freeze([
           "「診療」はソフトウェアの調査と修復のたとえで、医療や心理の診断ではありません。",
@@ -47,7 +56,7 @@ export const SERVICES_WORDING = Object.freeze({
       Object.freeze({ id: "login", title: "登録済みの方", lead: "", items: Object.freeze([
         Object.freeze({ link: "member_login", lines: Object.freeze(["ログインして、申し込んだ内容や結果を確かめます。"]) }),
       ]) }),
-      Object.freeze({ id: "signature", title: ".amupkg への WI-T.COM の署名", lead: "自分の AMU Studio で書き出した .amupkg は、自分の PC ではそのまま使えます。ほかの人に配る・販売するときに WI-T.COM の署名を付けたい場合は、申し込めます。申し込めるのは SAKU 診療所の加入者、または個別対応（料金は申込ページに記載）です。", items: Object.freeze([
+      Object.freeze({ id: "signature", title: ".amupkg への WI-T.COM の署名", lead: "自分の AMU Studio で書き出した .amupkg は、自分の PC ではそのまま使えます。ほかの人に配る・販売するときに WI-T.COM の署名を付けたい場合は、申し込めるようになります（いまは準備中です）。申し込めるのは、SAKU 診療所の加入者、または個別対応（料金は申込ページに記載します）の予定です。", items: Object.freeze([
         Object.freeze({ link: "amupkg_signature", lines: Object.freeze([
           "送り方: .amupkg をそのまま添付します（.amupkg は ZIP の形なので、さらに ZIP にする必要はありません）。",
           "含まれないもの: API キーの値、会話の記録。",
@@ -73,6 +82,11 @@ export const SERVICES_WORDING = Object.freeze({
       Object.freeze({ id: "intro", title: "Overview page", lead: "", items: Object.freeze([
         Object.freeze({ link: "service_intro", lines: Object.freeze(["You can read about the services on the overview page at kokoroamu.jp (in Japanese)."]) }),
       ]) }),
+      // 英語翻訳チーム 2026-09-30 (the same text as README_en.md, Wi-t_Site-en 2d6e94e). The button opens the Japanese page.
+      Object.freeze({ id: "characters", title: "Character introductions", lead: "Meet the Characters in the SAKU Character Packs, with what each is good at and what each hands to a person. The packs are paid. Prices are shown on the product pages.", items: Object.freeze([
+        Object.freeze({ link: "characters_intro", lines: Object.freeze([]) }),
+        Object.freeze({ link: "store_packs", lines: Object.freeze([]) }),
+      ]) }),
       Object.freeze({ id: "subscriptions", title: "Subscription", lead: "A monthly service. What each month includes and the fee are shown on the application page.", items: Object.freeze([
         Object.freeze({ link: "saku_clinic", lines: Object.freeze(["At SAKU Repair Desk, you can consult us about Character behavior you would like us to look at, and about changes that require a new signature. We look into the cause, propose a repair plan, and guide you through the repair and signature steps. One follow-up check after you make the fixes yourself is also included."]) }),
         Object.freeze({ link: "amu_training", lines: Object.freeze(["At AMU Evaluation Center, we try out one SAKU or AMU Character against your business goals, then measure and evaluate its speed and behavior. Based on the results, we give you suggestions for improvement, and one re-evaluation after you improve it is included. The menu has four options: Basic check, Speed test, Goal-based repeated measurement and Check after changes."]) }),
@@ -81,17 +95,17 @@ export const SERVICES_WORDING = Object.freeze({
       Object.freeze({ id: "login", title: "Already registered", lead: "", items: Object.freeze([
         Object.freeze({ link: "member_login", lines: Object.freeze(["Log in to check what you applied for and the results."]) }),
       ]) }),
-      Object.freeze({ id: "signature", title: "WI-T.COM signature for .amupkg", lead: "An .amupkg exported from your own AMU Studio can be used as it is on your own PC. If you want a WI-T.COM signature on it when you give it to others or sell it, you can apply for one. Applications are open to SAKU Repair Desk subscribers, or by individual arrangement (the fee is shown on the application page).", items: Object.freeze([
+      Object.freeze({ id: "signature", title: "WI-T.COM signature for .amupkg", lead: "An .amupkg exported from your own AMU Studio can be used as it is on your own PC. If you want a WI-T.COM signature on it when you give it to others or sell it, you will be able to apply for one (this is in preparation now). Applications are planned to be accepted from SAKU Repair Desk subscribers, or by individual arrangement (the fee will be shown on the application page).", items: Object.freeze([
         Object.freeze({ link: "amupkg_signature", lines: Object.freeze(["How to send: attach the .amupkg as it is (an .amupkg is already in ZIP form, so there is no need to zip it again).", "Not included: API key values and conversation logs.", "Included: the names and roles of the people in the 8 seats and, if set, the run path of the AI execution engine (a folder location on this PC). The folder location may include your Windows user name.", "What the signature shows: that WI-T.COM signed it and that it has not changed since."]) }),
       ]) }),
     ]),
-    commonNote: "You can check any improvement or repair yourself before you apply it. WI-T.COM applies the signature for distribution through its official procedure.",
+    commonNote: "You can check any improvement or repair yourself before you put it into your Character. WI-T.COM applies the signature for distribution through its official procedure.",
     pending: "In preparation",
     allPending: "The start of registration will be announced on kokoroamu.jp.",
     home: "Home",
     openFailed: "Could not open the browser.",
     // The link table (service-links.mjs, shared with AMU) carries the Japanese labels only.
-    linkLabels: Object.freeze({ service_intro: "View the overview page", saku_clinic: "Register for SAKU Repair Desk", amu_training: "Register for AMU Evaluation Center", set_plan: "Register for both (bundle)", member_login: "Log in (already registered)", amupkg_signature: "Apply for a signature on an .amupkg" }),
+    linkLabels: Object.freeze({ service_intro: "View the overview page", characters_intro: "See the Character introductions (in Japanese)", store_packs: "See the packs in the store", saku_clinic: "Register for SAKU Repair Desk", amu_training: "Register for AMU Evaluation Center", set_plan: "Register for both (bundle)", member_login: "Log in (already registered)", amupkg_signature: "Apply for a signature on an .amupkg" }),
   }),
 });
 
@@ -108,10 +122,11 @@ export function servicesMarkup(locale = "ja-JP", table = SERVICE_LINKS) {
   // buttons were hidden while all five were unset (ライター&SNS de9924e); the Owner
   // then asked that SAKU 診療所 and AMU トレーニングセンター read as 準備中 (via 統括,
   // 「SAKU診療所とAMUトレーニングセンター、ERABAZU工房は準備中としてください。」), which is
-  // also how AMU Studio shows them. The introduction page is not an application:
-  // its button shows whenever it has a URL (Owner 2026-09-27).
-  const INTRO = "service_intro";
-  const allPending = table.links.filter(link => link.id !== INTRO).every(link => serviceLinkState(link).state === "PENDING");
+  // also how AMU Studio shows them. The pages that only introduce something are not
+  // applications — the services' introduction page (Owner 2026-09-27), and the 64-Character
+  // introduction page and the store (Owner 2026-09-30) — so they do not count towards
+  // 「受付の開始は…」.
+  const allPending = table.links.filter(link => !INFORMATION_LINK_IDS.includes(link.id)).every(link => serviceLinkState(link).state === "PENDING");
   const control = id => {
     const link = byId.get(id);
     const { state, url } = serviceLinkState(link);

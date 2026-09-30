@@ -1913,9 +1913,9 @@ let currentSyncChapter=null;
 const CHAPTER_HELP=[
   {ja:["基本情報","Characterの名前と安定した識別子を決めます。","例：星野ルカ／hoshino-luka","識別子は英小文字・数字・ハイフンだけで入力します。"],en:["Basic information","Set the Character name and stable identifier.","Example: Hoshino Luka / hoshino-luka","Use only lowercase ASCII letters, digits, and hyphens for the identifier."]},
   {ja:["目的と役割","存在する目的、提供価値、役割、目的外を分けて書きます。","例：調査を整理する／根拠を分ける／最終判断はしない","提供価値と判断で大切にする価値観は別項目です。"],en:["Purpose and role","Separate purpose, primary value, role, and non-goals.","Example: organize research / separate evidence / do not make final decisions","Primary value is separate from decision values."]},
-  {ja:["仕事と使いどころ","主に支える相手と、扱う仕事の種類を選びます。","例：初めて企画書を書く人／ANALYSIS・REVIEW","仕事の種類は適性証明・権限・実行許可ではありません。"],en:["Work and use contexts","Choose the people supported and the kinds of work handled.","Example: first-time brief writers / ANALYSIS and REVIEW","Work modes are not aptitude proof, authority, or execution permission."]},
+  {ja:["仕事と使いどころ","主に支える相手と、扱う仕事の種類を選びます。","例：初めて企画書を書く人／ANALYSIS・REVIEW","仕事の種類は適性証明・権限・実行許可ではありません。"],en:["Work and use contexts","Choose the people supported and the kinds of work handled.","Example: first-time brief writers / ANALYSIS and REVIEW","Work modes are not proof of aptitude, authority, or the right to run anything."]},
   {ja:["人格・価値観と話し方","判断の価値観、表現、15の人格軸を定義します。","例：根拠を示す／穏やかに短く話す","軸はCharacterの傾向であり、実証済み能力ではありません。"],en:["Persona, values, and expression","Define decision values, expression, and the fifteen personality axes.","Example: show evidence / speak calmly and briefly","Axes are Character tendencies, not verified competence."]},
-  {ja:["守ることと人に任せる条件","不変条件、人への引き渡し、Seat 8、保持参照を明示します。","例：不確実性を断定しない／法的判断は人へ渡す","Seat 8は論理上の人間席です。実在者・資格・権限・承認状態はCharacterへ書きません。"],en:["Commitments and human handoff","State invariants, handoff conditions, Seat 8 expectations, and stable references.","Example: do not state uncertainty as fact / hand legal judgment to a human","Seat 8 is the logical human seat. Real identities, credentials, authority, and approval state are not Character data."]}
+  {ja:["守ることと人に任せる条件","不変条件、人への引き継ぎ、席 8、保持参照を明示します。","例：不確実性を断定しない／法的判断は人へ渡す","席 8 は論理上の人の席です。実在の人・資格・権限・承認の状態は、Character に書きません。"],en:["Commitments and handoff to a person","State the invariants, the handoff to a person, Seat 8, and the stable references.","Example: do not state uncertainty as fact / hand legal judgment to a person","Seat 8 — Human (logical) is the seat of a logical person. Real people, qualifications, authority and sign-off status are not written into the Character."]}
 ];
 /* 章 → 出力の対応。json 側は Unified V1 Character の並び。
    Character に対応する場所が無い章（職能・第0層・黒子・試験・組織参加）は
@@ -2110,7 +2110,7 @@ function renderFieldHelp(target,entry){
   const optionDetails=Array.isArray(help.optionDetails)?help.optionDetails:[];
   const structured=help.structuredGuide||null;
   const rows=[
-    [en?"HUMAN QUESTION":"人が答える問い",guideText(entry.humanQuestion)],
+    [en?"QUESTION A PERSON ANSWERS":"人が答える問い",guideText(entry.humanQuestion)],
     [en?"ABOUT THIS FIELD":"この項目について",guideText(help.about)],
     [en?"WHY DECIDE NOW":"なぜ今決めるか",guideText(help.why)],
     [en?"WHAT TO ENTER":"何を書く項目か",guideText(help.what)],
@@ -2863,9 +2863,12 @@ window.SAKU_HELP_TREE = HelpTree;
          try { trainerLinkRecorded = window.SAKU_RECORD_TRAINER_BUILDER_SAVE?.(character, trainerSaveReservation.save_attempt_id) || { active: true, ok: false, code: "TRAINER_SAVE_FINALIZE_UNAVAILABLE" }; }
          catch (error) { trainerLinkRecorded = { active: true, ok: false, code: "TRAINER_SAVE_FINALIZE_FAILED", error: String(error) }; }
        }
+      // The saved message follows the language (ライター&SNS review 17; 英語翻訳チーム U1-S01/S02, Wi-t_Site 09a59e4).
+      const savedEnglish = window.SAKU_GOLDEN_UI?.getLocale?.() === "en-US";
+      const savedRevision = character.identity.character_revision;
       let savedMessage = workspacePath
-        ? `Workspaceに保存しました（revision ${character.identity.character_revision}）\n${workspacePath}`
-        : `作業一覧に保存しました（revision ${character.identity.character_revision}）`;
+        ? (savedEnglish ? "Saved to the Workspace (revision " + savedRevision + ")\n" + workspacePath : `Workspaceに保存しました（revision ${savedRevision}）\n${workspacePath}`)
+        : (savedEnglish ? "Saved to the Character list (revision " + savedRevision + ")" : `作業一覧に保存しました（revision ${savedRevision}）`);
        const trainerLinkFailed = trainerRevisionPrepared && trainerLinkRecorded.ok !== true;
       if (trainerLinkFailed) {
         const english = window.SAKU_GOLDEN_UI?.getLocale?.() === "en-US";

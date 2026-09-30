@@ -1,6 +1,6 @@
 {
   "profile": "saku.field-guide-extension@1",
-  "applies_to_app_version": "0.1.0-beta.9",
+  "applies_to_app_version": "0.1.0-beta.10",
   "purpose": "manual/saku-field-guide.data.json に合成される追加内容（項目下の「現在の内容」、選択肢の効果と出典、候補語の方針、正本外項目の注記）。画面と manual の両方がこの合成結果を読む。",
   "content_review": {
     "current_note_ja": {
@@ -1654,7 +1654,7 @@
           "meaning_ja": "その他",
           "meaning_en": "Other",
           "effect_ja": "上のどれにも当てはまらない理由で人へ渡す場面です。何を人に決めてほしいかを「人に任せる条件」の本文で説明し、その先は決めません。",
-          "effect_en": "A situation where the decision is handed to a person for a reason not covered by any of the above. What the person is asked to decide is explained in the text of \"Human handoff conditions,\" and nothing beyond that is decided.",
+          "effect_en": "A situation where the decision is handed to a person for a reason not covered by any of the above. What the person is asked to decide is explained in the text of \"Conditions for handing off to a person,\" and nothing beyond that is decided.",
           "effect_source": "OPERATION_FACT",
           "directive": [
             "ALWAYS state the decision wanted from the person",
@@ -1781,7 +1781,7 @@
     "empathy": "Empathy",
     "forward_progress": "Forward progress"
   },
-  "candidate_screen_note_en": "Examples are in Japanese. You can write in any language.",
+  "candidate_screen_note_en": "The suggested words are examples in Japanese. You can write in any language.",
   "fixed_sentences_en": {
     "presentation_only": "Affects only the look and feel; judgments and the content of answers do not change.",
     "tactile_texture": "This is a texture of expression and does not change the content of judgments."
@@ -1817,10 +1817,10 @@
     }
   },
   "last_checked": {
-    "date": "2026-09-28",
-    "environment_ja": "Windows 11 Home 10.0.26200・WebView2 Runtime 153.0.4234.48",
-    "environment_en": "Windows 11 Home 10.0.26200, WebView2 Runtime 153.0.4234.48",
-    "source": "SAKU Builder(4) hands-on on the installed window of 0.1.0-beta.9 (record: docs/releases/0.1.0-beta.9; environment unchanged from 0.1.0-beta.8); wording approved by ライター&SNS 9be2c32 (JA) and 英語翻訳チーム 6a28224 (EN Q4)"
+    "date": "2026-09-30",
+    "environment_ja": "Windows 11 Home 10.0.26200・WebView2 Runtime 154.0.4258.37",
+    "environment_en": "Windows 11 Home 10.0.26200, WebView2 Runtime 154.0.4258.37",
+    "source": "SAKU Builder(4) hands-on on the installed window of 0.1.0-beta.10 (record: docs/releases/0.1.0-beta.10; WebView2 Runtime read from the registry on 2026-09-30); wording approved by ライター&SNS 9be2c32 (JA) and 英語翻訳チーム 6a28224 (EN Q4)"
   },
   "known_issues": {
     "note": "「困ったとき」の先頭に置く、この版で分かっている問題（Owner 2026-09-24 承認、ライター&SNS 9be2c32、英語翻訳チーム Q1–Q3 6a28224）。見出しと 2 つのラベルの英語は英語翻訳チーム Q6–Q8（Wi-t_Site f1440dd／632021e）。 Markdown の書式（** と `）は画面に出さない。文字は承認文のまま。",

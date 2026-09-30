@@ -31,13 +31,7 @@ const STATE_LABEL_JA = {
   DISTINCT: "個性が保たれている", FLATTENED: "個性が薄れている",
   NOT_ASSESSED: "未評価",
 };
-const DIFF_LABEL_JA = {
-  ALIGNED: "期待どおり", BELOW_EXPECTED: "期待より低い", ABOVE_EXPECTED: "期待より高い",
-  AT_RISK: "崩れかけている", VIOLATION: "逸脱している", FLATTENED: "個性が薄れている",
-  NOT_COMPARABLE: "比較できません",
-};
 const stateLabel = value => STATE_LABEL_JA[value] || value;
-const diffLabel = value => DIFF_LABEL_JA[value] || value;
 
 let currentCharacter = null;
 let currentItemId = "";
@@ -121,11 +115,9 @@ function renderDetail(itemId) {
   filed.textContent = `${item.id} · ${item.name}`;
 
   const dl = document.createElement("dl"); dl.className = "tuning-facts";
-  // Expected is what the Character says; Observed is what the Trainer saw.
-  // They are never merged, and a definition never becomes an observation.
+  // Expected is what the Character says. The Trainer's observation and the difference from it are not shown
+  // since the Trainer left the screens (β.9); the actual responses are checked on the AI platform.
   row(dl, "現在の状態（Character の期待）", stateLabel(projected.expected_state));
-  row(dl, "Trainer の観察", stateLabel(projected.observed_state));
-  row(dl, "差分", diffLabel(projected.diff));
   row(dl, "推奨変更", recommendation.change);
   row(dl, "期待効果", recommendation.expected_effect);
   row(dl, "副作用", recommendation.side_effects, "caution");

@@ -27,17 +27,17 @@ export const CHAPTERS = Object.freeze([
   { id: "purpose", numeral: "二", title: { ja: "目的と役割", en: "Purpose and role" }, question: { ja: "何のために存在し、何をしますか？", en: "Why does this Character exist, and what does it do?" } },
   { id: "work", numeral: "三", title: { ja: "仕事と使いどころ", en: "Work and use contexts" }, question: { ja: "どんな仕事や場面で使いますか？", en: "What work and situations is this Character used for?" } },
   { id: "persona", numeral: "四", title: { ja: "人格・価値観と話し方", en: "Persona, values, and expression" }, question: { ja: "どんな人物で、何を大切にし、どう話しますか？", en: "Who is this Character, what does it value, and how does it speak?" } },
-  { id: "boundary", numeral: "五", title: { ja: "守ることと人に任せる条件", en: "Commitments and human handoff" }, question: { ja: "何を必ず守り、どこから人に任せますか？", en: "What must be preserved, and when must a human take over?" } },
+  { id: "boundary", numeral: "五", title: { ja: "守ることと人に任せる条件", en: "Commitments and handoff to a person" }, question: { ja: "何を必ず守り、どこから人に任せますか？", en: "What must be preserved, and when must a person take over?" } },
 ]);
 
 const help = (jaLabel, enLabel, jaWhat, enWhat, jaExample, enExample, jaCaution, enCaution) => ({
   label: { ja: jaLabel, en: enLabel },
   help: {
-    about: { ja: `${jaLabel}をCharacter定義のどこへ記録するかを示します。`, en: `This records ${enLabel.toLowerCase()} in the Character definition.` },
+    about: { ja: `${jaLabel}をCharacter定義のどこへ記録するかを示します。`, en: `This shows where “${enLabel}” is recorded in the Character definition.` },
     what: { ja: jaWhat, en: enWhat },
     why: {
       ja: `${jaLabel}を、Characterの意図を人とAIの双方が同じように確認できるようにするためです。`,
-      en: `This lets people and AI inspect the Character's intent consistently for ${enLabel.toLowerCase()}.`,
+      en: `Recording this in the Character definition lets people and the AI read the Character's intent the same way.`,
     },
     example: { ja: jaExample, en: enExample },
     caution: { ja: jaCaution, en: enCaution },
@@ -68,7 +68,7 @@ const field = (chapter, canonicalPath, kind, labels, options = {}) => Object.fre
   humanQuestion: CHAPTERS.find(item => item.id === chapter)?.question || { ja: "", en: "" },
   boundary: {
     ja: "Character定義の項目です。Authority・資格・承認・実行許可を作りません。",
-    en: "This is Character-definition data. It does not create authority, credentials, approval, or execution permission.",
+    en: "This is Character-definition data. It does not create authority, qualifications, sign-off, or the right to run anything.",
   },
   relatedSemantics: Object.freeze([...(options.tuning || [])]),
   source: Object.freeze({ registry_id: REGISTRY_ID, ...CANONICAL_EVIDENCE }),
@@ -79,9 +79,9 @@ const field = (chapter, canonicalPath, kind, labels, options = {}) => Object.fre
   ...labels,
 });
 const simple = (chapter, path, kind, ja, en, exampleJa, exampleEn, options = {}) => field(chapter, path, kind,
-  help(ja, en, options.whatJa || `${ja}を、利用者が読んで判断できる言葉で入力します。`, options.whatEn || `Enter ${en.toLowerCase()} in language a user can understand.`, exampleJa, exampleEn,
+  help(ja, en, options.whatJa || `${ja}を、利用者が読んで判断できる言葉で入力します。`, options.whatEn || `Write “${en}” in words that users can read and make decisions from.`, exampleJa, exampleEn,
     options.cautionJa || "入力はCharacterの定義です。権限・資格・承認・実行許可を意味しません。",
-    options.cautionEn || "This is a Character definition; it does not grant authority, credentials, approval, or execution permission."), options);
+    options.cautionEn || "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."), options);
 
 export const WORK_MODE_OPTIONS = Object.freeze([
   "STRATEGY", "ANALYSIS", "PLANNING", "EXECUTION_SUPPORT", "REVIEW", "FACILITATION", "OPERATIONS",
@@ -118,7 +118,7 @@ export const FIELDS = Object.freeze([
   simple("purpose", "character_core.character_role", "text", "このCharacterが担う役割", "Character role", "例：調査内容の整理担当", "Example: research synthesis guide", { required: true, cautionJa: "職業資格・運用上の担当・権限を表しません。", cautionEn: "This is not a professional credential, operational assignment, or authority." }),
   simple("purpose", "purpose.non_goals", "string-list", "目的に含めないこと", "Non-goals", "例：法的判断を確定する", "Example: make final legal decisions", { required: true, tuning: ["T05", "T17"] }),
   simple("work", "purpose.target_users", "string-list", "主に支える相手", "Target users", "例：初めて企画書を書く担当者", "Example: people writing their first project brief", { tuning: ["T16"] }),
-  simple("work", "purpose.work_modes", "enum-list", "扱う仕事の種類", "Work modes", "例：ANALYSIS / REVIEW", "Example: ANALYSIS / REVIEW", { required: true, options: WORK_MODE_OPTIONS, cautionJa: "仕事の種類であり、向いている仕事の証明や実行許可ではありません。", cautionEn: "These are work modes, not proof of aptitude or permission to execute." }),
+  simple("work", "purpose.work_modes", "enum-list", "扱う仕事の種類", "Work modes", "例：ANALYSIS / REVIEW", "Example: ANALYSIS / REVIEW", { required: true, options: WORK_MODE_OPTIONS, cautionJa: "仕事の種類であり、向いている仕事の証明や実行許可ではありません。", cautionEn: "These are work modes, not proof of aptitude or of the right to run anything." }),
   simple("persona", "character_core.values", "string-list", "判断で大切にする価値観", "Decision values", "例：根拠を示す／急がせない", "Example: show evidence / do not rush", { required: true, tuning: ["T03", "T18"], cautionJa: "第2章の『提供する価値』と統合・自動変換しません。", cautionEn: "This is not merged with or derived from the Chapter 2 primary value." }),
   simple("persona", "expression_semantics.first_person", "text", "一人称", "First person", "例：私", "Example: I", { tuning: ["T11"] }),
   simple("persona", "expression_semantics.address_style", "text", "相手への呼びかけ方", "Address style", "例：丁寧な敬体で話す", "Example: use calm and polite language", { tuning: ["T02", "T12"] }),
@@ -137,8 +137,8 @@ export const FIELDS = Object.freeze([
   simple("boundary", "character_core.hard_invariants", "requirement-list", "必ず守ること", "Hard invariants", "例：根拠のない断定をしない", "Example: do not make unsupported claims", { required: true, tuning: ["T10", "T17"] }),
   simple("boundary", "character_core.expressive_range.allowed_variation", "string-list", "変わってよい範囲", "Allowed variation", "例：説明の長さ", "Example: explanation length", { required: true, tuning: ["T03"] }),
   simple("boundary", "character_core.expressive_range.prohibited_drift", "string-list", "変わってはいけない範囲", "Prohibited drift", "例：不確実性を事実として断定しない", "Example: do not state uncertainty as fact", { required: true, tuning: ["T03", "T17"] }),
-  simple("boundary", "character_core.human_handoff_conditions", "handoff-list", "人に任せる条件", "Human handoff conditions", "例：法的判断が必要／人が確定する", "Example: legal judgment is required / a human decides", { required: true, tuning: ["T05", "T10"] }),
-  simple("boundary", "assistant_composition.seat8.expected_human_contribution", "string-list", "人に期待すること", "Expected human contribution", "例：判断と最終確認", "Example: judgment and final confirmation", { required: true }),
+  simple("boundary", "character_core.human_handoff_conditions", "handoff-list", "人に任せる条件", "Conditions for handing off to a person", "例：法的判断が必要／人が確定する", "Example: legal judgment is required / a person decides", { required: true, tuning: ["T05", "T10"] }),
+  simple("boundary", "assistant_composition.seat8.expected_human_contribution", "string-list", "人に期待すること", "What a person is expected to do", "例：判断と最終確認", "Example: judgment and final confirmation", { required: true }),
   simple("boundary", "assistant_composition.seat8.handoff_question_requirements", "string-list", "人へ渡す問い", "Handoff questions", "例：どの選択肢を採用しますか？", "Example: Which option should be selected?", { required: true }),
   simple("boundary", "assistant_composition.seat8.handoff_material_requirements", "string-list", "人へ渡す材料", "Handoff materials", "例：根拠・不確実性・選択肢", "Example: evidence, uncertainty, and options", { required: true }),
   simple("boundary", "conformance_expectations.must_preserve_refs", "reference-list", "保持を確認する参照", "Must-preserve references", "例：INV-INPUT-INTEGRITY", "Example: INV-INPUT-INTEGRITY", { required: true }),
@@ -235,7 +235,7 @@ export const TUNING_ITEMS = Object.freeze([
   ["T02", "話し方が場面に合わない", "Uses a speaking style that does not fit the situation"],
   ["T03", "判断の軸が途中で揺れる", "Lets decision values drift during a task"],
   ["T04", "確認の問いが多すぎる", "Asks too many confirmation questions"],
-  ["T05", "人へ任せるべき場面で進める", "Continues when a human should take over"],
+  ["T05", "人へ任せるべき場面で進める", "Continues when a person should take over"],
   ["T06", "説明の段階が飛ぶ", "Skips needed explanation steps"],
   ["T07", "励ましや共感が過剰になる", "Overuses encouragement or rapport"],
   ["T08", "たとえや表現が強すぎる", "Uses overly strong metaphors or expression"],
