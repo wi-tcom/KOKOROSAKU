@@ -50,7 +50,18 @@ async function pinDesktopLightTheme(destinationRelative) {
   await writeFile(destination, source.replace(marker, '<html lang="ja" data-theme="light">'), "utf8");
 }
 
+// How the build is signed (Owner 2026-10-02: 「β.10 を署名して出し直す」). UNSIGNED unless the signed build sets
+// SAKU_CODE_SIGNING; the same value is compiled into the host (src-tauri/src/main.rs CODE_SIGNING), so the app, its
+// build metadata and the Home footer all say what the build is.
+export const CODE_SIGNING_MODES = Object.freeze(["UNSIGNED", "AZURE_ARTIFACT_SIGNING"]);
+export function codeSigningMode(env = process.env) {
+  const mode = String(env.SAKU_CODE_SIGNING || "UNSIGNED");
+  if (!CODE_SIGNING_MODES.includes(mode)) throw new Error(`SAKU_CODE_SIGNING_INVALID: ${mode}`);
+  return mode;
+}
+
 export async function prepareDesktopAssets(profileId = "public-oss") {
+  const codeSigning = codeSigningMode();
   if (!PROFILES.has(profileId)) throw new Error(`UNKNOWN_DESKTOP_PROFILE: ${profileId}`);
   const profilePath = `desktop/resources/profiles/${profileId}.json`;
   const profile = JSON.parse(await readFile(path.join(ROOT, profilePath), "utf8"));
@@ -97,10 +108,16 @@ export async function prepareDesktopAssets(profileId = "public-oss") {
     local_server: false,
     one_drive_runtime_dependency: false,
     approved_checkout_build_source_only: true,
-    code_signing: "UNSIGNED",
+    code_signing: codeSigning,
     publication: false
   };
   await writeFile(path.join(DIST, "resources", "build-metadata.json"), `${JSON.stringify(metadata, null, 2)}\n`, "utf8");
+  if (codeSigning !== "UNSIGNED") {
+    const home = path.join(DIST, "index.html");
+    const page = await readFile(home, "utf8");
+    if (page.split("<span>CODE_SIGNING = UNSIGNED</span>").length !== 2) throw new Error("DESKTOP_FOOTER_CODE_SIGNING_MARKER_INVALID");
+    await writeFile(home, page.replace("<span>CODE_SIGNING = UNSIGNED</span>", `<span>CODE_SIGNING = ${codeSigning}</span>`), "utf8");
+  }
   return metadata;
 }
 

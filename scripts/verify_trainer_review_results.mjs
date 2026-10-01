@@ -176,7 +176,9 @@ check(sha256(await read("tools/unified-v1/derived-profile-engine.mjs")), "1f4ff5
 const hostSource = await read("src-tauri/src/main.rs");
 const APP_VERSION_LINE = /const APP_VERSION: &str = "[^"]+";/;
 ok(APP_VERSION_LINE.test(hostSource), "the host still declares APP_VERSION (the normalisation below must have something to remove)");
-check(sha256(hostSource.replace(APP_VERSION_LINE, 'const APP_VERSION: &str = "<VERSION>";')), "2b3bf46a06649752c33fa36145a211080d0a6b52ea7eb4071f6448f9eb37b408", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
+// Re-pinned 2026-10-02: the host reports CODE_SIGNING, compiled from SAKU_CODE_SIGNING (UNSIGNED unless the signed
+// build sets it; Owner 2026-10-02 「β.10 を署名して出し直す」). Package Import is unchanged.
+check(sha256(hostSource.replace(APP_VERSION_LINE, 'const APP_VERSION: &str = "<VERSION>";')), "2cbed60e849b3aa35b944d745e57f9f5edc000ddaa256998360c996a239150e7", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
 ok(/SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE/.test(await read("src-tauri/src/main.rs")), "Package Import host does not recognise the active Unified schema");
 // Re-pinned 2026-09-28 (β.9): the profile named the three OSS samples as bundled after they left the
 // installer (D-20260924-oss-samples-retired) and did not name the sample pack 1.1.0 that replaced them
