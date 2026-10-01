@@ -1,0 +1,216 @@
+{
+  "profile": "saku.desktop.public-build-envelope@1",
+  "artifact": {
+    "product": "SAKU Builder",
+    "version": "0.1.0-beta.10.1",
+    "filename": "SAKU Builder_0.1.0-beta.10.1_x64-setup.exe",
+    "relative_path": "release/bundle/nsis/SAKU Builder_0.1.0-beta.10.1_x64-setup.exe",
+    "sha256": "51e99c7eecd11f9b7134c7c2434142f4a487867a3c693e35fafb98a80feae9ca",
+    "bytes": 2287504,
+    "code_signing": "AZURE_ARTIFACT_SIGNING",
+    "authenticode": "Valid"
+  },
+  "application_artifact": {
+    "product": "SAKU Builder",
+    "version": "0.1.0-beta.10.1",
+    "filename": "saku-builder-desktop.exe",
+    "relative_path": "release/saku-builder-desktop.exe",
+    "sha256": "c935327fb337175dfb126e4302ba0336ebc1d50c2c470ec271c27e3e099560f9",
+    "embedded_sha256": "c935327fb337175dfb126e4302ba0336ebc1d50c2c470ec271c27e3e099560f9",
+    "post_bundle_release_sha256": "da1219bd62635500f1072f4fe45ca3fe73b3e6272f317102c08618b42b837eaa",
+    "bundle_type_stamp_note": "The post-bundle release executable is rewritten by Tauri after bundling and carries no signature (4,303,872 bytes against 4,319,520 for the signed, installer-embedded one). sha256 is the installer-embedded identity; check signatures in the installer or the installed files.",
+    "bytes": 4319520,
+    "code_signing": "AZURE_ARTIFACT_SIGNING",
+    "host_path_scan": {
+      "user_profile_root_backslash": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "user_profile_root_slash": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "build_user_name": {
+        "utf8": false,
+        "utf16le": false
+      },
+      "cloud_sync_folder_name": {
+        "utf8": false,
+        "utf16le": false
+      }
+    },
+    "authenticode": "Valid (installer-embedded and installed)"
+  },
+  "source": {
+    "repository": "wi-tcom/-SAKU-builder",
+    "commit": "9998371fc366ed0cec492bcbaf5a3b2a7d69adbd",
+    "tree": "2a2bbb9f8716e12f8e9a9fa9d9910402f6ab3c55",
+    "branch": "claude/saku-beta10-1-signed-20261002",
+    "note": "the version bump is committed before the build, so this commit and tree are the ones the binary was made from",
+    "base": {
+      "commit": "a45780a404a26ef488c49551b06b2f7a12fbb056",
+      "branch": "main",
+      "note": "main after PR #94 merged (β.10, published 2026-09-30); this build adds only the signing and the version"
+    },
+    "revision": "9998371"
+  },
+  "resource_profile": {
+    "name": "public-oss",
+    "file": "resource-profile.json",
+    "sha256": "4a2374dbcc7bb50b9288f196a3cb868a48700569f62013a153f697751d4341ae",
+    "distribution_boundary": "PUBLIC_OSS_CANDIDATE",
+    "internal_content_count": 0
+  },
+  "build_metadata": {
+    "file": "build-metadata.json",
+    "sha256": "6cc40782c888c4bf4ce6d1489d7b4226505dd7bc2735143d9cb08e59b9046370",
+    "code_signing": "AZURE_ARTIFACT_SIGNING"
+  },
+  "bundled_notice_binding": {
+    "mode": "SHA_INDEPENDENT_EXTERNAL_RELEASE_ASSET_MANIFEST",
+    "files": {
+      "LICENSING.md": "20e2ff04dec462ef55d65a1dfb8aa379768ae95a2729fb492f6998fd77ef4813",
+      "THIRD_PARTY_NOTICES.md": "2168f1a7acb03af839f718403679984b9a12bb4220a7c5d953eff1096bcd17c8",
+      "third-party/THIRD_PARTY_LICENSE_MANIFEST.json": "ac683f2dba75f35aa9c0fcc8a2e94e481f13b831ef946f3f9d3dcda236c34964"
+    },
+    "embedded_installer_sha256_reference_count": 0
+  },
+  "tauri_public_override": {
+    "file": "tauri.public.override.json",
+    "sha256": "fbfdc5edb130c3a82558ca55e77ae8a2844d5f1a3c97b7f661f69c613389a85a",
+    "purpose": "preserve the prepared public resource projection by disabling the default owner-internal beforeBuildCommand"
+  },
+  "rust_flags": {
+    "RUSTFLAGS": null,
+    "CARGO_ENCODED_RUSTFLAGS": {
+      "encoding": "U+001F-separated argv",
+      "arguments": [
+        "--remap-path-prefix=<BUILD_USER_HOME>\\\\=/host/",
+        "--remap-path-prefix=<BUILD_USER_HOME>/=/host/",
+        "--remap-path-prefix=<CARGO_REGISTRY_SRC>\\\\=/cargo/registry/src/",
+        "--remap-path-prefix=<CARGO_REGISTRY_SRC>/=/cargo/registry/src/"
+      ],
+      "parameters": {
+        "BUILD_USER_HOME": "absolute build-user home on the reproducing host; not published",
+        "CARGO_REGISTRY_SRC": "absolute Cargo registry source root on the reproducing host; not published"
+      },
+      "result_contract": "no build-host absolute path remains in the public application executable"
+    }
+  },
+  "target": {
+    "triple": "x86_64-pc-windows-msvc",
+    "cargo_target_label": "tauri-exact-1.97.1-beta10-public-oss-e849c5a-001",
+    "label": "tauri-exact-1.97.1-beta10-1-public-oss-9998371-001"
+  },
+  "build_revision": "9998371",
+  "tools": {
+    "node": "24.21.0",
+    "npm": "11.19.0",
+    "rustc": "1.97.1 (8bab26f4f 2026-07-14)",
+    "cargo": "1.97.1 (c980f4866 2026-06-30)",
+    "llvm": "22.1.6",
+    "tauri_cli": "2.11.4",
+    "tauri_runtime_crate": "2.11.5",
+    "tauri_build_crate": "2.6.3",
+    "nsis": "3.11",
+    "visual_studio_build_tools": "18.7.1 (18.7.11911.148)",
+    "msvc": "14.51.36231",
+    "deviation_note": "Same host toolchain as β.2 – β.10 (rustc/cargo 1.97.1, Tauri CLI 2.11.4, Node 24.21.0 / npm 11.19.0). No tool changed for this build."
+  },
+  "build": {
+    "cwd": "<REPOSITORY_ROOT>",
+    "environment": {
+      "CARGO_TARGET_DIR": "<REPOSITORY_ROOT>/src-tauri/target/tauri-exact-1.97.1-beta10-1-public-oss-9998371-001",
+      "CARGO_ENCODED_RUSTFLAGS": "construct from rust_flags.CARGO_ENCODED_RUSTFLAGS.arguments using U+001F",
+      "CARGO_NET_OFFLINE": "true",
+      "CARGO_BUILD_JOBS": "1",
+      "CARGO_INCREMENTAL": "0",
+      "RUSTUP_TOOLCHAIN": "1.97.1"
+    },
+    "command": "<NODE_24_21_0>/node.exe node_modules/@tauri-apps/cli/tauri.js build --bundles nsis --config docs/releases/0.1.0-beta.10.1/tauri.public.override.json -- --locked",
+    "bundles": [
+      "nsis"
+    ],
+    "offline": true,
+    "locked": true,
+    "jobs": 1,
+    "source_mutation": 0,
+    "duration": "13m 40s total (including signing)",
+    "builder": "Claude Code (SAKU Builder Active Writer). Owner 2026-10-02: 「β.10 を署名して出し直す」"
+  },
+  "webview2": {
+    "install_mode": "downloadBootstrapper",
+    "bootstrapper_url": "https://go.microsoft.com/fwlink/p/?LinkId=2124703",
+    "bootstrapper_bundled": false,
+    "runtime_bundled": false
+  },
+  "app_icon": {
+    "source_revision": "512f0363078bb8a6529483a8b8a47923ca10ed08",
+    "icon_ico_sha256": "fb8b522e90452f924956cec5ca56eb437c9b3e218739e55b091b252feb9e14e0",
+    "icon_256_png_embedded_in_executables": {
+      "embedded_exe": true,
+      "post_bundle_exe": true,
+      "installer": true
+    }
+  },
+  "base_layer": {
+    "profile": "saku.base-directives@1",
+    "version": "1.0",
+    "source_file": "desktop/resources/base/saku-base-directives.v1.txt",
+    "bundled_as": "help/base/saku-base-directives.v1.txt",
+    "sha256": "ab4745a3617e5b8e49125146a47ee99d1adde7ad8436c953431518ac23358654",
+    "bytes": 4397,
+    "burned_in_as": "BASE_LAYER_SHA256 (tools/unified-v1/platform-prompt.mjs and src-tauri/src/main.rs)",
+    "checked": "at startup (host, through the asset resolver the WebView reads) and before every hand-off (03). A mismatch stops 03 from producing any text at all.",
+    "first_bundled_in": "0.1.0-beta.4"
+  },
+  "superseded": {
+    "supersedes": "0.1.0-beta.10 (published 2026-09-30, unsigned; installer e763023e…, embedded e0db6efc…). The β.10 release is not changed.",
+    "note": "β.10.1 carries the same contents as β.10, signed with Azure Artifact Signing (wi-t.com Inc.)."
+  },
+  "contents_since_beta10": [
+    "Authenticode signatures (SHA-256, RFC 3161 timestamp from http://timestamp.acs.microsoft.com) on the installer, the application, the uninstaller and the NSIS plugins Tauri bundles; signer CN=wi-t.com Inc., O=wi-t.com Inc., L=Yokohama, S=Kanagawa-ken, C=JP (Azure Artifact Signing, account witcomsigning, profile witcomPublicTrust)",
+    "the build says how it is signed from one value, SAKU_CODE_SIGNING: the Home footer reads 「CODE_SIGNING = AZURE_ARTIFACT_SIGNING」, and resources/build-metadata.json and the host's get_runtime_state.code_signing say the same",
+    "version 0.1.0-beta.10.1; the manual's last-checked day is 2026-10-02 (Windows 10.0.26300, WebView2 Runtime 154.0.4258.48)"
+  ],
+  "provisional_wording": {
+    "state": "NONE",
+    "approved": true,
+    "count": 0,
+    "note": "docs/collaboration/provisional-wording.json has no entries: every user-visible string in this build has been through ライター&SNS 様式チェック, and the English is the 英語翻訳チーム delivery."
+  },
+  "release_state": {
+    "code_signing": "AZURE_ARTIFACT_SIGNING",
+    "authenticode": "Valid",
+    "published": false,
+    "note": "Signed (Authenticode, Azure Artifact Signing, wi-t.com Inc.) / NOT_RELEASED until the Owner publishes. A signature shows who made the file and that it has not changed since signing; it does not show that the contents are correct or safe."
+  },
+  "code_signing": {
+    "service": "Azure Artifact Signing",
+    "signer": "CN=wi-t.com Inc., O=wi-t.com Inc., L=Yokohama, S=Kanagawa-ken, C=JP",
+    "account": "witcomsigning (Japan East, https://jpe.codesigning.azure.net)",
+    "certificate_profile": "witcomPublicTrust",
+    "digest": "SHA256",
+    "timestamp": "http://timestamp.acs.microsoft.com (TSA: Microsoft Public RSA Time Stamping Authority)",
+    "tool": "signtool from Windows SDK 10.0.26100.0 (x64) with Azure.CodeSigning.Dlib (Microsoft.Azure.ArtifactSigningClientTools 0.1.128), via Tauri bundle.windows.signCommand",
+    "checked_valid": [
+      "installer",
+      "saku-builder-desktop.exe (installer-embedded)",
+      "uninstall.exe",
+      "nsDialogs.dll",
+      "nsis_tauri_utils.dll",
+      "NSISdl.dll",
+      "StartMenu.dll",
+      "System.dll",
+      "saku-builder-desktop.exe (installed)"
+    ],
+    "not_signed": [
+      "LangDLL.dll — an NSIS plugin Tauri does not sign; it is extracted at install time only"
+    ]
+  },
+  "signing_override": {
+    "file": "tauri.signing.override.template.json",
+    "sha256": "9e41f577e926046a9607546eb94fd7b06274e2cb9cab21dd68f3568606deb072",
+    "note": "The signing override actually used is written outside the repository at build time, because it holds host paths (signtool, the Artifact Signing dlib and its metadata.json); this template is that file with the paths replaced by placeholders."
+  }
+}

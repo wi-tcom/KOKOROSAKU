@@ -1,48 +1,49 @@
 {
   "format": "wi-t.kokorosaku-release-asset-manifest.v1",
-  "version": "v0.1.0-beta.10",
+  "version": "v0.1.0-beta.10.1",
   "state": "CANDIDATE_NOT_RELEASED",
   "publication_source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "exact_revision": "a45780a404a26ef488c49551b06b2f7a12fbb056",
-    "tree": "00587c8af12f48954b9710a297365eb5dfee112d"
+    "exact_revision": "672f4be4b38706d24d267604b760867c3eebc12c",
+    "tree": "68b1cb227c2d5ed607c7fef64b4205407f8d8130"
   },
   "binary_build_source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "exact_revision": "e849c5a7ed84f76a451c457febfa35b3beddaf1a",
-    "tree": "7b20f5f607275a331092b6730e2bdcb6512442d2"
+    "exact_revision": "9998371fc366ed0cec492bcbaf5a3b2a7d69adbd",
+    "tree": "2a2bbb9f8716e12f8e9a9fa9d9910402f6ab3c55"
   },
   "build_envelope": {
     "source_repository": "wi-tcom/-SAKU-builder",
-    "source_revision": "a45780a404a26ef488c49551b06b2f7a12fbb056",
-    "path": "docs/releases/0.1.0-beta.10/BUILD_ENVELOPE.json",
-    "sha256": "e56aa90bd4b5ad47f07ed25b7dafad420df4ae07580465acd80fe29c9dc1c7b6"
+    "source_revision": "672f4be4b38706d24d267604b760867c3eebc12c",
+    "path": "docs/releases/0.1.0-beta.10.1/BUILD_ENVELOPE.json",
+    "sha256": "afd363fdb9ea4c6c5e0c1b7a33ee9e28820a0919cf2f36c144896998990e1564"
   },
   "assets": [
     {
-      "filename": "SAKU Builder_0.1.0-beta.10_x64-setup.exe",
-      "bytes": 2215425,
-      "sha256": "e763023e4381f4d395983074962df3be0c3b785e0c41b54eee6bf3828974c48c",
-      "authenticode": "NotSigned",
-      "release_asset": true
+      "filename": "SAKU Builder_0.1.0-beta.10.1_x64-setup.exe",
+      "bytes": 2287504,
+      "sha256": "51e99c7eecd11f9b7134c7c2434142f4a487867a3c693e35fafb98a80feae9ca",
+      "authenticode": "Valid",
+      "release_asset": true,
+      "signer": "CN=wi-t.com Inc., O=wi-t.com Inc., L=Yokohama, S=Kanagawa-ken, C=JP"
     }
   ],
   "embedded_application": {
     "filename": "saku-builder-desktop.exe",
-    "bytes": 4303872,
-    "sha256": "e0db6efc99aa6dc45e6b70eb9a5607dbac696378196a60e6f2c2b01f7ef70ce9",
-    "authenticode": "NotSigned",
+    "bytes": 4319520,
+    "sha256": "c935327fb337175dfb126e4302ba0336ebc1d50c2c470ec271c27e3e099560f9",
+    "authenticode": "Valid",
     "release_asset": false,
     "location": "INSIDE_INSTALLER",
-    "post_bundle_release_sha256": "d0264725211b0754d1b2ad5245da9d1f1259e6a0ea92422e8c0499be14d0a38b"
+    "post_bundle_release_sha256": "da1219bd62635500f1072f4fe45ca3fe73b3e6272f317102c08618b42b837eaa"
   },
   "superseded_installer": {
-    "bytes": 2208616,
-    "sha256": "d6474dd66f04834500a7ffa079e856f6c372e52d7459596f2f15ba1f4bb7b533",
-    "label": "v0.1.0-beta.9 (published 2026-09-28)",
+    "bytes": 2215425,
+    "sha256": "e763023e4381f4d395983074962df3be0c3b785e0c41b54eee6bf3828974c48c",
+    "label": "v0.1.0-beta.10 (published 2026-09-30, unsigned)",
     "staged": false,
     "prohibited": false,
-    "reason": "the previous published beta; superseded by v0.1.0-beta.10"
+    "reason": "the same contents, unsigned; superseded by the signed v0.1.0-beta.10.1"
   },
   "installer_in_git_tree": false,
   "installer_in_source_archive": false,
@@ -54,6 +55,6 @@
     "exact_revision": "0f9a0592287a14ea9dd6aa00ae18da8e8e6d3449",
     "tree": "907a451b07dff9edcce7cf85c01911a1852a3cea"
   },
-  "generated_by": "Claude Code SAKU Builder(4), public tree for v0.1.0-beta.10 (Owner 2026-09-30), with the β.9 tree as the model",
-  "release_asset_manifest_id": "sha256:85fa0cc8f0bdcee8f47dbb93dddeedfa0b14fb5d9448d8aed6bb14d7a874aa81"
+  "generated_by": "Claude Code SAKU Builder(4), public tree for v0.1.0-beta.10.1 (Owner 2026-10-02, signed re-release), with the β.10 tree as the model",
+  "release_asset_manifest_id": "sha256:f2105c95c5ac2e339569045481d647cb9f1e15d7794b0670ca7ac70ec42d13bf"
 }

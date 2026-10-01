@@ -1,4 +1,4 @@
-# KOKOROSAKU v0.1.0-beta.10
+# KOKOROSAKU v0.1.0-beta.10.1
 
 English canonical documentation: [README.md](README.md)
 
@@ -6,13 +6,13 @@ KOKOROSAKUは、SAKU Builderの公開sourceと評価用packageです。Builder�
 
 ## インストールして使う
 
-将来の公式GitHub Releaseから `SAKU Builder_0.1.0-beta.10_x64-setup.exe` を取得します。このβ版は未署名のため、Windows SmartScreenが警告を表示することがあります。実行前にSHA-256 `e763023e4381f4d395983074962df3be0c3b785e0c41b54eee6bf3828974c48c`（2,215,425 bytes）と一致することを確認してください。installerはgit treeとsource ZIPには含まれません。
+将来の公式GitHub Releaseから `SAKU Builder_0.1.0-beta.10.1_x64-setup.exe` を取得します。インストーラーにはコード署名（署名者 wi-t.com Inc.）があります。署名があっても、評判が積み上がるまでWindows SmartScreenが警告を表示することがあります。実行前にSHA-256 `51e99c7eecd11f9b7134c7c2434142f4a487867a3c693e35fafb98a80feae9ca`（2,287,504 bytes）と一致することを確認してください。installerはgit treeとsource ZIPには含まれません。
 
 ## このリリースの変更点
 
-- 04 に「キャラクター紹介」の節を加えました。SAKU Character Pack のキャラクターの紹介ページと、ストアのパックの一覧へのボタンがあります（パックは有料。価格は商品ページに記載）。SAKU 診療所・AMU トレーニングセンターと、その申し込みは、引き続き準備中です。
-- 英語表示で日本語のまま出ていた文を英語にし、同じものを違う語で呼んでいた所をそろえました。β.9 で外した Trainer の残りの表示もなくしました。
-- 日本語の文を直しました（「席 8（論理上の人）」、「人への引き継ぎ」、効果の出典の一覧、保存確認のボタン名、04 の署名の節など）。
+- 中身は v0.1.0-beta.10 と同じです。インストーラーとアプリ本体に、コード署名（署名者 wi-t.com Inc.、Microsoft の時刻局のタイムスタンプ付き）を付けて出し直しました。署名が示すのは、作ったのが wi-t.com Inc. であることと、署名の後にファイルが変わっていないことまでです。
+- アプリのビルドの情報の表示が「CODE_SIGNING = AZURE_ARTIFACT_SIGNING」に変わります。
+- 公開済みの v0.1.0-beta.10（署名なし）は、そのまま残しています。
 
 ## インストールせず試す
 
@@ -20,7 +20,7 @@ source archiveのrootをローカルHTTPで配信し、`tooling/builder/index.ht
 
 ## 開発者
 
-repositoryをcloneし、Node 24.19.0で `npm ci`、`npm run desktop:prepare:public`、`npm run tauri:build` の順に実行します。exact toolchainは `docs/releases/0.1.0-beta.10/BUILD_ENVELOPE.json` を参照してください。
+repositoryをcloneし、Node 24.19.0で `npm ci`、`npm run desktop:prepare:public`、`npm run tauri:build` の順に実行します。exact toolchainは `docs/releases/0.1.0-beta.10.1/BUILD_ENVELOPE.json` を参照してください。
 
 ## ライセンスとブランド
 

@@ -15,7 +15,9 @@ mod saku_return;
 use character_pack::{CharacterPackImport, looks_like_character_pack, parse_character_pack};
 use saku_return::{SakuReturnImport, looks_like_saku_return, parse_saku_return};
 
-const APP_VERSION: &str = "0.1.0-beta.10";
+/// How this build is signed, set by the signed build (scripts/prepare_desktop_assets.mjs reads the same value).
+const CODE_SIGNING: &str = match option_env!("SAKU_CODE_SIGNING") { Some(mode) => mode, None => "UNSIGNED" };
+const APP_VERSION: &str = "0.1.0-beta.10.1";
 const CONFIG_FILE: &str = "desktop-host.json";
 const MAX_PACKAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_ARCHIVE_ENTRY_BYTES: usize = 32 * 1024 * 1024;
@@ -352,7 +354,7 @@ fn runtime_state_inner(app: &AppHandle) -> Result<RuntimeState, String> {
             .as_deref()
             .map(|workspace| app.state::<WorkspaceLock>().acquire(workspace))
             .unwrap_or(false),
-        code_signing: "UNSIGNED",
+        code_signing: CODE_SIGNING,
         base_layer: base_layer_state(app),
     })
 }

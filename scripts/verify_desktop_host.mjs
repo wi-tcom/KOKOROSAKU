@@ -255,6 +255,23 @@ assert.doesNotMatch(desktopApp, /location\.replace\("\.\/tools\/saku-builder\.ht
 assert.match(desktopApp, /classList\.remove\("boot-pending"\)/);
 const desktopIndex = await read("desktop/index.html");
 {
+  // Owner 2026-10-02 「β.10 を署名して出し直す」: the build says how it is signed, from one value. The source keeps
+  // UNSIGNED; only the signed build's SAKU_CODE_SIGNING changes the footer, the build metadata and the host's report.
+  const { codeSigningMode, CODE_SIGNING_MODES } = await import("./prepare_desktop_assets.mjs");
+  assert.deepEqual([...CODE_SIGNING_MODES], ["UNSIGNED", "AZURE_ARTIFACT_SIGNING"]);
+  assert.equal(codeSigningMode({}), "UNSIGNED");
+  assert.equal(codeSigningMode({ SAKU_CODE_SIGNING: "AZURE_ARTIFACT_SIGNING" }), "AZURE_ARTIFACT_SIGNING");
+  assert.throws(() => codeSigningMode({ SAKU_CODE_SIGNING: "SIGNED" }), /SAKU_CODE_SIGNING_INVALID/);
+  assert.equal((desktopIndex.match(/<span>CODE_SIGNING = UNSIGNED<\/span>/g) || []).length, 1, "the source footer stays UNSIGNED");
+  const hostMain = await read("src-tauri/src/main.rs");
+  assert.match(hostMain, /const CODE_SIGNING: &str = match option_env!\("SAKU_CODE_SIGNING"\) \{ Some\(mode\) => mode, None => "UNSIGNED" \};/);
+  assert.match(hostMain, /code_signing: CODE_SIGNING,/);
+  assert.doesNotMatch(hostMain, /code_signing: "UNSIGNED"/);
+  const builtMeta = JSON.parse(await read(".desktop-dist/resources/build-metadata.json"));
+  const builtHome = await read(".desktop-dist/index.html");
+  assert.ok(builtHome.includes(`<span>CODE_SIGNING = ${builtMeta.code_signing}</span>`), "the built footer says what the build metadata says");
+}
+{
   // ライター&SNS review 15 (2026-09-30): messages with run-time values are whole-sentence templates, tr("…", {…}),
   // and every template has its English in desktop/i18n.mjs EN_FORMAT with the same {placeholders}; the English
   // carries no Japanese outside quoted screen names (「…」). The strings that showed Japanese in English are in EN.
