@@ -143,14 +143,14 @@ check(P.PRECEDENCE_HEADING.test("PRECEDENCE (prose, not DSL):") && !P.PRECEDENCE
   check(echoed.length > 0 && !echoed.some(line => line.includes("keep invariant number") || line.includes("cross statutory line")), "PP-BASE the base layer's own ALWAYS / NEVER lines stay out of the Character's directive block (they sit above the heading the echo-back reads from)");
 }
 equal(G.ECHO_CHECK_LABEL.ja, "AI 申告値（検証不能）", "PP-ECHO the echo-back result is labelled as a reported value, never as verification");
-// ── the base layer the product ships (統制卓 2026-09-23, Owner-approved v1.0) ──
+// ── the base layer the product ships (統制卓 2026-09-23, Owner-approved v1.0; v1.1 2026-10-02) ──
 {
   const shipped = path.join(ROOT, "desktop/resources/base/saku-base-directives.v1.txt");
   check(existsSync(shipped), "PP-SHIP the shared base layer is in the repository, where the bundle picks it up");
   const bytes = readFileSync(shipped);
   const text = bytes.toString("utf8");
   equal(await sha256Hex(text), P.BASE_LAYER_SHA256, "PP-SHIP the shipped base layer has the digest the product was built with");
-  equal(P.BASE_LAYER_SHA256, "ab4745a3617e5b8e49125146a47ee99d1adde7ad8436c953431518ac23358654", "PP-SHIP the digest is the one 統制卓 confirmed for v1.0");
+  equal(P.BASE_LAYER_SHA256, "f906ebfcf67d153f2196f4a43232325cd56a58b471626d3eabc959fa14b7204c", "PP-SHIP the digest is v1.1 (2026-10-02: Seat 8 named as a logical person's seat, shared with AMU and MACHI)");
   check(!text.includes(String.fromCharCode(13)) && bytes[0] !== 0xEF && text.endsWith(String.fromCharCode(10)), "PP-SHIP the shipped bytes are LF, no BOM, one closing newline — a checkout that rewrote them would change the digest");
   check(readFileSync(path.join(ROOT, ".gitattributes"), "utf8").includes("desktop/resources/base/*.txt -text"), "PP-SHIP .gitattributes keeps a checkout from rewriting those bytes");
   equal(G.lintBaseLayer(text, "B").join(" | "), "", "PP-SHIP the shipped base layer passes lintBaseLayer");
@@ -357,7 +357,9 @@ for (const base of samples) {
   // without the glossary the text says so instead of passing bare tokens quietly
   const bare = P.platformLaunchText(dirty, "prompt");
   assert.ok(bare.includes(P.GLOSSARY_UNAVAILABLE) && bare.includes(`work_modes: [${workModes.join(", ")}]`) && !/^ {2}(ALWAYS|NEVER|PREFER|IF|HANDOFF WHEN|OUTPUT)\b/m.test(bare), `PP-PROMPT ${base.identity.character_id}: without the glossary the prompt marks directives as unavailable and shows only the tokens`);
-  assert.ok(prompt.includes("席8は人間です。AIがこの席を埋めることはできません。"), `PP-PROMPT ${base.identity.character_id}: Seat 8 boundary sentence`);
+  assert.ok(prompt.includes("席8は論理上の人の席です。AIはこの席を埋めません。席8の判断は、実在の人が行います。利用者への答えでは、席の番号や「席8の人間」という言い方を使いません。"), `PP-PROMPT ${base.identity.character_id}: Seat 8 boundary sentence`);
+  // Owner 2026-10-02: Seat 8 is the logical person's seat (screens: 「席 8（論理上の人）」); the prompt no longer calls it 人間.
+  assert.ok(!prompt.includes("席8は人間です") && !prompt.includes("席8の人間判断"), `PP-PROMPT ${base.identity.character_id}: the old Seat 8 wording is gone`);
   for (const inv of base.character_core.hard_invariants || []) assert.ok(prompt.includes(inv.statement), `PP-PROMPT ${base.identity.character_id}: invariant ${inv.id} statement`);
   assert.ok(!/locator|\/character_core\/hard_invariants\//.test(prompt), `PP-PROMPT ${base.identity.character_id}: no locators in the prompt`);
 }

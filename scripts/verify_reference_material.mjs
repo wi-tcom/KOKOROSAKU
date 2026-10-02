@@ -127,4 +127,19 @@ check(read("desktop/index.html").includes('id="platform-reference-file"'), "REF-
 check(/if \(platformReference\) options\.reference = platformReference;\s*if \(launch\) launch\.value = platformLaunchText\(character, HANDOFF_FORMAT, options\);/.test(app), "REF-STORE 03 passes the attachment with this hand-over's options only");
 check(JSON.parse(read("desktop/resources/manifests/native-public.json")).files.some(([source]) => source === "tools/unified-v1/reference-material.mjs"), "REF-STORE the installer ships the module");
 
+// REF-CHAIN (2026-10-02, AMU STUDIO(1)): AMU vendors platform-prompt.mjs and reference-material.mjs byte for byte. Their
+// imports stay inside unified-v1 and small: canonicalJson comes from a module with no imports, not from the Trainer intake.
+const importsOf = rel => [...read(rel).matchAll(/^\s*(?:import|export)\b[^;]*?\bfrom\s+"([^"]+)"/gm)].map(match => match[1]);
+check(importsOf("tools/unified-v1/canonical-json.mjs").length === 0, "REF-CHAIN canonical-json.mjs imports nothing");
+check(JSON.stringify(importsOf("tools/unified-v1/reference-material.mjs")) === JSON.stringify(["./canonical-json.mjs"]), "REF-CHAIN reference-material.mjs reads only ./canonical-json.mjs");
+check(JSON.stringify(importsOf("tools/unified-v1/platform-prompt.mjs").sort()) === JSON.stringify(["./directive-glossary.mjs", "./reference-material.mjs"]), "REF-CHAIN platform-prompt.mjs reads only the glossary and the reference module");
+check(importsOf("tools/unified-v1/directive-glossary.mjs").length === 0, "REF-CHAIN directive-glossary.mjs imports nothing");
+const Intake = await import("../tools/v1/external-review-intake.mjs");
+const Canonical = await import("../tools/unified-v1/canonical-json.mjs");
+check(Intake.canonicalJson === Canonical.canonicalJson && canonicalJson === Canonical.canonicalJson, "REF-CHAIN the Trainer intake re-exports the same canonicalJson (its callers are unchanged)");
+for (const manifest of ["native-public", "static-public"]) {
+  const sources = JSON.parse(read(`desktop/resources/manifests/${manifest}.json`)).files.map(([source]) => source);
+  check(["tools/unified-v1/reference-material.mjs", "tools/unified-v1/canonical-json.mjs"].every(rel => sources.includes(rel)), `REF-CHAIN the ${manifest} delivery carries reference-material.mjs and canonical-json.mjs`);
+}
+
 console.log(`REFERENCE_MATERIAL PASS ${cases.length}/${cases.length}`);

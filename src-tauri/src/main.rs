@@ -17,7 +17,7 @@ use saku_return::{SakuReturnImport, looks_like_saku_return, parse_saku_return};
 
 /// How this build is signed, set by the signed build (scripts/prepare_desktop_assets.mjs reads the same value).
 const CODE_SIGNING: &str = match option_env!("SAKU_CODE_SIGNING") { Some(mode) => mode, None => "UNSIGNED" };
-const APP_VERSION: &str = "0.1.0-beta.10.1";
+const APP_VERSION: &str = "0.1.0-beta.11";
 const CONFIG_FILE: &str = "desktop-host.json";
 const MAX_PACKAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_ARCHIVE_ENTRY_BYTES: usize = 32 * 1024 * 1024;
@@ -74,9 +74,9 @@ struct BaseLayerState {
     reason: Option<String>,
 }
 
-/// The shared base layer this build ships (統制卓 2026-09-23, Owner-approved v1.0).
-const BASE_LAYER_VERSION: &str = "1.0";
-const BASE_LAYER_SHA256: &str = "ab4745a3617e5b8e49125146a47ee99d1adde7ad8436c953431518ac23358654";
+/// The shared base layer this build ships (統制卓 2026-09-23, Owner-approved v1.0; v1.1 2026-10-02 names Seat 8 as a logical person's seat, Owner 2026-10-02).
+const BASE_LAYER_VERSION: &str = "1.1";
+const BASE_LAYER_SHA256: &str = "f906ebfcf67d153f2196f4a43232325cd56a58b471626d3eabc959fa14b7204c";
 const BASE_LAYER_RESOURCE: &str = "help/base/saku-base-directives.v1.txt";
 
 /// Read the bundled base layer and compare it with the digest built into this

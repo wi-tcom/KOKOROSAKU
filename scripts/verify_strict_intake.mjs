@@ -244,12 +244,22 @@ const compose = (character, extra = {}) => P.platformLaunchText(character, P.HAN
       writeFileSync(path.join(tmp, rel), execFileSync("git", ["show", `origin/main:${rel}`], { cwd: ROOT, maxBuffer: 1 << 24 }));
     }
     const Main = await import(pathToFileURL(path.join(tmp, "tools/unified-v1/platform-prompt.mjs")).href);
+    // Intended differences against main, and nothing else (D-20261002-seat8-wording, Owner 2026-10-02): the two Seat 8
+    // sentences and Base Directives v1.1. Remove this list once the change is on main.
+    const INTENDED = [
+      ["席7はCharacterの人格・価値観・話し方・役割境界の一貫性を確認するAI側の席であり、席8の人間判断を代行しません。", "席7はCharacterの人格・価値観・話し方・役割境界の一貫性を確認するAI側の席であり、席8（論理上の人）の判断を代行しません。"],
+      ["席8は人間です。AIがこの席を埋めることはできません。", "席8は論理上の人の席です。AIはこの席を埋めません。席8の判断は、実在の人が行います。利用者への答えでは、席の番号や「席8の人間」という言い方を使いません。"],
+      ["  ALWAYS treat Seat 8 as a human role no AI fills", "  ALWAYS treat Seat 8 as a logical person's seat no AI fills"],
+      ["refer the issue for human assessment.", "refer the issue to a person for assessment."],
+      ["v1.0 sha256:ab4745a3617e5b8e", "v1.1 sha256:f906ebfcf67d153f"],
+    ];
+    const asIntended = text => INTENDED.reduce((t, [from, to]) => t.split(from).join(to), text);
     let same = 0, withBreak = 0;
     for (const [label, character] of realCharacters) {
       const hasBreak = value => typeof value === "string" ? /[\r\n\u2028\u2029\u0085\u000b\u000c]/.test(value) : value && typeof value === "object" ? Object.values(value).some(hasBreak) : false;
       if (hasBreak(P.canonicalOnly(character))) { withBreak += 1; continue; }
       for (const opts of [{ directives, glossaryDigest, baseLayer }, { directives, glossaryDigest }, {}]) {
-        equal(P.platformLaunchText(character, P.HANDOFF_FORMAT, opts), Main.platformLaunchText(character, Main.HANDOFF_FORMAT, opts), `F: byte-identical to main — ${label} (${Object.keys(opts).join("+") || "no options"})`);
+        equal(P.platformLaunchText(character, P.HANDOFF_FORMAT, opts), asIntended(Main.platformLaunchText(character, Main.HANDOFF_FORMAT, opts)), `F: byte-identical to main, apart from the intended Seat 8 wording — ${label} (${Object.keys(opts).join("+") || "no options"})`);
       }
       same += 1;
     }

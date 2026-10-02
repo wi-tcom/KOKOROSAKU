@@ -1,7 +1,7 @@
 {
   "profile": "saku.screen-guide@1",
   "screen": "03-ai-platform",
-  "applies_to_app_version": "0.1.0-beta.10.1",
+  "applies_to_app_version": "0.1.0-beta.11",
   "content_review": {
     "ja": {
       "status": "APPROVED",

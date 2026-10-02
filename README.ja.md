@@ -1,4 +1,4 @@
-# KOKOROSAKU v0.1.0-beta.10.1
+# KOKOROSAKU v0.1.0-beta.11
 
 English canonical documentation: [README.md](README.md)
 
@@ -6,13 +6,16 @@ KOKOROSAKUは、SAKU Builderの公開sourceと評価用packageです。Builder�
 
 ## インストールして使う
 
-将来の公式GitHub Releaseから `SAKU Builder_0.1.0-beta.10.1_x64-setup.exe` を取得します。インストーラーにはコード署名（署名者 wi-t.com Inc.）があります。署名があっても、評判が積み上がるまでWindows SmartScreenが警告を表示することがあります。実行前にSHA-256 `51e99c7eecd11f9b7134c7c2434142f4a487867a3c693e35fafb98a80feae9ca`（2,287,504 bytes）と一致することを確認してください。installerはgit treeとsource ZIPには含まれません。
+将来の公式GitHub Releaseから `SAKU Builder_0.1.0-beta.11_x64-setup.exe` を取得します。インストーラーにはコード署名（署名者 wi-t.com Inc.）があります。署名があっても、評判が積み上がるまでWindows SmartScreenが警告を表示することがあります。実行前にSHA-256 `b3aea22ae10dee7510d77d6f5d4ec20b105c93c621de4d958e54a45be15a4bdd`（2,295,296 bytes）と一致することを確認してください。installerはgit treeとsource ZIPには含まれません。
 
 ## このリリースの変更点
 
-- 中身は v0.1.0-beta.10 と同じです。インストーラーとアプリ本体に、コード署名（署名者 wi-t.com Inc.、Microsoft の時刻局のタイムスタンプ付き）を付けて出し直しました。署名が示すのは、作ったのが wi-t.com Inc. であることと、署名の後にファイルが変わっていないことまでです。
-- アプリのビルドの情報の表示が「CODE_SIGNING = AZURE_ARTIFACT_SIGNING」に変わります。
-- 公開済みの v0.1.0-beta.10（署名なし）は、そのまま残しています。
+- **AI に渡す文の中の席 8 の言い方を、画面の席の名前（論理上の人）にそろえました。** 03 の「コピーする」で写す文の「席8は人間です」などを、「席8は論理上の人の席です。AIはこの席を埋めません。席8の判断は、実在の人が行います。」に改めました。あわせて、利用者への答えでは、席の番号や「席8の人間」という言い方を使わないよう、AI に伝えます。
+- **すべての Character に共通の指示文（Base Directives）を v1.0 から v1.1 にしました。** 変えたのは 2 行だけで、席 8 を論理上の人の席と書き、判断が要るときは人に渡すと書きました。規則を緩める変更ではありません。AMU Studio・MACHI と同じ版で、03 の文の版の行が「v1.1」になります。
+- **アプリのアイコンと、画面のマークを新しくしました**（芽のマーク）。
+- インストーラーとアプリ本体には、前の版と同じく、コード署名（署名者 wi-t.com Inc.、Microsoft の時刻局のタイムスタンプ付き）があります。
+- 画面の機能は変わりません。Character や Workspace のデータの形も変わらないので、前の版から上書きでインストールできます。
+- 公開済みの v0.1.0-beta.10.1 は、そのまま残しています。
 
 ## インストールせず試す
 
@@ -20,7 +23,7 @@ source archiveのrootをローカルHTTPで配信し、`tooling/builder/index.ht
 
 ## 開発者
 
-repositoryをcloneし、Node 24.19.0で `npm ci`、`npm run desktop:prepare:public`、`npm run tauri:build` の順に実行します。exact toolchainは `docs/releases/0.1.0-beta.10.1/BUILD_ENVELOPE.json` を参照してください。
+repositoryをcloneし、Node 24.19.0で `npm ci`、`npm run desktop:prepare:public`、`npm run tauri:build` の順に実行します。exact toolchainは `docs/releases/0.1.0-beta.11/BUILD_ENVELOPE.json` を参照してください。
 
 ## ライセンスとブランド
 

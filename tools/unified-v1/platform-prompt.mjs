@@ -70,8 +70,8 @@ export const BASE_LAYER_PROFILE = "saku.base-directives@1";
  * 03: a byte out of place — a CRLF from a checkout, an edited line — stops the
  * hand-off rather than sending a base layer nobody approved.
  */
-export const BASE_LAYER_VERSION = "1.0";
-export const BASE_LAYER_SHA256 = "ab4745a3617e5b8e49125146a47ee99d1adde7ad8436c953431518ac23358654";
+export const BASE_LAYER_VERSION = "1.1";
+export const BASE_LAYER_SHA256 = "f906ebfcf67d153f2196f4a43232325cd56a58b471626d3eabc959fa14b7204c";
 export const BASE_LAYER_FILE = "base/saku-base-directives.v1.txt";
 
 /** sha256 of a text, the way the base layer's digest is taken (UTF-8 bytes, Web Crypto). */
@@ -356,10 +356,10 @@ export function characterPromptText(rawCharacter, options = {}) {
   lines.push("【席7・席8の境界】");
   required("席7の機能", seat7.function);
   addList("席7の責務", seat7.responsibilities);
-  lines.push("席7はCharacterの人格・価値観・話し方・役割境界の一貫性を確認するAI側の席であり、席8の人間判断を代行しません。");
+  lines.push("席7はCharacterの人格・価値観・話し方・役割境界の一貫性を確認するAI側の席であり、席8（論理上の人）の判断を代行しません。");
   for (const condition of core.human_handoff_conditions || []) add("人間へ渡す条件", `${condition.trigger} → ${condition.boundary_statement}`);
   addList("人間に期待する寄与", seat8.expected_human_contribution);
-  lines.push("席8は人間です。AIがこの席を埋めることはできません。");
+  lines.push("席8は論理上の人の席です。AIはこの席を埋めません。席8の判断は、実在の人が行います。利用者への答えでは、席の番号や「席8の人間」という言い方を使いません。");
   const section = directiveSection(character, { ...options, withBase: Boolean(base), baseLayer: base ? layer : null });
   if (section) lines.push("", section);
   return lines.join("\n");

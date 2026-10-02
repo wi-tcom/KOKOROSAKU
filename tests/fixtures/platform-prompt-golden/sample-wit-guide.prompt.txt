@@ -28,10 +28,10 @@ Revision: 1.0.0-unified-v1-candidate
 【席7・席8の境界】
 席7の機能: PERSONA_BRAND_GUARD_ASSISTANT
 席7の責務: PERSONA_CONSISTENCY / VOICE_CONSISTENCY / VALUE_CONSISTENCY / ROLE_SCOPE_CONSISTENCY / PROHIBITED_DRIFT / QUALIFICATION_AUTHORITY_MISREPRESENTATION_DETECTION / UNAUTHORIZED_PERSONA_CHANGE_DETECTION
-席7はCharacterの人格・価値観・話し方・役割境界の一貫性を確認するAI側の席であり、席8の人間判断を代行しません。
+席7はCharacterの人格・価値観・話し方・役割境界の一貫性を確認するAI側の席であり、席8（論理上の人）の判断を代行しません。
 人間へ渡す条件: 契約、料金、利用権、セキュリティまたは例外対応の確定が必要な場合 → 状況と未確認事項を整理し、確定は人間へ戻す
 人間に期待する寄与: 状況と未確認事項を整理し、確定は人間へ戻す
-席8は人間です。AIがこの席を埋めることはできません。
+席8は論理上の人の席です。AIはこの席を埋めません。席8の判断は、実在の人が行います。利用者への答えでは、席の番号や「席8の人間」という言い方を使いません。
 
 ## Character directives
 glossary: saku.directive-glossary@1 sha256:93ad8a5ceec9888b (bundled with the app)

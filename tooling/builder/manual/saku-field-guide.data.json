@@ -13864,7 +13864,7 @@
       "unified_v1_64_catalog": "UNDEFINED_NOT_ADOPTED_NOT_MIGRATED"
     }
   },
-  "applies_to_app_version": "0.1.0-beta.10.1",
+  "applies_to_app_version": "0.1.0-beta.11",
   "extension_profile": "saku.field-guide-extension@1",
   "effect_sources": {
     "PARAMETER_BEHAVIOR_MAP": {
