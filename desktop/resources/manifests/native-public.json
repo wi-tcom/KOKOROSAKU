@@ -30,6 +30,7 @@
     ["tools/v1/external-review-intake.mjs", "tools/v1/external-review-intake.mjs"],
     ["tools/unified-v1/self-made-character-zip.mjs", "tools/unified-v1/self-made-character-zip.mjs"],
     ["tools/unified-v1/reference-material.mjs", "tools/unified-v1/reference-material.mjs"],
+    ["tools/unified-v1/canonical-json.mjs", "tools/unified-v1/canonical-json.mjs"],
     ["tools/unified-v1/external-review-ui.mjs", "tools/unified-v1/external-review-ui.mjs"],
     ["tools/unified-v1/external-review.css", "tools/unified-v1/external-review.css"],
     ["tools/saku-speed-test.html", "tools/saku-speed-test.html"],

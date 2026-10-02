@@ -215,7 +215,7 @@ try{
  // the shared base layer B: bundled, digest-checked, and actually handed over (統制卓 2026-09-23)
  check(/^## Base/m.test(launch),'SH-BASE the pasted text opens with the shared base layer');
  check(launch.indexOf('## Base')<launch.indexOf('## Character'),'SH-BASE the base layer sits above the persona');
- check(/^base: saku\.base-directives@1 v1\.0 sha256:ab4745a3617e5b8e/m.test(launch),'SH-BASE the provenance line names the bundled version and digest');
+ check(/^base: saku\.base-directives@1 v1\.1 sha256:f906ebfcf67d153f/m.test(launch),'SH-BASE the provenance line names the bundled version and digest');
  check(!/## Output rules/.test(launch),'SH-BASE with a base layer 03 does not repeat the output rules (B carries them)');
  check(launch.length>3000,'SH-BASE the text is actually there — fail closed would have left it empty');
  // echo-back (Owner-approved wording 2026-09-23): default off, and the result is a report, never a verification
@@ -224,7 +224,7 @@ try{
  check(doc.getElementById('platform-echo-title').textContent==='読み込めたか AI に聞く（任意）','SH-ECHO the button carries the approved wording');
  const request=doc.getElementById('platform-echo-request').value;check(request==="この会話に読み込んだ『## Character directives』の行を、書き換えずにそのまま列挙してください。説明は不要です。",'SH-ECHO the request text is the approved one');
  check(request.includes('## Character directives')&&launch.includes('## Character directives'),'SH-ECHO the heading the request quotes is the heading the prompt actually uses');
- const KW=['ALWAYS','NEVER','PREFER','IF ','HANDOFF WHEN','OUTPUT'];const afterHeading=launch.slice(launch.indexOf('## Character directives'));const sent=afterHeading.split(String.fromCharCode(10)).filter(l=>l.startsWith('  ')&&KW.some(k=>l.trim().startsWith(k))).map(l=>l.trim());check(sent.length>=4&&!sent.some(x=>x.includes('Seat 8 as a human role')),'SH-ECHO the echo set is the Character block only — the base layer sits above the heading');
+ const KW=['ALWAYS','NEVER','PREFER','IF ','HANDOFF WHEN','OUTPUT'];const afterHeading=launch.slice(launch.indexOf('## Character directives'));const sent=afterHeading.split(String.fromCharCode(10)).filter(l=>l.startsWith('  ')&&KW.some(k=>l.trim().startsWith(k))).map(l=>l.trim());check(sent.length>=4&&!sent.some(x=>x.includes("Seat 8 as a logical person's seat")),'SH-ECHO the echo set is the Character block only — the base layer sits above the heading');
  doc.getElementById('platform-echo-answer').value=sent.join(String.fromCharCode(10));doc.getElementById('platform-echo-check').click();await wait(80);
  const result=doc.getElementById('platform-echo-result');check(result.hidden===false&&result.dataset.echoState==='REPORTED_COMPLETE','SH-ECHO a complete echo reports REPORTED_COMPLETE');
  check(result.textContent.includes('AI 申告値（検証不能）')&&result.textContent.includes('申告であって検証ではありません')&&!/検証済|確認できました/.test(result.textContent),'SH-ECHO the result is labelled as a report and never claims verification');
@@ -258,7 +258,7 @@ try{
  doc.getElementById('generate-menu').click();await until(()=>doc.getElementById('start-training')&&!doc.getElementById('start-training').disabled,1500);
  doc.getElementById('start-training').click();await until(()=>win.__saku_trainer.getStage()===2,1500);await wait(200);
  const context=win.__saku_trainer.getHandoffContext();
- check(context.baseLayer&&context.baseLayer.sha256==='ab4745a3617e5b8e49125146a47ee99d1adde7ad8436c953431518ac23358654','SH-04 the Trainer reads the same shared base layer, and it checks out');
+ check(context.baseLayer&&context.baseLayer.sha256==='f906ebfcf67d153f2196f4a43232325cd56a58b471626d3eabc959fa14b7204c','SH-04 the Trainer reads the same shared base layer, and it checks out');
  for(const id of GUIDE_SECTIONS.trainer) if(doc.getElementById(id)) trainerSeen.add(id);
  // Stage 1 and stage 2 between them must account for some of them; the rest
  // belong to later stages and are checked in the source instead (SECTION-SRC).

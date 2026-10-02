@@ -62,6 +62,7 @@ function project(text, source) {
     ["./unified-v1/external-review-ui.mjs", "./lib/external-review-ui.mjs"],
     ["./unified-v1/external-review.css", "./external-review.css"],
     ["../v1/external-review-intake.mjs", "./external-review-intake.mjs"],
+    ["../unified-v1/canonical-json.mjs", "./canonical-json.mjs"],
     ["./tuning/tuning-projection.mjs", "./tuning-projection.mjs"],
     ["./saku-external-review.html", "./external-review.html"],
     ["./unified-v1/speed-test-ui.mjs", "./lib/speed-test-ui.mjs"],

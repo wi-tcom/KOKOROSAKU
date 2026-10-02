@@ -1,113 +1,113 @@
 {
   "evidence": "saku.brand-source-evidence@1",
-  "source_repository": "wi-tcom/site-content",
-  "source_revision": "a3c24a1",
-  "source_path": "brand/logo/saku",
-  "provenance": "Owner-directed vector artwork (hand-defined SVG, rasterized with Chrome; no generative image model)",
+  "source_repository": "wi-tcom/Wi-t_Site",
+  "source_revision": "bf296dfae981f71351bb118175e699262729df82",
+  "source_path": "site-content/brand/logo/saku",
+  "provenance": "Owner-directed vector artwork (hand-defined SVG, rasterized with Edge; no generative image model)",
   "license": "CC-BY-4.0",
   "rights_holder": "株式会社wi-t.com",
   "trademark_rights_granted": false,
   "copyright_scope_ja": "著作権が及ぶ範囲において",
   "sources": {
     "saku-1024.png": {
-      "bytes": 31854,
-      "sha256": "854a6d39ee28e8cacd2d8b8ca881875c62d72cdae6d649851897cc24431cba0c"
+      "bytes": 45974,
+      "sha256": "5f701e1ff6b03bcc7cdec8702757798898e1b9cb03d101dec7a69dd690c65b8f"
     },
     "saku.svg": {
-      "bytes": 341,
-      "sha256": "e1a72c0bcec0653c27eaf07afeaac27274c2f8dc2b9cfee0fc3eb8d043894403"
+      "bytes": 562,
+      "sha256": "bb175025063e1dbc65c65872d2135986c151d5ba1e7d2a9ae68b0dc131a912f9"
     },
     "saku-favicon.ico": {
-      "bytes": 5884,
-      "sha256": "52769ad1e2b7916cfb8d3800d362da8570016a20c6d0f3b653ee5140049e59b1"
+      "bytes": 5522,
+      "sha256": "105db30fd326c95550f68f9ed20b7f694359562255984911f1283e198da8d216"
     }
   },
   "app_icon": {
-    "adopted_by_owner": "2026-09-21",
+    "adopted_by_owner": "2026-09-27",
     "source_repository": "wi-tcom/Wi-t_Site",
-    "source_branch": "claude/content-20260918",
-    "source_revision": "512f0363078bb8a6529483a8b8a47923ca10ed08",
-    "source_path": "site-content/brand/app-icon/saku-builder",
-    "source_sha256sums": "site-content/brand/app-icon/SHA256SUMS",
-    "design": "正八角形（辺が上下）・和紙地・縁なし・淡い浮かせ影。マーク = brand/logo/saku/saku.svg の幾何を写した SAKU 変奏（弧 2 本＋萌黄 #5F8F2A の点、墨 #1B1A16）",
-    "provenance": "AI 生成を含む画像。マークの幾何は当社の公式 SVG（brand/logo/saku/saku.svg、人間創作）を決定論的スクリプト build-icons.py（PIL）で写したもの。背景（和紙地）のみ Gemini 生成画像由来（washi-source-gemini.jpg → washi-tile-1024.png）。SynthID／C2PA の識別情報が残り得る。",
+    "source_branch": "main",
+    "source_revision": "bf296dfae981f71351bb118175e699262729df82",
+    "source_path": "site-content/brand/app-icon-v5/saku-builder",
+    "source_sha256sums": "site-content/brand/app-icon-v5/SHA256SUMS",
+    "design": "正八角形（辺が上下）・和紙地・縁なし・藍鉄 30% のぼかし影（背景は v4 と同じ）。マーク = brand/logo/saku/saku.svg（v5、芽）をそのまま重ねる（幅はタイルの 62%、基線 y=72 をタイルの 61.5%）",
+    "provenance": "AI 生成を含む画像。マークは当社の公式 SVG（brand/logo/saku/saku.svg v5、人間創作）を決定論的スクリプト build-icons-v5.py（手元の Edge で SVG を描く）で重ねたもの。背景（和紙地、washi-tile-1024.png は v4 と同じ）のみ Gemini 生成画像由来。SynthID／C2PA の識別情報が残り得る。",
     "provenance_note": "ロゴ本体（desktop/icon.svg・favicon）の証跡ブロックは不変（生成モデル不使用）。",
     "license": "CC-BY-4.0 — マークおよびアイコン全体（公式 SVG 由来の人間創作部分）に対して。背景（和紙地）単体には著作権を主張せず、ライセンスの対象にもしない（権利主張なし）。",
     "rights_holder": "株式会社wi-t.com",
     "trademark_rights_granted": false,
     "sources": {
       "saku-builder-icon-1024.png": {
-        "bytes": 460209,
-        "sha256": "509644b182809f07118e994284b42f132671a398c4d223fffa7819c202e8e670"
+        "bytes": 467305,
+        "sha256": "07e035cc1273c3d8f5f1efe7352f18f2597ae02f41e6f61a52cf406397a832ab"
       },
       "saku-builder-icon-128.png": {
-        "bytes": 19290,
-        "sha256": "44931459cd57df174a5ad44db092d4f4fa47c6439fcc7ac17310d047f7ea5097"
+        "bytes": 20438,
+        "sha256": "dd51444be4dffb80d03b02602763cb5e28332384778035592ecd754648abe65a"
       },
       "saku-builder-icon-16.png": {
-        "bytes": 863,
-        "sha256": "5959a503996e968d334513e62f6104ac5ab60ab153579efd2dc828f0b433bd36"
+        "bytes": 882,
+        "sha256": "5ac0464488cc21f8bd1f60ceb54d458d6af9f33a10d2fd52586f00e6684da28a"
       },
       "saku-builder-icon-256.png": {
-        "bytes": 57506,
-        "sha256": "9fdf782b698c4cdebcfa4dc02185dd5064ac58a19d9b3e176fd4fced6035462b"
+        "bytes": 59890,
+        "sha256": "ff72b8953bb0fc35711f4c0ccfe4108e33d388b57cb9df48e83f768d3d5012f3"
       },
       "saku-builder-icon-32.png": {
-        "bytes": 2227,
-        "sha256": "e7257de4af581411e8368c3c05efb047ccfe7028b2abf7db795b22f2bc1a4127"
+        "bytes": 2346,
+        "sha256": "85d0d7d1ab95b51a7aa0ea632ee58eab3e93a7c0b16562866a8d9459dbeb331b"
       },
       "saku-builder-icon-48.png": {
-        "bytes": 4162,
-        "sha256": "221264e79da202e1f0a1d7d73a31078455792e4b668030509a1100fe3d1bc80a"
+        "bytes": 4405,
+        "sha256": "b16c21f86cb4a46b2926cf2a221dd294d02c1a9e56bd9dbd67937c159452d441"
       },
       "saku-builder-icon-512.png": {
-        "bytes": 189586,
-        "sha256": "ed5cc1d4fdbc8c8a4728fac52ff64c524764ef8df8c7d3e45dd2e169ae165def"
+        "bytes": 192791,
+        "sha256": "60250004a02ba32addb741ca770ae16c61707ddebaa993679474bb1762f8d24d"
       },
       "saku-builder-icon-64.png": {
-        "bytes": 6429,
-        "sha256": "a52f15156bf1d3f415e7cd4dfae3585651edf1e348b016ad50506bb4efe4201d"
+        "bytes": 6887,
+        "sha256": "e0400ae5f4be5088cd73705efd3df92e99361f951851ec9a99646a488f198ecf"
       },
       "saku-builder.ico": {
-        "bytes": 90579,
-        "sha256": "fb8b522e90452f924956cec5ca56eb437c9b3e218739e55b091b252feb9e14e0"
+        "bytes": 94950,
+        "sha256": "2651c16042df0108cbfb05c14805efc3aeedf018eb2d891ad036083f20d2f811"
       }
     },
     "tauri_targets": {
       "32x32.png": {
         "source_file": "saku-builder-icon-32.png",
-        "bytes": 2227,
-        "sha256": "e7257de4af581411e8368c3c05efb047ccfe7028b2abf7db795b22f2bc1a4127"
+        "bytes": 2346,
+        "sha256": "85d0d7d1ab95b51a7aa0ea632ee58eab3e93a7c0b16562866a8d9459dbeb331b"
       },
       "64x64.png": {
         "source_file": "saku-builder-icon-64.png",
-        "bytes": 6429,
-        "sha256": "a52f15156bf1d3f415e7cd4dfae3585651edf1e348b016ad50506bb4efe4201d"
+        "bytes": 6887,
+        "sha256": "e0400ae5f4be5088cd73705efd3df92e99361f951851ec9a99646a488f198ecf"
       },
       "128x128.png": {
         "source_file": "saku-builder-icon-128.png",
-        "bytes": 19290,
-        "sha256": "44931459cd57df174a5ad44db092d4f4fa47c6439fcc7ac17310d047f7ea5097"
+        "bytes": 20438,
+        "sha256": "dd51444be4dffb80d03b02602763cb5e28332384778035592ecd754648abe65a"
       },
       "128x128@2x.png": {
         "source_file": "saku-builder-icon-256.png",
-        "bytes": 57506,
-        "sha256": "9fdf782b698c4cdebcfa4dc02185dd5064ac58a19d9b3e176fd4fced6035462b"
+        "bytes": 59890,
+        "sha256": "ff72b8953bb0fc35711f4c0ccfe4108e33d388b57cb9df48e83f768d3d5012f3"
       },
       "icon.png": {
         "source_file": "saku-builder-icon-512.png",
-        "bytes": 189586,
-        "sha256": "ed5cc1d4fdbc8c8a4728fac52ff64c524764ef8df8c7d3e45dd2e169ae165def"
+        "bytes": 192791,
+        "sha256": "60250004a02ba32addb741ca770ae16c61707ddebaa993679474bb1762f8d24d"
       },
       "icon.ico": {
         "source_file": "saku-builder.ico",
-        "bytes": 90579,
-        "sha256": "fb8b522e90452f924956cec5ca56eb437c9b3e218739e55b091b252feb9e14e0"
+        "bytes": 94950,
+        "sha256": "2651c16042df0108cbfb05c14805efc3aeedf018eb2d891ad036083f20d2f811"
       },
       "icon.icns": {
-        "source_file": "saku-builder-icon-1024.png (Tauri CLI 2 `tauri icon`, macOS container only; not built)",
-        "bytes": 905615,
-        "sha256": "8bd5b82edefa1b9396adbb9646911ba0bf8287b98295daceb2f33bab2b535282"
+        "source_file": "saku-builder-icon-1024.png (Tauri CLI 2.11.4 `tauri icon`, macOS only; not built; the CLI does not give the same bytes twice, so this digest pins the committed file, not a rebuild)",
+        "bytes": 929274,
+        "sha256": "f76c22d916bffed25ca3ed72a769344ec2d47f15015e99e0f8a23ac756ccfca8"
       }
     },
     "rights_statement_owner_confirmed": "背景（和紙地）のみ Gemini 生成由来。クレジット表記の義務なし・商用利用可・背景単体には著作権を主張しない。マークの幾何は当社の公式 SVG（人間創作）。商標は付与しない。ロゴ本体の「生成モデル不使用」証跡は不変。",
@@ -119,6 +119,8 @@
       "credit_required": false,
       "commercial_use": true,
       "displayed_labelling": "来歴のみ（アイコン・インストーラ・サイトに「Gemini 生成」表記は付けない）"
-    }
-  }
+    },
+    "version": "v5（Owner 2026-10-02: SAKU は β.11 から新しいアイコン）"
+  },
+  "logo_version": "v5（芽、Owner 決定 2026-09-27、Wi-t_Site PR #40）"
 }

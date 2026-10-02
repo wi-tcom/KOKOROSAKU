@@ -48,6 +48,8 @@
     ["tools/unified-v1/confirm-wording.mjs", "lib/confirm-wording.mjs"],
     ["tools/unified-v1/platform-prompt.mjs", "lib/platform-prompt.mjs"],
     ["tools/unified-v1/directive-glossary.mjs", "lib/directive-glossary.mjs"],
+    ["tools/unified-v1/reference-material.mjs", "lib/reference-material.mjs"],
+    ["tools/unified-v1/canonical-json.mjs", "lib/canonical-json.mjs"],
     ["tools/unified-v1/handoff-context.mjs", "lib/handoff-context.mjs"],
     ["tools/unified-v1/help-pane.css", "help-pane.css"],
     ["manual/platform-guide.data.json", "manual/platform-guide.data.json"],

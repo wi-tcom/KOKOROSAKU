@@ -22,7 +22,7 @@ if (!chrome) { console.error("ROUND3_OWNER_FIXES NOT_AVAILABLE / CHROME_NOT_FOUN
 const samples = JSON.parse(await readFile(path.join(ROOT, "desktop/resources/source/oss-sample-characters.json"), "utf8")).characters;
 const mime = new Map([[".html", "text/html; charset=utf-8"], [".mjs", "text/javascript; charset=utf-8"], [".css", "text/css; charset=utf-8"], [".json", "application/json; charset=utf-8"], [".svg", "image/svg+xml"]]);
 const tauriMock = `<script>window.__TAURI__={core:{invoke:async command=>{if(command==="get_runtime_state")return {workspace:"C:/round3",first_run:false,install_dir:"i",config_dir:"c",log_dir:"l",cache_dir:"ca"};if(command==="list_workspace_characters")return [];throw new Error("UNEXPECTED_COMMAND:"+command)}}};</script>`;
-const requiredSeatBoundary = process.env.SAKU_ROUND3_NEGATIVE === "1" ? "INTENTIONAL_MISSING_SEAT_BOUNDARY" : "席8の人間判断を代行しません";
+const requiredSeatBoundary = process.env.SAKU_ROUND3_NEGATIVE === "1" ? "INTENTIONAL_MISSING_SEAT_BOUNDARY" : "席8（論理上の人）の判断を代行しません";
 const harness = `<!doctype html><meta charset="utf-8"><title>ROUND3_RUNNING</title><div id="frames"></div><pre id="result" data-status="RUNNING"></pre><script type="module">
 const samples=${JSON.stringify(samples)}, checks=[], measurements=[];
 const requiredSeatBoundary=${JSON.stringify(requiredSeatBoundary)};
@@ -44,7 +44,7 @@ try{
       values:prompt.includes("価値観:")&&(character.character_core.values||[]).every(value=>prompt.includes(value)),
       voice:prompt.includes("【Voice / Expression】")&&prompt.includes("話し方（voice）:"),
       seat7:prompt.includes("席7の機能:")&&prompt.includes(requiredSeatBoundary),
-      seat8:prompt.includes("席8は人間です。AIがこの席を埋めることはできません。"),
+      seat8:prompt.includes("席8は論理上の人の席です。AIはこの席を埋めません。席8の判断は、実在の人が行います。利用者への答えでは、席の番号や「席8の人間」という言い方を使いません。"),
     };
     Object.entries(fields).forEach(([field,ok])=>check(ok,character.identity.character_id+" prompt contains "+field));
     measurements.push({character_id:character.identity.character_id,display_name:character.identity.display_name,characters:prompt.length,utf8_bytes:new TextEncoder().encode(prompt).length,fields});

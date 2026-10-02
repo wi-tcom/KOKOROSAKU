@@ -1,6 +1,6 @@
 {
   "profile": "saku.field-guide-extension@1",
-  "applies_to_app_version": "0.1.0-beta.10.1",
+  "applies_to_app_version": "0.1.0-beta.11",
   "purpose": "manual/saku-field-guide.data.json に合成される追加内容（項目下の「現在の内容」、選択肢の効果と出典、候補語の方針、正本外項目の注記）。画面と manual の両方がこの合成結果を読む。",
   "content_review": {
     "current_note_ja": {
@@ -1820,7 +1820,7 @@
     "date": "2026-10-02",
     "environment_ja": "Windows 11 Home 10.0.26300・WebView2 Runtime 154.0.4258.48",
     "environment_en": "Windows 11 Home 10.0.26300, WebView2 Runtime 154.0.4258.48",
-    "source": "SAKU Builder(4) hands-on on the installed window of 0.1.0-beta.10.1 (record: docs/releases/0.1.0-beta.10.1; Windows and WebView2 Runtime read on 2026-10-02); wording approved by ライター&SNS 9be2c32 (JA) and 英語翻訳チーム 6a28224 (EN Q4)"
+    "source": "SAKU Builder(4) hands-on on the installed window of 0.1.0-beta.11 (record: docs/releases/0.1.0-beta.11; Windows and WebView2 Runtime read on 2026-10-02); wording approved by ライター&SNS 9be2c32 (JA) and 英語翻訳チーム 6a28224 (EN Q4)"
   },
   "known_issues": {
     "note": "「困ったとき」の先頭に置く、この版で分かっている問題（Owner 2026-09-24 承認、ライター&SNS 9be2c32、英語翻訳チーム Q1–Q3 6a28224）。見出しと 2 つのラベルの英語は英語翻訳チーム Q6–Q8（Wi-t_Site f1440dd／632021e）。 Markdown の書式（** と `）は画面に出さない。文字は承認文のまま。",

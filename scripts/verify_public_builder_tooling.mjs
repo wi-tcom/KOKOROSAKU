@@ -97,7 +97,7 @@ const extensionBytes = await readFile(path.join(PUBLIC, "schemas", "character-ex
 const faviconBytes = await readFile(path.join(PUBLIC, "favicon.ico"));
 check(digest(schemaBytes) === "48a7241dac4653c94b0cb82971697deb804c23999548cb9c6b64563813bba817", "exact D-13 Character schema bytes");
 check(digest(extensionBytes) === "2069021745e9ad98afc84e7dacdb0404c0993f3fcad4147590059764b3170b1b", "exact D-13 extension schema bytes");
-check(digest(faviconBytes) === "52769ad1e2b7916cfb8d3800d362da8570016a20c6d0f3b653ee5140049e59b1", "exact Owner-authorized SAKU favicon bytes");
+check(digest(faviconBytes) === "105db30fd326c95550f68f9ed20b7f694359562255984911f1283e198da8d216", "exact Owner-authorized SAKU favicon bytes (logo v5, Wi-t_Site bf296df)");
 const about = await readFile(path.join(PUBLIC, "about.html"), "utf8");
 check(about.includes("Current schema state") && about.includes("Adopted by D-13"), "About displays the D-13 adoption as current schema state");
 check(!about.includes("SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE") && !about.includes("Candidate only; not Canonical adoption"), "About does not present historical schema candidate metadata as current state");

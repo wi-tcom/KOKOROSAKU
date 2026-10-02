@@ -68,10 +68,11 @@ assert.deepEqual(sample.characters.map(character => character.identity.character
 
 const sha256 = bytes => createHash("sha256").update(bytes).digest("hex");
 const brandEvidence = await json("desktop/resources/source/brand-source-evidence.json");
-assert.equal(brandEvidence.source_repository, "wi-tcom/site-content");
-assert.equal(brandEvidence.source_revision, "a3c24a1");
-assert.equal(brandEvidence.source_path, "brand/logo/saku");
-assert.equal(brandEvidence.provenance, "Owner-directed vector artwork (hand-defined SVG, rasterized with Chrome; no generative image model)");
+// Logo v5 (芽, Owner 2026-09-27; Wi-t_Site PR #40). v4 came from wi-tcom/site-content a3c24a1.
+assert.equal(brandEvidence.source_repository, "wi-tcom/Wi-t_Site");
+assert.equal(brandEvidence.source_revision, "bf296dfae981f71351bb118175e699262729df82");
+assert.equal(brandEvidence.source_path, "site-content/brand/logo/saku");
+assert.equal(brandEvidence.provenance, "Owner-directed vector artwork (hand-defined SVG, rasterized with Edge; no generative image model)");
 assert.equal(brandEvidence.license, "CC-BY-4.0");
 assert.equal(brandEvidence.rights_holder, "株式会社wi-t.com");
 assert.equal(brandEvidence.trademark_rights_granted, false);
@@ -79,24 +80,34 @@ assert.equal(brandEvidence.copyright_scope_ja, "著作権が及ぶ範囲にお�
 assert.equal(sha256(await readFile(path.join(ROOT, "desktop/icon.svg"))), brandEvidence.sources["saku.svg"].sha256);
 assert.equal(sha256(await readFile(path.join(ROOT, "desktop/resources/source/saku-favicon.ico"))), brandEvidence.sources["saku-favicon.ico"].sha256);
 const iconHashes = {
-  "32x32.png": "e7257de4af581411e8368c3c05efb047ccfe7028b2abf7db795b22f2bc1a4127",
-  "64x64.png": "a52f15156bf1d3f415e7cd4dfae3585651edf1e348b016ad50506bb4efe4201d",
-  "128x128.png": "44931459cd57df174a5ad44db092d4f4fa47c6439fcc7ac17310d047f7ea5097",
-  "128x128@2x.png": "9fdf782b698c4cdebcfa4dc02185dd5064ac58a19d9b3e176fd4fced6035462b",
-  "icon.png": "ed5cc1d4fdbc8c8a4728fac52ff64c524764ef8df8c7d3e45dd2e169ae165def",
-  "icon.ico": "fb8b522e90452f924956cec5ca56eb437c9b3e218739e55b091b252feb9e14e0",
-  "icon.icns": "8bd5b82edefa1b9396adbb9646911ba0bf8287b98295daceb2f33bab2b535282",
+  "32x32.png": "85d0d7d1ab95b51a7aa0ea632ee58eab3e93a7c0b16562866a8d9459dbeb331b",
+  "64x64.png": "e0400ae5f4be5088cd73705efd3df92e99361f951851ec9a99646a488f198ecf",
+  "128x128.png": "dd51444be4dffb80d03b02602763cb5e28332384778035592ecd754648abe65a",
+  "128x128@2x.png": "ff72b8953bb0fc35711f4c0ccfe4108e33d388b57cb9df48e83f768d3d5012f3",
+  "icon.png": "60250004a02ba32addb741ca770ae16c61707ddebaa993679474bb1762f8d24d",
+  "icon.ico": "2651c16042df0108cbfb05c14805efc3aeedf018eb2d891ad036083f20d2f811",
+  "icon.icns": "f76c22d916bffed25ca3ed72a769344ec2d47f15015e99e0f8a23ac756ccfca8",
 };
-// App icon (Owner adoption 2026-09-21): the six Windows targets are byte copies of the Wi-t_Site files at the
+// App icon (v5, Owner adoption 2026-09-27; in SAKU from β.11, Owner 2026-10-02; v4 was adopted 2026-09-21): the six Windows targets are byte copies of the Wi-t_Site files at the
 // recorded revision; the evidence block names the source and says where a generative model was used.
 assert.equal(brandEvidence.app_icon.source_repository, "wi-tcom/Wi-t_Site");
-assert.equal(brandEvidence.app_icon.source_revision, "512f0363078bb8a6529483a8b8a47923ca10ed08");
-assert.equal(brandEvidence.app_icon.source_path, "site-content/brand/app-icon/saku-builder");
+assert.equal(brandEvidence.app_icon.source_revision, "bf296dfae981f71351bb118175e699262729df82");
+assert.equal(brandEvidence.app_icon.source_path, "site-content/brand/app-icon-v5/saku-builder");
 assert.match(brandEvidence.app_icon.provenance, /Gemini 生成画像由来/);
 assert.equal(brandEvidence.app_icon.rights_statement_owner_confirmed, "背景（和紙地）のみ Gemini 生成由来。クレジット表記の義務なし・商用利用可・背景単体には著作権を主張しない。マークの幾何は当社の公式 SVG（人間創作）。商標は付与しない。ロゴ本体の「生成モデル不使用」証跡は不変。");
 assert.equal(brandEvidence.app_icon.background_rights.copyright_claimed, false);
 assert.match(brandEvidence.app_icon.license, /^CC-BY-4\.0 — マークおよびアイコン全体/);
 assert.equal(brandEvidence.app_icon.trademark_rights_granted, false);
+// The shipped notice says what the evidence says (Owner 2026-10-02 「直してから公開」): the logo is free of generative
+// models, the app icon's washi background is not, no copyright is claimed in that background, and both name the source revision.
+{
+  const notice = await readFile(path.join(ROOT, "BRAND-ASSET-NOTICE.md"), "utf8");
+  const logoLine = notice.split("\n").find(line => line.startsWith("- Logo ")) || "";
+  const iconLine = notice.split("\n").find(line => line.startsWith("- App icon ")) || "";
+  assert.ok(logoLine.includes(brandEvidence.provenance) && logoLine.includes(brandEvidence.source_revision) && logoLine.includes(brandEvidence.source_path), "brand notice: the logo line matches the logo evidence");
+  assert.ok(iconLine.includes(brandEvidence.app_icon.source_revision) && iconLine.includes(brandEvidence.app_icon.source_path) && iconLine.includes("AI-generated image") && iconLine.includes("No copyright is claimed in the background"), "brand notice: the app icon line matches the app icon evidence");
+  assert.ok(!iconLine.includes("no generative image model") && !notice.includes("wi-tcom/site-content"), "brand notice: no stale provenance");
+}
 for (const [name, target] of Object.entries(brandEvidence.app_icon.tauri_targets)) {
   assert.equal(iconHashes[name], target.sha256, `app icon evidence ${name}`);
   if (name !== "icon.icns") assert.equal(brandEvidence.app_icon.sources[target.source_file].sha256, target.sha256, `app icon source ${name}`);

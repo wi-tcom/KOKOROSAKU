@@ -14,7 +14,7 @@
 //
 // The ZIP is stored (no compression) with a fixed time, so the bytes are a pure function of
 // the Character bytes and the manifest fields (created_at included).
-import { canonicalJson } from "./external-review-intake.mjs";
+import { canonicalJson } from "./canonical-json.mjs";
 
 export const SELF_MADE_FORMAT = "saku-self-made-character";
 export const SELF_MADE_FORMAT_VERSION = "1";

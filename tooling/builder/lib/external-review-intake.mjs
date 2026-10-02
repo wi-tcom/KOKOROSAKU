@@ -26,6 +26,9 @@ import {
   TUNING_ITEMS,
   diffState,
 } from "../lib/tuning-projection.mjs";
+import { canonicalJson } from "./canonical-json.mjs";
+
+export { canonicalJson };
 
 export const EXTERNAL_REVIEW_INTAKE_CONTRACT_ID = "saku.trainer.external-review-intake@1";
 export const EXTERNAL_REVIEW_RECORD_SCHEMA_ID = "saku.trainer.external-review-record@1";
@@ -81,19 +84,6 @@ const isObject = value => value !== null && typeof value === "object" && !Array.
 const nonEmpty = value => typeof value === "string" && value.trim().length > 0;
 const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 const nowIso = now => typeof now === "string" ? now : (now instanceof Date ? now : new Date()).toISOString();
-
-/**
- * RFC 8785-equivalent canonical JSON for the shapes a received packet holds:
- * keys sorted by UTF-16 code units, no whitespace, arrays in order, primitives
- * as JSON.stringify.  A received JSON object never carries `undefined`, so
- * the omission rule is stated for completeness only.
- */
-export function canonicalJson(value) {
-  if (value === undefined) return undefined;
-  if (value === null || typeof value !== "object") return JSON.stringify(value);
-  if (Array.isArray(value)) return `[${value.map(item => (item === undefined ? "null" : canonicalJson(item))).join(",")}]`;
-  return `{${Object.keys(value).filter(key => value[key] !== undefined).sort().map(key => `${JSON.stringify(key)}:${canonicalJson(value[key])}`).join(",")}}`;
-}
 
 export async function sha256Hex(text) {
   const subtle = globalThis.crypto && globalThis.crypto.subtle;
