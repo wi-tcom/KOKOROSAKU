@@ -4,8 +4,8 @@
   "state": "CANDIDATE_NOT_RELEASED",
   "publication_source": {
     "repository": "wi-tcom/-SAKU-builder",
-    "exact_revision": "778d0b256dbe8b9f77fa57b5aad6b0f0fa0ebde6",
-    "tree": "63610b012819242967e651cf5f0ff4f525dd9e1a"
+    "exact_revision": "d986fdd049d71da049388edc28ebcc892a920f3b",
+    "tree": "6ba898745dc90781fb8b076d3bca6cc9bb0685f5"
   },
   "binary_build_source": {
     "repository": "wi-tcom/-SAKU-builder",
@@ -14,9 +14,9 @@
   },
   "build_envelope": {
     "source_repository": "wi-tcom/-SAKU-builder",
-    "source_revision": "778d0b256dbe8b9f77fa57b5aad6b0f0fa0ebde6",
+    "source_revision": "d986fdd049d71da049388edc28ebcc892a920f3b",
     "path": "docs/releases/0.1.0-beta.11/BUILD_ENVELOPE.json",
-    "sha256": "10b6c6169d27daba1f70503c346f66d5f5861d69c97dc3d8e1f21b02a2ef2add"
+    "sha256": "d79b89c8f12e6a14aa38b06932234a20289dd87753c375d78faa30c80dac7069"
   },
   "assets": [
     {
@@ -56,5 +56,5 @@
     "tree": "907a451b07dff9edcce7cf85c01911a1852a3cea"
   },
   "generated_by": "Claude Code SAKU Builder(4), public tree for v0.1.0-beta.11 (Owner 2026-10-02), with the β.10.1 tree as the model",
-  "release_asset_manifest_id": "sha256:6fc079607123cf60e26a2dfdd484919f13d5305c3115286f6e3806c62ebd82f1"
+  "release_asset_manifest_id": "sha256:55e7168db303cde821775344f59491927499eb4b5ba15a226144d3431123f68e"
 }

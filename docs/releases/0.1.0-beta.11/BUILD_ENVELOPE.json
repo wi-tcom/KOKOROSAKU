@@ -155,7 +155,7 @@
   },
   "base_layer": {
     "profile": "saku.base-directives@1",
-    "version": "1.0",
+    "version": "1.1",
     "source_file": "desktop/resources/base/saku-base-directives.v1.txt",
     "bundled_as": "help/base/saku-base-directives.v1.txt",
     "sha256": "f906ebfcf67d153f2196f4a43232325cd56a58b471626d3eabc959fa14b7204c",

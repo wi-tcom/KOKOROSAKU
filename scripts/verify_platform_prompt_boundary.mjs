@@ -153,6 +153,12 @@ equal(G.ECHO_CHECK_LABEL.ja, "AI 申告値（検証不能）", "PP-ECHO the echo
   equal(P.BASE_LAYER_SHA256, "f906ebfcf67d153f2196f4a43232325cd56a58b471626d3eabc959fa14b7204c", "PP-SHIP the digest is v1.1 (2026-10-02: Seat 8 named as a logical person's seat, shared with AMU and MACHI)");
   check(!text.includes(String.fromCharCode(13)) && bytes[0] !== 0xEF && text.endsWith(String.fromCharCode(10)), "PP-SHIP the shipped bytes are LF, no BOM, one closing newline — a checkout that rewrote them would change the digest");
   check(readFileSync(path.join(ROOT, ".gitattributes"), "utf8").includes("desktop/resources/base/*.txt -text"), "PP-SHIP .gitattributes keeps a checkout from rewriting those bytes");
+  // The release record of this version names the same base layer (β.11's first record said "1.0" with the v1.1 digest).
+  const envelopePath = path.join(ROOT, "docs/releases", JSON.parse(readFileSync(path.join(ROOT, "package.json"), "utf8")).version, "BUILD_ENVELOPE.json");
+  if (existsSync(envelopePath)) {
+    const recorded = JSON.parse(readFileSync(envelopePath, "utf8")).base_layer || {};
+    check(recorded.version === P.BASE_LAYER_VERSION && recorded.sha256 === P.BASE_LAYER_SHA256 && recorded.bytes === bytes.length, "PP-SHIP this version's build envelope names the base layer's version, digest and size");
+  }
   equal(G.lintBaseLayer(text, "B").join(" | "), "", "PP-SHIP the shipped base layer passes lintBaseLayer");
   // 統制卓 2026-09-23: the real point of this round — the approved B must not fail at run time
   const loaded = await P.loadBaseLayer(async () => text);
