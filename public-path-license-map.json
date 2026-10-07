@@ -160,10 +160,10 @@
       "path": "LICENSE",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "d986fdd049d71da049388edc28ebcc892a920f3b",
+      "exact_revision": "87e53e3f4b47873c4403efb2bc3cffcd2078678a",
       "source_path": "LICENSE",
-      "artifact_sha256": "a84058e62f095755f6ad907ea7aea94853a693699296e692fb5e40c76cabaff3",
-      "bytes": 16633,
+      "artifact_sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04",
+      "bytes": 16726,
       "license": "MPL-2.0",
       "scope": "MPL_2_0_LEGAL_TEXT"
     },
@@ -230,8 +230,8 @@
       "source_repository": "02C_SAKU_OSS_Launch",
       "exact_revision": "sha256:582b611f2de5902903f7c6d7be7647070a050e69febe70351a60bd2aaf3263b4",
       "source_path": "generated:LICENSES/MPL-2.0.txt",
-      "artifact_sha256": "a84058e62f095755f6ad907ea7aea94853a693699296e692fb5e40c76cabaff3",
-      "bytes": 16633
+      "artifact_sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04",
+      "bytes": 16726
     },
     {
       "path": "LICENSING.md",
@@ -4661,10 +4661,10 @@
       "path": "tooling/builder/LICENSE",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "wi-tcom/-SAKU-builder",
-      "exact_revision": "d986fdd049d71da049388edc28ebcc892a920f3b",
+      "exact_revision": "87e53e3f4b47873c4403efb2bc3cffcd2078678a",
       "source_path": "tooling/builder/LICENSE",
-      "artifact_sha256": "a84058e62f095755f6ad907ea7aea94853a693699296e692fb5e40c76cabaff3",
-      "bytes": 16633,
+      "artifact_sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04",
+      "bytes": 16726,
       "license": "MPL-2.0",
       "scope": "MPL_2_0_LEGAL_TEXT"
     },
