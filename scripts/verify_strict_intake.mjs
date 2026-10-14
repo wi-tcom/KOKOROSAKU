@@ -270,7 +270,7 @@ const compose = (character, extra = {}) => P.platformLaunchText(character, P.HAN
 
 // ── G. browser end to end ───────────────────────────────────────────────────
 {
-  const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+  const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
   const dist = path.join(ROOT, ".desktop-dist");
   const stale = ["desktop/app.mjs:app.mjs", "tools/unified-v1/character-schema.mjs:tools/unified-v1/character-schema.mjs", "tools/unified-v1/platform-prompt.mjs:tools/unified-v1/platform-prompt.mjs"]
     .map(pair => pair.split(":")).filter(([src, out]) => !existsSync(path.join(dist, out)) || readFileSync(path.join(ROOT, src), "utf8") !== readFileSync(path.join(dist, out), "utf8")).map(([src]) => src);

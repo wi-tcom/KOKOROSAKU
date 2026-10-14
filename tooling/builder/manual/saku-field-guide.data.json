@@ -294,8 +294,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -392,8 +392,8 @@
           "en": "Use a stable lowercase ID made of letters, digits, and hyphens. It is separate from the display name."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -496,8 +496,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -594,8 +594,8 @@
           "en": "This is separate from the decision values in Chapter 4."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -692,8 +692,8 @@
           "en": "This is not a professional credential, operational assignment, or authority."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -814,8 +814,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -930,8 +930,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -1056,8 +1056,8 @@
           "en": "These are work modes, not proof of aptitude or of the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -1577,8 +1577,8 @@
           "en": "This is not merged with or derived from the Chapter 2 primary value."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -1693,8 +1693,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -1849,8 +1849,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -2003,8 +2003,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -2159,8 +2159,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -2322,8 +2322,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -2440,8 +2440,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -2594,8 +2594,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -2696,8 +2696,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -2850,8 +2850,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -3004,8 +3004,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -3158,8 +3158,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -3312,8 +3312,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -3462,8 +3462,8 @@
           "en": "This is an abstract portrayal intent; it contains no image, CSS, audio, or other asset."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -3632,8 +3632,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -3847,8 +3847,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -4080,8 +4080,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -4319,8 +4319,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -4550,8 +4550,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -4780,8 +4780,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -5011,8 +5011,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -5238,8 +5238,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -5468,8 +5468,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -5654,8 +5654,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -5868,8 +5868,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -6054,8 +6054,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -6268,8 +6268,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -6465,8 +6465,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -6661,8 +6661,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -6881,8 +6881,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -6997,8 +6997,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -7115,8 +7115,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -7233,8 +7233,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -7345,8 +7345,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -7457,8 +7457,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -7569,8 +7569,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -7681,8 +7681,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -7793,8 +7793,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -7905,8 +7905,8 @@
           "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
         },
         "relatedAiBehavior": {
-          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-          "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+          "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+          "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
         },
         "relatedItems": {
           "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -8711,8 +8711,8 @@
         "en": "Values: separate confirmed and unconfirmed points; do not rush the user. Voice: brief and calm, with evidence before conclusions. Axis examples: Structural logic, Warm and embracing, Mirroring."
       },
       "review": {
-        "ja": "Previewを読み、名前を隠しても同じCharacterだと感じられるか確かめます。実際のAI応答は、03 で新しい会話に貼って確かめます。",
-        "en": "Read the Preview and check whether it still feels like the same Character with the name hidden. Check the actual AI responses in 03 by pasting into a new conversation."
+        "ja": "Previewを読み、名前を隠しても同じCharacterだと感じられるか確かめます。実際のAI応答は、③実行（プロンプト）の文を新しい会話に貼って確かめます。",
+        "en": "Read the Preview and check whether it still feels like the same Character with the name hidden. Check the actual AI responses by pasting the text from ③ Run (prompt) into a new conversation."
       },
       "next": {
         "ja": "次に『守ることと人に任せる条件』へ進みます。",
@@ -8760,12 +8760,12 @@
   ],
   "first_time_walkthrough": [
     {
-      "ja": "Homeで『キャラクターを作る・編集する』を選びます。",
-      "en": "On Home, choose “02 Create or edit a Character”."
+      "ja": "キャラクターを①キャラクター選択で選び、メニュー行の『②キャラクター編集』を選びます。",
+      "en": "Choose a Character in ① Choose a Character, then choose “② Edit the Character” on the menu bar."
     },
     {
-      "ja": "新規なら『記入例から新規作成』またはCharacter選択画面の『新規作成』から始めます。",
-      "en": "For a new Character, press “Start from the example”, or “Create new” on the Character selection screen."
+      "ja": "新規なら、②または①の『新規作成』から始めます。",
+      "en": "For a new Character, start with “New” in ② or in ①."
     },
     {
       "ja": "第1章で名前とIDを入力します。",
@@ -8788,8 +8788,8 @@
       "en": "Enter the commitments and the conditions for handing off to a person in Chapter 5."
     },
     {
-      "ja": "PreviewでHelp、character.yaml、Character Fileを必要に応じて切り替えます。",
-      "en": "Use Preview to switch among Help, character.yaml, and Character File as needed."
+      "ja": "右の表示で、character.yaml・Character.json・試験記録・Help を必要に応じて切り替えます。",
+      "en": "Use the right-hand pane to switch among character.yaml, Character.json, Test record and Help as needed."
     },
     {
       "ja": "『この内容で保存する』を選び、Validation案内があれば該当章を直します。",
@@ -8800,8 +8800,8 @@
       "en": "You are done when the saved message, the revision and the save path are shown."
     },
     {
-      "ja": "AI で使う場合も、応答を確かめる場合も、「03 AI プラットフォームでキャラクターを動作」へ進みます。",
-      "en": "Whether you use it with an AI or check its responses, go to “03 Run the Character on an AI platform”."
+      "ja": "AI で使う場合も、応答を確かめる場合も、メニュー行の「③実行（プロンプト）」へ進みます。書き出しは「④出力」で行います。",
+      "en": "Whether you use it with an AI or check its responses, go to “③ Run (prompt)” on the menu bar. Exports are in “④ Export”."
     },
     {
       "ja": "キャラクターの改善・修復のサポートを受けたいときは、P06 をご覧ください。",
@@ -9854,8 +9854,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -9928,8 +9928,8 @@
             "en": "Use a stable lowercase ID made of letters, digits, and hyphens. It is separate from the display name."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10008,8 +10008,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10082,8 +10082,8 @@
             "en": "This is separate from the decision values in Chapter 4."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10156,8 +10156,8 @@
             "en": "This is not a professional credential, operational assignment, or authority."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10236,8 +10236,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10314,8 +10314,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10402,8 +10402,8 @@
             "en": "These are work modes, not proof of aptitude or of the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10482,8 +10482,8 @@
             "en": "This is not merged with or derived from the Chapter 2 primary value."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10560,8 +10560,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10640,8 +10640,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10718,8 +10718,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10798,8 +10798,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10878,8 +10878,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -10958,8 +10958,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11036,8 +11036,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11114,8 +11114,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11192,8 +11192,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11270,8 +11270,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11348,8 +11348,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11426,8 +11426,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11500,8 +11500,8 @@
             "en": "This is an abstract portrayal intent; it contains no image, CSS, audio, or other asset."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11587,8 +11587,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11674,8 +11674,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11761,8 +11761,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11848,8 +11848,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -11935,8 +11935,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12022,8 +12022,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12109,8 +12109,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12196,8 +12196,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12282,8 +12282,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12369,8 +12369,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12455,8 +12455,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12542,8 +12542,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12628,8 +12628,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12714,8 +12714,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12801,8 +12801,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12881,8 +12881,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -12959,8 +12959,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -13039,8 +13039,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -13119,8 +13119,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -13193,8 +13193,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -13267,8 +13267,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -13341,8 +13341,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -13415,8 +13415,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -13489,8 +13489,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -13563,8 +13563,8 @@
             "en": "This is a Character definition; it does not grant authority, qualifications, sign-off, or the right to run anything."
           },
           "relatedAiBehavior": {
-            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-            "en": "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation."
+            "ja": "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+            "en": "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation."
           },
           "relatedItems": {
             "ja": "同じ章の項目と、表示された調整症状を一緒に確認します。",
@@ -13864,7 +13864,7 @@
       "unified_v1_64_catalog": "UNDEFINED_NOT_ADOPTED_NOT_MIGRATED"
     }
   },
-  "applies_to_app_version": "0.1.0-beta.11",
+  "applies_to_app_version": "0.1.0-beta.12",
   "extension_profile": "saku.field-guide-extension@1",
   "effect_sources": {
     "PARAMETER_BEHAVIOR_MAP": {
@@ -13879,7 +13879,7 @@
     },
     "PROMPT_INCLUDED_03 + DESIGN_INTENT": {
       "kind": "design",
-      "from": "03 AI プラットフォームのプロンプトに選択値が意味文で渡る項目（platform-prompt.mjs PROMPT_MEANING_FIELDS = work_modes + 10 軸）。効果は設計上の意図。",
+      "from": "③実行（プロンプト）のプロンプトに選択値が意味文で渡る項目（platform-prompt.mjs PROMPT_MEANING_FIELDS = work_modes + 10 軸）。効果は設計上の意図。",
       "truth_gate": "platform:boundary:verify（実出力）＋ docs:verify（ラベルの置き場）"
     },
     "DESIGN_INTENT": {

@@ -181,7 +181,7 @@ for (const [name, guide] of Object.entries(guides)) {
 }
 
 // ── headless ────────────────────────────────────────────────────────────────
-const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 if (!existsSync(chrome)) skipped.push("UI: Chrome not found");
 else if (!existsSync(path.join(DIST, "index.html"))) skipped.push("UI: .desktop-dist not prepared (run desktop:prepare)");
 else {
@@ -198,7 +198,7 @@ try{
  // 03
  await load('/index.html?stub=1&stay=1&open=platform');await until(()=>win.__saku_platform_help&&doc.querySelector('#platform-help[data-screen-help]'),600);await wait(300);
  const pane=doc.getElementById('platform-help');check(pane.dataset.screenHelp==='saku.screen-help@1'&&doc.getElementById('platform-panel').hidden===false,'SH-03 the pane is mounted beside the platform panel');
- check(pane.querySelectorAll('[data-help-chapter]').length===3&&pane.querySelectorAll('[data-help-field]').length===4&&pane.querySelector('[data-help-field="platform.reference"]'),'SH-03 3 chapters / 4 fields from the platform guide (the speed-test item left with the speed test; the reference-material item came, 2026-09-27)');
+ check(pane.querySelectorAll('[data-help-chapter]').length===3&&pane.querySelectorAll('[data-help-field]').length===5&&pane.querySelector('[data-help-field="platform.reference"]')&&pane.querySelector('[data-help-field="platform.skill_export"]'),'SH-03 3 chapters / 5 fields from the platform guide (the speed-test item left with the speed test; the reference-material item came, 2026-09-27; the skill export item came, β.12 2026-10-04)');
  check(pane.dataset.helpSynced==='false'&&!pane.querySelector('.help-tree-lead').textContent.includes('同期'),'SYNC-LEAD 03 does not claim to be synced with the input fields — it passes no current value');
  for(const id of GUIDE_SECTIONS.platform) check(doc.getElementById(id),'SECTION 03 the section '+id+' the guide points at exists on the screen');
  check(!doc.querySelector('[data-platform-format]')&&!doc.body.textContent.includes('渡し方を選ぶ'),'SH-03 the screen offers one way to hand the Character over, and no step that chooses between forms');
@@ -238,8 +238,36 @@ try{
  doc.getElementById('platform-echo-answer').value='nothing like a directive';doc.getElementById('platform-echo-check').click();await wait(80);
  check(result.textContent.includes("AI self-reported value (unverifiable)")&&result.textContent.includes("Paste them again, or use AMU"),'SH-ECHO-EN the result reads the approved English and still says it is a report');
  check(!/verif(y|ied)|validate|confirmed/i.test(result.textContent),'SH-ECHO-EN the English result never claims verification');
+ // β.12: a line written twice before the translator runs stays translated (the first text node is gone by then;
+ // its null parent used to throw and stop the rest of the batch, so the home state lines stayed Japanese in English).
+ {const state=doc.createElement('span');doc.getElementById('platform-panel').append(state);state.textContent='保存済み';state.textContent='保存済み';await wait(80);
+  check(state.textContent==='Saved','SH-I18N-EN a line replaced twice in one turn is still translated');}
  win.SAKU_DESKTOP_I18N.setLocale('ja-JP');await wait(150);
  check(doc.getElementById('platform-echo-title').textContent==='読み込めたか AI に聞く（任意）','SH-ECHO-EN switching back restores the Japanese');
+ // β.12: the Agent Skills export (ADR-0026) saves one skill folder through the host's own command.
+ {const save=doc.getElementById('platform-skill-export-save');check(save&&save.disabled===false,'SH-SKILL the export button is pressable when there is text to hand over');
+  // 2026-10-14 (G4): with no list row behind the selection, the export stops instead of guessing the origin.
+  save.click();await wait(800);
+  check(doc.getElementById('platform-skill-export-state').textContent.includes('ENTRY_NOT_RESOLVED'),'SH-SKILL G4: no list row, no export (ENTRY_NOT_RESOLVED)');
+  {const Library=await import('/tools/unified-v1/character-library.mjs');const activeNow=JSON.parse(localStorage.getItem('saku.workspace.active'));
+   Library.importCharacters([activeNow.character],'FILE',{schema:{kind:'UNIFIED_V1_CHARACTER',schema_id:activeNow.character.schema.schema_id,schema_version:activeNow.character.schema.schema_version}});
+   win.__saku_home.renderLibrary();}
+  save.click();await wait(1200);
+  const slot=doc.getElementById('platform-skill-export-state'),sent=win.__skillSave||{};
+  check(/^[a-z0-9-]+[.]agent-skill[.]zip$/.test(sent.filename||''),'SH-SKILL the host is asked to save <character_id>.agent-skill.zip (got '+sent.filename+' | '+slot.textContent+')');
+  check(Array.isArray(sent.bytes)&&sent.bytes[0]===0x50&&sent.bytes[1]===0x4b,'SH-SKILL the bytes are a ZIP');
+  check(slot.hidden===false&&slot.textContent.startsWith('SKILL_EXPORT_SAVED'),'SH-SKILL the state line says it was saved');
+  check(sent.dialogTitle==='スキルとして保存','SH-SKILL the save dialog title is Japanese in Japanese');
+  check(!/Claude|Codex|Anthropic|OpenAI|Copilot|Gemini/.test(doc.getElementById('platform-skill-export').textContent+doc.getElementById('platform-skills').textContent),'SH-SKILL the section and the 03 explanation name no product (Owner 2026-10-04)');
+  // EN: the translation team's strings (2026-10-04), the dialog title and the state line switch too.
+  win.SAKU_DESKTOP_I18N.setLocale('en-US');await wait(150);
+  check(doc.getElementById('platform-skill-export-title').textContent==='Export as an agent skill (Agent Skills)'&&save.textContent==='Save as a skill','SH-SKILL-EN the title (renamed 2026-10-14, the Q20 English from the translation team) and the button read English');
+  check(doc.getElementById('platform-skill-export-lead').textContent.startsWith('Save this Character as a ZIP of a folder for AI tools that can load the “skill” format (Agent Skills).'),'SH-SKILL-EN the lead reads the approved English');
+  win.__skillSave=null;save.click();await wait(1200);const sentEn=win.__skillSave||{};
+  check(sentEn.dialogTitle==='Save as a skill','SH-SKILL-EN the save dialog title is English (got '+sentEn.dialogTitle+')');
+  check(slot.textContent.includes('Saved: C:/x/')&&!/[\u3040-\u30ff]/.test(slot.textContent),'SH-SKILL-EN the state line is English (got '+slot.textContent+')');
+  check(!/Claude|Codex|Anthropic|OpenAI|Copilot|Gemini|verif/i.test(doc.getElementById('platform-skill-export').textContent+doc.getElementById('platform-skills').textContent),'SH-SKILL-EN the English names no product and never says verify');
+  win.SAKU_DESKTOP_I18N.setLocale('ja-JP');await wait(150);}
  // 04 Trainer
  await load('/tools/saku-trainer.html?stub=1');await until(()=>win.__saku_trainer_help&&doc.querySelector('#trainer-help[data-screen-help]'),800);await wait(500);
  const tp=doc.getElementById('trainer-help');check(tp.querySelectorAll('[data-help-chapter]').length===3&&tp.querySelectorAll('[data-help-field]').length===10,'SH-04 3 chapters / 10 fields from the trainer guide');
@@ -279,7 +307,7 @@ try{
  document.getElementById('report').textContent=JSON.stringify({status:'PASS',checks});document.getElementById('report').dataset.status='PASS';
 }catch(error){document.getElementById('report').textContent=JSON.stringify({status:'FAIL',error:String(error.stack||error),checks,body:doc?.body?.innerText.slice(-1200)});document.getElementById('report').dataset.status='FAIL';}
 </script>`;
-  const stub = "<script>window.__TAURI__={__stub:true,core:{invoke:async(command)=>{if(command==='save_workspace_character')return 'C:/ws/characters/x/character.json';if(command==='get_runtime_state'||command==='runtime_state')return{workspace:'C:/ws',first_run:false,app_version:'0.1.0-beta.3'};if(command==='list_workspace_characters')return{status:'OK',artifacts:[]};return null;}}};</script>";
+  const stub = "<script>window.__TAURI__={__stub:true,core:{invoke:async(command,args)=>{if(command==='save_skill_export_zip'){window.__skillSave=args;return{status:'SAVED',path:'C:/x/'+args.filename};}if(command==='save_workspace_character')return 'C:/ws/characters/x/character.json';if(command==='get_runtime_state'||command==='runtime_state')return{workspace:'C:/ws',first_run:false,app_version:'0.1.0-beta.3'};if(command==='list_workspace_characters')return{status:'OK',artifacts:[]};return null;}}};</script>";
   const mime = { ".mjs": "text/javascript", ".html": "text/html", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml" };
   const server = createServer(async (request, response) => {
     try {

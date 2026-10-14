@@ -4,7 +4,7 @@
 //     guide order, 47 fields, options with effect + source, NOT_MEASURED text,
 //     #help= hash round trip
 //   headless (.desktop-dist only, edit screen with 「WI-T ガイド」):
-//     the Help tab is the tree; each field shows 「現在の内容」 + 「詳細はヘルプ参照 →」;
+//     the Help tab is the tree; each field shows 「現在の内容」 and its (?) button opens the tree (「詳細はヘルプ参照 →」 left, 2026-10-14);
 //     the link opens the field node and sets #help=<path>; a chapter 同期 opens
 //     the chapter; a select change highlights the option node and refreshes
 //     the field note; 「入力欄へ」 focuses the left input; a hash change opens
@@ -153,7 +153,7 @@ const guide = JSON.parse(read("manual/saku-field-guide.data.json"));
 }
 
 // ── headless ────────────────────────────────────────────────────────────────
-const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 if (!existsSync(chrome)) skipped.push("UI: Chrome not found");
 else if (!existsSync(path.join(DIST, "tools/saku-builder.html"))) skipped.push("UI: .desktop-dist not prepared (run desktop:prepare)");
 else {
@@ -171,7 +171,7 @@ try{
  // per-field note + link
  const nameField=doc.querySelector('main.form [data-canonical-path="identity.display_name"]');const note=nameField.querySelector('.field-current-note');
  check(note&&note.querySelector('.field-current-note-text').textContent===NOTE_NAME.ja,'HT-UI 「現在の内容」 under the field = guide currentNote.ja');
- const link=note.querySelector('[data-help-link]');check(link&&link.textContent==='詳細はヘルプ参照 →','HT-UI 「詳細はヘルプ参照 →」 link under the field');
+ check(!note.querySelector('[data-help-link]'),'HT-UI no 「詳細はヘルプ参照 →」 under the field (Owner 2026-10-14: the (?) button does the same)');const link=nameField.querySelector('button.field-help');check(link&&link.textContent==='?','HT-UI the (?) button sits on the field');
  // link → tree opens at the field, hash set
  link.click();await until(()=>doc.getElementById('contextHelp')?.dataset.helpTree,200);await wait(200);
  const tree=doc.getElementById('contextHelp');check(tree.hidden===false&&tree.dataset.helpTree==='saku.help-tree@1','HT-UI the Help tab shows the tree');
@@ -213,7 +213,7 @@ try{
  doc.querySelector('[data-builder-locale="en-US"]').click();await wait(500);
  check(doc.getElementById('contextHelp').querySelector('.help-tree-lead').textContent.startsWith('Chapter'),'HT-UI EN: tree strings switch');
  check(doc.querySelector('main.form [data-canonical-path="identity.display_name"] .field-current-note-text').textContent===NOTE_NAME.en,'HT-UI EN: the field note shows the delivered EN text');
- check(doc.querySelector('main.form [data-canonical-path="identity.display_name"] [data-help-link]').textContent==='See help →','HT-UI EN: link text');
+ check(!doc.querySelector('main.form [data-canonical-path="identity.display_name"] [data-help-link]'),'HT-UI EN: no link text either');
  doc.querySelector('[data-builder-locale="ja-JP"]').click();await wait(300);
  document.getElementById('report').textContent=JSON.stringify({status:'PASS',checks});document.getElementById('report').dataset.status='PASS';
 }catch(error){document.getElementById('report').textContent=JSON.stringify({status:'FAIL',error:String(error.stack||error),checks,body:doc?.body?.innerText.slice(-1200)});document.getElementById('report').dataset.status='FAIL';}

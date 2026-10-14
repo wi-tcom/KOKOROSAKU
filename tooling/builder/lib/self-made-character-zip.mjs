@@ -7,6 +7,13 @@
 //      portable-manifest.json so the two cannot be mistaken for each other.
 //   2. character.json — the Unified Character, the same bytes as the JSON download.
 //
+// 3. edited_from (optional, 2026-10-14) — when the Character was a WI-T.COM pack entry changed in SAKU, the pack it
+//    came from: { pack_id, pack_version, character_digest, license } (license: 00A 2026-10-14, ADR #32 §14-2 — the
+//    pack's terms continue; the two-entry format carries no LICENSE.md). pack_id, pack_version and license are required and
+//    the license is a pack's id (LicenseRef-WIT-Commercial|Subscriber|Sample-N.N; 00A QA10 2026-10-14). Self-reported like everything here: it lets the list
+//    show 「WI-T.COM署名無効・改変あり」 instead of 「WI-T.COM署名無し・自作」, and never makes the ZIP count as signed.
+//    AMU Studio reads format_version "1" with the field present (Studio main 200dc27 checks the declared fields only).
+//
 // There is no signature. The manifest says "signature": "NONE" and has no `package` field,
 // which is how the publisher's signed archive (`<slug>.kokorosaku.zip`) differs. The digests
 // only detect a change after export; they prove nothing about who made the file.
@@ -131,7 +138,31 @@ export function readStoredZip(bytes) {
 }
 
 /** The manifest for a Character's JSON text (the exact bytes the JSON download writes). */
-export async function selfMadeManifest({ characterText, appVersion = null, createdAt, exportChecks }) {
+const EDITED_FROM_KEYS = ["pack_id", "pack_version", "character_digest", "license"];
+// 00A QA10 (2026-10-14, Codex 照らし §3): pack_id, pack_version and license are required, and the license is a pack's id.
+export const EDITED_FROM_REQUIRED = Object.freeze(["pack_id", "pack_version", "license"]);
+export const EDITED_FROM_LICENSE_ID = /^LicenseRef-WIT-(?:Commercial|Subscriber|Sample)-[0-9]+\.[0-9]+$/;
+
+/** True when edited_from names its pack completely: known keys only, non-empty strings, the three required, a pack license id. */
+export function editedFromComplete(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  if (!Object.keys(value).every(key => EDITED_FROM_KEYS.includes(key) && typeof value[key] === "string" && value[key].length > 0)) return false;
+  return EDITED_FROM_REQUIRED.every(key => Object.hasOwn(value, key)) && EDITED_FROM_LICENSE_ID.test(value.license);
+}
+
+/**
+ * The edited_from record written into the manifest, from a list row's provenance.edited_from; null when there is none.
+ * An incomplete one is refused (EDITED_FROM_INCOMPLETE), never dropped: dropped, the ZIP would read as plain self-made.
+ */
+export function editedFromRecord(editedFrom) {
+  if (!editedFrom) return null;
+  const record = {};
+  if (typeof editedFrom === "object") for (const key of EDITED_FROM_KEYS) if (typeof editedFrom[key] === "string" && editedFrom[key]) record[key] = editedFrom[key];
+  if (!editedFromComplete(record)) throw new Error("EDITED_FROM_INCOMPLETE");
+  return record;
+}
+
+export async function selfMadeManifest({ characterText, appVersion = null, createdAt, exportChecks, editedFrom = null }) {
   const character = JSON.parse(characterText);
   const identity = character.identity || {};
   const schema = character.schema || {};
@@ -145,6 +176,7 @@ export async function selfMadeManifest({ characterText, appVersion = null, creat
     created_by: { product: "SAKU Builder", app_version: appVersion },
     created_at: createdAt,
     export_checks: exportChecks,
+    ...(editedFromRecord(editedFrom) ? { edited_from: editedFromRecord(editedFrom) } : {}),
     signature: "NONE",
   };
   manifest.manifest_digest = await digestOf(utf8(canonicalJson(manifest)));
@@ -155,9 +187,9 @@ export async function selfMadeManifest({ characterText, appVersion = null, creat
 export const manifestTime = (date = new Date()) => date.toISOString().replace(/\.\d{3}Z$/, "Z");
 
 /** Builds `<slug>.saku-character.zip`. Returns { filename, bytes, manifest }. */
-export async function buildSelfMadeCharacterZip({ slug, characterText, appVersion = null, createdAt = manifestTime(), exportChecks }) {
+export async function buildSelfMadeCharacterZip({ slug, characterText, appVersion = null, createdAt = manifestTime(), exportChecks, editedFrom = null }) {
   const safeSlug = String(slug || "").replace(/[^a-z0-9-]/g, "") || "character";
-  const manifest = await selfMadeManifest({ characterText, appVersion, createdAt, exportChecks });
+  const manifest = await selfMadeManifest({ characterText, appVersion, createdAt, exportChecks, editedFrom });
   const bytes = storedZip([
     { name: SELF_MADE_MANIFEST_NAME, bytes: utf8(`${JSON.stringify(manifest, null, 2)}\n`) },
     { name: SELF_MADE_CHARACTER_NAME, bytes: utf8(characterText) },
@@ -172,6 +204,15 @@ export async function buildSelfMadeCharacterZip({ slug, characterText, appVersio
  */
 export async function checkSelfMadeCharacterZip(bytes) {
   const { entries, errors } = readStoredZip(bytes);
+  return checkSelfMadeEntries(entries, errors);
+}
+
+/**
+ * The same rules on the two entries as the desktop host hands them over (it reads the ZIP itself):
+ * [{ name, bytes }] with the archive-level errors already found. SAKU Builder's import uses this.
+ */
+export async function checkSelfMadeEntries(entries, archiveErrors = []) {
+  const errors = [...archiveErrors];
   const names = entries.map(entry => entry.name);
   if (names.length !== new Set(names).size) errors.push("ZIP_ENTRY_DUPLICATE");
   const undeclared = names.filter(name => !ENTRY_ORDER.includes(name));
@@ -189,6 +230,9 @@ export async function checkSelfMadeCharacterZip(bytes) {
     if (manifest.format !== SELF_MADE_FORMAT) errors.push("FORMAT_NOT_SELF_MADE");
     if (manifest.signature !== "NONE") errors.push("SIGNATURE_NOT_NONE");
     if (Object.hasOwn(manifest, "package")) errors.push("PACKAGE_FIELD_PRESENT");
+    if (Object.hasOwn(manifest, "edited_from")) {
+      if (!editedFromComplete(manifest.edited_from)) errors.push("EDITED_FROM_INVALID");
+    }
     const declared = Array.isArray(manifest.files) ? manifest.files : [];
     if (declared.length !== 1 || declared[0]?.path !== SELF_MADE_CHARACTER_NAME) errors.push("FILES_NOT_ONLY_CHARACTER");
     const characterBytes = byName.get(SELF_MADE_CHARACTER_NAME);

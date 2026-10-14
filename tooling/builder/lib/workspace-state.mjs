@@ -186,11 +186,22 @@ export async function adoptWorkspace(runtime) {
   return { status: isReadOnly() ? "READ_ONLY" : WORKSPACE_STATE_KEYS.some(key => held[key] != null) ? "RESTORED" : "EMPTY", workspace };
 }
 
+// The same comparison as active-saku.mjs isDirty (β.6): the edit screen writes its form, not a Unified Character, so a
+// draft is compared with the shape it was opened with. Comparing it with the Active SAKU found a difference every time,
+// and switching the Workspace asked about unsaved edits with nothing edited (2026-10-14 keying 4-16 ④).
+const canonicalOf = value => value === null || typeof value !== "object"
+  ? JSON.stringify(value)
+  : Array.isArray(value)
+    ? `[${value.map(canonicalOf).join(",")}]`
+    : `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${canonicalOf(value[key])}`).join(",")}}`;
+
 function draftIsUnsaved() {
   try {
     const draft = JSON.parse(get(DRAFT_KEY) || "null");
     const active = JSON.parse(get(ACTIVE_KEY) || "null");
-    return Boolean(draft && active && JSON.stringify(draft.character) !== JSON.stringify(active.character));
+    if (!draft || !active) return false;
+    if (typeof draft.opened === "string") return canonicalOf(draft.character) !== draft.opened;
+    return canonicalOf(draft.character) !== canonicalOf(active.character);
   } catch { return false; }
 }
 

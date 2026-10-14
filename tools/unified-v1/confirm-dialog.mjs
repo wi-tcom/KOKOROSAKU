@@ -3,14 +3,20 @@
 // This is the app's own confirmation instead.
 //
 //   confirmDialog({ title, message, confirmLabel, cancelLabel }) → Promise<boolean>
+//   choiceDialog({ title, message, choices: [{ value, label, primary }], cancelValue }) → Promise<value>
+//   alertDialog({ title, message, okLabel }) → Promise<void>
 //
 // The caller passes text already in the display language. The dialog itself
 // fixes three things for every screen (ライター&SNS 8d9118e): Esc cancels, the
 // focus starts on the safe side (cancel), and the buttons are always in the same
 // order (the action, then cancel). A second call while one is open waits its turn.
 //
-// It is also set as `window.sakuConfirm` so the Golden page's classic script can
-// reach it; where it is missing, that page falls back to confirm().
+// 2026-10-14 keying 4-16 ① / 4-17: a three-way choice (save / leave without saving / back) and a one-button notice,
+// so window.alert's 「tauri.localhost の内容」 box is not needed either.
+//
+// It is also set as `window.sakuConfirm` / `window.sakuChoice` / `window.sakuAlert` so the Golden page's classic
+// script can reach it; where it is missing, that page falls back to confirm() / alert().
+import { adoptCss } from "./adopt-css.mjs";
 
 const STYLE_ID = "saku-confirm-style";
 const CSS = `
@@ -18,24 +24,18 @@ dialog.saku-confirm{border:1px solid #c9c4b8;border-radius:10px;padding:0;max-wi
 dialog.saku-confirm::backdrop{background:rgba(20,20,20,.35)}
 dialog.saku-confirm h2{margin:0;padding:16px 20px 0;font-size:1.05rem}
 dialog.saku-confirm p{margin:0;padding:10px 20px 0;white-space:pre-wrap;line-height:1.6}
-dialog.saku-confirm .saku-confirm-actions{display:flex;gap:8px;justify-content:flex-end;padding:16px 20px}
+dialog.saku-confirm .saku-confirm-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;padding:16px 20px}
 dialog.saku-confirm button{font:inherit;padding:6px 14px;border-radius:6px;border:1px solid #9a9486;background:#fff;cursor:pointer}
 dialog.saku-confirm button[data-confirm-action]{background:#2f4a3a;border-color:#2f4a3a;color:#fff}
 `;
 
 let queue = Promise.resolve();
 
-function ensureStyle(doc) {
-  if (doc.getElementById(STYLE_ID)) return;
-  const style = doc.createElement("style");
-  style.id = STYLE_ID;
-  style.textContent = CSS;
-  doc.head.append(style);
-}
-
-function open({ title = "", message = "", confirmLabel = "OK", cancelLabel = "Cancel" }, doc) {
+// buttons: [{ value, label, primary, safe }] in display order; `safe` takes the focus; cancelValue is what Esc gives.
+function open({ title = "", message = "", buttons, cancelValue }, doc) {
   return new Promise(resolve => {
-    ensureStyle(doc);
+    // The app's CSP drops a <style> element made at run time; the sheet is adopted instead.
+    adoptCss(doc, STYLE_ID, CSS);
     const dialog = doc.createElement("dialog");
     dialog.className = "saku-confirm";
     dialog.setAttribute("role", "alertdialog");
@@ -49,12 +49,6 @@ function open({ title = "", message = "", confirmLabel = "OK", cancelLabel = "Ca
     dialog.setAttribute("aria-describedby", body.id);
     const actions = doc.createElement("div");
     actions.className = "saku-confirm-actions";
-    const ok = doc.createElement("button");
-    ok.type = "button"; ok.dataset.confirmAction = ""; ok.textContent = confirmLabel;
-    const cancel = doc.createElement("button");
-    cancel.type = "button"; cancel.dataset.confirmCancel = ""; cancel.textContent = cancelLabel;
-    actions.append(ok, cancel);
-    dialog.append(heading, body, actions);
     let settled = false;
     const finish = value => {
       if (settled) return;
@@ -63,21 +57,55 @@ function open({ title = "", message = "", confirmLabel = "OK", cancelLabel = "Ca
       dialog.remove();
       resolve(value);
     };
-    ok.addEventListener("click", () => finish(true));
-    cancel.addEventListener("click", () => finish(false));
+    let focusTarget = null;
+    for (const spec of buttons) {
+      const button = doc.createElement("button");
+      button.type = "button";
+      // The action, the safe way back (cancel), and any third way between them (e.g. leave without saving).
+      if (spec.primary) button.dataset.confirmAction = ""; else if (spec.safe) button.dataset.confirmCancel = ""; else button.dataset.confirmAlt = "";
+      button.dataset.choice = String(spec.value);
+      button.textContent = spec.label;
+      button.addEventListener("click", () => finish(spec.value));
+      actions.append(button);
+      if (spec.safe) focusTarget = button;
+    }
+    dialog.append(heading, body, actions);
     // Esc raises `cancel` on a modal dialog; closing any other way is a cancel too.
-    dialog.addEventListener("cancel", event => { event.preventDefault(); finish(false); });
-    dialog.addEventListener("close", () => finish(false));
+    dialog.addEventListener("cancel", event => { event.preventDefault(); finish(cancelValue); });
+    dialog.addEventListener("close", () => finish(cancelValue));
     doc.body.append(dialog);
     if (typeof dialog.showModal === "function") dialog.showModal(); else dialog.setAttribute("open", "");
-    cancel.focus();
+    (focusTarget || actions.lastElementChild)?.focus();
   });
 }
 
-export function confirmDialog(options = {}, doc = globalThis.document) {
+function enqueue(options, doc) {
   const next = queue.then(() => open(options, doc));
   queue = next.catch(() => {});
   return next;
 }
 
-if (typeof window !== "undefined") window.sakuConfirm = options => confirmDialog(options);
+export function confirmDialog({ title = "", message = "", confirmLabel = "OK", cancelLabel = "Cancel" } = {}, doc = globalThis.document) {
+  return enqueue({ title, message, cancelValue: false, buttons: [
+    { value: true, label: confirmLabel, primary: true },
+    { value: false, label: cancelLabel, safe: true },
+  ] }, doc);
+}
+
+/** choices in display order, the first one primary; the last one is the safe choice that Esc and the focus take. */
+export function choiceDialog({ title = "", message = "", choices = [], cancelValue = null } = {}, doc = globalThis.document) {
+  const safe = cancelValue ?? choices.at(-1)?.value ?? null;
+  return enqueue({ title, message, cancelValue: safe, buttons: choices.map((choice, index) => ({
+    value: choice.value, label: choice.label, primary: Boolean(choice.primary ?? index === 0), safe: choice.value === safe,
+  })) }, doc);
+}
+
+export function alertDialog({ title = "", message = "", okLabel = "OK" } = {}, doc = globalThis.document) {
+  return enqueue({ title, message, cancelValue: undefined, buttons: [{ value: undefined, label: okLabel, primary: true, safe: true }] }, doc).then(() => undefined);
+}
+
+if (typeof window !== "undefined") {
+  window.sakuConfirm = options => confirmDialog(options);
+  window.sakuChoice = options => choiceDialog(options);
+  window.sakuAlert = options => alertDialog(options);
+}

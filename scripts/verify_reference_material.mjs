@@ -121,7 +121,7 @@ check(oneBlock === ["--- 参考資料 ここから ---", "## Reference material 
 const app = read("desktop/app.mjs");
 const refLines = app.split("\n").filter(line => /platformReference/.test(line));
 check(refLines.length > 0 && !refLines.some(line => /localStorage|sessionStorage|invoke\(|writeWorkspace|save_|library/i.test(line)), "REF-STORE the attached export is never stored or sent to the host");
-check(/\$\("platform-panel"\)\.hidden = false;\s*clearPlatformReference\(\);/.test(app), "REF-STORE opening 03 starts without an attachment");
+check(/showPanel\("run"\);\s*clearPlatformReference\(\);/.test(app), "REF-STORE opening 03 starts without an attachment");
 check(app.includes("file.size > REFERENCE_FILE_MAX_BYTES") && app.includes("verifyReferenceExport(await file.text())"), "REF-STORE a file is size-capped, then checked before it is used");
 check(read("desktop/index.html").includes('id="platform-reference-file"'), "REF-STORE 03 offers the attachment in step 2");
 check(/if \(platformReference\) options\.reference = platformReference;\s*if \(launch\) launch\.value = platformLaunchText\(character, HANDOFF_FORMAT, options\);/.test(app), "REF-STORE 03 passes the attachment with this hand-over's options only");

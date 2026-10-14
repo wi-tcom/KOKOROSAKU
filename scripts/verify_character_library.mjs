@@ -72,23 +72,29 @@ ok(conflicts.length === 1 && conflicts[0].name === "あかり", "a repeated name
 Library.importCharacters([character("a2", "あかり")], "FILE", { onConflict: "KEEP_BOTH", schema: LEGACY_SCHEMA });
 ok(Library.list().filter(entry => Library.displayNameOf(entry.character) === "あかり").length === 2, "keep both leaves two rows with the same name");
 
-Library.importCharacters([character("a3", "あかり")], "FILE", { onConflict: "REPLACE", schema: LEGACY_SCHEMA });
-const akari = Library.list().filter(entry => Library.displayNameOf(entry.character) === "あかり");
-ok(akari.length === 2 && akari.some(entry => entry.character.identity.character_id === "a3"), "replace overwrites one row instead of adding a third");
+// A replace is decided by character_id and origin (2026-10-14 G2, TV-B-06), never by the display name:
+// the Owner's own row with the same id is overwritten; a different id with the same name is added beside it.
+const sameId = { ...character("a2", "あかり"), purpose: { summary: "second" } };
+Library.importCharacters([sameId], "FILE", { onConflict: "REPLACE", schema: LEGACY_SCHEMA });
+let akari = Library.list().filter(entry => Library.displayNameOf(entry.character) === "あかり");
+ok(akari.length === 2 && akari.some(entry => entry.character.purpose?.summary === "second"), "replace overwrites the row with the same character_id");
+const byName = Library.importCharacters([character("a3", "あかり")], "FILE", { onConflict: "REPLACE", schema: LEGACY_SCHEMA });
+akari = Library.list().filter(entry => Library.displayNameOf(entry.character) === "あかり");
+ok(byName.replaced === 0 && akari.length === 3, "a repeated name with another character_id is added, never replaced");
 
 const target = Library.list()[0];
 Library.setDeleted([target.entry_id], true);
-ok(Library.list().length === 3 && Library.list({ includeDeleted: true }).length === 4, "a deleted Character leaves the list but not the store");
+ok(Library.list().length === 4 && Library.list({ includeDeleted: true }).length === 5, "a deleted Character leaves the list but not the store");
 ok(Library.get(target.entry_id) !== null, "a deleted Character can still be found by id");
 Library.setDeleted([target.entry_id], false);
-ok(Library.list().length === 4, "a deleted Character can be restored");
+ok(Library.list().length === 5, "a deleted Character can be restored");
 
 const draft = Library.createDraft("NEW");
-ok(draft.entry.draft === true && Library.list().length === 5, "a new Character joins the list immediately");
+ok(draft.entry.draft === true && Library.list().length === 6, "a new Character joins the list immediately");
 ok(Object.keys(draft.entry.character.assistant_composition).filter(key => key.startsWith("seat")).length === 8, "a new Character starts with all eight seats");
 
 const cleared = Library.clear();
-ok(cleared.removed === 5 && Library.list({ includeDeleted: true }).length === 0, "clearing removes every row");
+ok(cleared.removed === 6 && Library.list({ includeDeleted: true }).length === 0, "clearing removes every row");
 
 // Storage that refuses to write must be reported, not swallowed.
 const good = globalThis.localStorage.setItem;

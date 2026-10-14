@@ -112,12 +112,8 @@ export async function prepareDesktopAssets(profileId = "public-oss") {
     publication: false
   };
   await writeFile(path.join(DIST, "resources", "build-metadata.json"), `${JSON.stringify(metadata, null, 2)}\n`, "utf8");
-  if (codeSigning !== "UNSIGNED") {
-    const home = path.join(DIST, "index.html");
-    const page = await readFile(home, "utf8");
-    if (page.split("<span>CODE_SIGNING = UNSIGNED</span>").length !== 2) throw new Error("DESKTOP_FOOTER_CODE_SIGNING_MARKER_INVALID");
-    await writeFile(home, page.replace("<span>CODE_SIGNING = UNSIGNED</span>", `<span>CODE_SIGNING = ${codeSigning}</span>`), "utf8");
-  }
+  // The footer no longer says what the build declared: the app reads its own signature on the spot and says that
+  // (2026-10-14 keying F1, Owner 結果 190 対策 D). code_signing stays in the build metadata as a record.
   return metadata;
 }
 

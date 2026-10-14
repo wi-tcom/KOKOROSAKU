@@ -62,7 +62,8 @@ try{
   const frame=document.getElementById("builder");
   await new Promise(resolve=>frame.addEventListener("load",resolve,{once:true}));
   let w=frame.contentWindow,d=frame.contentDocument;
-  await poll(()=>w.SAKU_GOLDEN_UI&&w.SAKU_FROZEN_IA&&d.querySelectorAll(".frozen-chapter").length===5&&!d.querySelector("#openDesktopHome").hidden);
+  // 2026-10-14: in the desktop app the shared frame replaces the page's top row (and its ホーム link).
+  await poll(()=>w.SAKU_GOLDEN_UI&&w.SAKU_FROZEN_IA&&d.querySelectorAll(".frozen-chapter").length===5&&d.querySelector("#saku-frame .sf-nav"));
   ((w,fn)=>{w.__sakuAnswer=fn;if(w.__sakuObs)return;w.__sakuObs=new w.MutationObserver(()=>{for(const g of w.document.querySelectorAll("dialog.saku-confirm")){if(g.dataset.answered)continue;g.dataset.answered="1";const q=(g.querySelector("p")||{}).textContent||"";(w.__sakuAnswer(q)?g.querySelector("[data-confirm-action]"):g.querySelector("[data-confirm-cancel]")).click();}});w.__sakuObs.observe(w.document.documentElement,{childList:true,subtree:true});})(w,()=>true);
   w.alert=message=>{w.__BETA1_ALERT=String(message)};
 
@@ -84,7 +85,7 @@ try{
   purposeNode.querySelectorAll("details").forEach(node=>{node.open=true;});
   check(/何を書くか/.test(purposeNode.textContent),"Help has novice guidance sections");
   check(purposeNode.querySelectorAll(".help-detail-rows dt").length>=4,"Help has the four required sections");
-  check(d.querySelector('main.form [data-canonical-path="purpose.summary"] .field-current-note [data-help-link]')!==null,"and the field itself carries the one link into it");
+  check(d.querySelector('main.form [data-canonical-path="purpose.summary"] .field-current-note [data-help-link]')===null&&d.querySelector('main.form [data-canonical-path="purpose.summary"] button.field-help')!==null,"and the field leads into it with its (?) button (「詳細はヘルプ参照 →」 left, 2026-10-14)");
   click(d.querySelector('[data-builder-locale="en-US"]'));await wait(120);
   const purposeNodeEn=d.querySelector('#contextHelp [data-help-field="purpose.summary"]');
   purposeNodeEn.querySelectorAll("details").forEach(node=>{node.open=true;});
@@ -115,8 +116,10 @@ try{
   check(d.querySelector('[data-path="meta.name"]').value==="","Start over clears Character before navigation");
   check(d.querySelector("#qsRows")===null,"retired Boundary Quick Setup cannot retain residual state");
   check(d.querySelector("#yaml").hidden===false&&d.querySelector("#contextHelp").hidden===true,"Start over resets preview and Help state");
-  await poll(()=>frame.contentWindow.location.pathname.endsWith("/index.html"));
-  w=frame.contentWindow;check(new URL(w.location.href).searchParams.get("stay")==="1","Start over navigates to existing top screen");
+  // 2026-10-14 (Q14): the button is 新規作成 in the desktop app — it stays in ② with a blank Character and lets the selection go.
+  await wait(300);
+  check(frame.contentWindow.location.pathname.endsWith("/__beta1_builder__.html"),"新規作成 stays in ②");
+  check(w.localStorage.getItem("saku.workspace.active")===null,"新規作成 lets the previous selection go");
 
   result.dataset.status="PASS";result.textContent=JSON.stringify({status:"PASS",passed:checks.length,checks});document.title="BETA1_OWNER_FIXES_PASS";
 }catch(error){

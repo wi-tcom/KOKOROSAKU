@@ -90,7 +90,7 @@ const sample = JSON.parse(read("tools/unified-v1/sample-pack/sample-characters.j
 
 // ── browser: D1 D2 D3 D4 D5 D6 D7 on the real pages ─────────────────────────
 {
-  const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+  const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
   const dist = path.join(ROOT, ".desktop-dist");
   const pairs = ["desktop/app.mjs:app.mjs", "tools/saku-builder.html:tools/saku-builder.html", "tools/v1/frozen-ia-ui.mjs:tools/v1/frozen-ia-ui.mjs", "tools/unified-v1/active-saku.mjs:tools/unified-v1/active-saku.mjs"];
   const stale = pairs.map(p => p.split(":")).filter(([src, out]) => !existsSync(path.join(dist, out)) || read(src) !== readFileSync(path.join(dist, out), "utf8")).map(([src]) => src);

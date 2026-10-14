@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "SAKU Builder",
-  "version": "0.1.0-beta.11",
+  "version": "0.1.0-beta.12",
   "identifier": "com.wi-t.saku-builder",
   "build": {
     "beforeBuildCommand": "npm run desktop:prepare",
@@ -63,7 +63,7 @@
       }
     },
     "resources": {
-      "../desktop/resources/samples/saku-pack-sample-1.1.0.zip": "samples/saku-pack-sample-1.1.0.zip"
+      "../desktop/resources/samples/saku-pack-sample-1.2.0.zip": "samples/saku-pack-sample-1.2.0.zip"
     }
   }
 }

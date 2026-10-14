@@ -1,6 +1,6 @@
 {
   "profile": "saku.field-guide-extension@1",
-  "applies_to_app_version": "0.1.0-beta.11",
+  "applies_to_app_version": "0.1.0-beta.12",
   "purpose": "manual/saku-field-guide.data.json に合成される追加内容（項目下の「現在の内容」、選択肢の効果と出典、候補語の方針、正本外項目の注記）。画面と manual の両方がこの合成結果を読む。",
   "content_review": {
     "current_note_ja": {
@@ -88,7 +88,7 @@
     },
     "PROMPT_INCLUDED_03 + DESIGN_INTENT": {
       "kind": "design",
-      "from": "03 AI プラットフォームのプロンプトに選択値が意味文で渡る項目（platform-prompt.mjs PROMPT_MEANING_FIELDS = work_modes + 10 軸）。効果は設計上の意図。",
+      "from": "③実行（プロンプト）のプロンプトに選択値が意味文で渡る項目（platform-prompt.mjs PROMPT_MEANING_FIELDS = work_modes + 10 軸）。効果は設計上の意図。",
       "truth_gate": "platform:boundary:verify（実出力）＋ docs:verify（ラベルの置き場）"
     },
     "DESIGN_INTENT": {
@@ -1817,10 +1817,10 @@
     }
   },
   "last_checked": {
-    "date": "2026-10-02",
-    "environment_ja": "Windows 11 Home 10.0.26300・WebView2 Runtime 154.0.4258.48",
-    "environment_en": "Windows 11 Home 10.0.26300, WebView2 Runtime 154.0.4258.48",
-    "source": "SAKU Builder(4) hands-on on the installed window of 0.1.0-beta.11 (record: docs/releases/0.1.0-beta.11; Windows and WebView2 Runtime read on 2026-10-02); wording approved by ライター&SNS 9be2c32 (JA) and 英語翻訳チーム 6a28224 (EN Q4)"
+    "date": "2026-10-15",
+    "environment_ja": "Windows 11 Home 10.0.26300・WebView2 Runtime 155.0.4283.45",
+    "environment_en": "Windows 11 Home 10.0.26300, WebView2 Runtime 155.0.4283.45",
+    "source": "統括 keying round 3 and the Owner's keying on the installed window of the 76f61f7 build (wi-tcom/-SAKU-builder #116; 0.1.0-beta.12 differs from it only in the version strings and docs/releases/0.1.0-beta.12; record: an internal keying record; Windows and WebView2 Runtime read on 2026-10-15 on that PC); wording approved by ライター&SNS 9be2c32 (JA) and 英語翻訳チーム 6a28224 (EN Q4)"
   },
   "known_issues": {
     "note": "「困ったとき」の先頭に置く、この版で分かっている問題（Owner 2026-09-24 承認、ライター&SNS 9be2c32、英語翻訳チーム Q1–Q3 6a28224）。見出しと 2 つのラベルの英語は英語翻訳チーム Q6–Q8（Wi-t_Site f1440dd／632021e）。 Markdown の書式（** と `）は画面に出さない。文字は承認文のまま。",

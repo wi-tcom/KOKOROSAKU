@@ -51,6 +51,9 @@ pub struct PackEntryImport {
     pub schema_version: String,
     /// Whether this entry shipped its own directive glossary beside character.json.
     pub has_directives: bool,
+    /// `summary.license` of the entry's portable manifest, as written (empty when absent). Read for the
+    /// Agent Skills export (ADR-0026), which writes the pack's license id; nothing here acts on it.
+    pub license: String,
     #[serde(skip_serializing)]
     pub character_json: String,
     /// directives.json when the entry carries one. It is covered by the same
@@ -77,6 +80,9 @@ pub struct CharacterPackImport {
     pub sha256sums_verified: usize,
     pub digest_state: &'static str,
     pub signature_state: &'static str,
+    /// The pack's LICENSE.md as UTF-8 (empty when absent or not UTF-8). SHA256SUMS already bound its bytes. The
+    /// Agent Skills export (ADR-0026 §11) bundles it and reads its version; nothing here acts on it.
+    pub license_md: String,
     pub entries: Vec<PackEntryImport>,
     #[serde(skip_serializing)]
     pub files: BTreeMap<String, Vec<u8>>,
@@ -314,6 +320,7 @@ pub fn parse_character_pack(entries: HashMap<String, Vec<u8>>) -> Result<Charact
         if text(&manifest, "summary.seat8") != Some("human") {
             return Err(invalid(format!("{file}: seat8 must be human.")));
         }
+        let license = text(&manifest, "summary.license").unwrap_or("").to_string();
         if text(&manifest, "source.characterDigest.value") != Some(character_digest.as_str()) {
             return Err(digest_mismatch(format!("{file}: characterDigest differs between pack entry and portable manifest.")));
         }
@@ -391,6 +398,7 @@ pub fn parse_character_pack(entries: HashMap<String, Vec<u8>>) -> Result<Charact
             schema_id: entry_schema_id,
             schema_version: entry_schema_version,
             has_directives: directives_json.is_some(),
+            license,
             character_json,
             directives_json,
         });
@@ -402,6 +410,7 @@ pub fn parse_character_pack(entries: HashMap<String, Vec<u8>>) -> Result<Charact
             return Err(invalid(format!("{name} is not declared in character-pack.json.")));
         }
     }
+    let license_md = entries.get("LICENSE.md").and_then(|bytes| String::from_utf8(bytes.clone()).ok()).unwrap_or_default();
     let files: BTreeMap<String, Vec<u8>> = entries
         .iter()
         .filter(|(name, _)| !name.ends_with(".kokorosaku.zip"))
@@ -424,6 +433,7 @@ pub fn parse_character_pack(entries: HashMap<String, Vec<u8>>) -> Result<Charact
         sha256sums_verified: listed.len(),
         digest_state: "SHA256_BINDINGS_VERIFIED",
         signature_state: "NOT_VERIFIED_BY_HOST",
+        license_md,
         entries: imports,
         files,
     })

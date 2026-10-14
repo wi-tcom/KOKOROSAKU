@@ -75,7 +75,7 @@ ok(/saku\.desktop\.pendingCharacter/.test(app) && /saku-builder\.html\?desktop=v
 ok(!/saku-builder-unified-v1\.html/.test(app), "editable-copy handoff must not route to the legacy-schema Builder");
 ok(/ActiveSaku\.setActive\(record\.source_character/.test(app), "the Builder route must set the subject before it navigates");
 ok(/storeBoundCharacter\("saku\.desktop\.pendingCharacter", record\.source_character\)/.test(app) && /structuredClone\(characterOrPayload\)/.test(app), "Builder handoff does not use explicit bound copy");
-ok(/Viewer data mutation: 0/.test(app), "Read-only status missing");
+ok(/この画面ではキャラクターの中身を変えません/.test(app), "Read-only status missing (2026-10-14 keying F2: said in words, not as 'Viewer data mutation: 0')");
 ok(/SAME \/ DIFFERENT \/ UNKNOWN \/ NOT_AVAILABLE/.test(html), "Compare state disclosure missing");
 ok(/HANDOFF_SOURCE_NOT_FOUND/.test(app), "Handoff recovery text missing");
 

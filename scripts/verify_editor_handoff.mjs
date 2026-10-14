@@ -21,6 +21,7 @@ import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { STEPS } from "../tools/unified-v1/required-progress.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = path.join(ROOT, ".desktop-dist");
@@ -33,32 +34,33 @@ const read = rel => readFileSync(path.join(ROOT, rel), "utf8");
   const html = read("tools/saku-builder.html");
   const tabsBlock = html.slice(html.indexOf("const TABS=["), html.indexOf("];", html.indexOf("const TABS=[")));
   const tabs = [...tabsBlock.matchAll(/\["(\w+)","([^"]+)"\]/g)].map(m => m[2]);
-  check(tabs.join(",") === "character.yaml,Character File,試験記録,Help", `TABS: ${tabs.join(" / ")}`);
+  check(tabs.join(",") === "character.yaml,Character.json,試験記録,Help", `TABS: ${tabs.join(" / ")}`);
   check(!/function toPrompt\(|function toGuildJson\(|schema:"MACHI-GUILD-SUMMARY"/.test(html), "TABS: no prompt / Guild generator on the page");
   check(/isExternalOutput\(tab\)\{return tab==="json";\}/.test(html), "TABS: the export gate applies to the Character File only");
   // The Character File line is the shared text (ライター&SNS, EN 依頼 AC1); self-made-zip:verify ties it to the constant.
-  check(html.includes('ja:"署名やパックを作るときの元になる JSON です。この SAKU Builder へは読み戻せません。AMU Studio へは「AMU 用 ZIP をダウンロード」で作る ZIP で取り込めます'), "TABS: Character File purpose = the source JSON, not loaded back, AMU through the ZIP, MACHI through a signed pack");
-  check(html.includes("Character File（署名やパックを作るときの元になる JSON）にだけ書き出す。</p>"), "TABS: chapter 十 note says where it is written, and leaves the hand-over to the purpose line");
+  check(html.includes('ja:"署名やパックを作るときの元になる JSON です。この SAKU Builder の「個別ファイルインポート」で読み戻せます。AMU Studio へは「④出力」の「SAKU キャラクターを書き出す（.zip）」で作る ZIP で取り込めます'), "TABS: Character.json purpose = the source JSON, read back by the individual import (2026-10-14), AMU through the ZIP made in ④, MACHI through a signed pack");
+  check(html.includes("Character.json（署名やパックを作るときの元になる JSON）にだけ書き出す。</p>"), "TABS: chapter 十 note says where it is written, and leaves the hand-over to the purpose line");
   const additions = html.slice(html.indexOf('<div class="desktop-toolbar-additions">'), html.indexOf('<span class="subtitle" style="margin:0">'));
   check(/id="runOnPlatform"[^>]*hidden>AIプラットフォームで動作確認</.test(additions) && /id="trainCharacter"[^>]*hidden>トレーニングする</.test(additions), "BTN: both buttons sit in .desktop-toolbar-additions, hidden until the host reveals them");
   check(html.includes('location.assign("../index.html?stay=1&open=platform")') && html.includes("saku-trainer.html?desktop=builder&character_id="), "BTN: destinations are desktop 03 (open=platform) and 04 (saku-trainer, desktop=builder)");
   check(html.includes("window.SAKU_SAVE_UNIFIED_CHARACTER = performSave") && (html.match(/await performSave\(\)/g) || []).length === 1, "BTN: the hand-off runs the same Save function, once");
-  check(html.includes("未保存の変更があります。この内容で保存してから進みますか？"), "BTN: unsaved edits are asked about, not handed over silently");
+  check(html.includes("未保存の変更があります。保存してから進みますか？") && html.includes("window.sakuChoiceFor(\"saveAndContinue\"") , "BTN: unsaved edits are asked about (save / leave without saving / back, keying 2026-10-14 4-16 ①), not handed over silently");
   const app = read("desktop/app.mjs");
-  check(/open === "platform"\) showPlatform\(\)/.test(app), "03: desktop index opens the platform panel for open=platform");
+  check(app.includes('open === "platform" ? "run"') && app.includes('if (name === "run") return showPlatform();'), "03: desktop index opens the platform panel for open=platform and for #run");
+  check(html.includes("window.SAKU_NAV_GUARD = async () => (await settleBeforeLeaving()).leave;") && html.includes("const ok = typeof window.SAKU_NAV_GUARD === \"function\" ? await window.SAKU_NAV_GUARD() : true;"), "NAV: leaving ② through the menu bar runs the unsaved-edit guard first (2026-10-14)");
   const contract = JSON.parse(read("tests/fixtures/owner-golden-ui-contract.json"));
-  check(contract.preview_tabs.join(",") === "character.yaml,Character File,試験記録" && !contract.golden_function_names.includes("toPrompt") && !contract.golden_function_names.includes("toGuildJson"), "CONTRACT: preview tabs and golden functions follow");
+  check(contract.preview_tabs.join(",") === "character.yaml,Character.json,試験記録" && !contract.golden_function_names.includes("toPrompt") && !contract.golden_function_names.includes("toGuildJson"), "CONTRACT: preview tabs and golden functions follow");
 }
 
 // ── headless ────────────────────────────────────────────────────────────────
-const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 if (!existsSync(chrome)) skipped.push("UI: Chrome not found");
 else if (!existsSync(path.join(DIST, "tools/saku-builder.html"))) skipped.push("UI: .desktop-dist not prepared (run desktop:prepare)");
 else {
   const handed = JSON.parse(readFileSync(path.join(ROOT, "tools/unified-v1/sample-pack/sample-characters.json"), "utf8")).characters.find(c => c.identity.character_id === "sample-wit-guide");
   const harness = `<!doctype html><meta charset="utf-8"><pre id="report">RUNNING</pre><script type="module">
 const checks=[],check=(v,l)=>{if(!v)throw new Error(l);checks.push(l);};const wait=ms=>new Promise(r=>setTimeout(r,ms));const until=async (fn,n=400)=>{for(let i=0;i<n;i++){if(fn())return;await wait(25);}throw new Error('TIMEOUT: '+fn.toString().slice(0,80));};
-const HANDED=${JSON.stringify(handed)};const ID=HANDED.identity.character_id,REV=HANDED.identity.character_revision,NAME=HANDED.identity.display_name;
+const HANDED=${JSON.stringify(handed)};const REQ=${JSON.stringify(STEPS.flatMap(step => step.fields))};const ID=HANDED.identity.character_id,REV=HANDED.identity.character_revision,NAME=HANDED.identity.display_name;
 const {storeHandoff}=await import('/tools/unified-v1/handoff-binding.mjs');
 const lib=()=>((JSON.parse(localStorage.getItem('saku.workspace.library')||'{}').entries)||[]).filter(e=>!e.deleted);
 let frame,doc,win;
@@ -69,21 +71,31 @@ try{
  // A. browser mode
  await openEditor(false);
  check(doc.getElementById('runOnPlatform').hidden===true&&doc.getElementById('trainCharacter')===null,'A: without a desktop host the 03 button stays hidden, and there is no Trainer button (Owner 2026-09-27)');
- check([...doc.querySelectorAll('#pvTabs .pv-tab')].map(b=>b.textContent.trim()).join(',')==='character.yaml,Character File,試験記録,Help','A: preview tabs = character.yaml / Character File / 試験記録 / Help');
+ check([...doc.querySelectorAll('#pvTabs .pv-tab')].map(b=>b.textContent.trim()).join(',')==='character.yaml,Character.json,試験記録,Help','A: preview tabs = character.yaml / Character.json / 試験記録 / Help');
+ // Q12 (2026-10-14): every required field has a place in ② that the bar and the save warning open, and the save
+ // warning names the empty field in Japanese with 「未入力」 — not the check's English text or an internal path.
+ { const unplaced=REQ.filter(field=>!win.SAKU_FOCUS_REQUIRED(field));
+   check(unplaced.length===0,'A: each of the 30 required fields opens at its place in ② (no place: '+unplaced.join(', ')+')');
+   const asked=[];win.sakuNotice=message=>{asked.push(String(message));return Promise.resolve();};
+   const realData=win.__saku_data;win.__saku_data=()=>({});const savesBefore=lib().length;doc.getElementById('saveUnifiedCharacter').click();for(let i=0;i<200&&!asked.length;i++)await wait(25);win.__saku_data=realData;
+   check(lib().length===savesBefore,'A: a blank form is not saved');
+   if(!asked.length)throw new Error('NO_SAVE_WARNING');
+   check(asked[0].includes('：未入力')&&!/must |minLength|minItems|keyword|\\/identity|identity\\./.test(asked[0]),'A: the save warning names the empty field in Japanese with 「未入力」 ('+asked[0].split('\\n').slice(1).join(' / ')+')'); }
  // B. desktop: 04 Trainer left the screens (Owner 2026-09-27, AMU DECISION 2026-09-27-11), so the
  // edit screen offers 03 only; the Golden page's 「トレーニングする」 is taken out, not hidden.
  localStorage.clear();await openEditor(true);
  check(win.__TAURI__&&win.__TAURI__.__stub===true,'B: host stub installed before the page scripts');
- check(doc.getElementById('runOnPlatform').hidden===false&&doc.getElementById('trainCharacter')===null,'B: the 03 button is visible under the desktop host and there is no Trainer button');
+ await until(()=>doc.querySelector('#saku-frame [data-sf-screen="run"]'),400);
+ check(win.getComputedStyle(doc.getElementById('runOnPlatform')).display==='none'&&doc.getElementById('trainCharacter')===null&&doc.querySelector('#saku-frame [data-sf-screen="run"]'),'B: under the desktop host the menu bar leads to ③; the old 03 button is not shown (Owner 2026-10-14) and there is no Trainer button');
  // C. desktop, edit → platform (cancel, then OK)
  localStorage.clear();await openEditor(true);
  const nameField=doc.querySelector('[data-path="meta.name"]');nameField.value=NAME+'（改）';nameField.dispatchEvent(new Event('input',{bubbles:true}));nameField.dispatchEvent(new Event('change',{bubbles:true}));await wait(300);
  const before2=lib().length;let asked=[];((w,fn)=>{w.__sakuAnswer=fn;if(w.__sakuObs)return;w.__sakuObs=new w.MutationObserver(()=>{for(const g of w.document.querySelectorAll("dialog.saku-confirm")){if(g.dataset.answered)continue;g.dataset.answered="1";const q=(g.querySelector("p")||{}).textContent||"";(w.__sakuAnswer(q)?g.querySelector("[data-confirm-action]"):g.querySelector("[data-confirm-cancel]")).click();}});w.__sakuObs.observe(w.document.documentElement,{childList:true,subtree:true});})(win,q=>{asked.push(q);return false;});const href=win.location.href;
- doc.getElementById('runOnPlatform').click();await wait(600);
+ doc.querySelector('#saku-frame [data-sf-screen="run"]').click();await wait(600);
  check(asked.length===1&&asked[0].includes('未保存の変更があります'),'C: an edit triggers the unsaved-edit question');
  check(win.location.href===href&&lib().length===before2,'C: Cancel stays on the editor and saves nothing');
  ((w,fn)=>{w.__sakuAnswer=fn;if(w.__sakuObs)return;w.__sakuObs=new w.MutationObserver(()=>{for(const g of w.document.querySelectorAll("dialog.saku-confirm")){if(g.dataset.answered)continue;g.dataset.answered="1";const q=(g.querySelector("p")||{}).textContent||"";(w.__sakuAnswer(q)?g.querySelector("[data-confirm-action]"):g.querySelector("[data-confirm-cancel]")).click();}});w.__sakuObs.observe(w.document.documentElement,{childList:true,subtree:true});})(win,q=>{asked.push(q);return true;});
- doc.getElementById('runOnPlatform').click();
+ doc.querySelector('#saku-frame [data-sf-screen="run"]').click();
  await until(()=>/index\\.html/.test(frame.contentWindow.location.href),600);
  const platformUrl=new URL(frame.contentWindow.location.href);
  check(lib().length===before2+1,'C: OK saved exactly one new Character through the same Save ('+before2+'→'+lib().length+')');
@@ -91,8 +103,8 @@ try{
  check(saved.identity.display_name===NAME+'（改）'&&saved.identity.character_revision!==REV,'C: the saved Character carries the edit as a new revision ('+saved.identity.character_revision+')');
  check(Number(localStorage.getItem('__eh_saves')||0)===1,'C: the Workspace was written exactly once (through the same Save)');
  const active=JSON.parse(localStorage.getItem('saku.workspace.active'));
- check(active&&active.source==='builder-platform'&&active.character.identity.character_revision===saved.identity.character_revision,'C: the Active SAKU is the saved revision, source builder-platform');
- check(platformUrl.pathname.endsWith('/index.html')&&platformUrl.searchParams.get('open')==='platform','C: landed on the desktop index with open=platform');
+ check(active&&active.source==='builder-save'&&active.entry_id&&active.character.identity.character_revision===saved.identity.character_revision,'C: the Active SAKU is the saved revision and its new row (source builder-save, entry_id)');
+ check(platformUrl.pathname.endsWith('/index.html')&&platformUrl.hash==='#run','C: landed on the desktop index at #run (the menu bar ③)');
  await new Promise(r=>frame.contentWindow.document.readyState==='complete'?r():frame.addEventListener('load',r,{once:true}));
  doc=frame.contentDocument;win=frame.contentWindow;
  await until(()=>doc.getElementById('platform-panel')&&doc.getElementById('platform-panel').hidden===false,600);

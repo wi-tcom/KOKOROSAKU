@@ -14,7 +14,7 @@
 // with a host stub that returns the real pack result, lists 15 Characters with
 // operation class and signature state.  Rules are falsified in a mutated copy.
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, generateKeyPairSync, sign as nodeSign } from "node:crypto";
 import { spawn, spawnSync } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
@@ -128,6 +128,45 @@ if (existsSync(amuPrimitives)) {
   }
 } else cases.push("PK-FINGERPRINT sibling KOKOROAMU-STUDIO primitives not present — fingerprint equality not compared");
 
+// ── 0b. key purposes (統括 2026-10-08, from the a20 vector of the 1-1 conformance set) ──────────────────
+// A pinned key verifies only what its trust purposes allow: the pack catalog only under a character-pack key,
+// a Character (and an AMU return manifest) only under a character-package key. The table equals the vendored
+// kokoroamu-trust gen 10 bundle.
+{
+  const bundle = JSON.parse(readFileSync(path.join(ROOT, "tools/vendor/kokoroamu-trust-f99fdbe/trust/v1/bundle.json"), "utf8"));
+  const fromTrust = {};
+  const keyBytes = {};
+  for (const publisher of bundle.publishers) for (const key of publisher.keys || []) if (Intake.TRUSTED_PUBLISHERS[key.key_id]) { fromTrust[key.key_id] = [...key.purposes].sort(); keyBytes[key.key_id] = Buffer.from(key.public_key, "base64url"); }
+  // AMU TRUST(1) 2026-10-08: the pinned PEMs are the same SPKI bytes as the gen 10 public_key, so a key swap is caught here too.
+  for (const [keyId, pemText] of Object.entries(Intake.TRUSTED_PUBLISHERS)) {
+    const der = Buffer.from(pemText.replace(/-----(BEGIN|END) PUBLIC KEY-----/g, "").replace(/\s+/g, ""), "base64");
+    check(keyBytes[keyId] && der.equals(keyBytes[keyId]), `PK-PURPOSE the pinned PEM of ${keyId} is the gen 10 public_key, byte for byte`);
+  }
+  const canon = o => JSON.stringify(Object.keys(o).sort().map(k => [k, [...o[k]].sort()]));
+  equal(canon(Intake.PUBLISHER_PURPOSES || {}), canon(fromTrust), "PK-PURPOSE the pinned purposes equal kokoroamu-trust gen 10 for both pinned keys");
+  const pem = key => key.publicKey.export({ type: "spki", format: "pem" });
+  const charKey = generateKeyPairSync("ed25519"), packKey = generateKeyPairSync("ed25519");
+  const publishers = { "t-character": pem(charKey), "t-pack": pem(packKey) };
+  const purposes = { "t-character": ["character-package"], "t-pack": ["character-pack"] };
+  const digest = `sha-256:${"ab".repeat(32)}`;
+  const sig = key => nodeSign(null, Buffer.from(digest), key.privateKey).toString("base64url");
+  const v = o => Intake.verifyEd25519({ digest, publishers, purposes, ...o });
+  equal((await v({ publisher_key_id: "t-character", signature: sig(charKey), purpose: "character-package" })).state, "PASS", "PK-PURPOSE a Character signature under the character key passes");
+  equal((await v({ publisher_key_id: "t-pack", signature: sig(packKey), purpose: "character-pack" })).state, "PASS", "PK-PURPOSE a catalog signature under the pack key passes");
+  equal((await v({ publisher_key_id: "t-pack", signature: sig(packKey), purpose: "character-package" })).state, "PURPOSE_NOT_ALLOWED", "PK-PURPOSE a valid signature by the pack key on a Character is refused");
+  equal((await v({ publisher_key_id: "t-character", signature: sig(charKey), purpose: "character-pack" })).state, "PURPOSE_NOT_ALLOWED", "PK-PURPOSE a valid signature by the character key on a catalog is refused");
+  equal((await v({ publisher_key_id: "t-character", signature: sig(charKey) })).state, "PURPOSE_NOT_ALLOWED", "PK-PURPOSE a check that names no purpose is refused, not passed");
+  const pack = (catalogKey, entryKey) => ({ pack_publisher_key_id: catalogKey, pack_manifest_digest: digest, pack_signature: sig(catalogKey === "t-pack" ? packKey : charKey),
+    entries: [{ file: "x.kokorosaku.zip", publisher_key_id: entryKey, package_digest: digest, signature: sig(entryKey === "t-pack" ? packKey : charKey) }] });
+  equal((await Intake.assessPackSignatures(pack("t-pack", "t-character"), { publishers, purposes })).signature_state, "PASS", "PK-PURPOSE a pack signed with the right key for each part passes");
+  const swapped = await Intake.assessPackSignatures(pack("t-pack", "t-pack"), { publishers, purposes });
+  check(swapped.signature_state === "FAIL" && swapped.failed[0].state === "PURPOSE_NOT_ALLOWED", "PK-PURPOSE a Character signed with the pack key fails the pack (a20)");
+  const catalogByChar = await Intake.assessPackSignatures(pack("t-character", "t-character"), { publishers, purposes });
+  check(catalogByChar.signature_state === "FAIL" && catalogByChar.failed[0].state === "PURPOSE_NOT_ALLOWED", "PK-PURPOSE a catalog signed with the character key fails the pack");
+  const ret = await Intake.assessReturnSignature({ publisher_key_id: "t-pack", manifest_digest: digest, signature: sig(packKey) }, { publishers, purposes });
+  check(ret.signature_state === "FAIL" && ret.state === "PURPOSE_NOT_ALLOWED", "PK-PURPOSE an AMU return manifest signed with the pack key fails");
+}
+
 // ── 1. signatures on the real packs ────────────────────────────────────────
 let results = {};
 if (packsPresent) {
@@ -221,7 +260,7 @@ if (packsPresent) {
 // ── 5. browser: the desktop screen end to end with a host stub ─────────────
 if (packsPresent) {
   const supportResult = results["saku-pack-support-1.0.0-beta.zip"];
-  const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+  const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
   const harness = `<!doctype html><meta charset="utf-8"><pre id="report">RUNNING</pre><script type="module">
 const checks=[],check=(value,label)=>{if(!value)throw new Error(label);checks.push(label);};
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));

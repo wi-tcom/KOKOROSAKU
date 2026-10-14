@@ -65,6 +65,8 @@ export function setActive(character, options = {}) {
     character,
     identity: identityOf(character),
     source: options.source || "unknown",
+    // The list row it was chosen from (G4): 03, the exports and 02's save use that row's origin.
+    entry_id: typeof options.entry_id === "string" && options.entry_id ? options.entry_id : null,
     opened_at: new Date().toISOString(),
   };
   if (!writeRaw(ACTIVE_KEY, JSON.stringify(record))) return null;

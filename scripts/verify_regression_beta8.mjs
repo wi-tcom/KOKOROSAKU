@@ -90,9 +90,11 @@ const o1Problems = source => {
   const broken = { ...surfaces, "desktop/app.mjs": surfaces["desktop/app.mjs"] + '\nif (!window.confirm("x")) {}\n' };
   assert.ok(o11Problems(broken).length > 0, "O-11 falsification: a bare confirm() is caught");
   const dialog = read("tools/unified-v1/confirm-dialog.mjs");
-  assert.match(dialog, /dialog\.addEventListener\("cancel", event => \{ event\.preventDefault\(\); finish\(false\); \}\);/, "O-11 Esc cancels");
-  assert.match(dialog, /actions\.append\(ok, cancel\);/, "O-11 the order is the action, then cancel, on every screen");
-  assert.match(dialog, /\n    cancel\.focus\(\);\n/, "O-11 the focus starts on cancel");
+  // 2026-10-14 keying: the dialog also offers a three-way choice and a one-button notice; the rules hold for each.
+  assert.match(dialog, /dialog\.addEventListener\("cancel", event => \{ event\.preventDefault\(\); finish\(cancelValue\); \}\);/, "O-11 Esc cancels");
+  assert.match(dialog, /return enqueue\(\{ title, message, cancelValue: false, buttons: \[\n    \{ value: true, label: confirmLabel, primary: true \},\n    \{ value: false, label: cancelLabel, safe: true \},\n  \] \}, doc\);/, "O-11 the order is the action, then cancel, on every screen");
+  assert.match(dialog, /\(focusTarget \|\| actions\.lastElementChild\)\?\.focus\(\);/, "O-11 the focus starts on the safe side (cancel)");
+  assert.match(dialog, /adoptCss\(doc, STYLE_ID, CSS\)/, "O-11 the dialog's look is adopted, not a run-time <style> the app's CSP drops (keying 2026-10-14)");
   cases.push("O-11 app.mjs, the edit screen and the Golden page ask through the app's dialog: Esc cancels, focus on cancel, one order (falsified 1/1)");
 }
 

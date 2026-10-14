@@ -166,6 +166,10 @@ check(sha256(await read("tools/unified-v1/derived-profile-engine.mjs")), "1f4ff5
 // as a ZIP, through the same write-and-confirm as the text export (`write_export_bytes`),
 // and leaves import untouched. Covered by one cargo test and self-made-zip:verify.
 //
+// Advanced 2026-10-10 for the bundled sample pack 1.2.0 (Owner results 97, 102 and 143): only the
+// resource name, the pinned digest and the version the cargo test expects change; the intake is untouched.
+// The same cargo test covers it (pinned digest, intake passes, one flipped byte refused).
+//
 // The pin is taken with APP_VERSION normalised away (2026-09-23). It had gone
 // stale twice for that one line alone — at β.4, where it reached main unnoticed
 // because the β.4 build never ran this gate, and again at β.5. Which version the
@@ -180,12 +184,26 @@ ok(APP_VERSION_LINE.test(hostSource), "the host still declares APP_VERSION (the 
 // build sets it; Owner 2026-10-02 「β.10 を署名して出し直す」). Package Import is unchanged.
 // Re-pinned 2026-10-02 again: the shared base layer is v1.1 (BASE_LAYER_VERSION / BASE_LAYER_SHA256 and their comment;
 // Owner 2026-10-02 「席8は人間です」を SAKU、AMU とも直す). Package Import is unchanged.
-check(sha256(hostSource.replace(APP_VERSION_LINE, 'const APP_VERSION: &str = "<VERSION>";')), "26d5246d24eb3f30f5dec428d00087fddbf3ca672f85eeb186c006f7db556c68", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
+// Re-pinned 2026-10-03: the Agent Skills export ZIP is saved through the self-made ZIP's check, now shared
+// (export_zip_acceptable, save_export_zip, save_skill_export_zip; ADR-0026, Owner 2026-10-03). Package Import is unchanged.
+// Re-pinned 2026-10-14: Package Import changes on purpose — G1 (a pack is staged under imports/.pending until the page
+// accepts its signatures: commit_pack_import / discard_pack_import, collect_imports skips dot folders, a scan clears
+// stale pending folders) and the self-made Character ZIP route (Owner 2026-10-14). Reviewed by
+// scripts/verify_signature_before_write.mjs and the cargo tests g1_* / self_made_zip_is_handed_to_the_page.
+// Re-pinned 2026-10-14 (keying round 2, Owner 結果 190): Package Import itself is unchanged. Around it: the save dialogs
+// carry a file-type filter and keep the export's extension (3-18); a shown path drops Windows' long-path prefix (3-8); the
+// individual import and the pack picker open over the window (choose_character_files, set_parent; F3); the window asks
+// the page before closing (CloseGate; 4-16). Cargo tests keying_*.
+// Then F1 (統括 approval): the running exe's signature is read on its own thread (code_signature.rs, get_code_signature).
+// Re-pinned 2026-10-15 (keying round 3, 統括 m4・m5): Package Import itself is unchanged. The export save dialogs name the
+// extension in the type row (m4) and open in the Workspace folder (export_start_directory, workspace_export_start; the three
+// save commands take the AppHandle; m5). Cargo tests keying_save_dialog_*.
+check(sha256(hostSource.replace(APP_VERSION_LINE, 'const APP_VERSION: &str = "<VERSION>";')), "fc5689027fc466dd3878b4005932aa403a0102dc5815a2a483fec917498b78bd", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
 ok(/SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE/.test(await read("src-tauri/src/main.rs")), "Package Import host does not recognise the active Unified schema");
 // Re-pinned 2026-09-28 (β.9): the profile named the three OSS samples as bundled after they left the
 // installer (D-20260924-oss-samples-retired) and did not name the sample pack 1.1.0 that replaced them
 // (D-20260924-sample-pack-1-1-0). oss-sample3 is now bundled: false; saku-pack-sample-1.1.0 is listed.
-check(sha256(await read("desktop/resources/profiles/public-oss.json")), "4a2374dbcc7bb50b9288f196a3cb868a48700569f62013a153f697751d4341ae", "Public profile changed");
+check(sha256(await read("desktop/resources/profiles/public-oss.json")), "96777e50ecc127b58bc67d069bd32c2bd41499a629af0e4bb88f37f60aac90f5", "Public profile changed");
 
 console.log(`TRAINER_REVIEW_RESULTS_VERIFY PASS ${count}/${count}`);
 console.log("REVIEW_STATES MATCH DIFFERENT UNKNOWN NOT_TESTED INVALID PASS");

@@ -1,7 +1,7 @@
 {
   "profile": "saku.screen-guide@1",
   "screen": "03-ai-platform",
-  "applies_to_app_version": "0.1.0-beta.11",
+  "applies_to_app_version": "0.1.0-beta.12",
   "content_review": {
     "ja": {
       "status": "APPROVED",
@@ -27,6 +27,24 @@
             "platform.speed_test"
           ],
           "why": "Owner 2026-09-27（AMU DECISION 2026-09-27-11）: 04 Trainer と AI スピードテストを画面から外す。スピードテストの項目と章「speed」を 03 のガイドから外す（ライター&SNS de9924e: ヘルプは『いまの版にあるもの』だけを書く）"
+        },
+        {
+          "on": "2026-10-04",
+          "fields": [
+            "platform.skill_export"
+          ],
+          "why": "β.12: 03 の「スキルとして書き出す」（ADR-0026、統括 2026-10-04「β.12 の作業を始めてよいです」）。製品名を出さず、公開されている形式の説明を示す（Owner 2026-10-04）",
+          "drafted_by": "Wi-t.comライター&SNS（2026-10-04、SAKU Builder(4) の事実 1〜7 だけで）",
+          "note": "currentNote は 120 字・2 文以内の決まりに合わせ短くした版（ライター&SNS 2026-10-04「案で」）。caution は箇条書きでなく 1 段落の版（同、代替として提示）。"
+        },
+        {
+          "on": "2026-10-07",
+          "fields": [
+            "platform.skill_export"
+          ],
+          "why": "help.caution の「配るときの条件は、パックの使用条件と同じです。」が、事務所の外へ渡してよいと読まれるおそれ（サイト構築の指摘 2026-10-07）。画面の説明（platform-skill-export-lead）も同じ差し替え",
+          "drafted_by": "Wi-t.comライター&SNS（2026-10-07）",
+          "note": "「再配布に当たり」は書かない（00A 2026-10-07：既存 3 パックの LICENSE v1.1 は置き場所を定めていないため。v1.1・Subscriber v1.1・サンプルとも第三者への提供は不可なので「置くことはできません」は言える）。「同梱の」→「パックの」ライセンスの文書（ライター：β.12 より前に取り込んだサンプルには LICENSE.md が入らない）"
         }
       ]
     },
@@ -66,6 +84,26 @@
           "source": "wi-tcom/Wi-t_Site site-content/manuals/translation/2026-09-27_request_saku-reference-material-AH_EN.md@101e3d8 (AH12, AH13)",
           "translated_by": "英語翻訳チーム",
           "checked_by": "Wi-t.comライター&SNS"
+        },
+        {
+          "on": "2026-10-04",
+          "fields": [
+            "platform.skill_export"
+          ],
+          "change": "added: the Agent Skills export on 03 (β.12, ADR-0026)",
+          "source": "wi-tcom/Wi-t_Site site-content/manuals/translation/2026-10-04_saku-beta12-skill-export-help_EN.json@d2dc841",
+          "translated_by": "英語翻訳チーム",
+          "checked_by": "Wi-t.comライター&SNS（2026-10-04、a620d5f の照合で 1 か所の直し → d2dc841 で PASS）"
+        },
+        {
+          "on": "2026-10-07",
+          "fields": [
+            "platform.skill_export"
+          ],
+          "change": "help.caution: the sentence on sharing replaced by five sentences (no 'redistribution'; the placement rule; a request not to remove the license and provenance record)",
+          "source": "wi-tcom/Wi-t_Site site-content/manuals/translation/2026-10-07_saku-beta12-skill-export-terms_EN.json@370ac30",
+          "translated_by": "英語翻訳チーム",
+          "checked_by": "Wi-t.comライター&SNS（2026-10-07、9675737 の照合で 2 か所の直し → 370ac30 で PASS）"
         }
       ]
     }
@@ -140,8 +178,8 @@
           "en": ""
         },
         "caution": {
-          "ja": "保存していない編集内容は渡りません。編集画面の「AIプラットフォームで動作確認」は未保存があれば先に保存を確認します。",
-          "en": "Unsaved edits are not handed over. \"Check on an AI platform\" on the edit screen first asks you to save if there are unsaved changes."
+          "ja": "保存していない編集内容は渡りません。②からメニュー行で移るときは、未保存があれば先に確認します（保存して進む／保存せずに進む／編集に戻る）。",
+          "en": "Unsaved edits are not handed over. Leaving ② through the menu bar first asks about unsaved changes (save and continue / continue without saving / back to editing)."
         },
         "usedAt": {
           "ja": "",
@@ -218,6 +256,44 @@
         "caution": {
           "ja": "",
           "en": ""
+        },
+        "usedAt": {
+          "ja": "",
+          "en": ""
+        },
+        "optionDetails": []
+      }
+    },
+    {
+      "canonicalPath": "platform.skill_export",
+      "chapter": "paste",
+      "kind": "text",
+      "manualType": "TEXT_SHORT",
+      "uiLabel": {
+        "ja": "スキルとして書き出す",
+        "en": "Export as a skill"
+      },
+      "label": {
+        "ja": "スキルとして書き出す",
+        "en": "Export as a skill"
+      },
+      "currentNote": {
+        "ja": "このキャラクターを、「スキル」の形式（Agent Skills）を読み込める AI の道具向けに、ZIP で保存します。WI-T.COM の署名はまだ付かず、読み込む側の道具は席 8 の決まりを守らせる仕組みを持ちません。",
+        "en": "Saves this Character as a ZIP for AI tools that can load the “skill” format (Agent Skills). It does not yet carry a WI-T.COM signature, and the tool that loads it has no mechanism to make the AI follow the Seat 8 rules."
+      },
+      "screenSection": "platform-skill-export",
+      "help": {
+        "about": {
+          "ja": "このキャラクターを、「スキル」の形式（Agent Skills）を読み込める AI の道具向けのフォルダーとして、ZIP で保存します。形式の決まりは、公開されている説明のページ（agentskills.io/specification）にあります。保存されるファイルは「<キャラクターの ID>.agent-skill.zip」で、中のフォルダー名はキャラクターの ID と同じです。中身は、AI の道具が読む本体の SKILL.md、キャラクターの正本（references/character.json）、席 8 の決まり（references/seat8-human-gate.md）、出どころの記録（wi-t-overlay.json）です。パックのキャラクターは、パックのライセンス（LICENSE.md）も入ります。自作のキャラクターも書き出せます。そのときは署名なしで、出どころの記録に「自作・署名なし」と残ります。書き出しても、SAKU の中のキャラクターは変わりません。",
+          "en": "Saves this Character as a ZIP of a folder for AI tools that can load the “skill” format (Agent Skills). The rules of the format are on its published description page (agentskills.io/specification). The saved file is “<Character ID>.agent-skill.zip”, and the folder inside has the same name as the Character ID. It contains SKILL.md, the main file the AI tool reads; the Character's authoritative version (references/character.json); the rules for Seat 8 — Human (logical) (references/seat8-human-gate.md); and the provenance record (wi-t-overlay.json). For a Character from a pack, the pack's license (LICENSE.md) is included too. You can also export a Character you made yourself. It is then unsigned, and the provenance record notes it as “self-made, unsigned”. Exporting does not change the Character in SAKU."
+        },
+        "what": {
+          "ja": "",
+          "en": ""
+        },
+        "caution": {
+          "ja": "書き出したものには、WI-T.COM の署名はまだ付きません。パックのキャラクターを書き出したものには、パックの使用条件がそのまま及びます。使える範囲は、パックのライセンスの文書のとおりです。スキルの配布サイト、公開のリポジトリ、ほかの組織と共有する作業場所など、第三者が取り出せる場所に置くことはできません。同梱のライセンスの文書と出どころの記録は、外したり書き換えたりしないでください。自作のキャラクターには、ライセンスの宣言は入りません。読み込む側の道具は、席 8 の決まりを守らせる仕組みを持ちません。守るかどうかは、使う AI しだいです。次の場合は書き出しません。β.11 以前に取り込んだパックのキャラクター（ライセンスの情報が残っていないため。「①キャラクター選択」からパックをもう一度取り込むと書き出せます）、署名の確かめに通らなかったパックのキャラクター、キャラクターの ID が形式の名前の決まり（英小文字・数字・ハイフン、64 文字まで）に合わないとき（ID を縮めたり変えたりはせず、書き出しを止めます）。",
+          "en": "The export does not yet carry a WI-T.COM signature. The pack's terms of use apply as they are to an export of a Character from a pack. How it may be used is as set out in the pack's license. It may not be placed anywhere a third party can retrieve it, such as a skill distribution site, a public repository, or a workspace shared with another organization. Please do not remove or rewrite the included license and the provenance record. An export of a Character you made yourself includes no license declaration. The tool that loads it has no mechanism to make the AI follow the Seat 8 rules. Whether they are followed depends on the AI you use. Nothing is exported in these cases: a Character from a pack imported with β.11 or earlier (the license information is not kept; import the pack again from “① Choose a Character” and you can export it); a Character from a pack that did not pass the signature check; and when the Character ID does not follow the naming rules of the format (lowercase letters a–z, digits and hyphens, up to 64 characters) — the ID is not shortened or changed; the export stops."
         },
         "usedAt": {
           "ja": "",

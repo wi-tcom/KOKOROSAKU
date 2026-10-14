@@ -35,7 +35,7 @@ try{
   for(const character of samples){
     active.setActive(character,{source:"round3-measurement"});
     const frame=await load(760),doc=frame.contentDocument;
-    doc.getElementById("run-on-ai-platform").click();
+    await poll(()=>doc.querySelector('#saku-frame [data-sf-screen="run"]'));doc.querySelector('#saku-frame [data-sf-screen="run"]').click();
     await poll(()=>doc.getElementById("platform-panel").hidden===false);
     const prompt=doc.getElementById("platform-launch").value;
     const fields={
@@ -60,15 +60,16 @@ try{
   const localTime=win.__saku_home.formatLocalTimestamp("2026-09-15T03:01:00.000Z");
   check(!localTime.includes("T03:01")&&!localTime.endsWith("03:01:00"),"Import history does not display sliced UTC");
   check(/GMT|UTC|JST|日本標準時|協定世界時/.test(localTime),"Import history displays a timezone");
-  doc.getElementById("view-characters").click();
+  await poll(()=>doc.querySelector('#saku-frame [data-sf-screen="select"]'));doc.querySelector('#saku-frame [data-sf-screen="select"]').click();
   await poll(()=>doc.querySelectorAll(".catalog-card").length===2);
   const latest=doc.querySelectorAll(".catalog-latest-badge");
   check(latest.length===1,"Exactly one latest revision badge for duplicate character_id");
   check(latest[0].closest(".catalog-card").querySelector("[data-open-id]").dataset.openId==="newer","Latest revision badge identifies newest entry");
-  const cards=[...doc.querySelectorAll("#home-content .entry-card")];
-  doc.getElementById("viewer-back").click();
+  // 2026-10-14: the Home entry cards gave way to the shared menu bar; it wraps at 760px instead.
+  doc.querySelector('#saku-frame [data-sf-screen="prep"]').click();await wait(100);
+  const cards=[...doc.querySelectorAll("#saku-frame .sf-nav-item")];
   check(doc.documentElement.scrollWidth<=doc.documentElement.clientWidth,"Home has no horizontal overflow at 760px");
-  check(new Set(cards.map(card=>Math.round(card.getBoundingClientRect().top))).size>1,"Home cards wrap at 760px");
+  check(cards.length===6&&cards.every(card=>card.getBoundingClientRect().right<=doc.documentElement.clientWidth),"the menu bar keeps all six items inside 760px ("+cards.length+" items)");
   frame.remove();localStorage.removeItem("saku.workspace.library");active.clearActive();
   const output={status:"PASS",passed:checks.length,measurements,local_time_example:localTime,checks};
   const node=document.getElementById("result");node.dataset.status="PASS";node.textContent=JSON.stringify(output);document.title="ROUND3_PASS";

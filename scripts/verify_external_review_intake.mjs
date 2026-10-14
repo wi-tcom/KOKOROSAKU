@@ -276,7 +276,7 @@ try {
 const packagedPages = [];
 try { await readFile(path.join(ROOT, ".desktop-dist/tools/saku-external-review.html")); packagedPages.push("/.desktop-dist/tools/saku-external-review.html"); }
 catch { cases.push("XR-PACKAGED .desktop-dist not prepared in this run (desktop:prepare) — desktop copy not loaded"); }
-const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
 const harness = `<!doctype html><meta charset="utf-8"><pre id="report">RUNNING</pre><script type="module">
 const checks=[],check=(value,label)=>{if(!value)throw new Error(label);checks.push(label);};
 const wait=ms=>new Promise(resolve=>setTimeout(resolve,ms));

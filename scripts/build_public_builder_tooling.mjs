@@ -38,6 +38,11 @@ if (new Set(manifest.files.map(([, destination]) => destination)).size !== manif
 
 function project(text, source) {
   let output = text;
+  // 2026-10-14: the shared frame (header, menu bar, selected-Character line) belongs to the desktop app only; the
+  // public web tool keeps its own header. Its stylesheet, mount point and mount script are taken out here.
+  output = output.replace(/\n?<link rel="stylesheet" href="\.\/unified-v1\/app-frame\.css">/, "")
+    .replace(/<div id="saku-frame" class="saku-frame"><\/div>\n?/, "")
+    .replace(/\n<script type="module">\n\/\* The shared frame \(Owner 2026-10-14[\s\S]*?<\/script>/, "");
   const replacements = [
     ["./saku-builder-desktop-additions.css", "./builder.css"],
     ["./unified-v1/active-saku.mjs", "./lib/active-character.mjs"],
@@ -53,6 +58,7 @@ function project(text, source) {
     ["./v1/semantic-registry.mjs", "./lib/semantic-registry.mjs"],
     ["./unified-v1/character-library.mjs", "./lib/character-library.mjs"],
     ["./unified-v1/self-made-character-zip.mjs", "./lib/self-made-character-zip.mjs"],
+    ["./unified-v1/required-progress.mjs", "./lib/required-progress.mjs"],
     ["./unified-v1/handoff-binding.mjs", "./lib/handoff-binding.mjs"],
     ["./unified-v1/tuning/tuning-projection.mjs", "./lib/tuning-projection.mjs"],
     ["./v1/builder-golden-ui.mjs", "./lib/builder-ui.mjs"],

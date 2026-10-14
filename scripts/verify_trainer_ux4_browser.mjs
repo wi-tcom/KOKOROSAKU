@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const chrome='C:/Program Files/Google/Chrome/Application/chrome.exe';
+const chrome=process.env.SAKU_CHROME_PATH||'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const harness=`<!doctype html><meta charset="utf-8"><pre id="report">RUNNING</pre><script type="module">
 import { testCharacter } from '/scripts/fixtures/trainer-ux3-character.mjs';
 import { openStore, current } from '/tools/v1/trainer-ux4.mjs';

@@ -605,8 +605,11 @@ function fixedSystemMarkup() {
     // The seat names come from tools/unified-v1/seat-roles.mjs, shared with manual P04 (Owner 2026-09-28).
     ...SEAT_ROLES.map(role => [String(role.seat), role.name.ja, role.name.en]),
   ];
-  return `<section class="fixed-system-info" aria-labelledby="one-seven-title"><p class="eyebrow">1+7 CHARACTER SYSTEM</p>
-    <h2 id="one-seven-title">${ui("考えを支える助手（1+7 Character System）", "Assistants that support thinking (1+7 Character System)")}</h2>
+  // A chapter that folds like the others (2026-10-14 keying, Owner 2); outside the five frozen chapters.
+  return `<section class="chapter fixed-system-info" data-extra-chapter="one-seven" aria-labelledby="one-seven-title">
+    <h2 id="one-seven-title"><span class="num">七</span>${ui("内面を支える助手（1+7 Character System）", "Assistants that support the inner life (1+7 Character System)")}</h2>
+    <p class="eyebrow">1+7 CHARACTER SYSTEM</p>
+    <p class="council-note">${ui("SAKU の定義だけでは合議は動きません。合議は KOKOROAMU の AMU Studio・AMU Runtime で定義して動かします（席 8 の人の確認は AMU 8 席コンソールで行います）。", "A SAKU definition alone does not run the council. The council is defined and run in KOKOROAMU's AMU Studio and AMU Runtime (the Seat 8 person's check takes place in the AMU Seat8 Console).")}</p>
     <p class="fixed-badge">${ui("固定された仕組み", "Fixed system")}</p>
     <ol class="fixed-seat-list">${seats.map(([n, ja, en]) => `<li><strong>${n}</strong> ${ui(ja, en)} <span>${ui("読み取り専用", "Read only")}</span></li>`).join("")}</ol>
     <p>${ui("席1〜7の有効／無効、強さ、担当変更はCharacterごとには編集できません。One Voiceと内部検討も固定された仕組みです。席8の条件は第5章で編集します。", "Seats 1–7 cannot be enabled, disabled, intensified, or reassigned per Character. One Voice and internal deliberation are fixed. Edit Seat 8 conditions in Chapter 5.")}</p>
@@ -624,12 +627,40 @@ function inspectorMarkup() {
     <p>${ui("これらはシステム管理情報で、通常の入力項目ではありません。", "These are system-managed values, not ordinary authoring inputs.")}</p></details>`;
 }
 
-function tuningMarkup() {
-  return `<section class="tuning-entry" aria-labelledby="tuning-title"><h2 id="tuning-title">${ui("AIの動き方を調整", "Adjust AI behavior")}</h2>
-    <p>${ui("気になる症状から、関係するCharacter設定を確認します。推奨は自動適用されません。", "Start with a symptom and inspect related Character settings. Recommendations are never applied automatically.")}</p>
-    <div class="tuning-symptom-grid">${TUNING_ITEMS.map(item => `<button type="button" data-tuning-symptom="${item.id}" aria-label="${esc(localized(item.symptom, locale()))}">${esc(localized(item.symptom, locale()))}</button>`).join("")}</div>
-    <div id="tuningRegistryDetail" class="tuning-registry-detail" role="status" aria-live="polite">${ui("症状を選択してください。", "Select a symptom.")}</div>
-    <p><a href="../index.html?stay=1">${ui("DesktopでCurrent / Expected / Recommendationを確認する", "Open Desktop to review Current / Expected / Recommendation")}</a></p></section>`;
+// 2026-10-14 (Owner 画面改修 Q13): a chapter for ERABAZU's occupation templates, for later. The reader exists
+// (tools/unified-v1/occupation-template.mjs); no production-signed template does yet, so the button cannot be pressed.
+// Not one of the five frozen chapters (the IA stays five; builder_workflow checks it): an extra section after them.
+function occupationTemplateMarkup() {
+  return `<section class="chapter occupation-template-chapter" data-extra-chapter="occupation-template" aria-labelledby="occupation-template-title">
+    <h2 id="occupation-template-title"><span class="num">六</span>${ui("職能テンプレートを読み込む", "Load an occupation template")}</h2>
+    <p class="chapter-question">${ui("ERABAZU の職能テンプレート（WI-T.COM の署名つき）から、役割の候補を読み込みます。いまは準備中です。", "Load role candidates from an ERABAZU occupation template (signed by WI-T.COM). This is in preparation.")}</p>
+    <button type="button" class="btn-sm" id="occupationTemplateImport" disabled aria-disabled="true">${ui("職能テンプレートを読み込む", "Load an occupation template")}</button>
+    <span class="occupation-template-state">${ui("準備中", "In preparation")}</span></section>`;
+}
+
+// 2026-10-14 (Owner 画面改修 Q19): what each definition decides, in place of 「AIの動き方を調整」 and 「詳細設定」.
+// A snapshot with its date; the page on kokoroamu.com is linked once it exists. Provisional wording (ライター&SNS checks
+// it with its sources: SAKU does not run the council — Owner 2026-09-26; AMU = one Character with the AMU layer in
+// a .amupkg; MACHI = several Characters, Guild and Corp — Owner 2026-09-28).
+export const COMPARISON_SNAPSHOT = "2026-10-14";
+function comparisonMarkup() {
+  // ライター&SNS の点検（社内の点検の記録）を入れた。MACHI の合議は
+  // MACHI の書き手（統括、KOKOROMACHI-guild main 1191160）の答え：設計では各メンバーの番で合議を行う
+  // （docs/DESIGN_2026-09-29_machi_from_amu.md §4.2、core/machi/team-run.js）が、チームの実行は画面にまだつながっていない
+  // ので、設計と製品を分けて書く。公開の状態は 2026-10-14 の GitHub Release（KOKOROSAKU v0.1.0-beta.11、KOKOROAMU
+  // v0.1.0-beta.4.1、どちらも Pre-release。KOKOROMACHI-guild・-corp は Release 0 件）と AMU STUDIO(1) の答え。この表は
+  // 次の版と一緒に出るので、版の番号は入れない。
+  const rows = [
+    [ui("何を決めるか", "What it defines"), ui("キャラクター 1 体の人格・役割・判断の仕方・人に任せる条件", "One Character's personality, role, way of judging, and when to hand things to a person"), ui("SAKU のキャラクター 1 体に、AI の接続・1+7 の定義・8 席の接続・メモリーを足したもの", "One SAKU Character with the AI connection, the 1+7 definition, the 8-seat connection (AMU Seat8 Console) and memory added"), ui("複数のキャラクターで組むチーム（Guild＝プロジェクト、Corp＝組織の定常業務）の組み方・役割・共有のメモリー", "A team of several Characters (Guild for projects, Corp for an organization's routine work): how it is put together, its roles and its shared memory")],
+    [ui("作る道具", "Made with"), "SAKU Builder", "AMU Studio", ui("MACHI Guild・MACHI Corp（キャラクターは AMU の .amupkg を取り込む）", "MACHI Guild and MACHI Corp (Characters are imported as AMU .amupkg files)")],
+    [ui("合議（1+7）", "Council (1+7)"), ui("実行しない（定義を作るだけ）", "Does not run (it only makes the definition)"), ui("AMU Studio・AMU Runtime で実行する", "Runs in AMU Studio and AMU Runtime"), ui("各メンバーの番で合議を行う設計（チームの実行は準備中）", "Designed so that the council runs on each member's turn (running a team is in preparation)")],
+    [ui("ファイル", "File"), ui("キャラクター：.zip（1 体）・.json／.yaml。パック：.zip", "Character: .zip (one Character), .json / .yaml. Pack: .zip"), ui(".amupkg（Studio の鍵で署名）", ".amupkg (signed with the Studio key)"), ui("取り込むのは .amupkg", "Imports .amupkg files")],
+    [ui("公開の状態", "Release status"), ui("β 公開中", "Public beta"), ui("β 公開中", "Public beta"), ui("未公開（開発中）", "Not released (in development)")],
+  ];
+  return `<section class="chapter definition-comparison" data-extra-chapter="comparison" aria-labelledby="definition-comparison-title"><h2 id="definition-comparison-title"><span class="num">八</span>${ui("SAKU定義とAMU定義、MACHI定義の比較", "SAKU, AMU and MACHI definitions compared")}</h2>
+    <div class="comparison-scroll"><table class="comparison-table"><thead><tr><th></th><th>${ui("SAKU 定義", "SAKU definition")}</th><th>${ui("AMU 定義", "AMU definition")}</th><th>${ui("MACHI 定義", "MACHI definition")}</th></tr></thead>
+    <tbody>${rows.map(([head, ...cells]) => `<tr><th scope="row">${head}</th>${cells.map(cell => `<td>${cell}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <p class="comparison-date">${ui(`${COMPARISON_SNAPSHOT} 時点の情報です。`, `As of ${COMPARISON_SNAPSHOT}.`)}</p></section>`;
 }
 
 function renderSurface() {
@@ -641,7 +672,7 @@ function renderSurface() {
     identity: `<div class="two">${simpleControl("identity.display_name")}${simpleControl("identity.character_id")}</div>${inspectorMarkup()}`,
     purpose: `${simpleControl("purpose.summary")}<div class="two">${simpleControl("purpose.primary_value")}${simpleControl("character_core.character_role")}</div>${listControl("purpose.non_goals")}`,
     work: `${listControl("purpose.target_users")}${enumListMarkup("purpose.work_modes")}
-      <aside class="helper-boundary"><strong>${ui("職能CSVはHelper Contextです", "Occupation CSV is Helper Context")}</strong><p>${ui("直接反映できる既存対応はCharacterの役割だけです。職業から資格・権限・許可・適性を推測しません。Previewと確認を経て明示的に適用します。", "Occupation CSV is helper context. The only existing direct mapping is Character role. It never implies qualifications, authority, the right to act, or proven aptitude, and it requires preview and explicit apply.")}</p></aside>`,
+`,
     persona: `${listControl("character_core.values")}<div class="two">${simpleControl("expression_semantics.first_person")}${simpleControl("expression_semantics.address_style")}${simpleControl("expression_semantics.age_expression")}${simpleControl("expression_semantics.voice")}</div>
       ${listControl("expression_semantics.preferred_questions")}${simpleControl("expression_semantics.uncertainty_expression")}${simpleControl("expression_semantics.error_correction_rule")}${simpleControl("expression_semantics.closing_rule")}
       <details class="optional-expression"><summary>${ui("任意の対話・見た目設定", "Optional interaction and appearance settings")}</summary><div class="two">${simpleControl("expression_semantics.interaction_tendencies.encouragement")}${simpleControl("expression_semantics.interaction_tendencies.rapport")}${simpleControl("expression_semantics.interaction_tendencies.metaphor")}${simpleControl("expression_semantics.interaction_tendencies.scaffolding")}</div>${simpleControl("expression_semantics.presentation_intent.appearance")}</details>
@@ -653,7 +684,7 @@ function renderSurface() {
       <div id="referenceEditors" class="reference-editors"></div>`,
   };
   for (const chapter of CHAPTERS) form.insertAdjacentHTML("beforeend", chapterMarkup(chapter, bodies[chapter.id]));
-  form.insertAdjacentHTML("beforeend", fixedSystemMarkup() + tuningMarkup() + `<details class="advanced-settings"><summary>${ui("詳細設定 — Expert / Advanced", "Expert / Advanced settings")}</summary><p>${ui("この欄で編集できる項目は、いまはありません。実行環境（Runtime）・AMU・MACHI の設定は、それぞれのツールで行います。", "There are no fields to edit here at the moment. Settings for the runtime environment (Runtime), AMU and MACHI are made in each of those tools.")}</p></details>`);
+  form.insertAdjacentHTML("beforeend", occupationTemplateMarkup() + fixedSystemMarkup() + comparisonMarkup());
 
   window.bindInputs?.();
   window.renderAllLists?.();

@@ -10,6 +10,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
+mod code_signature;
 mod character_pack;
 mod saku_return;
 use character_pack::{CharacterPackImport, looks_like_character_pack, parse_character_pack};
@@ -17,7 +18,7 @@ use saku_return::{SakuReturnImport, looks_like_saku_return, parse_saku_return};
 
 /// How this build is signed, set by the signed build (scripts/prepare_desktop_assets.mjs reads the same value).
 const CODE_SIGNING: &str = match option_env!("SAKU_CODE_SIGNING") { Some(mode) => mode, None => "UNSIGNED" };
-const APP_VERSION: &str = "0.1.0-beta.11";
+const APP_VERSION: &str = "0.1.0-beta.12";
 const CONFIG_FILE: &str = "desktop-host.json";
 const MAX_PACKAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_ARCHIVE_ENTRY_BYTES: usize = 32 * 1024 * 1024;
@@ -141,6 +142,21 @@ struct ImportResult {
     /// Present only for an AMU Studio saku-return (nothing is written for it).
     #[serde(skip_serializing_if = "Option::is_none")]
     saku_return: Option<SakuReturnImport>,
+    /// G1 (2026-10-14): a pack waits under imports/.pending/<id> until the page has checked its
+    /// signatures, then commit_pack_import or discard_pack_import. Present only for a staged pack.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pending_id: Option<String>,
+    /// A self-made Character ZIP (<slug>.saku-character.zip), handed to the page as it is: the page
+    /// applies AMU Studio's refusal rules to the bytes. Nothing is written for it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    self_made: Option<SelfMadeImport>,
+}
+
+/// The bytes of a self-made Character ZIP and their SHA-256 (Owner 2026-10-14: SAKU reads its own ZIP back).
+#[derive(Debug, Serialize)]
+struct SelfMadeImport {
+    sha256: String,
+    bytes: Vec<u8>,
 }
 
 #[derive(Debug, Serialize)]
@@ -160,7 +176,58 @@ struct PackageValidationFailure {
 }
 
 fn path_string(path: &Path) -> String {
-    path.to_string_lossy().into_owned()
+    let text = path.to_string_lossy();
+    // 2026-10-14 keying 3-8: a resource path on Windows comes canonicalized (\\?\C:\...); a person reads it as written.
+    match text.strip_prefix(r"\\?\") {
+        Some(rest) if !rest.starts_with("UNC\\") => rest.to_string(),
+        _ => text.into_owned(),
+    }
+}
+
+/// The save dialog's file type for an export name (2026-10-14 keying 3-18: without a filter the dialog had no
+/// default extension, and with known extensions hidden the name read as `<id>.saku-character`).
+fn export_filter(filename: &str) -> Option<(&'static str, &'static str)> {
+    let lower = filename.to_ascii_lowercase();
+    // The type row names the extension (2026-10-15 keying round 2 m4: with known extensions hidden, the name box shows no
+    // ".json", so the type row says it).
+    if lower.ends_with(".zip") { Some(("ZIP（*.zip）", "zip")) }
+    else if lower.ends_with(".json") { Some(("JSON（*.json）", "json")) }
+    else if lower.ends_with(".yaml") { Some(("YAML（*.yaml）", "yaml")) }
+    else { None }
+}
+
+/// The chosen path, with the export's extension added when the person typed a name without it.
+fn with_export_extension(path: PathBuf, filename: &str) -> PathBuf {
+    let Some((_, ext)) = export_filter(filename) else { return path };
+    let has = path.extension().map(|e| e.to_string_lossy().eq_ignore_ascii_case(ext)).unwrap_or(false);
+    if has { return path; }
+    let mut name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    name.push('.');
+    name.push_str(ext);
+    path.with_file_name(name)
+}
+
+/// Where an export's save dialog opens: the Workspace folder, every time (2026-10-15 keying round 2 m5: the dialog opened
+/// the last folder used, which was the repository's test fixtures, so a save would have written into the repository).
+/// None when no Workspace is chosen or its folder is gone; the dialog then opens where Windows chooses.
+fn export_start_directory(workspace: Option<PathBuf>) -> Option<PathBuf> {
+    workspace.filter(|dir| dir.is_dir())
+}
+
+fn export_save_dialog(dialog_title: String, filename: &str, start: Option<PathBuf>) -> Option<PathBuf> {
+    let mut dialog = rfd::FileDialog::new().set_title(dialog_title).set_file_name(filename);
+    // rfd sets it with IFileDialog::SetFolder, which wins over the folder Windows remembers.
+    if let Some(dir) = start {
+        dialog = dialog.set_directory(dir);
+    }
+    if let Some((label, ext)) = export_filter(filename) {
+        dialog = dialog.add_filter(label, &[ext]);
+    }
+    dialog.save_file().map(|path| with_export_extension(path, filename))
+}
+
+fn workspace_export_start(app: &AppHandle) -> Option<PathBuf> {
+    export_start_directory(read_config(app).ok().and_then(|config| config.workspace))
 }
 
 fn valid_export_filename(filename: &str) -> bool {
@@ -222,7 +289,7 @@ fn write_export_bytes(path: &Path, filename: &str, content: &[u8]) -> SaveFileRe
 }
 
 #[tauri::command]
-fn save_builder_file(filename: String, content: String, dialog_title: String) -> SaveFileResult {
+fn save_builder_file(app: AppHandle, filename: String, content: String, dialog_title: String) -> SaveFileResult {
     if !valid_export_filename(&filename) {
         return SaveFileResult {
             status: "ERROR",
@@ -232,10 +299,7 @@ fn save_builder_file(filename: String, content: String, dialog_title: String) ->
             reason: Some("EXPORT_FILENAME_INVALID".to_string()),
         };
     }
-    let selection = rfd::FileDialog::new()
-        .set_title(dialog_title)
-        .set_file_name(&filename)
-        .save_file();
+    let selection = export_save_dialog(dialog_title, &filename, workspace_export_start(&app));
     match selection {
         Some(path) => write_export_file(&path, &filename, &content),
         None => SaveFileResult {
@@ -255,7 +319,19 @@ const SELF_MADE_ZIP_SUFFIX: &str = ".saku-character.zip";
 const SELF_MADE_ZIP_MAX: usize = 4 * 1024 * 1024;
 
 fn self_made_zip_acceptable(filename: &str, bytes: &[u8]) -> Result<(), &'static str> {
-    let stem = filename.strip_suffix(SELF_MADE_ZIP_SUFFIX).ok_or("EXPORT_FILENAME_INVALID")?;
+    export_zip_acceptable(filename, bytes, SELF_MADE_ZIP_SUFFIX)
+}
+
+// The Agent Skills export (ADR-0026; Owner 2026-10-03: SAKU Builder adds it): one skill folder in a ZIP,
+// saved through the same narrow door as the self-made Character ZIP.
+const SKILL_EXPORT_ZIP_SUFFIX: &str = ".agent-skill.zip";
+
+fn skill_export_zip_acceptable(filename: &str, bytes: &[u8]) -> Result<(), &'static str> {
+    export_zip_acceptable(filename, bytes, SKILL_EXPORT_ZIP_SUFFIX)
+}
+
+fn export_zip_acceptable(filename: &str, bytes: &[u8], suffix: &str) -> Result<(), &'static str> {
+    let stem = filename.strip_suffix(suffix).ok_or("EXPORT_FILENAME_INVALID")?;
     if !valid_export_filename(filename)
         || stem.is_empty()
         || !stem.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
@@ -269,8 +345,17 @@ fn self_made_zip_acceptable(filename: &str, bytes: &[u8]) -> Result<(), &'static
 }
 
 #[tauri::command]
-fn save_self_made_zip(filename: String, bytes: Vec<u8>, dialog_title: String) -> SaveFileResult {
-    if let Err(reason) = self_made_zip_acceptable(&filename, &bytes) {
+fn save_self_made_zip(app: AppHandle, filename: String, bytes: Vec<u8>, dialog_title: String) -> SaveFileResult {
+    save_export_zip(&app, filename, bytes, dialog_title, self_made_zip_acceptable)
+}
+
+#[tauri::command]
+fn save_skill_export_zip(app: AppHandle, filename: String, bytes: Vec<u8>, dialog_title: String) -> SaveFileResult {
+    save_export_zip(&app, filename, bytes, dialog_title, skill_export_zip_acceptable)
+}
+
+fn save_export_zip(app: &AppHandle, filename: String, bytes: Vec<u8>, dialog_title: String, acceptable: fn(&str, &[u8]) -> Result<(), &'static str>) -> SaveFileResult {
+    if let Err(reason) = acceptable(&filename, &bytes) {
         return SaveFileResult {
             status: "ERROR",
             path: None,
@@ -279,10 +364,7 @@ fn save_self_made_zip(filename: String, bytes: Vec<u8>, dialog_title: String) ->
             reason: Some(reason.to_string()),
         };
     }
-    let selection = rfd::FileDialog::new()
-        .set_title(dialog_title)
-        .set_file_name(&filename)
-        .save_file();
+    let selection = export_save_dialog(dialog_title, &filename, workspace_export_start(app));
     match selection {
         Some(path) => write_export_bytes(&path, &filename, &bytes),
         None => SaveFileResult {
@@ -467,6 +549,8 @@ fn invalid(reason: impl Into<String>, source_path: Option<String>) -> ImportResu
         manifest: None,
         pack: None,
         saku_return: None,
+        pending_id: None,
+        self_made: None,
     }
 }
 
@@ -493,6 +577,8 @@ fn failure_result(failure: PackageValidationFailure, source_path: Option<String>
         manifest: None,
         pack: None,
         saku_return: None,
+        pending_id: None,
+        self_made: None,
     }
 }
 
@@ -785,7 +871,12 @@ fn unrecognized_format(detail: impl Into<String>) -> PackageValidationFailure {
 enum ParsedPackage {
     CharacterPack(CharacterPackImport),
     SakuReturn(SakuReturnImport),
+    SelfMade(SelfMadeImport),
 }
+
+pub(crate) const SELF_MADE_MANIFEST_NAME: &str = "saku-character-manifest.json";
+/// A self-made ZIP holds one Character and its list; anything this large is not one.
+const MAX_SELF_MADE_BYTES: usize = 8 * 1024 * 1024;
 
 /// Is this wit-package.json the AMU Character File marker?  Decided by the
 /// pinned strings only; a schema prefix match alone is accepted as a hedge
@@ -865,6 +956,14 @@ fn parse_package(path: &Path, bytes: &[u8]) -> Result<ParsedPackage, PackageVali
             }
             return Ok(ParsedPackage::SakuReturn(ret));
         }
+        // SAKU Builder's own 「SAKU キャラクターを書き出す（.zip）」: root saku-character-manifest.json.
+        // The page checks it with the same rules as AMU Studio; the host only recognises it.
+        if entries.contains_key(SELF_MADE_MANIFEST_NAME) {
+            if bytes.len() > MAX_SELF_MADE_BYTES {
+                return Err(package_failure("INVALID", "SELF_MADE_ZIP_TOO_LARGE", "自作のキャラクターの ZIP として大きすぎます。"));
+            }
+            return Ok(ParsedPackage::SelfMade(SelfMadeImport { sha256: sha256_hex(bytes), bytes: bytes.to_vec() }));
+        }
         // wit-package.json now marks two things this host does not import: the
         // AMU Character File (say where it belongs) and the retired Builder
         // package (say that it is retired).  Neither is guessed from anything
@@ -929,6 +1028,19 @@ fn import_package(app: &AppHandle, path: &Path) -> ImportResult {
     match parse_package(path, &bytes) {
         Ok(ParsedPackage::CharacterPack(pack)) => import_character_pack(app, pack, source_path),
         Ok(ParsedPackage::SakuReturn(ret)) => import_saku_return(ret, source_path),
+        Ok(ParsedPackage::SelfMade(zip)) => ImportResult {
+            status: "IMPORTED",
+            code: "SELF_MADE_ZIP_READY",
+            reason: "自作のキャラクターの ZIP です。この画面で中身を確かめます。workspace には保存していません。".to_string(),
+            source_path,
+            imported_path: None,
+            payload_json: None,
+            manifest: None,
+            pack: None,
+            saku_return: None,
+            pending_id: None,
+            self_made: Some(zip),
+        },
         Err(failure) => failure_result(failure, source_path),
     }
 }
@@ -970,6 +1082,8 @@ fn import_saku_return(ret: SakuReturnImport, source_path: Option<String>) -> Imp
         manifest: Some(manifest),
         pack: None,
         saku_return: Some(ret),
+        pending_id: None,
+        self_made: None,
     }
 }
 
@@ -1028,6 +1142,8 @@ fn import_character_pack(app: &AppHandle, pack: CharacterPackImport, source_path
                 manifest: Some(manifest),
                 pack: Some(pack),
                 saku_return: None,
+                pending_id: None,
+                self_made: None,
             };
         }
     };
@@ -1035,12 +1151,19 @@ fn import_character_pack(app: &AppHandle, pack: CharacterPackImport, source_path
     if let Err(error) = require_workspace_lock(app, None) {
         return invalid(error, source_path);
     }
-    let import_dir = workspace.join("imports").join(format!(
+    let pending_id = format!(
         "{}-{}-{}",
         safe_path_segment(&pack.pack_id),
         safe_path_segment(&pack.pack_version),
         &payload_hash[..12]
-    ));
+    );
+    // G1: nothing reaches imports/ before the page has checked the signatures.
+    let import_dir = pending_dir(&workspace, &pending_id);
+    if import_dir.exists() {
+        if let Err(error) = fs::remove_dir_all(&import_dir) {
+            return invalid(format!("IMPORT_PENDING_RESET_FAILED: {error}"), source_path);
+        }
+    }
     if let Err(error) = fs::create_dir_all(import_dir.join("characters")) {
         return invalid(format!("IMPORT_DIRECTORY_CREATE_FAILED: {error}"), source_path);
     }
@@ -1081,6 +1204,7 @@ fn import_character_pack(app: &AppHandle, pack: CharacterPackImport, source_path
         }
     }
     let count = pack.character_count;
+    remember_pending(app, &pending_id);
     ImportResult {
         status: "IMPORTED",
         code: "CHARACTER_PACK_IMPORTED",
@@ -1089,22 +1213,162 @@ fn import_character_pack(app: &AppHandle, pack: CharacterPackImport, source_path
             pack.pack_id, pack.pack_version
         ),
         source_path,
-        imported_path: Some(path_string(&import_dir)),
+        imported_path: None,
         payload_json: Some(payload_json),
         manifest: Some(manifest),
         pack: Some(pack),
         saku_return: None,
+        pending_id: Some(pending_id),
+        self_made: None,
     }
 }
 
+// ── G1: staged pack imports (2026-10-14) ─────────────────────────────────────────
+//
+// import_character_pack writes a pack under imports/.pending/<id>. The page checks the
+// signatures with the pinned keys, then either commits (PASS or DIGEST_ONLY) or discards
+// (FAIL). collect_imports never reads .pending, and a pending folder this process did not
+// stage (left by a crash or a closed window) is removed at the next workspace scan, so a
+// refused pack cannot come back through the workspace rebuild.
+
+const PENDING_DIR: &str = ".pending";
+
+fn pending_dir(workspace: &Path, id: &str) -> PathBuf {
+    workspace.join("imports").join(PENDING_DIR).join(id)
+}
+
+/// A pending id is one flat folder name made by import_character_pack.
+fn pending_id_valid(id: &str) -> bool {
+    !id.is_empty() && id.len() <= 200 && !id.starts_with('.') && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+}
+
+#[derive(Default)]
+struct PendingImports(std::sync::Mutex<std::collections::HashSet<String>>);
+
+fn remember_pending(app: &AppHandle, id: &str) {
+    if let Ok(mut set) = app.state::<PendingImports>().0.lock() {
+        set.insert(id.to_string());
+    }
+}
+
+fn forget_pending(app: &AppHandle, id: &str) {
+    if let Ok(mut set) = app.state::<PendingImports>().0.lock() {
+        set.remove(id);
+    }
+}
+
+/// Move a staged pack into imports/ when its payload is still the one the page checked.
+fn commit_pending(workspace: &Path, id: &str, payload_sha256: &str) -> Result<PathBuf, &'static str> {
+    if !pending_id_valid(id) {
+        return Err("PACK_IMPORT_PENDING_ID_INVALID");
+    }
+    let staged = pending_dir(workspace, id);
+    let payload = fs::read(staged.join("payload.json")).map_err(|_| "PACK_IMPORT_PENDING_MISSING")?;
+    if sha256_hex(&payload) != payload_sha256.to_ascii_lowercase() {
+        return Err("PACK_IMPORT_PENDING_MISMATCH");
+    }
+    let target = workspace.join("imports").join(id);
+    if target.exists() {
+        // The same pack, version and payload (the name carries the payload hash) is already there.
+        fs::remove_dir_all(&staged).map_err(|_| "PACK_IMPORT_PENDING_CLEANUP_FAILED")?;
+        return Ok(target);
+    }
+    fs::rename(&staged, &target).map_err(|_| "PACK_IMPORT_COMMIT_FAILED")?;
+    Ok(target)
+}
+
+fn discard_pending(workspace: &Path, id: &str) -> Result<(), &'static str> {
+    if !pending_id_valid(id) {
+        return Err("PACK_IMPORT_PENDING_ID_INVALID");
+    }
+    let staged = pending_dir(workspace, id);
+    if staged.exists() {
+        fs::remove_dir_all(&staged).map_err(|_| "PACK_IMPORT_DISCARD_FAILED")?;
+    }
+    Ok(())
+}
+
+/// Remove every pending folder that is not in `keep`. Committed imports are never touched.
+fn clear_stale_pending(workspace: &Path, keep: &std::collections::HashSet<String>) -> usize {
+    let root = workspace.join("imports").join(PENDING_DIR);
+    let mut removed = 0;
+    if let Ok(entries) = fs::read_dir(&root) {
+        for entry in entries.flatten() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if keep.contains(&name) {
+                continue;
+            }
+            let path = entry.path();
+            let gone = if path.is_dir() { fs::remove_dir_all(&path).is_ok() } else { fs::remove_file(&path).is_ok() };
+            if gone {
+                removed += 1;
+            }
+        }
+    }
+    removed
+}
+
 #[tauri::command]
-fn choose_and_import_package(app: AppHandle) -> Result<ImportResult, String> {
+fn commit_pack_import(app: AppHandle, pending_id: String, payload_sha256: String) -> Result<String, String> {
+    let workspace = require_workspace_lock(&app, None)?;
+    let committed = commit_pending(&workspace, &pending_id, &payload_sha256).map_err(str::to_string)?;
+    forget_pending(&app, &pending_id);
+    Ok(path_string(&committed))
+}
+
+#[tauri::command]
+fn discard_pack_import(app: AppHandle, pending_id: String) -> Result<(), String> {
+    let workspace = require_workspace_lock(&app, None)?;
+    discard_pending(&workspace, &pending_id).map_err(str::to_string)?;
+    forget_pending(&app, &pending_id);
+    Ok(())
+}
+
+#[tauri::command]
+fn choose_and_import_package(app: AppHandle, window: tauri::Window) -> Result<ImportResult, String> {
     let selection = rfd::FileDialog::new()
         .set_title("SAKU Character Pack を選択")
         .add_filter("SAKU Character Pack (.zip)", &["zip"])
+        .set_parent(&window)
         .pick_file()
         .ok_or_else(|| "PACKAGE_SELECTION_CANCELLED".to_string())?;
     Ok(import_package(&app, &selection))
+}
+
+// 2026-10-14 keying F3: the individual import used the WebView's own file picker (an <input type="file">), which
+// opened small and folded at the bottom right. The host opens it like the pack picker, over the app's window.
+const MAX_CHARACTER_FILE_BYTES: u64 = 2 * 1024 * 1024;
+const MAX_CHARACTER_FILES: usize = 20;
+
+#[derive(Serialize, Debug)]
+struct PickedCharacterFile {
+    name: String,
+    text: String,
+}
+
+fn read_character_file(path: &Path) -> Result<PickedCharacterFile, String> {
+    let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let size = fs::metadata(path).map_err(|e| format!("{name}: {e}"))?.len();
+    if size > MAX_CHARACTER_FILE_BYTES {
+        return Err(format!("{name}: CHARACTER_FILE_TOO_LARGE"));
+    }
+    let bytes = fs::read(path).map_err(|e| format!("{name}: {e}"))?;
+    let text = String::from_utf8(bytes).map_err(|_| format!("{name}: CHARACTER_FILE_NOT_UTF8"))?;
+    Ok(PickedCharacterFile { name, text })
+}
+
+#[tauri::command]
+fn choose_character_files(window: tauri::Window) -> Result<Vec<PickedCharacterFile>, String> {
+    let selection = rfd::FileDialog::new()
+        .set_title("キャラクター定義を選択（.json／.yaml）")
+        .add_filter("SAKU Character (.json / .yaml)", &["json", "yaml", "yml"])
+        .set_parent(&window)
+        .pick_files()
+        .ok_or_else(|| "CHARACTER_FILES_CANCELLED".to_string())?;
+    if selection.len() > MAX_CHARACTER_FILES {
+        return Err("CHARACTER_FILES_TOO_MANY".to_string());
+    }
+    selection.iter().map(|path| read_character_file(path)).collect()
 }
 
 #[tauri::command]
@@ -1117,12 +1381,13 @@ fn import_package_path(app: AppHandle, path: String) -> ImportResult {
 // Owner 2026-09-24: the three OSS samples are retired and the installer carries
 // the same sample pack as AMU Studio instead: saku-pack-sample 1.1.0, three
 // sample-mode Characters signed with the production keys
-// (LicenseRef-WIT-Sample-1.0). It is a bundle resource, and it goes through
+// (LicenseRef-WIT-Sample-1.0). Since 2026-10-10 it is 1.2.0: the same three with the decision
+// invariants INV-DEC-1..3 (Owner results 97 and 102), signed in Cloud KMS by the Owner. It is a bundle resource, and it goes through
 // exactly the intake a chosen pack goes through — digests, the catalog
 // release, the adopted schema, and the signature check on the page. The pinned
 // digest only makes a swapped or damaged file stop before that intake runs.
-const SAMPLE_PACK_RESOURCE: &str = "samples/saku-pack-sample-1.1.0.zip";
-const SAMPLE_PACK_SHA256: &str = "1e5a20855371f1f4e90a52f0142c8154fd787034f6e0babee1e9b9419b277c8c";
+const SAMPLE_PACK_RESOURCE: &str = "samples/saku-pack-sample-1.2.0.zip";
+const SAMPLE_PACK_SHA256: &str = "f30462275a35d53122518941457d64f1ec07ca748efe681caa46d3d0dc384126";
 
 #[derive(Debug, Serialize)]
 struct BundledSamplePack {
@@ -1252,7 +1517,8 @@ fn collect_imports(
     };
     for entry in entries.flatten() {
         let dir = entry.path();
-        if !dir.is_dir() {
+        // G1: .pending holds packs whose signatures the page has not accepted.
+        if !dir.is_dir() || entry.file_name().to_string_lossy().starts_with('.') {
             continue;
         }
         let payload = match fs::read_to_string(dir.join("payload.json")) {
@@ -1324,6 +1590,11 @@ fn list_workspace_characters(app: AppHandle) -> Result<DurableLibrary, String> {
     };
     let mut artifacts = Vec::new();
     let mut unreadable = Vec::new();
+    // G1: a pending folder this process did not stage was never accepted by the page.
+    if require_workspace_lock(&app, None).is_ok() {
+        let keep = app.state::<PendingImports>().0.lock().map(|set| set.clone()).unwrap_or_default();
+        clear_stale_pending(&workspace, &keep);
+    }
     collect_imports(&workspace, &mut artifacts, &mut unreadable);
     collect_authored(&workspace, &mut artifacts, &mut unreadable);
     Ok(DurableLibrary {
@@ -1602,10 +1873,109 @@ fn write_workspace_migration_backup(app: AppHandle, workspace: String, content: 
     write_migration_copy(&root, &content)
 }
 
+// ── Closing the window (2026-10-14 keying 4-16) ─────────────────────────────
+//
+// The window closed without asking even with unsaved edits in ②. The page's own close hook would need the
+// core:window:allow-destroy permission; instead the host holds the close and asks the page (event
+// "saku-close-requested"), which answers with close_main_window (close) or close_cancelled (stay). A page that does
+// not answer cannot keep the window open: once the request has gone unacknowledged for CLOSE_ACK_WAIT, the next close
+// closes.
+const CLOSE_ACK_WAIT: std::time::Duration = std::time::Duration::from_secs(2);
+
+#[derive(Default)]
+struct CloseGate(std::sync::Mutex<CloseState>);
+
+#[derive(Default, Clone, Copy, Debug, PartialEq)]
+struct CloseState {
+    allowed: bool,
+    requested_at: Option<std::time::Instant>,
+    acknowledged: bool,
+}
+
+#[derive(Debug, PartialEq)]
+enum CloseAction {
+    Close,
+    AskPage,
+}
+
+/// What a close request does, given the state and the time now. Pure, so the rule is tested without a window.
+fn decide_close(state: &mut CloseState, now: std::time::Instant) -> CloseAction {
+    if state.allowed {
+        return CloseAction::Close;
+    }
+    if let Some(at) = state.requested_at {
+        if !state.acknowledged {
+            // The page has not answered: the wait counts from the first request, however often the person clicks.
+            if now.duration_since(at) >= CLOSE_ACK_WAIT {
+                state.allowed = true;
+                return CloseAction::Close;
+            }
+            return CloseAction::AskPage;
+        }
+    }
+    state.requested_at = Some(now);
+    state.acknowledged = false;
+    CloseAction::AskPage
+}
+
+// The running exe's signature, read once on its own thread after start (keying F1); None while it is being read.
+#[derive(Default)]
+struct CodeSignature(std::sync::Mutex<Option<code_signature::SignatureFacts>>);
+
+#[tauri::command]
+fn get_code_signature(signature: tauri::State<'_, CodeSignature>) -> Option<code_signature::SignatureFacts> {
+    signature.0.lock().ok().and_then(|facts| facts.clone())
+}
+
+#[tauri::command]
+fn close_request_seen(gate: tauri::State<'_, CloseGate>) {
+    if let Ok(mut state) = gate.0.lock() { state.acknowledged = true; }
+}
+
+#[tauri::command]
+fn close_cancelled(gate: tauri::State<'_, CloseGate>) {
+    if let Ok(mut state) = gate.0.lock() { *state = CloseState::default(); }
+}
+
+#[tauri::command]
+fn close_main_window(window: tauri::Window, gate: tauri::State<'_, CloseGate>) -> Result<(), String> {
+    if let Ok(mut state) = gate.0.lock() { state.allowed = true; }
+    window.close().map_err(|error| error.to_string())
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(WorkspaceLock::default())
+        .manage(PendingImports::default())
+        .manage(CloseGate::default())
+        .manage(CodeSignature::default())
+        .setup(|app| {
+            let handle = app.handle().clone();
+            std::thread::spawn(move || {
+                let facts = code_signature::read_own_signature();
+                if let Ok(mut slot) = handle.state::<CodeSignature>().0.lock() {
+                    *slot = Some(facts);
+                }
+            });
+            Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let action = match window.state::<CloseGate>().0.lock() {
+                    Ok(mut state) => decide_close(&mut state, std::time::Instant::now()),
+                    Err(_) => CloseAction::Close,
+                };
+                if action == CloseAction::AskPage {
+                    api.prevent_close();
+                    let _ = tauri::Emitter::emit(window, "saku-close-requested", ());
+                }
+            }
+        })
         .invoke_handler(tauri::generate_handler![
+            get_code_signature,
+            close_request_seen,
+            close_cancelled,
+            close_main_window,
             get_runtime_state,
             get_startup_route,
             choose_workspace,
@@ -1615,12 +1985,16 @@ fn main() {
             write_workspace_state,
             write_workspace_migration_backup,
             choose_and_import_package,
+            choose_character_files,
             import_package_path,
+            commit_pack_import,
+            discard_pack_import,
             bundled_sample_pack,
             import_bundled_sample_pack,
             open_service_link,
             save_builder_file,
             save_self_made_zip,
+            save_skill_export_zip,
             list_workspace_characters,
             save_workspace_character
         ])
@@ -1631,9 +2005,9 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::{
-        collect_authored, collect_imports, crc32, metadata_dir, path_string, read_state_files,
+        collect_authored, collect_imports, crc32, export_filter, export_start_directory, metadata_dir, path_string, read_state_files,
         safe_path_segment, sha256_hex, startup_route_from_args, valid_export_filename,
-        write_character_files, write_export_file, write_migration_copy, write_state_files,
+        with_export_extension, write_character_files, write_export_file, write_migration_copy, write_state_files,
         WorkspaceLock, STATE_DIR,
     };
     use std::collections::HashMap;
@@ -1654,6 +2028,17 @@ mod tests {
         assert_eq!(self_made_zip_acceptable("x.saku-character.zip", b"{}"), Err("EXPORT_ZIP_INVALID"));
         let big = vec![0x50u8, 0x4b, 0x03, 0x04].into_iter().chain(std::iter::repeat(0).take(4 * 1024 * 1024)).collect::<Vec<u8>>();
         assert_eq!(self_made_zip_acceptable("x.saku-character.zip", &big), Err("EXPORT_ZIP_INVALID"));
+    }
+
+    #[test]
+    fn skill_export_zip_saves_only_its_own_file() {
+        use super::skill_export_zip_acceptable;
+        let zip = [0x50u8, 0x4b, 0x03, 0x04, 0, 0];
+        assert!(skill_export_zip_acceptable("sample-general-compass.agent-skill.zip", &zip).is_ok());
+        for bad in ["x.saku-character.zip", ".agent-skill.zip", "../x.agent-skill.zip", "Upper.agent-skill.zip", "x.agent-skill.zip.exe"] {
+            assert_eq!(skill_export_zip_acceptable(bad, &zip), Err("EXPORT_FILENAME_INVALID"), "{bad}");
+        }
+        assert_eq!(skill_export_zip_acceptable("x.agent-skill.zip", b"{}"), Err("EXPORT_ZIP_INVALID"));
     }
 
     #[test]
@@ -2113,6 +2498,7 @@ mod tests {
         match parse_package(Path::new("saku-pack-test-1.0.0-beta.zip"), bytes)? {
             ParsedPackage::CharacterPack(pack) => Ok(pack),
             ParsedPackage::SakuReturn(_) => panic!("a pack must not parse as a saku-return"),
+            ParsedPackage::SelfMade(_) => panic!("a pack must not parse as a self-made ZIP"),
         }
     }
 
@@ -2275,6 +2661,7 @@ mod tests {
         match parse_package(Path::new("aoi-one.saku-return.zip"), bytes)? {
             ParsedPackage::SakuReturn(ret) => Ok(ret),
             ParsedPackage::CharacterPack(_) => panic!("a return must not parse as a pack"),
+            ParsedPackage::SelfMade(_) => panic!("a return must not parse as a self-made ZIP"),
         }
     }
 
@@ -2431,14 +2818,14 @@ mod tests {
     fn bundled_sample_pack_is_pinned_and_passes_intake() {
         use super::{parse_package, ParsedPackage, SAMPLE_PACK_RESOURCE, SAMPLE_PACK_SHA256};
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
-        let file = root.join("desktop/resources/samples/saku-pack-sample-1.1.0.zip");
+        let file = root.join("desktop/resources/samples/saku-pack-sample-1.2.0.zip");
         let bytes = std::fs::read(&file).expect("the sample pack is committed");
         assert_eq!(sha256_hex(&bytes), SAMPLE_PACK_SHA256);
         let conf: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(root.join("src-tauri/tauri.conf.json")).unwrap()).unwrap();
-        assert_eq!(conf["bundle"]["resources"]["../desktop/resources/samples/saku-pack-sample-1.1.0.zip"], SAMPLE_PACK_RESOURCE);
+        assert_eq!(conf["bundle"]["resources"]["../desktop/resources/samples/saku-pack-sample-1.2.0.zip"], SAMPLE_PACK_RESOURCE);
         match parse_package(&file, &bytes) {
             Ok(ParsedPackage::CharacterPack(pack)) => {
-                assert_eq!(pack.pack_version, "1.1.0");
+                assert_eq!(pack.pack_version, "1.2.0");
                 assert_eq!(pack.entries.len(), 3);
                 let mut slugs: Vec<&str> = pack.entries.iter().map(|entry| entry.slug.as_str()).collect();
                 slugs.sort();
@@ -2466,5 +2853,196 @@ mod tests {
                     "file:///C:/Windows/System32/calc.exe", "https://wi-t.com:8443/"] {
             assert!(!allowed_service_url(bad), "{bad}");
         }
+    }
+
+    // ── G1: staged pack imports (2026-10-14) ──────────────────────────────────
+    fn staged_workspace(name: &str) -> PathBuf {
+        let root = std::env::temp_dir().join(format!("saku-g1-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&root);
+        fs::create_dir_all(&root).unwrap();
+        root
+    }
+
+    fn stage(workspace: &Path, id: &str, payload: &[u8]) {
+        let dir = super::pending_dir(workspace, id);
+        fs::create_dir_all(&dir).unwrap();
+        fs::write(dir.join("payload.json"), payload).unwrap();
+        fs::write(dir.join("wit-package.json"), b"{}").unwrap();
+    }
+
+    #[test]
+    fn g1_a_staged_pack_is_not_collected() {
+        let workspace = staged_workspace("collect");
+        stage(&workspace, "saku-pack-x-1_0_0-abcdef012345", br#"{"characters":[]}"#);
+        let mut artifacts = Vec::new();
+        let mut unreadable = Vec::new();
+        collect_imports(&workspace, &mut artifacts, &mut unreadable);
+        assert!(artifacts.is_empty(), "a pending pack must not come back through the workspace rebuild");
+        assert!(unreadable.is_empty(), "the .pending folder is not an unreadable import either");
+        let _ = fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn g1_commit_moves_only_the_checked_payload() {
+        let workspace = staged_workspace("commit");
+        let payload = br#"{"characters":[1]}"#;
+        stage(&workspace, "p-1-aaaaaaaaaaaa", payload);
+        assert_eq!(super::commit_pending(&workspace, "p-1-aaaaaaaaaaaa", &sha256_hex(b"other")), Err("PACK_IMPORT_PENDING_MISMATCH"));
+        assert!(super::pending_dir(&workspace, "p-1-aaaaaaaaaaaa").exists(), "a refused commit leaves the staged folder for discard");
+        let committed = super::commit_pending(&workspace, "p-1-aaaaaaaaaaaa", &sha256_hex(payload).to_uppercase()).unwrap();
+        assert_eq!(committed, workspace.join("imports").join("p-1-aaaaaaaaaaaa"));
+        assert!(committed.join("payload.json").exists());
+        assert!(!super::pending_dir(&workspace, "p-1-aaaaaaaaaaaa").exists());
+        let mut artifacts = Vec::new();
+        let mut unreadable = Vec::new();
+        collect_imports(&workspace, &mut artifacts, &mut unreadable);
+        assert_eq!(artifacts.len(), 1, "a committed pack is collected");
+        // The same pack again: already there, the staged copy is dropped.
+        stage(&workspace, "p-1-aaaaaaaaaaaa", payload);
+        assert_eq!(super::commit_pending(&workspace, "p-1-aaaaaaaaaaaa", &sha256_hex(payload)).unwrap(), committed);
+        assert!(!super::pending_dir(&workspace, "p-1-aaaaaaaaaaaa").exists());
+        assert_eq!(super::commit_pending(&workspace, "missing-1", &sha256_hex(payload)), Err("PACK_IMPORT_PENDING_MISSING"));
+        let _ = fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn g1_discard_and_ids() {
+        let workspace = staged_workspace("discard");
+        stage(&workspace, "p-2-bbbbbbbbbbbb", b"{}");
+        super::discard_pending(&workspace, "p-2-bbbbbbbbbbbb").unwrap();
+        assert!(!super::pending_dir(&workspace, "p-2-bbbbbbbbbbbb").exists());
+        super::discard_pending(&workspace, "p-2-bbbbbbbbbbbb").unwrap();
+        for bad in ["", ".", "..", "../x", "a/b", "a\\b", ".pending", "x y"] {
+            assert_eq!(super::discard_pending(&workspace, bad), Err("PACK_IMPORT_PENDING_ID_INVALID"), "{bad}");
+            assert_eq!(super::commit_pending(&workspace, bad, "00"), Err("PACK_IMPORT_PENDING_ID_INVALID"), "{bad}");
+        }
+        let _ = fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn g1_stale_pending_is_cleared_and_committed_imports_are_kept() {
+        let workspace = staged_workspace("stale");
+        stage(&workspace, "old-1-cccccccccccc", b"{}");
+        stage(&workspace, "live-1-dddddddddddd", b"{}");
+        fs::create_dir_all(workspace.join("imports").join("kept-1-eeeeeeeeeeee")).unwrap();
+        let keep: std::collections::HashSet<String> = ["live-1-dddddddddddd".to_string()].into_iter().collect();
+        assert_eq!(super::clear_stale_pending(&workspace, &keep), 1);
+        assert!(!super::pending_dir(&workspace, "old-1-cccccccccccc").exists());
+        assert!(super::pending_dir(&workspace, "live-1-dddddddddddd").exists());
+        assert!(workspace.join("imports").join("kept-1-eeeeeeeeeeee").exists());
+        let _ = fs::remove_dir_all(&workspace);
+    }
+
+    #[test]
+    fn keying_character_files_are_read_with_limits() {
+        use super::{read_character_file, MAX_CHARACTER_FILE_BYTES};
+        let dir = std::env::temp_dir().join(format!("saku-pick-{}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let ok = dir.join("a.saku-character.json");
+        fs::write(&ok, "{\"identity\":{}}").unwrap();
+        let picked = read_character_file(&ok).unwrap();
+        assert_eq!((picked.name.as_str(), picked.text.as_str()), ("a.saku-character.json", "{\"identity\":{}}"));
+        let bad = dir.join("b.yaml");
+        fs::write(&bad, [0xffu8, 0xfe, 0x00]).unwrap();
+        assert!(read_character_file(&bad).unwrap_err().ends_with("CHARACTER_FILE_NOT_UTF8"));
+        let big = dir.join("c.json");
+        fs::write(&big, vec![b' '; (MAX_CHARACTER_FILE_BYTES + 1) as usize]).unwrap();
+        assert!(read_character_file(&big).unwrap_err().ends_with("CHARACTER_FILE_TOO_LARGE"));
+        let _ = fs::remove_file(&ok);
+        let _ = fs::remove_file(&bad);
+        let _ = fs::remove_file(&big);
+        let _ = fs::remove_dir(&dir);
+    }
+
+    // ── 2026-10-14 keying: what a person reads and saves ─────────────────────
+    #[test]
+    fn keying_paths_read_as_written() {
+        assert_eq!(path_string(Path::new(r"\\?\C:\Users\x\samples\a.zip")), r"C:\Users\x\samples\a.zip");
+        assert_eq!(path_string(Path::new(r"C:\Users\x\a.zip")), r"C:\Users\x\a.zip");
+        // a long UNC path keeps its form: stripping it would change where it points
+        assert_eq!(path_string(Path::new(r"\\?\UNC\server\share\a.zip")), r"\\?\UNC\server\share\a.zip");
+    }
+
+    #[test]
+    fn keying_save_dialog_keeps_the_export_extension() {
+        assert_eq!(export_filter("x.saku-character.zip"), Some(("ZIP（*.zip）", "zip")));
+        assert_eq!(export_filter("x.saku-character.json"), Some(("JSON（*.json）", "json")));
+        assert_eq!(export_filter("x.character.yaml"), Some(("YAML（*.yaml）", "yaml")));
+        assert_eq!(export_filter("x.txt"), None);
+        let typed = with_export_extension(PathBuf::from(r"C:\out\x.saku-character"), "x.saku-character.zip");
+        assert_eq!(typed, PathBuf::from(r"C:\out\x.saku-character.zip"));
+        let kept = with_export_extension(PathBuf::from(r"C:\out\other.ZIP"), "x.saku-character.zip");
+        assert_eq!(kept, PathBuf::from(r"C:\out\other.ZIP"));
+        let json = with_export_extension(PathBuf::from(r"C:\out\x"), "x.saku-character.json");
+        assert_eq!(json, PathBuf::from(r"C:\out\x.json"));
+    }
+
+    #[test]
+    fn keying_save_dialog_opens_in_the_workspace() {
+        // m5 (2026-10-15 keying round 2): the Workspace folder, not the last folder used.
+        let workspace = std::env::temp_dir();
+        assert_eq!(export_start_directory(Some(workspace.clone())), Some(workspace.clone()));
+        // A Workspace folder that is gone, or none chosen: no folder is forced.
+        assert_eq!(export_start_directory(Some(workspace.join("saku-no-such-workspace-m5"))), None);
+        assert_eq!(export_start_directory(None), None);
+    }
+
+    #[test]
+    fn keying_signature_facts_are_facts_only() {
+        use super::code_signature::{trust_word, unavailable};
+        assert_eq!(trust_word(0), "TRUSTED");
+        assert_eq!(trust_word(0x800B0100_u32 as i32), "NO_SIGNATURE");
+        // anything else Windows says is not trust: an expired, revoked, untrusted root or a hash mismatch
+        assert_eq!(trust_word(0x800B0101_u32 as i32), "NOT_TRUSTED");
+        assert_eq!(trust_word(0x80096010_u32 as i32), "NOT_TRUSTED");
+        assert_eq!(trust_word(-1), "NOT_TRUSTED");
+        let none = unavailable();
+        assert_eq!((none.trust, none.signer_cn.as_str(), none.signer_o.as_str()), ("UNAVAILABLE", "", ""));
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn keying_an_unsigned_test_binary_is_not_trusted() {
+        // the test executable itself carries no signature: never TRUSTED, and no signer is invented
+        let facts = super::code_signature::read_own_signature();
+        assert_ne!(facts.trust, "TRUSTED");
+        assert!(facts.signer_cn.is_empty() && facts.signer_o.is_empty());
+    }
+
+    #[test]
+    fn keying_close_asks_the_page_and_never_traps_the_window() {
+        use super::{decide_close, CloseAction, CloseState, CLOSE_ACK_WAIT};
+        let start = std::time::Instant::now();
+        let mut state = CloseState::default();
+        assert_eq!(decide_close(&mut state, start), CloseAction::AskPage, "the first close asks the page");
+        // the page answered (it is asking the person): a second close while it asks asks again, it does not close
+        state.acknowledged = true;
+        assert_eq!(decide_close(&mut state, start + CLOSE_ACK_WAIT * 2), CloseAction::AskPage);
+        // a page that never answers: after the wait, the next close closes
+        let mut silent = CloseState::default();
+        assert_eq!(decide_close(&mut silent, start), CloseAction::AskPage);
+        assert_eq!(decide_close(&mut silent, start + CLOSE_ACK_WAIT / 2), CloseAction::AskPage, "too soon to give up on the page");
+        // repeated clicks do not restart the wait
+        assert_eq!(decide_close(&mut silent, start + CLOSE_ACK_WAIT), CloseAction::Close);
+        // once the page said close, it closes
+        let mut allowed = CloseState { allowed: true, ..CloseState::default() };
+        assert_eq!(decide_close(&mut allowed, start), CloseAction::Close);
+    }
+
+    // ── Self-made Character ZIP is recognised and handed over as it is ─────────
+    #[test]
+    fn self_made_zip_is_handed_to_the_page() {
+        let fixture = fs::read(Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/self-made-character/sample-general-compass.saku-character.zip")).unwrap();
+        match parse_package(Path::new("sample-general-compass.saku-character.zip"), &fixture).unwrap() {
+            ParsedPackage::SelfMade(zip) => {
+                assert_eq!(zip.bytes, fixture);
+                assert_eq!(zip.sha256, sha256_hex(&fixture));
+            }
+            _ => panic!("the self-made ZIP must parse as a self-made ZIP"),
+        }
+        let mut big = fixture.clone();
+        big.resize(super::MAX_SELF_MADE_BYTES + 1, 0);
+        // Still a ZIP with the manifest entry only when the archive itself is readable; a padded file is not.
+        assert!(parse_package(Path::new("x.saku-character.zip"), &big).is_err());
     }
 }

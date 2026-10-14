@@ -195,7 +195,7 @@ function scan(label, iterable, { expectBytes = false } = {}) {
 }
 // ── E. the real Builder screen: 「WI-T ガイド」 saved without change ──────────
 {
-  const chrome = ["C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"].find(existsSync);
+  const chrome = [process.env.SAKU_CHROME_PATH, "C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe"].filter(Boolean).find(existsSync);
   const DIST = path.join(ROOT, ".desktop-dist");
   if (!chrome) skipped.push("E: Chrome not found");
   else if (!existsSync(path.join(DIST, "tools/saku-builder.html"))) skipped.push("E: .desktop-dist not prepared (run desktop:prepare)");

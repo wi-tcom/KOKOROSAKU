@@ -1,0 +1,89 @@
+/* The shared frame (app-frame.mjs), after AMU Studio's (KOKOROAMU-STUDIO main 200dc27: shells/desktop/src/styles.css
+   tokens, amu.css .amu-nav / .amu-active-line). Every selector is under .saku-frame and uses sf- classes, so the
+   pages' own rules (the editor styles header, .toolbar, .hero) neither reach in nor are reached. */
+.saku-frame {
+  --sf-ink: #17201e;
+  --sf-muted: #62706b;
+  --sf-deep: #123f3b;
+  --sf-accent: #c77a2c;
+  --sf-line: #d5ddd9;
+  --sf-paper: rgba(255, 255, 255, 0.92);
+  --sf-soft: #e3ebe7;
+  --sf-current: #dcebe5;
+  font-family: "Segoe UI Variable", "Yu Gothic UI", "Meiryo", sans-serif;
+  color: var(--sf-ink);
+  background:
+    radial-gradient(circle at 85% 0%, rgba(199, 122, 44, 0.14), transparent 28rem),
+    linear-gradient(145deg, #f5f7f5 0%, #e7eeea 100%);
+  padding: 26px max(16px, calc((100% - 1180px) / 2)) 14px;
+  display: grid;
+  gap: 14px;
+  box-sizing: border-box;
+}
+.saku-frame *, .saku-frame *::before, .saku-frame *::after { box-sizing: border-box; }
+.saku-frame .sf-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: start; }
+.saku-frame .sf-eyebrow { margin: 0 0 8px; color: var(--sf-accent); font-size: 0.76rem; font-weight: 750; letter-spacing: 0.16em; text-transform: uppercase; }
+.saku-frame .sf-title { margin: 0 0 10px; color: var(--sf-deep); font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 700; line-height: 0.95; letter-spacing: -0.05em; }
+.saku-frame .sf-lead { margin: 0; max-width: 760px; color: var(--sf-muted); line-height: 1.6; }
+.saku-frame .sf-lang { display: flex; gap: 4px; }
+.saku-frame .sf-lang button { font: inherit; font-size: 0.8rem; border: 1px solid var(--sf-line); background: var(--sf-paper); color: var(--sf-ink); border-radius: 999px; padding: 4px 11px; cursor: pointer; }
+.saku-frame .sf-lang button[aria-pressed="true"] { background: var(--sf-deep); border-color: var(--sf-deep); color: #fff; }
+.saku-frame .sf-nav { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border: 1px solid rgba(18, 63, 59, 0.12); border-radius: 18px; background: var(--sf-paper); box-shadow: 0 18px 50px rgba(31, 52, 47, 0.08); }
+.saku-frame .sf-nav-item { display: inline-flex; align-items: center; gap: 8px; border-radius: 12px; padding: 9px 14px; color: var(--sf-ink); font-weight: 700; text-decoration: none; }
+.saku-frame .sf-nav-item:hover { background: #f1f5f2; }
+.saku-frame .sf-nav-item:focus-visible, .saku-frame .sf-lang button:focus-visible, .saku-frame .sf-next:focus-visible { outline: 2px solid var(--sf-accent); outline-offset: 2px; }
+.saku-frame .sf-num { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 999px; background: var(--sf-soft); color: var(--sf-deep); font-size: 0.76rem; }
+.saku-frame .sf-nav-item[aria-current="page"] { background: var(--sf-current); color: var(--sf-deep); }
+.saku-frame .sf-nav-item[aria-current="page"] .sf-num { background: var(--sf-deep); color: #fff; }
+.saku-frame .sf-active { display: grid; grid-template-columns: minmax(180px, auto) minmax(0, 1fr) minmax(200px, auto); gap: 10px 18px; align-items: center; padding: 12px 16px; border: 1px solid var(--sf-line); border-radius: 14px; background: #f8faf8; }
+.saku-frame .sf-who { display: grid; gap: 2px; min-width: 0; }
+.saku-frame .sf-who-label { font-size: 0.72rem; color: var(--sf-muted); letter-spacing: 0.06em; }
+.saku-frame .sf-who-name { color: var(--sf-deep); font-size: 1.05rem; overflow-wrap: anywhere; }
+.saku-frame .sf-who-meta { font-size: 0.76rem; color: var(--sf-muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.saku-frame .sf-badge { display: inline-flex; border-radius: 999px; padding: 1px 9px; font-weight: 700; font-size: 0.72rem; white-space: nowrap; }
+.saku-frame .sf-badge-valid { color: #1f6b45; background: #e2f3ea; }
+.saku-frame .sf-badge-unverified { color: #8a5a00; background: #fbefd9; }
+.saku-frame .sf-badge-invalid_modified { color: #a3302a; background: #f8e3e1; }
+.saku-frame .sf-badge-none { color: #4f5a56; background: #eceeed; }
+.saku-frame .sf-badge-candidate { color: #2f5b8a; background: #e3ecf6; }
+.saku-frame .sf-badge-unknown { color: #4f5a56; background: #eceeed; }
+.saku-frame .sf-bar { display: grid; gap: 4px; min-width: 0; }
+.saku-frame .sf-segs, .saku-frame .sf-seg-labels { display: grid; grid-template-columns: 7fr 8fr 15fr; gap: 4px; }
+.saku-frame .sf-seg { height: 9px; border-radius: 5px; background: var(--sf-soft); overflow: hidden; }
+.saku-frame .sf-seg i { display: block; height: 100%; width: 0; }
+.saku-frame .sf-seg-1 i { background: #2f6db0; }
+.saku-frame .sf-seg-2 i { background: #c77a2c; }
+.saku-frame .sf-seg-3 i { background: #3c8a5a; }
+.saku-frame .sf-seg-labels { font-size: 0.72rem; color: var(--sf-muted); font-variant-numeric: tabular-nums; }
+.saku-frame .sf-seg-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.saku-frame .sf-seg-link:hover, .saku-frame .sf-seg-link:focus-visible { color: var(--sf-ink, inherit); }
+.saku-frame .sf-msg { display: grid; gap: 2px; font-size: 0.82rem; }
+.saku-frame .sf-next { color: var(--sf-deep); font-weight: 700; }
+.saku-frame .sf-clear { font: inherit; font-size: 0.72rem; border: 1px solid var(--sf-line); background: #fff; color: var(--sf-ink); border-radius: 999px; padding: 1px 9px; cursor: pointer; }
+@media (max-width: 860px) {
+  .saku-frame .sf-active { grid-template-columns: minmax(0, 1fr); }
+  .saku-frame .sf-hero { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: no-preference) { .saku-frame .sf-seg i { transition: width 0.2s ease-out; } }
+
+/* ② in the desktop app (html.saku-desktop, set by the page's frame script): the frame replaces the page's own header
+   and the toolbar keeps 新規作成・すべて畳む・すべて広げる・この内容で保存する (Owner 2026-10-14). The public web tool,
+   which has no frame, is unchanged. */
+.saku-frame:empty { display: none; }
+html.saku-desktop body > header,
+html.saku-desktop #loadExample,
+html.saku-desktop .toolbar .language-control,
+html.saku-desktop #desktopWorkspaceSelect,
+html.saku-desktop #desktopPackageImport,
+html.saku-desktop #openUnifiedV1Builder,
+html.saku-desktop #runOnPlatform,
+html.saku-desktop #trainCharacter,
+html.saku-desktop #openDesktopHome,
+html.saku-desktop #downloadZipBtn { display: none !important; }
+.definition-comparison { margin: 28px 0 8px; }
+.definition-comparison .comparison-scroll { overflow-x: auto; }
+.definition-comparison table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.definition-comparison th, .definition-comparison td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid rgba(0, 0, 0, 0.12); }
+.definition-comparison .comparison-date { font-size: 12px; opacity: 0.75; }
+.council-note { font-size: 13px; line-height: 1.7; }
+.occupation-template-chapter .occupation-template-state { margin-left: 8px; font-size: 12px; opacity: 0.75; }

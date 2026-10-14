@@ -188,6 +188,15 @@ export function validateUnifiedV1(character) {
 
 export const INPUT_INTEGRITY_STATEMENT = "REQUIRED_INPUT != AI_GENERATED_SUBSTITUTE";
 
+// Owner 2026-10-09 (results 97 and 102): every Character carries these three, in the Owner's words —
+// never paraphrased (INV-DEC-3). A new Character starts with them (統括's reading of "すべてのキャラ").
+// The same three are in every Unified V1 Character of wi-tcom/-SAKU-1-7-Character-System.
+export const DECISION_INVARIANTS = Object.freeze([
+  Object.freeze({ id: "INV-DEC-1", statement: "知っている決定を後ろに置いて、作業を完了させない。" }),
+  Object.freeze({ id: "INV-DEC-2", statement: "決定に無い制約を、変えられない事実として出さない。" }),
+  Object.freeze({ id: "INV-DEC-3", statement: "決裁事項の原文を、自分の要約で置き換えない。" }),
+]);
+
 export function hasInputIntegrityInvariant(character) {
   const list = ((character && character.character_core) || {}).hard_invariants || [];
   return list.some(item => String((item && item.statement) || item || "").includes(INPUT_INTEGRITY_STATEMENT));
@@ -362,13 +371,20 @@ export function blankUnifiedCharacter() {
       character_role: "",
       values: [],
       // Input Integrity is required at Character level, so a blank Character
-      // starts with it rather than acquiring it later by accident.
-      hard_invariants: [{ id: "INV-INPUT-INTEGRITY", statement: INPUT_INTEGRITY_STATEMENT }],
+      // starts with it rather than acquiring it later by accident. The three
+      // decision invariants follow it (Owner 2026-10-09).
+      hard_invariants: [{ id: "INV-INPUT-INTEGRITY", statement: INPUT_INTEGRITY_STATEMENT }, ...DECISION_INVARIANTS.map(item => ({ ...item }))],
       expressive_range: { allowed_variation: [], prohibited_drift: [] },
       human_handoff_conditions: [],
     },
     assistant_composition: composition,
     personality_axes: {},
-    conformance_expectations: { must_preserve_refs: [], prohibited_drift_refs: [], continuity_refs: [] },
+    // The decision invariants are checked for preservation and continuity, not
+    // listed as prohibited drift (Owner 2026-10-09: no other fields).
+    conformance_expectations: { must_preserve_refs: decisionRefs(), prohibited_drift_refs: [], continuity_refs: decisionRefs() },
   };
+}
+
+function decisionRefs() {
+  return DECISION_INVARIANTS.map((item, index) => ({ requirement_id: item.id, locator: `/character_core/hard_invariants/${index + 1}` }));
 }

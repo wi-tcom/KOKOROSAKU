@@ -119,6 +119,8 @@
     background:var(--surface);color:var(--ink);border:1px solid var(--hair-strong);
     border-radius:2px;padding:8px 14px;white-space:nowrap;transition:background .15s,border-color .15s}
   .btn-sm:hover{background:var(--surface-2);border-color:var(--accent)}
+  /* A button that cannot be pressed looks so (2026-10-15 keying round 2 N5: the sample's save button looked pressable). */
+  .btn-sm:disabled,.btn-sm:disabled:hover{opacity:.45;cursor:not-allowed;background:var(--surface);border-color:var(--hair-strong)}
   .empty{font-size:12px;color:var(--faint);font-style:normal;margin:0 0 8px}
 
   /* seats */
@@ -147,6 +149,8 @@
   .pv-path{font-family:var(--mono);font-size:11px;color:var(--sumi-faint);
     background:#00000030;padding:3px 7px;border-radius:2px}
   .pv-actions{margin-left:auto;display:flex;gap:8px}
+  /* 2026-10-14 keying 4-9: an author display rule must not undo the hidden attribute (desktop.css has the same rule). */
+  [hidden]{display:none!important}
   .pv-btn{font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;
     background:transparent;color:var(--sumi-text);border:1px solid #4a4d45;border-radius:2px;
     padding:7px 12px;transition:background .15s,border-color .15s}
@@ -194,8 +198,10 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 <link rel="stylesheet" href="./saku-builder-desktop-additions.css">
+<link rel="stylesheet" href="./unified-v1/app-frame.css">
 </head>
 <body>
+<div id="saku-frame" class="saku-frame"></div>
 <header>
   <p class="eyebrow">SAKU BUILDER — KOKOROSAKU 1+7 CHARACTER SYSTEM</p>
   <h1 class="charname" id="heroName"><span class="ph">無名</span></h1>
@@ -206,7 +212,7 @@
 
 <div class="toolbar">
   <button class="btn-sm" id="loadExample">記入例（星野ルカ）を読み込む</button>
-  <button class="btn-sm" id="resetAll">最初から</button>
+  <button class="btn-sm" id="resetAll">新規作成</button>
   <span class="sp"></span>
   <div class="desktop-toolbar-additions">
     <div class="language-control" role="group" aria-label="言語 / Language">
@@ -495,7 +501,7 @@
       <h2><span class="num">十</span>黒子／キャラバック接続前提</h2>
       <p class="note">このキャラクターが黒子（人間の確認・承認）なしで動けるかを定める。
         詳細な黒子情報は AMU Studio 側で管理し、ここでは<b>接続前提だけ</b>を定義する。
-        本章の内容は <code>character.yaml</code> には出さず、Character File（署名やパックを作るときの元になる JSON）にだけ書き出す。</p>
+        本章の内容は <code>character.yaml</code> には出さず、Character.json（署名やパックを作るときの元になる JSON）にだけ書き出す。</p>
       <div class="field"><label class="toggle" style="font-size:14px">
         <input type="checkbox" data-path="charback.required" data-type="bool"> 黒子（人間の確認・承認）が必要なキャラクター</label>
         <p class="hint">黒子がいない場合、承認領域は下書き・保留までとし公開しない（§8）。</p></div>
@@ -854,7 +860,7 @@ function setFieldError(path,message){
 function updateValidationAccessibility(){
   setFieldError("meta.name",data.meta.name.trim()?"":"キャラクター名を入力してください");
   const slug=data.meta.slug.trim();
-  setFieldError("meta.slug",!slug?"slugを入力してください":(!/^[a-z0-9-]+$/.test(slug)?"slugは英小文字・数字・ハイフンだけで入力してください":""));
+  setFieldError("meta.slug",!slug?"Character ID を入力してください":(!/^[a-z0-9-]+$/.test(slug)?"Character ID は英小文字・数字・ハイフンだけで入力してください":""));
   setFieldError("meta.field",data.meta.field.trim()?"":"主な活動分野を入力してください");
 }
 
@@ -864,10 +870,13 @@ function resetBoundarySelections(){
   updateChapterStates();
 }
 
+/* 2026-10-14 keying 4-17: notices in the app's own box (window.sakuNotice) instead of window.alert, whose box the
+   WebView titles 「tauri.localhost の内容」. Falls back to alert where the module is not there. */
+function sakuNotify(message){ if(typeof window.sakuNotice==="function") return window.sakuNotice(message); window.alert(message); }
 function replaceCharacterData(next){
   if(window.SAKU_INVALIDATE_TRAINER_APPLY_CONTEXT?.("BUILDER_CHARACTER_REPLACED")===false){
     const english=window.SAKU_GOLDEN_UI?.getLocale?.()==="en-US";
-    window.alert(english
+    sakuNotify(english
       ? "The current Trainer handoff could not be invalidated, so replacing the Character was blocked."
       : "現在のTrainer handoffを無効化できないため、Characterの置換を停止しました。");
     return false;
@@ -1018,7 +1027,7 @@ function readinessState(d){
     validation:valid?"PASS":"INCOMPLETE",
     miss,warn,
     message:valid
-      ? "Draftはvalidationを通過し、シリアライズできます（未承認）"+(warn.length?"。注意："+warn.join(" / "):"")
+      ? "必須の項目はそろっています（保存できます）"+(warn.length?"。注意："+warn.join(" / "):"")
       : "Draftはシリアライズできますが、validation errorがあります："+miss.join("、")
   };
 }
@@ -1070,27 +1079,32 @@ function buildAccordion() {
     sec.dataset.acc = "1";
     sec.dataset.idx = String(i);
 
-    // 状態の印を見出しへ
-    const st = document.createElement("span");
-    st.className = "ch-state";
-    st.id=`chapter-state-${i+1}`;
-    st.innerHTML = '<span class="ch-dot"></span><span class="ch-lbl"></span>'
-                 + '<span class="ch-n"></span>';
-    h2.appendChild(st);
+    // An extra chapter (occupation template, 1+7, the comparison) has no fields: it opens and closes, and carries no
+    // filling state or sync button (2026-10-14 keying, Owner 2: the 1+7 and comparison sections fold like chapters).
+    const extra = Boolean(sec.dataset.extraChapter);
+    let st = null;
+    if (!extra) {
+      // 状態の印を見出しへ
+      st = document.createElement("span");
+      st.className = "ch-state";
+      st.id=`chapter-state-${i+1}`;
+      st.innerHTML = '<span class="ch-dot"></span><span class="ch-lbl"></span>'
+                   + '<span class="ch-n"></span>';
+      h2.appendChild(st);
 
-    // 章の開閉とは独立した明示操作。現在のHelp / YAML / JSON表示をこの章へ合わせる。
-    const sync = document.createElement("button");
-    sync.type = "button";
-    sync.className = "chapter-sync";
-    sync.dataset.chapterSync = String(i);
-    h2.insertAdjacentElement("afterend", sync);
-    sync.addEventListener("click", () => syncChapterToPreview(i));
-
+      // 章の開閉とは独立した明示操作。現在のHelp / YAML / JSON表示をこの章へ合わせる。
+      const sync = document.createElement("button");
+      sync.type = "button";
+      sync.className = "chapter-sync";
+      sync.dataset.chapterSync = String(i);
+      h2.insertAdjacentElement("afterend", sync);
+      sync.addEventListener("click", () => syncChapterToPreview(i));
+    }
     // Goldenの直下DOMを維持したまま、section状態だけで開閉する。
     h2.setAttribute("role", "button");
     h2.setAttribute("tabindex", "0");
     h2.setAttribute("aria-expanded", "true");
-    h2.setAttribute("aria-describedby",st.id);
+    if (st) h2.setAttribute("aria-describedby",st.id);
     const toggle = () => {
       const closed = sec.classList.toggle("is-closed");
       h2.setAttribute("aria-expanded", closed ? "false" : "true");
@@ -1292,20 +1306,26 @@ function desktopHomeHref(){
   const home=document.getElementById("openDesktopHome");
   return (home&&home.getAttribute("href"))||"../index.html?stay=1";
 }
+/* 2026-10-14 (Owner 画面改修 Q14): in the desktop app this button is 新規作成 — a new blank Character in ②, so the
+   screen stays here and the selection is let go (the frame's line then shows the new, unsaved one). It used to be
+   「最初から」 and went back to the top screen. */
 function resetDestination(){
-  return window.__TAURI__?.core?.invoke ? desktopHomeHref() : null;
+  if(window.__TAURI__?.core?.invoke) window.SAKU_ACTIVE?.clearActive?.();
+  return null;
 }
 document.getElementById("resetAll").addEventListener("click",async()=>{
   /* O-11 (Owner 2026-09-24: the Golden page included): the app's own confirmation. */
-  const clearQuestion=uiString("入力内容をすべて消して最初からにしますか？");
-  if(!(window.sakuConfirmFor?await window.sakuConfirmFor("clearInput"):confirm(clearQuestion)))return;
+  const clearQuestion=uiString("入力中の内容を消して、空の新しいキャラクターから始めますか？ 保存したキャラクターは一覧に残ります。");
+  if(!(window.sakuConfirmFor?await window.sakuConfirmFor("newCharacter"):confirm(clearQuestion)))return;
   if(!replaceCharacterData(blank()))return;
   curTab="yaml";currentHelpChapter=0;currentSyncChapter=null;clearApprovalSnapshot();
   document.getElementById("exportApproval").checked=false;
   setAllChapters(false);buildTabs();renderPreview();
   const saveFeedback=document.getElementById("saveFeedback");saveFeedback.hidden=true;saveFeedback.textContent="";
-  toast("リセットしました");
+  toast("新しいキャラクターを始めました");
   const dest=resetDestination();
+  /* the frame's line follows the reset only now: its timer ran while the question was open (2026-10-14 keying, Owner 3) */
+  window.SAKU_FRAME_REFRESH?.();
   if(dest) setTimeout(()=>location.assign(dest),0);
   else{window.scrollTo({top:0,behavior:"instant"});document.querySelector("main.form section.chapter h2")?.focus();}
 });
@@ -1340,6 +1360,14 @@ let openedWorkingShape=null;
    書き出しは最初の編集で起きるので、そこで取ると編集後の形を記録してしまう。 */
 function armWorkingCharacterPublish(){ workingPublishArmed=true; openedWorkingShape=JSON.parse(JSON.stringify(workingCharacterShape(data))); }
 if(typeof window!=="undefined") window.armWorkingCharacterPublish=armWorkingCharacterPublish;
+/* 開いた時点のフォームから何も変えていないか。フォームどうしで比べる。新規作成の空のフォームや、開いただけの見本を
+   「未保存」と言わないため（2026-10-15 打鍵 2 回目 N2・N4：キャラクターの形へ直して元と比べると、往復の差で食い違った）。 */
+function formAsOpened(){
+  if(!openedWorkingShape) return false;
+  const canon=v=>v===null||typeof v!=="object"?JSON.stringify(v):Array.isArray(v)?"["+v.map(canon).join(",")+"]":"{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+canon(v[k])).join(",")+"}";
+  return canon(workingCharacterShape(data))===canon(openedWorkingShape);
+}
+if(typeof window!=="undefined") window.SAKU_FORM_AS_OPENED=formAsOpened;
 
 /* 下書きには、開いた時点のフォームの形（armWorkingCharacterPublish で記録）を添える。
    未保存かどうかは同じ形どうし（フォーム対フォーム）で比べる。開いただけで
@@ -1882,21 +1910,21 @@ function contactGuard(text){
    試験記録だけ（AMU 用の自作 ZIP は、同じ JSON を包んだもの）。 */
 const TABS=[
   ["yaml","character.yaml"],
-  ["json","Character File"],
+  ["json","Character.json"],
   ["test","試験記録"],
   ["help","Help"],
 ];
 /* どれを次回読み込めばよいかを、推測させない。
-   このBuilderが読み戻せるのは character.yaml だけ（往復でバイト一致を検証済み）。
-   他は用途別の書き出しであり、読み戻しには使えない。 */
+   このBuilderが読み戻せるのは character.yaml と Character.json（個別ファイルインポート）。
+   試験記録は記録であり、読み戻しには使えない。 */
 const TAB_PURPOSE={
   yaml:{reimport:true,
     ja:"編集を続けるためのファイル。次回はこれを読み込みます。",
     en:"The file to keep editing. Load this one next time."},
-  json:{reimport:false,
+  json:{reimport:true,
     /* The same text as tools/unified-v1/character-file-text.mjs (ライター&SNS, EN 依頼 AC1). */
-    ja:"署名やパックを作るときの元になる JSON です。この SAKU Builder へは読み戻せません。AMU Studio へは「AMU 用 ZIP をダウンロード」で作る ZIP で取り込めます（署名は付かず、署名のない自作の Character として扱われます）。MACHI へは、署名付きのパックにして渡します。",
-    en:"This is the JSON used as the source when you make a signature or a pack. It cannot be loaded back into this SAKU Builder. For AMU Studio, import the ZIP made with “Download ZIP for AMU” (it carries no signature, so AMU treats it as an unsigned Character you made yourself). For MACHI, make it into a signed pack and hand over the pack."},
+    ja:"署名やパックを作るときの元になる JSON です。この SAKU Builder の「個別ファイルインポート」で読み戻せます。AMU Studio へは「④出力」の「SAKU キャラクターを書き出す（.zip）」で作る ZIP で取り込めます（署名は付かず、署名のない自作の Character として扱われます）。MACHI へは、署名付きのパックにして渡します。",
+    en:"This is the JSON used as the source when you make a signature or a pack. It can be imported back into this SAKU Builder with “Import a single file”. For AMU Studio, import the ZIP made with “Export the SAKU Character (.zip)” in ④ Export (it carries no signature and is treated as a self-made Character with no signature). For MACHI, make it a signed pack and hand that over."},
   test:{reimport:false,
     ja:"試験結果の記録。ここへは読み戻せません。",
     en:"A record of test results. It cannot be loaded back here."},
@@ -2016,9 +2044,6 @@ function attachFieldHelp(){
       const noteText=currentNoteText(entry);
       if(noteText){ const span=document.createElement("span"); span.className="field-current-note-text"; span.textContent=noteText; note.append(span); }
       const meaning=document.createElement("span"); meaning.className="field-option-meaning"; meaning.dataset.optionMeaning=entry.canonicalPath||""; note.append(meaning);
-      const link=document.createElement("button"); link.type="button"; link.className="field-help-link"; link.dataset.helpLink=entry.canonicalPath||"";
-      link.textContent=HELP_UI("detailLink"); link.addEventListener("click",()=>showFieldHelp(key));
-      note.append(link);
       label.insertAdjacentElement("afterend",note);
       updateOptionMeaning(entry.canonicalPath);
     }
@@ -2314,10 +2339,10 @@ function renderPreview(){
   document.querySelector(".pv-actions").hidden=isHelp;
   const zipButton=document.getElementById("downloadZipBtn");if(zipButton)zipButton.hidden=curTab!=="json";
   document.getElementById("exportGate").hidden=isHelp;
+  updateFilePurpose();
   if(isHelp){renderContextHelp();return;}
   const p=payloadFor(curTab,data);
   updateExportGate();
-  updateFilePurpose();
   el.innerHTML = curTab==="yaml" ? highlight(p.text) : escapeHtml(p.text);
   const pv=document.getElementById("pvPath");
   if(pv)pv.textContent = curTab==="yaml"
@@ -2734,7 +2759,10 @@ import * as UnifiedAuthoring from "./v1/unified-authoring.mjs";
 import { loadAdoptedSchema, validateCompleteAdoptedCharacter, formatValidationIssue } from "./v1/adopted-schema-validator.mjs";
 import * as SelfMadeZip from "./unified-v1/self-made-character-zip.mjs";
 import { FIELDS as SEMANTIC_FIELDS } from "./v1/semantic-registry.mjs";
+import { saveWarningLines, placeOf, firstMissingField, progressFromIssues } from "./unified-v1/required-progress.mjs";
 window.SAKU_UNIFIED = UnifiedAuthoring;
+/* Q12: a required field the bar or the save names opens here, at its place in ②. */
+window.SAKU_FOCUS_REQUIRED = field => typeof window.focusFieldInput === "function" && window.focusFieldInput(placeOf(field));
 window.SAKU_SELF_MADE_ZIP = SelfMadeZip;
 window.SAKU_ADOPTED_VALIDATE = async character => {
   const schema = await loadAdoptedSchema();
@@ -2753,11 +2781,28 @@ import * as CharacterLibrary from "./unified-v1/character-library.mjs";
 import { storeHandoff } from "./unified-v1/handoff-binding.mjs";
 import * as HelpTree from "./v1/help-tree.mjs";
 window.SAKU_HELP_TREE = HelpTree;
+/* Owner 結果 188 (Q27): is the opened row a sample pack Character (for reading only)? */
+const openedIsSample = () => {
+  const opened = CharacterLibrary.entryForActive(CharacterLibrary.list(), window.SAKU_ACTIVE?.getActive?.());
+  const from = opened?.provenance?.edited_from || opened?.provenance || null;
+  return Boolean(from && (from.pack_id === "saku-pack-sample" || /^LicenseRef-WIT-Sample-/.test(String(from.license || ""))));
+};
+window.SAKU_SAMPLE_OPENED = openedIsSample;
 {
   const button = document.getElementById("saveUnifiedCharacter");
   if (button) {
     let trainerAwareSaveInProgress = false;
     button.hidden = false;
+    /* After a save the form is the saved Character: its source becomes the saved one and the revision field shows the
+       saved revision (2026-10-14 keying 4-16 ③: the field kept the old revision, so the form read as unsaved right after
+       a save and the next save raised the revision again with nothing changed). */
+    const settleFormToSaved = (form, character) => {
+      form._unified_source = JSON.parse(JSON.stringify(character));
+      if (form.meta && typeof form.meta === "object") form.meta.version = character.identity.character_revision;
+      const field = document.querySelector('[data-path="meta.version"]');
+      if (field) field.value = character.identity.character_revision;
+      if (typeof renderPreview === "function") renderPreview();
+    };
     /* The save is one function so the hand-off buttons below can run it and
        learn whether it succeeded; the button itself only calls it. */
     const performSave = async () => {
@@ -2773,7 +2818,7 @@ window.SAKU_HELP_TREE = HelpTree;
        const trainerSavePreflight = window.SAKU_TRAINER_SAVE_PREFLIGHT?.(currentDraft) || { active: false, ok: true };
        if (trainerSavePreflight.active && !trainerSavePreflight.ok) {
          const english = window.SAKU_GOLDEN_UI?.getLocale?.() === "en-US";
-         window.alert(english
+         sakuNotify(english
            ? `Save blocked: the Trainer Session/handoff is no longer the exact applied draft (${trainerSavePreflight.code || "UNKNOWN"}). Return to Trainer and prepare a fresh handoff.`
            : `保存を停止しました：Trainer Session/handoffが現在の反映済みドラフトと一致しません（${trainerSavePreflight.code || "UNKNOWN"}）。Trainerへ戻り、新しいhandoffを準備してください。`);
          return;
@@ -2785,12 +2830,25 @@ window.SAKU_HELP_TREE = HelpTree;
       let verdict;
       try { verdict = await window.SAKU_ADOPTED_VALIDATE(character); }
       catch (error) {
-        window.alert("採択済みSchemaを確認できないため保存を停止しました：" + error.message);
+        sakuNotify("採択済みSchemaを確認できないため保存を停止しました：" + error.message);
         return;
       }
        if (!verdict.ok) {
-         window.alert(["保存できません。採択済みSchemaに対して次の項目が未了です：", ...verdict.errors.map(window.SAKU_FORMAT_VALIDATION_ISSUE)].join(String.fromCharCode(10)));
+         // Q12: the same words as the bar — each field by its name and 「未入力」, never the check's English or an internal path.
+         const lang = document.documentElement.lang === "en" ? "en" : "ja";
+         const labelOf = (canonicalPath, l) => SEMANTIC_FIELDS.find(item => item.canonicalPath === canonicalPath)?.label?.[l] || "";
+         sakuNotify([lang === "en" ? "Cannot save yet. These fields need attention:" : "保存できません。次の項目を確かめてください：", ...saveWarningLines(verdict.errors, labelOf, lang)].join(String.fromCharCode(10)));
+         window.SAKU_FOCUS_REQUIRED?.(firstMissingField(progressFromIssues(verdict.errors)) || "");
          return;
+       }
+       // Owner 結果 188 (Q27): the sample pack is for reading; its Characters are not edited and saved as new revisions.
+       {
+         if (openedIsSample()) {
+           sakuNotify(english()
+             ? "Sample Characters are for reading only and cannot be saved. Start your own Character with “New”."
+             : "見本（サンプル）のキャラクターは読むだけで、保存できません。自分のキャラクターは「新規作成」から作ってください。");
+           return { saved: false, code: "SAMPLE_READ_ONLY" };
+         }
        }
        let trainerSaveReservation = { active: false, ok: true, save_attempt_id: null };
        if (trainerRevisionPrepared) {
@@ -2802,7 +2860,7 @@ window.SAKU_HELP_TREE = HelpTree;
          }
          if (!trainerSaveReservation.ok) {
            const english = window.SAKU_GOLDEN_UI?.getLocale?.() === "en-US";
-           window.alert(english
+           sakuNotify(english
              ? `Save blocked before persistence: the exact Trainer reservation could not be created (${trainerSaveReservation.code || "UNKNOWN"}).`
              : `永続化前に保存を停止しました：Trainerの正確な保存予約を作成できません（${trainerSaveReservation.code || "UNKNOWN"}）。`);
            return;
@@ -2823,16 +2881,21 @@ window.SAKU_HELP_TREE = HelpTree;
           });
          } catch (error) {
            const cancelled = cancelTrainerSave("WORKSPACE_SAVE_FAILED");
-           window.alert(`Workspaceへ保存できませんでした：${error}${cancelled.ok ? "" : `\nTrainer保存予約の解除にも失敗しました：${cancelled.code || "UNKNOWN"}`}`);
+           sakuNotify(`Workspaceへ保存できませんでした：${error}${cancelled.ok ? "" : `\nTrainer保存予約の解除にも失敗しました：${cancelled.code || "UNKNOWN"}`}`);
            return;
          }
        }
        let outcome;
+       let sourceEntry = null;
        try {
+         // G3/G4 (2026-10-14): the new revision keeps where its source row came from. A pack row's state
+         // becomes history (edited_from) and the new row claims no signature: 「WI-T.COM署名無効・改変あり」.
+         sourceEntry = CharacterLibrary.entryForActive(CharacterLibrary.list(), window.SAKU_ACTIVE?.getActive?.());
          outcome = CharacterLibrary.importCharacters([character], "BUILDER", {
            onConflict: "KEEP_BOTH",
            verification: null,
            schema: { kind: "UNIFIED_V1_CHARACTER", schema_id: character.schema.schema_id, schema_version: character.schema.schema_version },
+           entryMeta: () => CharacterLibrary.editedProvenance(sourceEntry, CharacterLibrary.list()),
          });
        } catch (error) {
          outcome = { saved: false, reason: String(error) };
@@ -2843,7 +2906,7 @@ window.SAKU_HELP_TREE = HelpTree;
            // The native Workspace write is already durable even if refreshing
            // the browser-side list fails. Keep the Builder source/Active state
            // aligned with the exact revision that was actually persisted.
-           form._unified_source = JSON.parse(JSON.stringify(character));
+           settleFormToSaved(form, character);
            window.SAKU_ACTIVE?.setActive(character, { source: "builder-save" });
          }
          if (workspacePath && trainerRevisionPrepared) {
@@ -2852,12 +2915,16 @@ window.SAKU_HELP_TREE = HelpTree;
          } else if (!workspacePath) {
            trainerPartial = cancelTrainerSave("CHARACTER_LIBRARY_SAVE_FAILED");
          }
-         window.alert((workspacePath ? "Workspaceには保存しましたが、" : "") + "一覧を更新できませんでした：" + outcome.reason
+         sakuNotify((workspacePath ? "Workspaceには保存しましたが、" : "") + "一覧を更新できませんでした：" + outcome.reason
            + (trainerPartial.ok ? "" : `\nTrainer Sessionの保存状態を確定できませんでした：${trainerPartial.code || "UNKNOWN"}`));
          return;
        }
-      form._unified_source = JSON.parse(JSON.stringify(character));
-      window.SAKU_ACTIVE?.setActive(character, { source: "builder-save" });
+      settleFormToSaved(form, character);
+      // The blank row 新規作成 put in the list is now the saved row; it does not stay as a second, unnamed one (round 2 N3).
+      if (sourceEntry && sourceEntry.draft) CharacterLibrary.discardDraft(sourceEntry.entry_id);
+      window.SAKU_ACTIVE?.setActive(character, { source: "builder-save", entry_id: outcome.entry_ids?.[0] || null });
+      // What was just saved is the form as opened from now on.
+      window.armWorkingCharacterPublish?.();
        let trainerLinkRecorded = { active: false, ok: true };
        if (trainerRevisionPrepared) {
          try { trainerLinkRecorded = window.SAKU_RECORD_TRAINER_BUILDER_SAVE?.(character, trainerSaveReservation.save_attempt_id) || { active: true, ok: false, code: "TRAINER_SAVE_FINALIZE_UNAVAILABLE" }; }
@@ -2876,9 +2943,9 @@ window.SAKU_HELP_TREE = HelpTree;
            ? `\nThe Character was saved, but the Trainer Session link and targeted-retest plan were not recorded (${trainerLinkRecorded.code || "UNKNOWN"}). Return to Trainer and verify the Session before retesting.`
            : `\nCharacterは保存しましたが、Trainer Sessionとの関連付けと対象再test計画を記録できませんでした（${trainerLinkRecorded.code || "UNKNOWN"}）。再test前にTrainerへ戻り、Sessionを確認してください。`;
       }
-      if (trainerLinkFailed) window.alert(savedMessage);
+      if (trainerLinkFailed) sakuNotify(savedMessage);
       else if (typeof window.toast === "function") window.toast(savedMessage);
-      else window.alert(savedMessage);
+      else sakuNotify(savedMessage);
       return { saved: true, character };
       } finally {
         trainerAwareSaveInProgress = false;
@@ -2897,25 +2964,61 @@ window.SAKU_HELP_TREE = HelpTree;
     const unsavedEdits = () => {
       const form = typeof window.__saku_data === "function" ? window.__saku_data() : null;
       if (!form) return false;
+      // Nothing changed since the form was opened (a blank 新規作成, a sample only looked at): nothing to keep (round 2 N2・N4).
+      if (window.SAKU_FORM_AS_OPENED?.()) return false;
       const source = form._unified_source || null;
-      if (!source) return true;
-      try { return JSON.stringify(UnifiedAuthoring.toUnifiedCharacter(form, source, { bumpRevision: false })) !== JSON.stringify(source); }
+      try {
+        // A new Character has no source: it is unsaved only when it differs from a blank one. Its default values
+        // (revision 0.1.0, the fixed role kind) are not typing (2026-10-14 keying 4-16 ②: 新規作成 could not be left).
+        if (!source) return typeof blank === "function"
+          ? JSON.stringify(UnifiedAuthoring.toUnifiedCharacter(form, null, { bumpRevision: false })) !== JSON.stringify(UnifiedAuthoring.toUnifiedCharacter(blank(), null, { bumpRevision: false }))
+          : true;
+        return JSON.stringify(UnifiedAuthoring.toUnifiedCharacter(form, source, { bumpRevision: false })) !== JSON.stringify(source);
+      }
       catch { return true; }
     };
-    const settledCharacter = async () => {
-      if (unsavedEdits()) {
-        const question = english()
-          ? "There are unsaved changes. Save this Character and continue?"
-          : "未保存の変更があります。この内容で保存してから進みますか？";
-        // O-11: the buttons say 「保存して進む」 / 「編集に戻る」, so the body no longer explains Cancel.
-        if (!(window.sakuConfirmFor ? await window.sakuConfirmFor("saveAndContinue", question) : window.confirm(question))) return null;
-        const outcome = await performSave();
-        if (!outcome?.saved) return null;
-        return outcome.character;
-      }
-      const form = window.__saku_data();
-      return form._unified_source || null;
+    /* 2026-10-14 keying 4-16 ①: three ways — save and continue, continue without saving, or back to editing.
+       Returns "save" | "discard" | "back". */
+    const askLeave = async () => {
+      const question = english()
+        ? "There are unsaved changes. Save them before continuing?"
+        : "未保存の変更があります。保存してから進みますか？";
+      if (window.sakuChoiceFor) return window.sakuChoiceFor("saveAndContinue", question);
+      return (window.sakuConfirmFor ? await window.sakuConfirmFor("saveAndContinue", question) : window.confirm(question)) ? "save" : "back";
     };
+    /* One decision before leaving ②, for the hand-off buttons and the menu bar alike: { leave, character }.
+       leave: false keeps the person here; character: the saved Character that may travel (null for an unsaved new one). */
+    /* Leaving without saving: the blank row 新規作成 put in the list goes, and so does its selection (round 2 N3: an
+       「Unnamed Character」 row stayed). A row that was saved, or chosen from the list, is never touched. */
+    const dropUnsavedDraft = () => {
+      const opened = CharacterLibrary.entryForActive(CharacterLibrary.list(), window.SAKU_ACTIVE?.getActive?.());
+      if (!opened || !opened.draft) return;
+      CharacterLibrary.discardDraft(opened.entry_id);
+      window.SAKU_ACTIVE?.clearActive?.();
+    };
+    const settleBeforeLeaving = async () => {
+      // A sample cannot be saved (Q27), so 「保存して進む」 is not offered for it (round 2 N4).
+      if (!unsavedEdits() || openedIsSample()) {
+        const character = window.__saku_data()?._unified_source || null;
+        dropUnsavedDraft();
+        return { leave: true, character };
+      }
+      const choice = await askLeave();
+      if (choice === "back") return { leave: false, character: null };
+      // Without saving, what travels is the last saved Character (none for a new one).
+      if (choice === "discard") { dropUnsavedDraft(); return { leave: true, character: window.__saku_data()?._unified_source || null }; }
+      const outcome = await performSave();
+      return outcome?.saved ? { leave: true, character: outcome.character } : { leave: false, character: null };
+    };
+    const settledCharacter = async () => {
+      const settled = await settleBeforeLeaving();
+      return settled.leave ? settled.character : null;
+    };
+    /* 2026-10-14 (Owner 画面改修): the menu bar leaves this screen too. The same guard applies — unsaved edits are
+       not dropped silently: the person is asked, and the save runs through performSave. An untouched blank form
+       has nothing to keep. */
+    window.SAKU_NAV_GUARD = async () => (await settleBeforeLeaving()).leave;
+    window.SAKU_UNSAVED_EDITS = unsavedEdits;
     const platformButton = document.getElementById("runOnPlatform");
     const trainButton = document.getElementById("trainCharacter");
     const desktop = Boolean(window.__TAURI__?.core?.invoke);
@@ -2944,93 +3047,6 @@ window.SAKU_HELP_TREE = HelpTree;
 }
 
 
-/* 職種情報の受け取り。キャラクターとは別のものとして扱う。
-   Canonical に対応先のある項目だけを、確認のうえ反映する。
-   対応先が無い項目は黙って捨てない。画面に「反映しない」と出す。 */
-{
-  let occupation = null;
-  try { occupation = JSON.parse(localStorage.getItem("saku.desktop.pendingOccupation") || "null"); } catch { occupation = null; }
-  const host = document.querySelector(".desktop-toolbar-additions");
-  if (occupation && occupation.record && host && !document.getElementById("occupationHandoffNotice")) {
-    const en = () => document.documentElement.lang === "en";
-    const notice = document.createElement("div");
-    notice.id = "occupationHandoffNotice";
-    notice.className = "occupation-handoff";
-    notice.dataset.occupationSource = occupation.source_path || "";
-
-    const title = document.createElement("p");
-    title.className = "occupation-handoff-title";
-    title.textContent = "職能Helper Context — Preview";
-    notice.append(title);
-
-    const source = document.createElement("p");
-    source.textContent = "読み込み元: " + (occupation.source_path || "(パス不明)") + " / 職能名: " + (occupation.record.role || "(なし)");
-    source.dataset.runtimeValue = "";
-    notice.append(source);
-
-    const mappedList = document.createElement("p");
-    mappedList.id = "occupationMapped";
-    mappedList.textContent = "変更Preview（直接対応）: " + ((occupation.mapped || []).map(item => item.column + " → " + item.path + " = " + item.value).join(" / ") || "なし");
-    notice.append(mappedList);
-
-    const unmappedList = document.createElement("p");
-    unmappedList.id = "occupationUnmapped";
-    unmappedList.className = "occupation-unmapped";
-    unmappedList.textContent = "反映しない項目（Characterに対応する場所がありません）: "
-      + ((occupation.unmapped || []).map(item => item.column).join(" / ") || "なし");
-    notice.append(unmappedList);
-
-    const note = document.createElement("p");
-    note.textContent = "職種は資格・権限・許可ではありません。人格そのものを決めるものでもありません。";
-    notice.append(note);
-
-    const effect = document.createElement("p");
-    effect.id = "occupationEffect";
-    effect.textContent = "期待する変更効果: 明示的に反映した場合だけ、Characterの役割（CHARACTER_DEFINED）が更新されます。";
-    notice.append(effect);
-    const sideEffect = document.createElement("p");
-    sideEffect.id = "occupationSideEffect";
-    sideEffect.textContent = "副作用: 既存の役割を上書きする場合があります。非対応データはNON_CANONICAL_CONTEXT / NOT_MAPPABLEのまま保持し、資格・権限・許可・適性へ変換しません。";
-    notice.append(sideEffect);
-
-    const actions = document.createElement("div");
-    actions.className = "actions";
-    const apply = document.createElement("button");
-    apply.type = "button";
-    apply.id = "occupationApply";
-    apply.className = "btn-sm";
-    apply.textContent = "Previewを確認して明示的に反映する";
-    apply.addEventListener("click", async () => {
-      const mapped = occupation.mapped || [];
-      if (!mapped.length) { window.alert("反映できる項目がありません。"); return; }
-      const conflicts = [];
-      for (const item of mapped) {
-        const field = document.querySelector('[data-path="meta.field"]');
-        if (item.path === "character_core.character_role" && field && field.value.trim() && field.value.trim() !== item.value) {
-          conflicts.push("主な活動分野: " + field.value + " → " + item.value);
-        }
-      }
-      if (conflicts.length) {
-        const message = ["現在の入力内容を職種情報で上書きしてもよいですか？", ...conflicts].join(String.fromCharCode(10));
-        if (!(window.sakuConfirmFor ? await window.sakuConfirmFor("overwriteWithOccupation", message) : window.confirm(message))) return;
-      }
-      for (const item of mapped) {
-        if (item.path !== "character_core.character_role") continue;
-        const field = document.querySelector('[data-path="meta.field"]');
-        if (!field) continue;
-        field.value = item.value;
-        field.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-      apply.disabled = true;
-      apply.textContent = "反映しました";
-    });
-    actions.append(apply);
-    notice.append(actions);
-    host.insertAdjacentElement("afterend", notice);
-    if (typeof window.SAKU_ADOPT_MESSAGE === "function") window.SAKU_ADOPT_MESSAGE(notice);
-  }
-}
-
 import { recommendFromRoleSource } from "./unified-v1/tuning/tuning-projection.mjs";
 window.deriveOccupationTuning = (roleSource) => {
   try {
@@ -3042,5 +3058,104 @@ window.deriveOccupationTuning = (roleSource) => {
 </script>
 <script type="module" src="./v1/builder-golden-ui.mjs"></script>
 <script type="module" src="./v1/frozen-ia-ui.mjs"></script>
+<script type="module">
+/* The shared frame (Owner 2026-10-14 画面改修): the header, the menu bar and the selected-Character line, as on
+   every other screen. Only in the desktop app; the public web tool keeps its own header. The line follows the
+   Character as it is being edited (the draft as a Unified V1 Character), so the bar fills while the fields do. */
+const desktopApp = new URLSearchParams(location.search).has("desktop") || Boolean(window.__TAURI__);
+if (desktopApp) {
+  document.documentElement.classList.add("saku-desktop");
+  const [{ mountFrame }, ActiveSaku, Library, Validator] = await Promise.all([
+    import("./unified-v1/app-frame.mjs"), import("./unified-v1/active-saku.mjs"), import("./unified-v1/character-library.mjs"), import("./v1/adopted-schema-validator.mjs"),
+  ]);
+  const editing = () => {
+    const form = typeof window.__saku_data === "function" ? window.__saku_data() : null;
+    try { return form && window.SAKU_UNIFIED ? window.SAKU_UNIFIED.toUnifiedCharacter(form, form._unified_source || null) : null; } catch { return null; }
+  };
+  const frame = mountFrame({
+    page: "builder",
+    current: () => "edit",
+    read: () => {
+      const active = ActiveSaku.getActive();
+      const character = editing() || active?.character || null;
+      // A Character not chosen from the list (新規作成 here) is the Owner's own new one: 「署名無し・自作」.
+      const entry = active ? Library.entryForActive(Library.list(), active) : (character ? { character, source: "NEW", provenance: null } : null);
+      return { active: character ? { character, entry_id: active?.entry_id || null } : null, entry };
+    },
+    check: async character => Validator.validateCompleteAdoptedCharacter(character, await Validator.loadAdoptedSchema()).errors,
+    getLocale: () => window.SAKU_GOLDEN_UI?.getLocale?.() || "ja-JP",
+    setLocale: next => window.SAKU_GOLDEN_UI?.setLocale?.(next),
+    // Leaving ② through the menu bar asks about unsaved edits first (SAKU_NAV_GUARD), as the old buttons did.
+    onNavigate: (screen, event, field) => {
+      // Already in ②: go to the field without reloading the page (a reload would drop unsaved edits).
+      if (screen === "edit") { if (field) window.SAKU_FOCUS_REQUIRED?.(field); return true; }
+      const href = event.target.closest("[data-sf-screen]")?.getAttribute("href");
+      if (!href) return false;
+      void (async () => {
+        const ok = typeof window.SAKU_NAV_GUARD === "function" ? await window.SAKU_NAV_GUARD() : true;
+        if (ok) location.assign(href);
+      })();
+      return true;
+    },
+  });
+  let pending = 0;
+  const later = () => { clearTimeout(pending); pending = setTimeout(() => frame.refresh(), 400); };
+  // Owner 結果 188 (Q27): a sample pack Character is for reading. ② says so beside the save button and the button cannot
+  // be pressed — the reason is on the screen, not only in a refusal after pressing.
+  const markSampleReadOnly = () => {
+    const sample = typeof window.SAKU_SAMPLE_OPENED === "function" ? window.SAKU_SAMPLE_OPENED() : false;
+    // 「保存すると新しい revision になり…」 does not apply to a sample, which is not saved (round 2 N5).
+    const editingNotice = document.getElementById("desktopHandoffNotice");
+    if (editingNotice && editingNotice.dataset.handoffState === "POPULATED_FROM_UNIFIED_V1") editingNotice.hidden = sample;
+    const save = document.getElementById("saveUnifiedCharacter");
+    let note = document.getElementById("sampleReadOnlyNote");
+    if (sample && !note && save) {
+      note = document.createElement("p");
+      note.id = "sampleReadOnlyNote";
+      note.className = "sample-read-only";
+      note.setAttribute("role", "note");
+      save.insertAdjacentElement("afterend", note);
+    }
+    if (note) {
+      note.hidden = !sample;
+      note.textContent = sample ? (window.SAKU_GOLDEN_UI?.getLocale?.() === "en-US"
+        ? "Sample Characters are for reading only and cannot be saved. Start your own Character with “New”."
+        : "見本（サンプル）のキャラクターは読むだけで、保存できません。自分のキャラクターは「新規作成」から作ってください。") : "";
+    }
+    if (save) { save.disabled = sample; if (sample) save.setAttribute("aria-describedby", "sampleReadOnlyNote"); else save.removeAttribute("aria-describedby"); }
+  };
+  markSampleReadOnly();
+  setTimeout(markSampleReadOnly, 0);
+  window.addEventListener("storage", markSampleReadOnly);
+  window.addEventListener("saku-ui-locale-changed", markSampleReadOnly);
+  window.SAKU_FRAME_REFRESH = () => { markSampleReadOnly(); return frame.refresh(); };
+  // Closing the window with unsaved edits asks first (2026-10-14 keying 4-16): the host holds the close and asks here.
+  const tauriEvent = window.__TAURI__?.event;
+  const nativeInvoke = window.__TAURI__?.core?.invoke;
+  if (tauriEvent?.listen && nativeInvoke) {
+    let askingToClose = false;
+    void tauriEvent.listen("saku-close-requested", async () => {
+      void nativeInvoke("close_request_seen").catch(() => {});
+      if (askingToClose) return;
+      askingToClose = true;
+      try {
+        const ok = typeof window.SAKU_NAV_GUARD === "function" ? await window.SAKU_NAV_GUARD() : true;
+        await nativeInvoke(ok ? "close_main_window" : "close_cancelled");
+      } catch { /* the host closes on the next request after its wait */ }
+      finally { askingToClose = false; }
+    });
+  }
+  // Opened from the bar of another screen (?field=): go to that field once the form is drawn.
+  const askedField = new URLSearchParams(location.search).get("field");
+  if (askedField) {
+    let tries = 0;
+    const goToAsked = () => { if (window.SAKU_FOCUS_REQUIRED?.(askedField) || ++tries > 40) return; setTimeout(goToAsked, 100); };
+    setTimeout(goToAsked, 100);
+  }
+  document.addEventListener("input", later, true);
+  document.addEventListener("change", later, true);
+  document.addEventListener("click", event => { if (event.target.closest("#resetAll, #saveUnifiedCharacter, [data-list-add], [data-list-remove]")) later(); }, true);
+}
+</script>
 </body>
 </html>

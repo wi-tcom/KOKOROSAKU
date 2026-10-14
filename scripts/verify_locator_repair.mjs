@@ -160,7 +160,7 @@ function realPackResult(shiftedCharacter) {
 
 // ── 3. headless desktop ─────────────────────────────────────────────────────
 {
-  const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+  const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
   if (!existsSync(chrome)) skipped.push("UI: Chrome not found");
   else if (!existsSync(path.join(ROOT, ".desktop-dist/index.html"))) skipped.push("UI: .desktop-dist not prepared (run desktop:prepare)");
   else {

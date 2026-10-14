@@ -91,6 +91,40 @@ await refused(await withManifest(x => { x.character.display_name = "Someone else
 }
 await refused(utf8("not a zip"), "ZIP_NOT_READABLE", "not a ZIP");
 
+// ZIP-EDITED (2026-10-14, Owner Q5 (b)): a pack Character changed in SAKU names its pack, self-reported.
+{
+  const editedFrom = { pack_id: "saku-pack-business", pack_version: "1.1.0", character_digest: "sha-256:abc", signature_state: "PASS", license: "LicenseRef-WIT-Commercial-1.5" };
+  const edited = await Z.buildSelfMadeCharacterZip({ ...FIXED, editedFrom });
+  check(JSON.stringify(edited.manifest.edited_from) === JSON.stringify({ pack_id: "saku-pack-business", pack_version: "1.1.0", character_digest: "sha-256:abc", license: "LicenseRef-WIT-Commercial-1.5" }), "ZIP-EDITED edited_from carries pack_id, pack_version, character_digest and the pack's license id (00A 2026-10-14), never a signature state");
+  check(Z.storedZip && Z.readStoredZip(edited.bytes).entries.length === 2, "ZIP-EDITED still exactly two entries: no LICENSE.md in the ZIP (DECISION 2026-09-27-10)");
+  check(edited.manifest.format_version === "1" && edited.manifest.signature === "NONE" && !Object.hasOwn(edited.manifest, "package"), "ZIP-EDITED still format_version 1, signature NONE, no package field (AMU reads it)");
+  check((await Z.checkSelfMadeCharacterZip(edited.bytes)).ok, "ZIP-EDITED an edited export passes the refusal rules");
+  check(!Object.hasOwn(built.manifest, "edited_from"), "ZIP-EDITED no edited_from when the row names no pack");
+  // 00A QA10 (2026-10-14): pack_id, pack_version and license are required, the license a pack's id; an incomplete one stops
+  // the export rather than being dropped (dropped, the ZIP would read as plain self-made).
+  for (const [label, from] of [["no pack_id", { pack_version: "1.1.0", license: "LicenseRef-WIT-Commercial-1.5" }], ["no pack_version", { pack_id: "p", license: "LicenseRef-WIT-Commercial-1.5" }], ["no license", { pack_id: "p", pack_version: "1.1.0" }], ["MIT", { pack_id: "p", pack_version: "1.1.0", license: "MIT" }], ["the stale id", { pack_id: "p", pack_version: "1.1.0", license: "wi-t.com-ai-product-terms-2026-09-16" }]]) {
+    let code = "";
+    try { await Z.buildSelfMadeCharacterZip({ ...FIXED, editedFrom: from }); } catch (error) { code = error.message; }
+    check(code === "EDITED_FROM_INCOMPLETE", `ZIP-EDITED ${label}: the export stops (got ${code || "a ZIP"})`);
+  }
+  await refused(await withManifest(x => { x.edited_from = { pack_id: "p", pack_version: "1.1.0" }; }), "EDITED_FROM_INVALID", "edited_from without license (00A QA10)");
+  await refused(await withManifest(x => { x.edited_from = { pack_id: "p", license: "LicenseRef-WIT-Commercial-1.5" }; }), "EDITED_FROM_INVALID", "edited_from without pack_version (00A QA10)");
+  await refused(await withManifest(x => { x.edited_from = { pack_id: "p", pack_version: "1.1.0", license: "MIT" }; }), "EDITED_FROM_INVALID", "edited_from whose license is not a pack's id (00A QA10)");
+  check((await Z.checkSelfMadeCharacterZip(await withManifest(x => { x.edited_from = { pack_id: "p", pack_version: "1.1.0", license: "LicenseRef-WIT-Sample-1.0" }; }))).ok, "ZIP-EDITED the sample pack's license id is a pack's id");
+  await refused(await withManifest(x => { x.edited_from = "saku-pack-business"; }), "EDITED_FROM_INVALID", "edited_from that is not an object");
+  await refused(await withManifest(x => { x.edited_from = null; }), "EDITED_FROM_INVALID", "edited_from that is null");
+  await refused(await withManifest(x => { x.edited_from = { pack_version: "1.1.0" }; }), "EDITED_FROM_INVALID", "edited_from without pack_id");
+  await refused(await withManifest(x => { x.edited_from = { pack_id: "p", pack_version: "1.1.0", license: "LicenseRef-WIT-Commercial-1.5", signature_state: "PASS" }; }), "EDITED_FROM_INVALID", "edited_from claiming a signature state");
+  await refused(await withManifest(x => { x.edited_from = { pack_id: "p", pack_version: 1, license: "LicenseRef-WIT-Commercial-1.5" }; }), "EDITED_FROM_INVALID", "edited_from with a non-string value");
+  await refused(await withManifest(x => { x.edited_from = { pack_id: "p", pack_version: ["1.1.0"], license: "LicenseRef-WIT-Commercial-1.5" }; }), "EDITED_FROM_INVALID", "edited_from with a list value");
+  await refused(await withManifest(x => { x.edited_from = { pack_id: "p", license: "" }; }), "EDITED_FROM_INVALID", "edited_from with an empty value (AMU Studio isEditedFrom, KOKOROAMU-STUDIO #236)");
+  await refused(await withManifest(x => { x.edited_from = { pack_id: "p", pack_version: "1.1.0", license: "LicenseRef-WIT-Commercial-1.5", character_digest: "" }; }), "EDITED_FROM_INVALID", "a complete edited_from with an empty optional value");
+  const viaEntries = await Z.checkSelfMadeEntries(entriesOf(edited.bytes));
+  check(viaEntries.ok && viaEntries.manifest.edited_from.pack_id === "saku-pack-business", "ZIP-EDITED the host's two entries pass the same rules (checkSelfMadeEntries)");
+  const viaEntriesBad = await Z.checkSelfMadeEntries([entriesOf(edited.bytes)[0]], ["ZIP_FROM_HOST"]);
+  check(!viaEntriesBad.ok && viaEntriesBad.errors.includes("ZIP_FROM_HOST") && viaEntriesBad.errors.some(e => e.startsWith("ZIP_ENTRY_MISSING")), "ZIP-EDITED checkSelfMadeEntries keeps the host's errors and adds its own");
+}
+
 // ZIP-SCHEMA
 const schema = loadAdoptedSchemaFromRepository();   // the same schema and digests the page validates with
 check((await validateCompleteAdoptedCharacter(JSON.parse(new TextDecoder().decode(read1.entries[1].bytes)), schema)).ok, "ZIP-SCHEMA character.json passes the adopted Schema");
@@ -123,7 +157,7 @@ check(page.includes('import * as SelfMadeZip from "./unified-v1/self-made-charac
 // "AMU/MACHI receive it only through a signed pack" is gone from every screen text.
 {
   const { CHARACTER_FILE_PURPOSE } = await import("../tools/unified-v1/character-file-text.mjs");
-  const purpose = page.match(/json:\{reimport:false,\s*(?:\/\*[^*]*\*\/\s*)?ja:("(?:[^"\\]|\\.)*"),\s*en:("(?:[^"\\]|\\.)*")\}/);
+  const purpose = page.match(/json:\{reimport:true,\s*(?:\/\*[^*]*\*\/\s*)?ja:("(?:[^"\\]|\\.)*"),\s*en:("(?:[^"\\]|\\.)*")\}/);
   check(purpose && JSON.parse(purpose[1]) === CHARACTER_FILE_PURPOSE.ja && JSON.parse(purpose[2]) === CHARACTER_FILE_PURPOSE.en, "ZIP-TEXT the Character File tab line is the shared constant (JA and EN)");
   const manual = read("manual/saku-field-guide.html");
   const attr = text => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
@@ -137,8 +171,9 @@ check(page.includes('import * as SelfMadeZip from "./unified-v1/self-made-charac
 
 // ZIP-HOST
 const host = read("src-tauri/src/main.rs");
-check(/fn save_self_made_zip\(filename: String, bytes: Vec<u8>, dialog_title: String\) -> SaveFileResult/.test(host) && /save_builder_file,\s*\n\s*save_self_made_zip,/.test(host), "ZIP-HOST save_self_made_zip is a registered command");
-check(host.includes('filename.strip_suffix(SELF_MADE_ZIP_SUFFIX)') && host.includes("bytes[..4] != [0x50, 0x4b, 0x03, 0x04]") && host.includes("fn self_made_zip_saves_only_its_own_file()"), "ZIP-HOST only <slug>.saku-character.zip bytes that start as a ZIP are saved (cargo test covers the refusals)");
+check(/fn save_self_made_zip\(app: AppHandle, filename: String, bytes: Vec<u8>, dialog_title: String\) -> SaveFileResult/.test(host) && /save_builder_file,\s*\n\s*save_self_made_zip,/.test(host), "ZIP-HOST save_self_made_zip is a registered command");
+// 2026-10-03: the check is shared with the Agent Skills export ZIP (export_zip_acceptable, each with its own suffix).
+check(host.includes("export_zip_acceptable(filename, bytes, SELF_MADE_ZIP_SUFFIX)") && host.includes("filename.strip_suffix(suffix)") && host.includes("bytes[..4] != [0x50, 0x4b, 0x03, 0x04]") && host.includes("fn self_made_zip_saves_only_its_own_file()"), "ZIP-HOST only <slug>.saku-character.zip bytes that start as a ZIP are saved (cargo test covers the refusals)");
 for (const manifest of ["desktop/resources/manifests/native-public.json", "desktop/resources/manifests/static-public.json"]) {
   check(JSON.parse(read(manifest)).files.some(([source]) => source === "tools/unified-v1/self-made-character-zip.mjs"), `ZIP-HOST ${manifest} ships the module`);
 }
