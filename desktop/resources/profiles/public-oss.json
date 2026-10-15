@@ -9,7 +9,7 @@
     { "id": "builder-unified-v1", "classification": "PUBLIC_CODE", "license_state": "MPL-2.0", "bundled": true },
     { "id": "trainer-unified-v1", "classification": "PUBLIC_CODE", "license_state": "MPL-2.0", "bundled": true },
     { "id": "oss-sample3", "classification": "PUBLIC_SAMPLE_CANDIDATE", "license_state": "CC0-1.0", "bundled": false, "availability": "RETIRED_D_20260924_OSS_SAMPLES" },
-    { "id": "saku-pack-sample-1.1.0", "classification": "PUBLIC_SAMPLE", "license_state": "LicenseRef-WIT-Sample-1.0", "bundled": true, "count": 3 },
+    { "id": "saku-pack-sample-1.2.0", "classification": "PUBLIC_SAMPLE", "license_state": "LicenseRef-WIT-Sample-1.0", "bundled": true, "count": 3 },
     { "id": "approved-offline-help", "classification": "PUBLIC_DOCUMENTATION", "license_state": "CC-BY-4.0", "bundled": true },
     { "id": "saku-brand-artwork", "classification": "PUBLIC_BRAND_ASSET", "license_state": "CC-BY-4.0", "bundled": true, "trademark_rights_granted": false }
   ],

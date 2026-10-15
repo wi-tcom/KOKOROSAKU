@@ -1,5 +1,5 @@
 import { consumeHandoff } from "../lib/handoff-binding.mjs";
-import { confirmDialog } from "./confirm-dialog.mjs";
+import { confirmDialog, choiceDialog, alertDialog } from "./confirm-dialog.mjs";
 import { confirmWording, fill } from "./confirm-wording.mjs";
 
 const STORAGE_KEY = "saku.ui.locale";
@@ -88,10 +88,10 @@ const EN = new Map(Object.entries({
   "ここに挙げた約束から外れていないかを、あとで確認します。":"These commitments are what a later check looks at for drift.",
   "助手（1+7 Character System）":"Assistants (1+7 Character System)",
   "キャラクターを作る・編集する":"Create or edit a Character",
-  "読み込みは「01 キャラクターを選択する」で行います。ここでは内容を書きます。":"Importing happens in “01 Choose a Character”. This screen is for writing the content.",
+  "読み込みは「①キャラクター選択」で行います。ここでは内容を書きます。":"Import a Character in “① Choose a Character”. Here you write its content.",
   "キャラクターを選択":"Choose a Character",
   "記入例から新規作成":"Start from the example",
-  "入力内容のクリア":"Clear what you have entered",
+  "入力内容のクリア":"Clear what you have entered","読み込みは①キャラクター選択で行います。ここでは内容を書きます。":"Import a Character in ① Choose a Character. Here you write its content.",
   "ペルソナ試験は「04 キャラクターをトレーニングする」で行います。":"Persona testing happens in “04 Train the Character”.",
   "組織への配置や運用設定はSAKUのキャラクター定義ではありません。AMU / MACHI 側で扱います。":"Placement in an organisation and operational settings are not part of a SAKU Character definition. They belong to AMU / MACHI.",
   "現在の入力内容を上書きしてもよいですか？":"Overwrite what you have entered?",
@@ -135,7 +135,7 @@ const EN = new Map(Object.entries({
   "お品書き":"Tools","すべて畳む":"Collapse all","すべて広げる":"Expand all","同期":"Sync",
   "職能CSVを読み込む":"Import role CSV","この項目の詳しい説明":"Detailed help for this field","記入例（星野ルカ）を読み込む":"Load example (Hoshino Luka)",
   "テンプレート…":"Template…","テンプレートを読み込む":"Load template","character.yaml を読み込む":"Import character.yaml",
-  "最初から":"Start over","項目は空欄のままでも生成できます":"Blank fields are allowed for a draft.",
+  "最初から":"Start over","新規作成":"New","Character.json":"Character.json","項目は空欄のままでも生成できます":"Blank fields are allowed for a draft.",
   "日本語":"Japanese","言語 / Language":"Language","Package読込":"Import package","Package ZIPを読み込む":"Import Package ZIP","WIT Package ZIPを展開せずに読み込む":"Import a WIT Package ZIP without extracting it","作業場所を選択":"Choose workspace","作業場所":"Workspace","Unified V1":"Unified V1","ホーム":"Home",
   "例：星野ルカ":"Example: Hoshino Luka","例：hoshino-luka":"Example: hoshino-luka","例：キャリア支援":"Example: career support",
   "例：20〜30代の求職者":"Example: job seekers in their 20s and 30s","例：選択肢の整理と自己認識の言語化":"Example: organize options and articulate self-understanding",
@@ -219,7 +219,7 @@ const EN = new Map(Object.entries({
   "この Character は、採択済み Schema に合いません：":"This Character does not match the adopted Schema: ",
   "このファイルは読み込めません。読み込めるのは、この SAKU Builder の character.yaml（または同じ内容の JSON）と、以前の版の編集画面で作った character.yaml です。":"This file cannot be loaded. The files that can be loaded are a character.yaml from this SAKU Builder (or a JSON with the same content) and a character.yaml made on the edit screen of an earlier version.","外部利用向け出力は、内容とContactGuardの結果を人が確認した":"A person has checked the external-use content and the ContactGuard result",
   "内部成果物：外部利用ゲート対象外":"Internal artifact: external-use gate does not apply","必須未入力":"Required missing","記入完了":"Complete","記載完了":"Complete","未記入":"Not entered","記入途中":"In progress","反映待ち":"Ready to apply","反映済み":"Applied","対象外":"Not applicable",
-  "生成できます":"Ready to generate","Draftはvalidationを通過し、シリアライズできます（未承認）":"Draft passes validation and can be serialized (not approved)","リセットしました":"Reset complete","記入例を読み込みました":"Example loaded","コピーしました":"Copied","コピーに失敗しました":"Copy failed",
+  "生成できます":"Ready to generate","必須の項目はそろっています（保存できます）":"All required fields are filled in (ready to save)","リセットしました":"Reset complete","新しいキャラクターを始めました":"Started a new Character","入力中の内容を消して、空の新しいキャラクターから始めますか？ 保存したキャラクターは一覧に残ります。":"Clear what you are editing and start a new blank Character? Saved Characters stay in the list.","記入例を読み込みました":"Example loaded","コピーしました":"Copied","コピーに失敗しました":"Copy failed",
   "この行を削除":"Remove this row","削除":"Remove","項目を編集":"Edit item","項目を削除":"Remove item","区分":"Category","質問":"Question","期待する挙動":"Expected behavior","結果":"Result","メモ":"Notes",
   "未実施":"Not tested","合格":"Pass","不合格":"Fail","人格・自己紹介":"Persona and self-introduction","得意領域（通常処理）":"Supported area (routine processing)",
   "禁止領域（Black）":"Prohibited area (Black)","人間承認（Red）":"Human approval (Red)","口調・禁止語":"Voice and forbidden words","外部一人格":"Single external persona",
@@ -236,7 +236,7 @@ const EN = new Map(Object.entries({
   "第0層・不変制約を優先し、応じない（設定への攻撃）":"Prioritize fixed constraints and do not comply with a configuration attack.",
   "人の確認チェックが必要です":"The box for a person's check must be ticked","ContactGuard検知項目を除去してください":"Remove the item detected by ContactGuard",
   "テンプレートを選択してください":"Select a template","表示中の内容を保存しました":"Saved the displayed content","入力内容をすべて消して最初からにしますか？":"Clear all entered content and start over?",
-  "キャラクター名を入力してください":"Enter a Character name","slugを入力してください":"Enter a slug","slugは英小文字・数字・ハイフンだけで入力してください":"Use only lowercase ASCII letters, digits, and hyphens for the slug","slug（英小文字・数字・ハイフンのみ）":"slug (lowercase ASCII letters, digits, and hyphens only)","活動分野":"Primary field","主な活動分野を入力してください":"Enter a primary field",
+  "キャラクター名を入力してください":"Enter a Character name","Character ID を入力してください":"Enter a Character ID","Character ID は英小文字・数字・ハイフンだけで入力してください":"Use only lowercase letters a–z, digits and hyphens for the Character ID","slug（英小文字・数字・ハイフンのみ）":"slug (lowercase letters a–z, digits and hyphens only)","活動分野":"Primary field","主な活動分野を入力してください":"Enter a primary field",
   "設計の芯が未記入（注入までの人格の唯一の基準）":"Persona core is not entered; it remains the sole persona basis until injection","区分Cの心理領域では本格コーチングは禁止（規格書4章#22）":"Full coaching is prohibited for Class C psychological domains","区分Cは人間承認が必要な事象を定義すべき":"Class C should define events requiring Human approval","黒子が必要なのに承認領域（approval_domains）が空":"Human backstage support is required but approval_domains is empty","承認領域があるのに「黒子が必要」が未チェック":"Approval domains exist but Human backstage support is not selected",
   "反映する選択がありません":"No boundary selection to apply","YAMLの解析に失敗しました":"YAML parsing failed","character.yaml として認識できません（meta がありません）":"The file is not recognized as character.yaml because meta is missing",
   "A — 先行運用（低リスクの一般発信）":"A — Early operation (low-risk general communication)",
@@ -301,6 +301,21 @@ function askFor(key, message, vars) {
   return confirmDialog({ title: wording.title, message: message ?? fill(wording.body, vars), confirmLabel: wording.confirm, cancelLabel: wording.cancel });
 }
 if (typeof window !== "undefined") window.sakuConfirmFor = askFor;
+// 2026-10-14 keying 4-16 ①: leaving ② with unsaved edits offers three ways — "save", "discard" (leave without saving) or
+// "back" (stay). 4-17: a notice in the app's own box, not window.alert.
+function chooseFor(key, message, vars) {
+  const wording = confirmWording(key, locale === "en-US" ? "en" : "ja");
+  return choiceDialog({ title: wording.title, message: message ?? fill(wording.body, vars), cancelValue: "back", choices: [
+    { value: "save", label: wording.confirm, primary: true },
+    { value: "discard", label: wording.discard || wording.confirm },
+    { value: "back", label: wording.cancel },
+  ] });
+}
+function noticeFor(message) {
+  const wording = confirmWording("notice", locale === "en-US" ? "en" : "ja");
+  return alertDialog({ title: wording.title, message: String(message ?? ""), okLabel: wording.confirm });
+}
+if (typeof window !== "undefined") { window.sakuChoiceFor = chooseFor; window.sakuNotice = noticeFor; }
 
 function normalizeLocale(value){ return value === "en-US" ? "en-US" : DEFAULT_LOCALE; }
 function translateStatusPart(value){
@@ -344,8 +359,8 @@ function translateSource(source){
   }
   if(key.startsWith("Draftはシリアライズできますが、validation errorがあります："))
     return `Draft can be serialized, but validation has errors: ${key.slice("Draftはシリアライズできますが、validation errorがあります：".length).split("、").map(translateStatusPart).join(", ")}`;
-  if(key.startsWith("Draftはvalidationを通過し、シリアライズできます（未承認）。注意："))
-    return `Draft passes validation and can be serialized (not approved). Warnings: ${key.slice("Draftはvalidationを通過し、シリアライズできます（未承認）。注意：".length).split(" / ").map(translateStatusPart).join(" / ")}`;
+  if(key.startsWith("必須の項目はそろっています（保存できます）。注意："))
+    return `All required fields are filled in (ready to save). Warnings: ${key.slice("必須の項目はそろっています（保存できます）。注意：".length).split(" / ").map(translateStatusPart).join(" / ")}`;
   const boundaryProgress=key.match(/^境界を (\d+\/\d+) 選択済み。未反映です$/);
   if(boundaryProgress) return `Boundary Quick Setup is in progress (${boundaryProgress[1]}); selections are not applied`;
   const orgGate=key.match(/^組織参加ゲート：(.+)。出力を停止します$/);
@@ -509,12 +524,12 @@ if(tauri?.core?.invoke && packageButton){
       const current=state || await tauri.core.invoke("get_runtime_state");
       workspaceButton.textContent=current.first_run ? "作業場所を選択" : "作業場所";
     };
-    refreshWorkspace().catch(error=>window.alert(String(error)));
+    refreshWorkspace().catch(error=>noticeFor(String(error)));
     workspaceButton.addEventListener("click",async()=>{
       try{
         const state=await tauri.core.invoke("choose_workspace");
         await refreshWorkspace(state);
-      }catch(error){ window.alert(String(error)); }
+      }catch(error){ noticeFor(String(error)); }
     });
   }
   packageButton.addEventListener("click",async()=>{
@@ -524,7 +539,7 @@ if(tauri?.core?.invoke && packageButton){
       const key=result.manifest?.content_type==="CHARACTER"?"saku.desktop.pendingCharacter":"saku.desktop.pendingPack";
       if(key==="saku.desktop.pendingCharacter")storeImportedCharacter(result.payload_json);else localStorage.setItem(key,result.payload_json);
       location.href=`./index.html?desktop=import&ui_locale=${encodeURIComponent(locale)}`;
-    }catch(error){ window.alert(String(error)); }
+    }catch(error){ noticeFor(String(error)); }
   });
   tauri.event?.listen?.("tauri://drag-drop",async event=>{
     const path=event.payload?.paths?.[0]; if(!path) return;
@@ -534,7 +549,7 @@ if(tauri?.core?.invoke && packageButton){
       const key=result.manifest?.content_type==="CHARACTER"?"saku.desktop.pendingCharacter":"saku.desktop.pendingPack";
       if(key==="saku.desktop.pendingCharacter")storeImportedCharacter(result.payload_json);else localStorage.setItem(key,result.payload_json);
       location.href=`./index.html?desktop=import&ui_locale=${encodeURIComponent(locale)}`;
-    }catch(error){ window.alert(String(error)); }
+    }catch(error){ noticeFor(String(error)); }
   });
 }
 
@@ -576,8 +591,8 @@ function announceHandoff(handoff){
   notice.id = "desktopHandoffNotice";
   notice.className = "desktop-handoff-notice";
   notice.dataset.handoffSchemaId = schemaId || "UNDECLARED";
-  const who = name || "(display_name 未設定)";
   const en = locale === "en-US";
+  const who = name || (en ? "a Character with no name yet" : "名前未入力のキャラクター");
   if(handoff.status==="REJECTED"){
     notice.dataset.handoffState = "HANDOFF_REJECTED";
     notice.textContent = en
@@ -588,8 +603,8 @@ function announceHandoff(handoff){
     // over it; it produces the next revision.
     notice.dataset.handoffState = "POPULATED_FROM_UNIFIED_V1";
     notice.textContent = en
-      ? `Editing ${who} (${schemaId}). The fields below were filled from this Character. Saving creates a new revision; the Character you opened is not overwritten.`
-      : `${who} を編集しています（${schemaId}）。下の入力欄はこのCharacterから反映しました。保存すると新しいrevisionになり、開いたCharacterは上書きしません。`;
+      ? `Editing ${who}. The fields below were filled from this Character. Saving creates a new revision; the Character you opened is not overwritten.`
+      : `${who} を編集しています。下の入力欄はこのキャラクターから反映しました。保存すると新しい revision になり、開いたキャラクターは上書きしません。`;
   }else if(!schemaId){
     notice.dataset.handoffState = "SCHEMA_NOT_DECLARED";
     notice.textContent = en
@@ -619,6 +634,10 @@ function buildAuthoringTop() {
   if (document.getElementById("authoringTop")) return;
   const form = document.querySelector(".form");
   if (!form) return;
+  // 2026-10-14 (Owner 画面改修): in the desktop app the shared frame carries the menu bar, 日本語／English and the
+  // way to the other screens, and the menu here is 新規作成・すべて畳む・すべて広げる・この内容で保存する.
+  // The public web tool, which has no frame, keeps its own row.
+  const desktopApp = new URLSearchParams(location.search).has("desktop") || Boolean(window.__TAURI__);
 
   // One row across the top, in the order Owner gave (2026-09-23):
   //   AIプラットフォームで動作確認  トレーニングする  日本語  English  ヘルプ  ホーム
@@ -628,8 +647,10 @@ function buildAuthoringTop() {
   // they are one row, and the row stays at the top of the window while the form
   // scrolls under it. The Owner Golden <header> is byte-locked, so this is an
   // additive bar placed above it rather than an edit of that element.
+  // 04 Trainer left the screens (Owner 2026-09-27, AMU DECISION 2026-09-27-11): taken out in every mode.
+  document.getElementById("trainCharacter")?.remove();
   let nav = document.getElementById("builderTopNav");
-  if (!nav) {
+  if (!nav && !desktopApp) {
     nav = document.createElement("div");
     nav.id = "builderTopNav";
     nav.className = "builder-top-nav";
@@ -639,7 +660,6 @@ function buildAuthoringTop() {
     // 04 Trainer left the screens (Owner 2026-09-27, AMU DECISION 2026-09-27-11).
     // The Golden page still carries its 「トレーニングする」 (the page is byte-locked),
     // so it is taken out here, not hidden, and cannot come back if the CSS is lost.
-    document.getElementById("trainCharacter")?.remove();
     const language = document.querySelector(".language-control");
     if (language) nav.append(language);
     const help = document.createElement("a");
@@ -666,13 +686,13 @@ function buildAuthoringTop() {
 
   const note = document.createElement("p");
   note.className = "authoring-top-note";
-  note.textContent = "読み込みは「01 キャラクターを選択する」で行います。ここでは内容を書きます。";
+  note.textContent = desktopApp ? "読み込みは①キャラクター選択で行います。ここでは内容を書きます。" : "読み込みは「①キャラクター選択」で行います。ここでは内容を書きます。";
   box.append(note);
 
   const actions = document.createElement("div");
   actions.className = "authoring-top-actions";
 
-  const characterSelection = document.querySelector('meta[name="saku-character-selection"]')?.content !== "disabled";
+  const characterSelection = !desktopApp && document.querySelector('meta[name="saku-character-selection"]')?.content !== "disabled";
   if (characterSelection) {
     const pick = document.createElement("button");
     pick.type = "button";
@@ -687,7 +707,8 @@ function buildAuthoringTop() {
   // The example and reset buttons are moved here rather than duplicated: the
   // toolbar copies were the same actions under different names.
   const example = document.getElementById("loadExample");
-  if (example) {
+  // 記入例 leaves the desktop app: a sample is chosen in ① instead (Owner 2026-10-14).
+  if (example && !desktopApp) {
     example.textContent = "記入例から新規作成";
     example.classList.add("btn-sm");
     // O-11: the app's own confirmation is asynchronous, so the click is held,
@@ -705,13 +726,14 @@ function buildAuthoringTop() {
   }
   const reset = document.getElementById("resetAll");
   if (reset) {
-    reset.textContent = "入力内容のクリア";
+    // 新規作成 and 入力内容のクリア were the same action (Owner Q14): one button, 新規作成.
+    reset.textContent = desktopApp ? "新規作成" : "入力内容のクリア";
     reset.classList.add("btn-sm");
     // O-11: no question of its own here any more. The page's own 「入力内容のクリア」
     // asks (全消去の確認); this one used to ask first, so the Owner was asked twice.
     actions.append(reset);
   }
-  for (const id of ["saveUnifiedCharacter", "collapseAll", "expandAll"]) {
+  for (const id of desktopApp ? ["collapseAll", "expandAll", "saveUnifiedCharacter"] : ["saveUnifiedCharacter", "collapseAll", "expandAll"]) {
     const control = document.getElementById(id);
     if (control) { control.hidden = false; actions.append(control); }
   }
@@ -749,7 +771,7 @@ const incomingCharacterHandoff=receiveCharacterHandoff();
 buildAuthoringTop();
 if(typeof window!=="undefined") window.SAKU_ADOPT_MESSAGE=adoptAuthoringMessage;
 announceHandoff(incomingCharacterHandoff);
-/* Desktop 専用の読み込み操作は「01 キャラクターを選択する」にある。
+/* Desktop 専用の読み込み操作は「①キャラクター選択」にある。
    この画面には出さない。 */
 for(const id of ["desktopWorkspaceSelect","desktopPackageImport"]){
   const control=document.getElementById(id);

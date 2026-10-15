@@ -135,8 +135,11 @@ const names = Library => Library.list().map(e => e.character.identity.display_na
   const lib = read("tools/unified-v1/character-library.mjs"), act = read("tools/unified-v1/active-saku.mjs"), app = read("desktop/app.mjs");
   check(/noteChanged\(KEY\)/.test(lib) && /isReadOnly\(\)/.test(lib), "A: character-library reports every write and refuses to write in a read-only window");
   check((act.match(/noteChanged\(key\)/g) || []).length >= 2 && /isReadOnly\(\)/.test(act), "A: active-saku reports both writes and removals, and refuses in a read-only window");
+  // 2026-10-14 keying 3-8: one row per import — recordImport starts it, finishImport settles it, writeImportHistory writes.
   const record = app.match(/function recordImport\([\s\S]*?\n}\n/)?.[0] || "";
-  check(record.includes("noteChanged(IMPORT_HISTORY_KEY)") && record.includes("isReadOnly()"), "A: the import history reports its write and refuses in a read-only window");
+  const finish = app.match(/function finishImport\([\s\S]*?\n}\n/)?.[0] || "";
+  const write = app.match(/function writeImportHistory\([\s\S]*?\n}\n/)?.[0] || "";
+  check(write.includes("noteChanged(IMPORT_HISTORY_KEY)") && record.includes("isReadOnly()") && finish.includes("isReadOnly()") && record.includes("writeImportHistory(") && finish.includes("writeImportHistory("), "A: the import history reports its write and refuses in a read-only window");
   check(app.includes("if (!await applyStartupRoute()) await refreshState();"), "A: start-up waits for the working copy to be bound before a screen (01 on open=select) reads the list");
   const refresh = app.match(/async function refreshState\(\)[\s\S]*?\n}\n/)?.[0] || "";
   check(refresh.indexOf("bindAtStartup(") > 0 && refresh.indexOf("bindAtStartup(") < refresh.indexOf("renderState(state)"), "A: …and binds before it renders the home screen (the selected Character shown is the workspace's)");
@@ -296,7 +299,7 @@ const names = Library => Library.list().map(e => e.character.identity.display_na
 
 // ── I. browser end to end ───────────────────────────────────────────────────
 {
-  const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+  const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
   const dist = path.join(ROOT, ".desktop-dist");
   const stale = ["desktop/app.mjs:app.mjs", "tools/unified-v1/workspace-state.mjs:tools/unified-v1/workspace-state.mjs", "tools/unified-v1/character-library.mjs:tools/unified-v1/character-library.mjs", "tools/unified-v1/active-saku.mjs:tools/unified-v1/active-saku.mjs"]
     .map(pair => pair.split(":")).filter(([src, out]) => !existsSync(path.join(dist, out)) || read(src) !== readFileSync(path.join(dist, out), "utf8")).map(([src]) => src);
@@ -354,7 +357,7 @@ try{
  await load('?stay=1');
  await until(()=>entries().length===1);
  await new Promise(r=>setTimeout(r,300));
- check(doc.getElementById('selected-character').innerText.includes(NAME),'WS-UI on the home screen, the selection card shows the restored Character ('+doc.getElementById('selected-character').innerText.replace(/\\n/g,' / ')+')');
+ check(doc.querySelector('#saku-frame .sf-who').innerText.includes(NAME),'WS-UI on the home screen, the selected-Character line of the frame shows the restored Character ('+doc.querySelector('#saku-frame .sf-who').innerText.replace(/\\n/g,' / ')+')');
  // A second window on the same workspace (β.7 hands-on 2026-09-24): with a Character
  // selected, the home guidance was drawn after the read-only notice and replaced it.
  window.__stubWritable=false;
@@ -366,7 +369,7 @@ try{
  check(doc.getElementById('choose-workspace').disabled,'WS-UI …and its workspace control stays disabled');
  win.__saku_home.renderActiveSaku();
  check(/WORKSPACE_READ_ONLY/.test(doc.getElementById('host-status').innerText),'WS-UI …and a later redraw of the selection does not replace the notice either');
- check(doc.getElementById('selected-character').innerText.includes(NAME),'WS-UI …while the selection card still shows the Character');
+ check(doc.querySelector('#saku-frame .sf-who').innerText.includes(NAME),'WS-UI …while the line of the frame still shows the Character');
  window.__stubWritable=true;
  document.getElementById('report').textContent=JSON.stringify({status:'PASS',passed:checks.length,checks});document.getElementById('report').dataset.status='PASS';
 }catch(error){document.getElementById('report').textContent=JSON.stringify({status:'FAIL',passed:checks.length,error:String(error.stack||error),checks,body:doc?.body.innerText.slice(-2000)});document.getElementById('report').dataset.status='FAIL';}

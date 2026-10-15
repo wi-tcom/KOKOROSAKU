@@ -6,6 +6,7 @@
   <title>SAKU Builder — ホーム</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./desktop.css">
+  <link rel="stylesheet" href="./tools/unified-v1/app-frame.css">
   <script>
     window.__SAKU_DESKTOP_BOOT_FALLBACK = window.setTimeout(() => {
       if (window.__SAKU_DESKTOP_BOOTED) return;
@@ -17,42 +18,35 @@
   <noscript><style>html.boot-pending body{visibility:visible}</style></noscript>
 </head>
 <body>
-  <header class="topbar">
-    <div><span class="eyebrow">LOCAL DESKTOP CANDIDATE</span><span id="build-revision-head" class="build-revision" data-runtime-value></span><h1>SAKU Builder</h1></div>
-    <nav aria-label="補助メニュー"><a href="./help/getting-started.html">はじめに</a><a href="./help/index.html">ヘルプ</a><span class="desktop-language-control" role="group" aria-label="言語 / Language"><button type="button" data-desktop-locale="ja-JP" aria-pressed="true">日本語</button><button type="button" data-desktop-locale="en-US" aria-pressed="false">English</button></span></nav>
-</header>
+  <div id="saku-frame" class="saku-frame"></div>
 
   <main>
     <div id="home-content">
-      <section class="hero">
-        <p class="kicker">Choose what you want to do</p>
-        <h2>今日は何をしますか？</h2>
-        <p>選ぶ・作る・AI で動かす・サポートサービス、の 4 つの入口から、目的に合わせて選べます。</p>
-        <div class="selected-character" id="selected-character" aria-live="polite">
-          <span class="selected-character-label">選択されたキャラクター</span>
-          <strong class="selected-character-name" id="selected-character-name" data-runtime-value>未選択</strong>
-          <span class="selected-character-state" id="active-saku-state"></span>
-          <button type="button" id="active-saku-clear" class="quiet" hidden>選択を解除</button>
-        </div>
-        <div id="host-status" class="status info" role="status" aria-live="polite" aria-atomic="true"><strong>HOST_LOADING</strong><span>アプリの状態を確認しています。</span></div>
+      <section class="prep-head" aria-labelledby="prep-title">
+        <div class="section-heading"><span class="eyebrow">GETTING READY</span><h2 id="prep-title">準備と進め方</h2><p>Workspace を選び、はじめに・ヘルプを確かめます。進め方が分からないときは、下のガイドの順に進めてください。</p></div>
+        <div id="host-status" class="status info" role="status" aria-live="polite" aria-atomic="true"><strong class="status-code" aria-hidden="true">HOST_LOADING</strong><span>アプリの状態を確認しています。</span></div>
         <div id="host-recovery" class="recovery-panel" role="status" aria-live="polite" hidden>
           <strong>次にできること</strong><p id="host-recovery-message" data-runtime-value></p>
           <div class="actions"><button type="button" id="host-retry-workspace">Workspaceを選び直す</button><button type="button" id="host-retry-import">Packageを選び直す</button><a class="button" href="./help/index.html#import">Helpで確認する</a></div>
         </div>
       </section>
 
-      <section class="entry-grid" aria-label="主な操作">
-        <button type="button" class="entry-card primary-entry" id="view-characters"><span class="entry-number">01</span><strong>キャラクターを選択する</strong><span>キャラクターパッケージを読み込んでキャラクターを選択します。</span></button>
-        <a class="entry-card" id="create-edit-character" href="./tools/saku-builder.html?desktop=app"><span class="entry-number">02</span><strong>キャラクターを作る・編集する</strong><span>キャラクターを作成・編集します。</span></a>
-        <button type="button" class="entry-card" id="run-on-ai-platform"><span class="entry-number">03</span><strong>AI プラットフォームでキャラクターを動作</strong><span>選択中のキャラクターを外部のAIに読み込ませて動かします。</span></button>
-        <a class="entry-card" id="open-services" href="./tools/saku-services.html"><span class="entry-number">04</span><strong>SAKU 診療所・AMU トレーニングセンター</strong><span>サポートサービスは準備中です。紹介ページでサービスの内容をご覧いただけます。</span></a>
+      <section class="guide" id="guide" aria-labelledby="guide-title">
+        <div class="guide-head"><span class="eyebrow">GUIDE</span><h3 id="guide-title">はじめての方へ：5 つの手順で進めます</h3></div>
+        <ol class="guide-steps" id="guide-steps">
+          <li data-guide-step="workspace"><strong>1. Workspace を選ぶ</strong><span>作ったキャラクターを置く場所を選びます。</span><button type="button" data-guide-go="workspace">Workspace を選ぶ</button></li>
+          <li data-guide-step="select"><strong>2. キャラクターを用意する</strong><span>①でパック・ファイル・サンプルを読み込むか、新規作成します。</span><button type="button" data-guide-go="select">①キャラクター選択へ</button></li>
+          <li data-guide-step="edit"><strong>3. 定義を埋めて保存する</strong><span>②で、上のバーが全部埋まるまで書き、保存します。</span><button type="button" data-guide-go="edit">②キャラクター編集へ</button></li>
+          <li data-guide-step="run"><strong>4. AI で動かす</strong><span>③で貼り付ける文をコピーし、お使いの AI に渡します。</span><button type="button" data-guide-go="run">③実行（プロンプト）へ</button></li>
+          <li data-guide-step="out"><strong>5. 書き出す</strong><span>④で .zip・Agent Skills・.json／.yaml に書き出します。</span><button type="button" data-guide-go="out">④出力へ</button></li>
+        </ol>
       </section>
 
       <section class="supporting" aria-labelledby="setup-title">
         <div class="section-heading"><span class="eyebrow">WORKSPACE &amp; IMPORT</span><h2 id="setup-title">準備とデータ</h2></div>
         <div class="steps">
           <article class="card" id="step-workspace"><h3>Workspace</h3><p>作成物とimport済みPackageの保存場所です。Install / Config / Logs / Cacheとは分離します。</p><div class="path" id="workspace-path" data-runtime-value>未選択</div><button id="choose-workspace" class="primary">選択または作成</button></article>
-          <article class="card" id="step-help"><h3>Getting Started / Help</h3><p>初回設定、操作、保存場所、アンインストール時の保持内容を確認できます。</p><div class="actions"><a class="button primary" href="./help/getting-started.html">はじめに</a><a class="button" href="./help/index.html">ヘルプを見る</a><a class="button" href="./help/manual.html">マニュアル</a></div></article>
+          <article class="card" id="step-help"><h3>Getting Started / Help</h3><p>初回設定、操作、保存場所、アンインストール時の保持内容を確認できます。</p><div class="actions"><a class="button primary" href="./help/getting-started.html">はじめに</a><a class="button" href="./help/index.html">ヘルプを見る</a><a class="button" href="./help/manual.html">マニュアル</a></div><p class="prep-version"><span id="build-revision-prep" class="build-revision" data-runtime-value></span></p></article>
         </div>
       </section>
 
@@ -62,23 +56,22 @@
     </div>
 
     <section id="viewer-panel" class="viewer" hidden aria-labelledby="viewer-title">
-      <div class="viewer-header"><button type="button" id="viewer-back" class="quiet">← ホームへ戻る</button><div><span class="eyebrow">CHARACTER LIBRARY</span><h2 id="viewer-title">キャラクターを選択する</h2><p>読み込み・新規作成を行い、一覧から作業するキャラクターを選びます。</p></div></div>
-      <div id="viewer-status" class="status info" role="status" aria-live="polite" aria-atomic="true"><strong>VIEWER_READY</strong><span>読み込まれたCharacterを確認できます。</span></div>
+      <div class="viewer-header viewer-header-plain"><div><span class="eyebrow">CHARACTER LIBRARY</span><h2 id="viewer-title">キャラクター選択</h2><p>入手されたSAKU Character Pack(.zip)か本ツールで作成したキャラクター定義(.yamlや.json)、またはサンプルを読み込み一覧から１体を選びます。サンプルは得意領域を 1 つに絞っています。</p></div></div>
+      <div id="viewer-status" class="status info" role="status" aria-live="polite" aria-atomic="true"><strong class="status-code" aria-hidden="true">VIEWER_READY</strong><span>読み込まれたCharacterを確認できます。</span></div>
       <section class="acc" id="acc-intake">
         <h3 class="acc-head"><button type="button" class="acc-toggle" aria-expanded="true" aria-controls="acc-intake-body">キャラクターを読み込む</button></h3>
         <div class="acc-body" id="acc-intake-body">
 <section class="library-intake" aria-labelledby="library-intake-title">
-        <h3 id="library-intake-title">キャラクターを読み込む / 新規作成する</h3>
+        <h3 id="library-intake-title" class="visually-hidden">キャラクターを読み込む</h3>
         <div class="actions">
-          <button type="button" id="viewer-import-package" class="primary">Packageインポート</button>
-          <button type="button" id="viewer-import-file">個別インポート</button>
-          <button type="button" id="viewer-import-samples">サンプルを読み込む</button>
-          <button type="button" id="viewer-clear-list">一覧をクリア</button>
+          <button type="button" id="viewer-import-package" class="primary">PACKインポート</button>
+          <button type="button" id="viewer-import-file">個別ファイルインポート</button>
+          <button type="button" id="viewer-import-samples">サンプル読み込む</button>
           <button type="button" id="viewer-new-character">新規作成</button>
         </div>
         <p id="viewer-samples-note" class="library-count" role="status" hidden></p>
         <input type="file" id="viewer-file-input" accept=".json,.yaml,.yml,application/json,text/yaml" multiple hidden>
-        <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Packageファイルをドロップして読み込む">SAKU Character Pack（`.zip`）をここへドロップ</div>
+        <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="ファイルをドロップして読み込む">SAKU Character Pack（.zip）／SAKU キャラクター（.zip）／個別ファイル（.yaml／.json）をここへドロップ</div>
         <p id="library-count" class="library-count" data-runtime-value></p>
       </section>
           <section class="import-history" aria-labelledby="import-history-title">
@@ -100,7 +93,7 @@
             <label>カテゴリ<select id="catalog-category"><option value="ALL">すべて</option></select></label><label>向いている仕事<select id="catalog-work-mode"><option value="ALL">すべて</option></select></label>
             <label>削除済み<select id="catalog-deleted"><option value="HIDE">表示しない</option><option value="SHOW">含めて表示</option><option value="ONLY">削除済みのみ</option></select></label><label>並び順<select id="catalog-sort"><option value="name">名前</option><option value="role">役割</option><option value="category">カテゴリ</option><option value="revision">Revision</option></select></label>
           </div>
-          <div class="catalog-toolbar"><div class="view-switch" role="group" aria-label="Catalog表示"><button type="button" data-catalog-view="gallery" aria-pressed="true">Gallery</button><button type="button" data-catalog-view="list" aria-pressed="false">Compact / List</button><button type="button" data-catalog-view="table" aria-pressed="false">Table</button></div><div class="compare-controls"><span id="catalog-result-status" role="status" aria-live="polite">0件を表示</span><span id="compare-selection-status" role="status" aria-live="polite">比較対象 0件</span><button type="button" id="compare-open" disabled>選択したCharacterを比較</button><button type="button" id="compare-clear">選択を解除</button><button type="button" id="viewer-delete-selected">選択キャラクター削除</button></div></div>
+          <div class="catalog-toolbar"><div class="view-switch" role="group" aria-label="Catalog表示"><button type="button" data-catalog-view="gallery" aria-pressed="true">Gallery</button><button type="button" data-catalog-view="list" aria-pressed="false">Compact / List</button><button type="button" data-catalog-view="table" aria-pressed="false">Table</button></div><div class="compare-controls"><span id="catalog-result-status" role="status" aria-live="polite">0件を表示</span><span id="compare-selection-status" role="status" aria-live="polite">比較対象 0件</span><button type="button" id="compare-open" disabled>選択したCharacterを比較</button><button type="button" id="compare-clear">選択を解除</button><button type="button" id="viewer-delete-selected">選択キャラクター削除</button><button type="button" id="viewer-clear-list">一覧をクリア</button></div></div>
         </section>
         </div>
       </section>
@@ -112,28 +105,7 @@
 <div class="viewer-content"><section><div id="viewer-results" class="catalog-results gallery" aria-label="Character Catalog"></div></section><article id="viewer-detail" class="viewer-detail" aria-label="Character詳細"></article></div>
 <section id="compare-panel" class="compare-panel" hidden aria-labelledby="compare-title"><div class="compare-heading"><h3 id="compare-title">Character比較</h3><button type="button" id="compare-close">比較を閉じる</button></div><p>欠損値は推測せず、SAME / DIFFERENT / UNKNOWN / NOT_AVAILABLEを表示します。</p><div id="compare-output" class="compare-scroll"></div></section>
         </div>
-<div id="viewer-empty" class="empty-state"><h3>表示できるCharacterがまだありません。</h3><p>上の「キャラクターを読み込む / 新規作成する」から追加してください。</p><div class="actions"><a class="button" href="./help/index.html#import">ヘルプを見る</a></div></div>
-        </div>
-      </section>
-      <section class="acc" id="acc-occupation">
-        <h3 class="acc-head"><button type="button" class="acc-toggle" aria-expanded="false" aria-controls="acc-occupation-body">職能CSVを読み込む</button></h3>
-        <div class="acc-body" id="acc-occupation-body" hidden>
-          <p class="acc-note">職種の情報はキャラクターの一部です。キャラクター全体を決めるものではありません。資格・権限・許可には結び付けません。</p>
-          <div class="actions">
-            <button type="button" id="occupation-import" class="primary">職能CSVを読み込む</button>
-            <button type="button" id="occupation-clear">読み込んだ職能情報を消す</button>
-          </div>
-          <input type="file" id="occupation-file-input" accept=".csv,text/csv" hidden>
-          <div id="occupation-status" class="status info" role="status" aria-live="polite"><strong>OCCUPATION_READY</strong><span>職能CSVはまだ読み込まれていません。</span></div>
-          <div id="occupation-source" class="occupation-source" data-runtime-value hidden></div>
-          <div id="occupation-table-wrap" class="occupation-table-wrap" hidden>
-            <table id="occupation-table" class="occupation-table"><thead><tr><th scope="col">選択</th><th scope="col">大分類</th><th scope="col">職能名</th><th scope="col">実務内容</th></tr></thead><tbody id="occupation-rows"></tbody></table>
-          </div>
-          <div id="occupation-pairing" class="occupation-pairing" hidden>
-            <h4>Builderへ渡す内容</h4>
-            <dl id="occupation-pairing-fields"></dl>
-            <div class="actions"><button type="button" id="occupation-to-builder" class="primary">この組み合わせで編集する</button></div>
-          </div>
+<div id="viewer-empty" class="empty-state"><h3>表示できるCharacterがまだありません。</h3><p>上の「キャラクターを読み込む」から追加してください。</p><div class="actions"><a class="button" href="./help/index.html#import">ヘルプを見る</a></div></div>
         </div>
       </section>
       <dialog id="character-actions" class="character-actions" aria-labelledby="character-actions-title">
@@ -142,7 +114,7 @@
         <div class="actions">
           <button type="button" data-character-action="view" class="primary">このキャラクターを選択する</button>
           <button type="button" data-character-action="edit">キャラクターを作る・編集する</button>
-          <button type="button" data-character-action="tune">AI動作を調整する</button>
+          <button type="button" data-character-action="run">実行（プロンプト）</button>
           <button type="button" data-character-action="delete" class="danger">削除する</button>
         </div>
         <button type="button" id="character-actions-close" class="quiet">閉じる</button>
@@ -150,8 +122,8 @@
     </section>
 
     <section id="tuning-panel" class="viewer" hidden aria-labelledby="tuning-title">
-      <div class="viewer-header"><button type="button" id="tuning-back" class="quiet">← 戻る</button><div><span class="eyebrow">ADJUSTMENT / TUNING</span><h2 id="tuning-title">AI動作の調整</h2><p>気になる症状から選びます。ここでの推奨は、適用するまでCharacterを変更しません。</p></div></div>
-      <div id="tuning-subject" class="status info" role="status" aria-live="polite"><strong>TUNING_READY</strong><span>調整するキャラクターを選んでください。</span></div>
+      <div class="viewer-header"><a id="tuning-back" class="quiet button" href="./tools/saku-services.html">← SAKU診療所・AMUトレーニングセンターへ</a><div><span class="eyebrow">ADJUSTMENT / TUNING</span><h2 id="tuning-title">AI動作の調整</h2><p>気になる症状から選びます。ここでの推奨は、適用するまでCharacterを変更しません。</p></div></div>
+      <div id="tuning-subject" class="status info" role="status" aria-live="polite"><strong class="status-code" aria-hidden="true">TUNING_READY</strong><span>調整するキャラクターを選んでください。</span></div>
       <div class="tuning-layout">
         <section class="tuning-symptom-list" aria-labelledby="tuning-symptom-title">
           <h3 id="tuning-symptom-title">気になる症状</h3>
@@ -161,8 +133,8 @@
       </div>
     </section>
     <section id="platform-panel" class="viewer" hidden aria-labelledby="platform-title">
-      <div class="viewer-header"><button type="button" id="platform-back" class="quiet">← 戻る</button><div><span class="eyebrow">RUN / AI PLATFORM</span><h2 id="platform-title">AI プラットフォームでキャラクターを動作</h2><p>選択中のキャラクターを、お使いのAIにそのまま読み込ませて動かします。ここでキャラクターは変わりません。</p></div></div>
-      <div id="platform-subject" class="status info" role="status" aria-live="polite"><strong>PLATFORM_READY</strong><span>動かすキャラクターを選んでください。</span></div>
+      <div class="viewer-header viewer-header-plain"><div><span class="eyebrow">RUN / AI PLATFORM</span><h2 id="platform-title">AI プラットフォームでキャラクターを動作</h2><p>選択中のキャラクターを、お使いのAIにそのまま読み込ませて動かします。ここでキャラクターは変わりません。</p></div></div>
+      <div id="platform-subject" class="status info" role="status" aria-live="polite"><strong class="status-code" aria-hidden="true">PLATFORM_READY</strong><span>動かすキャラクターを選んでください。</span></div>
 
       <div class="screen-with-help platform-layout"><div class="platform-main">
       <ol class="platform-steps">
@@ -224,11 +196,49 @@
         </ul>
         <p>ここで扱うのはキャラクター定義そのものです。貼り付けても、SAKU側のキャラクターは変更されません。</p>
       </section>
+
+      <section id="platform-skills" class="platform-echo" aria-labelledby="platform-skills-title">
+        <h3 id="platform-skills-title">Agentスキルとして書き出す(Agent Skills)</h3>
+        <p>Agent Skills は、AI の道具が読み込める「スキル」の形式です。貼り付けなくても、道具がこのキャラクターの定義を読み込んで使えます。書き出しは ④出力 で行います。書き出したものに WI-T.COM の署名は付きません。席 8 の決まりを守るかどうかは、使う AI しだいです。</p>
+        <div class="actions"><button type="button" id="platform-to-skills" class="button primary">Agentスキルとして書き出す(Agent Skills) →</button></div>
+      </section>
       </div><aside id="platform-help" class="help-pane" aria-label="ヘルプ"></aside></div>
+    </section>
+    <section id="export-panel" class="viewer" hidden aria-labelledby="export-title">
+      <div class="viewer-header viewer-header-plain"><div><span class="eyebrow">EXPORT</span><h2 id="export-title">出力</h2><p>選択中のキャラクターを、使い道に合わせて書き出します。どの書き出しにも WI-T.COM の署名は付きません。</p></div></div>
+      <div id="export-subject" class="status info" role="status" aria-live="polite"><strong class="status-code" aria-hidden="true">EXPORT_READY</strong><span>書き出すキャラクターを選んでください。</span></div>
+      <div id="export-terms" class="status warning" role="note" hidden></div>
+      <section class="export-gate" aria-labelledby="export-gate-title">
+        <h3 id="export-gate-title">書き出す前の確認</h3>
+        <details id="export-preview" class="export-preview"><summary>書き出す中身を見る（Character.json）</summary><pre id="export-preview-text" data-runtime-value></pre></details>
+        <p id="export-guard-status" class="export-guard" role="status" aria-live="polite">ContactGuard（連絡先の紛れ込みの検査）：待機中</p>
+        <label class="export-confirm"><input type="checkbox" id="export-confirm"> 書き出す中身（上の定義）と、ContactGuard の結果を確かめました</label>
+      </section>
+      <div class="export-kinds">
+        <section id="export-zip" class="platform-echo" aria-labelledby="export-zip-title">
+          <h3 id="export-zip-title">SAKU キャラクターを書き出す（.zip）</h3>
+          <p>AMU Studio で読み込めます。この SAKU Builder にも読み戻せます。ファイル名は「ID.saku-character.zip」です。パックのキャラクターを編集したものは、元のパックとその使用条件の識別子を目録に書きます（自己申告）。</p>
+          <div class="actions"><button type="button" id="export-zip-save" class="button primary">.zip を書き出す</button></div>
+          <div id="export-zip-state" class="status info" role="status" aria-live="polite" hidden></div>
+        </section>
+        <section id="platform-skill-export" class="platform-echo" aria-labelledby="platform-skill-export-title">
+        <h3 id="platform-skill-export-title">Agentスキルとして書き出す(Agent Skills)</h3>
+        <p id="platform-skill-export-summary">AI の道具が読み込める「スキル」のフォルダーを、ZIP で保存します。パックのキャラクターは、パックの使用条件のまま使い、ほかの人には渡せません。</p>
+        <details class="export-more"><summary>くわしく</summary><p id="platform-skill-export-lead">このキャラクターを、「スキル」の形式（Agent Skills）を読み込める AI の道具向けのフォルダーとして、ZIP で保存します。中身は、上の貼り付ける文と同じ定義、キャラクターの正本、席 8 の決まり、出どころの記録です（パックのキャラクターは、パックのライセンスも入ります）。書き出したものには、WI-T.COM の署名はまだ付きません。パックのキャラクターを書き出したものには、パックの使用条件がそのまま及びます。使える範囲は、パックのライセンスの文書のとおりです。スキルの配布サイト、公開のリポジトリ、ほかの組織と共有する作業場所など、第三者が取り出せる場所に置くことはできません。同梱のライセンスの文書と出どころの記録は、外したり書き換えたりしないでください。自作のキャラクターには、ライセンスの宣言は入りません。読み込む側の道具は、席 8 の決まりを守らせる仕組みを持ちません。守るかどうかは、使う AI しだいです。</p></details>
+        <div class="actions"><button type="button" id="platform-skill-export-save" class="button">スキルとして保存する</button></div>
+        <div id="platform-skill-export-state" class="status info" role="status" aria-live="polite" hidden></div>
+      </section>
+        <section id="export-text" class="platform-echo" aria-labelledby="export-text-title">
+          <h3 id="export-text-title">キャラクター定義を書き出す（.json／.yaml）</h3>
+          <p>AI プラットフォームに渡すための 1 つのファイルです。この SAKU Builder の「個別ファイルインポート」で読み戻せます。</p>
+          <div class="actions"><button type="button" id="export-json-save" class="button">.json を書き出す</button><button type="button" id="export-yaml-save" class="button">.yaml を書き出す</button></div>
+          <div id="export-text-state" class="status info" role="status" aria-live="polite" hidden></div>
+        </section>
+      </div>
     </section>
   </main>
 
-  <footer><span id="build-revision-view" class="build-revision" data-runtime-value></span><span>STATUS = IMPLEMENTED_CANDIDATE</span><span>CODE_SIGNING = UNSIGNED</span><span>CANONICAL = NO</span></footer>
+  <footer><span id="build-revision-view" class="build-revision" data-runtime-value></span><span>STATUS = IMPLEMENTED_CANDIDATE</span><span id="code-signature-view" data-code-signature="CHECKING" data-runtime-value>署名：確かめています…</span><span>CANONICAL = NO</span></footer>
   <link rel="stylesheet" href="./tools/unified-v1/help-pane.css"><script type="module" src="./i18n.mjs"></script><script type="module" src="./app.mjs"></script>
 </body>
 </html>

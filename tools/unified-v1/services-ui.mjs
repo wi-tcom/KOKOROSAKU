@@ -32,17 +32,6 @@ export const SERVICES_WORDING = Object.freeze({
     // (ライター&SNS 2026-09-27).
     hosts: "リンクは wi-t.com または kokoroamu.jp のページをブラウザで開きます。",
     sections: Object.freeze([
-      // The introduction page (Owner 2026-09-27; the same section as AMU @90c8a9a). The line is ライター&SNS's
-      // confirmed wording (via 統括 2026-09-27).
-      Object.freeze({ id: "intro", title: "紹介ページ", lead: "", items: Object.freeze([
-        Object.freeze({ link: "service_intro", lines: Object.freeze(["サービスの内容は、kokoroamu.jp の紹介ページでご覧いただけます。"]) }),
-      ]) }),
-      // The 64 Characters and the store (Owner 2026-09-30; ライター&SNS 2e20567, the same text as AMU Studio). No line
-      // under the buttons: the 10 Characters outside the packs are explained on the introduction page.
-      Object.freeze({ id: "characters", title: "キャラクター紹介", lead: "SAKU Character Pack に収録しているキャラクターを、得意なことと、人に引き継ぐことと一緒に紹介しています。パックは有料です。価格は商品ページに記載しています。", items: Object.freeze([
-        Object.freeze({ link: "characters_intro", lines: Object.freeze([]) }),
-        Object.freeze({ link: "store_packs", lines: Object.freeze([]) }),
-      ]) }),
       Object.freeze({ id: "subscriptions", title: "サブスクリプション", lead: "月額のサービスです。毎月の内容と料金は申込ページに記載しています。", items: Object.freeze([
         Object.freeze({ link: "saku_clinic", lines: Object.freeze([
           "「診療」はソフトウェアの調査と修復のたとえで、医療や心理の診断ではありません。",
@@ -53,8 +42,11 @@ export const SERVICES_WORDING = Object.freeze({
         ]) }),
         Object.freeze({ link: "set_plan", lines: Object.freeze(["セット — 上の両方が含まれます。"]) }),
       ]) }),
-      Object.freeze({ id: "login", title: "登録済みの方", lead: "", items: Object.freeze([
-        Object.freeze({ link: "member_login", lines: Object.freeze(["ログインして、申し込んだ内容や結果を確かめます。"]) }),
+      // The 64 Characters and the store (Owner 2026-09-30; ライター&SNS 2e20567, the same text as AMU Studio). No line
+      // under the buttons: the 10 Characters outside the packs are explained on the introduction page.
+      Object.freeze({ id: "characters", title: "キャラクター紹介", lead: "SAKU Character Pack に収録しているキャラクターを、得意なことと、人に引き継ぐことと一緒に紹介しています。パックは有料です。価格は商品ページに記載しています。", items: Object.freeze([
+        Object.freeze({ link: "characters_intro", lines: Object.freeze([]) }),
+        Object.freeze({ link: "store_packs", lines: Object.freeze([]) }),
       ]) }),
       Object.freeze({ id: "signature", title: ".amupkg への WI-T.COM の署名", lead: "自分の AMU Studio で書き出した .amupkg は、自分の PC ではそのまま使えます。ほかの人に配る・販売するときに WI-T.COM の署名を付けたい場合は、申し込めるようになります（いまは準備中です）。申し込めるのは、SAKU 診療所の加入者、または個別対応（料金は申込ページに記載します）の予定です。", items: Object.freeze([
         Object.freeze({ link: "amupkg_signature", lines: Object.freeze([
@@ -70,6 +62,11 @@ export const SERVICES_WORDING = Object.freeze({
     allPending: "受付の開始は kokoroamu.jp でお知らせします。",
     home: "ホーム",
     openFailed: "ブラウザを開けませんでした。",
+    // 2026-10-14 (Owner 画面改修): the tuning screen is opened from here, as a diagnosis example. Provisional wording.
+    tuningKicker: "診断例",
+    tuningTitle: "AI動作の調整",
+    tuningLead: "気になる症状から、関係するキャラクターの設定を確かめます。推奨は、適用するまでキャラクターを変えません。",
+    tuningOpen: "AI動作の調整を開く",
   }),
   en: Object.freeze({
     title: "SAKU Repair Desk and AMU Evaluation Center",
@@ -77,23 +74,15 @@ export const SERVICES_WORDING = Object.freeze({
     hosts: "The links open pages on wi-t.com or kokoroamu.jp in your browser.",
     // The English has no 「診療」 disclaimer: the English name does not say Clinic (ライター&SNS).
     sections: Object.freeze([
-      // AG1–AG3 (英語翻訳チーム via ライター&SNS 2026-09-27). The overview page is Japanese only for now, so the
-      // line says so; drop "(in Japanese)" once an English page is public.
-      Object.freeze({ id: "intro", title: "Overview page", lead: "", items: Object.freeze([
-        Object.freeze({ link: "service_intro", lines: Object.freeze(["You can read about the services on the overview page at kokoroamu.jp (in Japanese)."]) }),
-      ]) }),
-      // 英語翻訳チーム 2026-09-30 (the same text as README_en.md, Wi-t_Site-en 2d6e94e). The button opens the Japanese page.
-      Object.freeze({ id: "characters", title: "Character introductions", lead: "Meet the Characters in the SAKU Character Packs, with what each is good at and what each hands to a person. The packs are paid. Prices are shown on the product pages.", items: Object.freeze([
-        Object.freeze({ link: "characters_intro", lines: Object.freeze([]) }),
-        Object.freeze({ link: "store_packs", lines: Object.freeze([]) }),
-      ]) }),
       Object.freeze({ id: "subscriptions", title: "Subscription", lead: "A monthly service. What each month includes and the fee are shown on the application page.", items: Object.freeze([
         Object.freeze({ link: "saku_clinic", lines: Object.freeze(["At SAKU Repair Desk, you can consult us about Character behavior you would like us to look at, and about changes that require a new signature. We look into the cause, propose a repair plan, and guide you through the repair and signature steps. One follow-up check after you make the fixes yourself is also included."]) }),
         Object.freeze({ link: "amu_training", lines: Object.freeze(["At AMU Evaluation Center, we try out one SAKU or AMU Character against your business goals, then measure and evaluate its speed and behavior. Based on the results, we give you suggestions for improvement, and one re-evaluation after you improve it is included. The menu has four options: Basic check, Speed test, Goal-based repeated measurement and Check after changes."]) }),
         Object.freeze({ link: "set_plan", lines: Object.freeze(["Bundle — includes both of the above."]) }),
       ]) }),
-      Object.freeze({ id: "login", title: "Already registered", lead: "", items: Object.freeze([
-        Object.freeze({ link: "member_login", lines: Object.freeze(["Log in to check what you applied for and the results."]) }),
+      // 英語翻訳チーム 2026-09-30 (the same text as README_en.md, Wi-t_Site-en 2d6e94e). The button opens the Japanese page.
+      Object.freeze({ id: "characters", title: "Character introductions", lead: "Meet the Characters in the SAKU Character Packs, with what each is good at and what each hands to a person. The packs are paid. Prices are shown on the product pages.", items: Object.freeze([
+        Object.freeze({ link: "characters_intro", lines: Object.freeze([]) }),
+        Object.freeze({ link: "store_packs", lines: Object.freeze([]) }),
       ]) }),
       Object.freeze({ id: "signature", title: "WI-T.COM signature for .amupkg", lead: "An .amupkg exported from your own AMU Studio can be used as it is on your own PC. If you want a WI-T.COM signature on it when you give it to others or sell it, you will be able to apply for one (this is in preparation now). Applications are planned to be accepted from SAKU Repair Desk subscribers, or by individual arrangement (the fee will be shown on the application page).", items: Object.freeze([
         Object.freeze({ link: "amupkg_signature", lines: Object.freeze(["How to send: attach the .amupkg as it is (an .amupkg is already in ZIP form, so there is no need to zip it again).", "Not included: API key values and conversation logs.", "Included: the names and roles of the people in the 8 seats and, if set, the run path of the AI execution engine (a folder location on this PC). The folder location may include your Windows user name.", "What the signature shows: that WI-T.COM signed it and that it has not changed since."]) }),
@@ -104,6 +93,10 @@ export const SERVICES_WORDING = Object.freeze({
     allPending: "The start of registration will be announced on kokoroamu.jp.",
     home: "Home",
     openFailed: "Could not open the browser.",
+    tuningKicker: "Example diagnosis",
+    tuningTitle: "Adjust AI behavior",
+    tuningLead: "Start from a symptom you notice and check the related Character settings. A recommendation does not change the Character until you apply it.",
+    tuningOpen: "Open Adjust AI behavior",
     // The link table (service-links.mjs, shared with AMU) carries the Japanese labels only.
     linkLabels: Object.freeze({ service_intro: "View the overview page", characters_intro: "See the Character introductions (in Japanese)", store_packs: "See the packs in the store", saku_clinic: "Register for SAKU Repair Desk", amu_training: "Register for AMU Evaluation Center", set_plan: "Register for both (bundle)", member_login: "Log in (already registered)", amupkg_signature: "Apply for a signature on an .amupkg" }),
   }),
@@ -135,16 +128,16 @@ export function servicesMarkup(locale = "ja-JP", table = SERVICE_LINKS) {
       ? `<button type="button" class="primary" data-service-link="${esc(id)}" data-service-url="${esc(url)}">${esc(label)}</button>`
       : `<button type="button" data-service-link="${esc(id)}" data-service-state="PENDING" disabled>${esc(label)}<span class="service-pending">${esc(w.pending)}</span></button>`;
   };
+  const tuning = `<div class="service-block" data-service-block="tuning"><p class="service-kicker">${esc(w.tuningKicker)}</p><h2>${esc(w.tuningTitle)}</h2><p class="service-note">${esc(w.tuningLead)}</p><p><a class="button-link primary" id="to-tuning" href="../index.html#tuning">${esc(w.tuningOpen)}</a></p></div>`;
   const sections = w.sections.map(section => `<div class="service-block" data-service-block="${esc(section.id)}"><h2>${esc(section.title)}</h2>`
     + (section.lead ? `<p class="service-note">${esc(section.lead)}</p>` : "")
     + `<ul class="service-list">${section.items.map(item => `<li class="service-item" data-service-item="${esc(item.link)}">${item.lines.map(line => `<p>${esc(line)}</p>`).join("")}${control(item.link)}</li>`).join("")}</ul></div>`).join("");
-  return `<header><div class="brand">SAKU <strong>SERVICES</strong></div><div class="header-actions"><a id="to-home" class="button-link" href="../index.html?stay=1">${esc(w.home)}</a></div></header>`
-    + `<main class="layout"><section class="card" data-services="${esc(table.schema)}"${allPending ? " data-services-state=\"ALL_PENDING\"" : ""}><h1>${esc(w.title)}</h1><p>${esc(w.intro)}</p>`
+  return `<main class="layout"><section class="card" data-services="${esc(table.schema)}"${allPending ? " data-services-state=\"ALL_PENDING\"" : ""}><h1>${esc(w.title)}</h1><p>${esc(w.intro)}</p>`
     // Where the links open is said whenever a button can be pressed (ライター&SNS 2026-09-27), so an
     // unfamiliar address in the browser is expected.
     + (allPending ? `<p class="service-all-pending" data-service-note="all-pending">${esc(w.allPending)}</p>` : "")
     + (table.links.some(link => serviceLinkState(link).state === "READY") ? `<p class="service-note" data-service-note="hosts">${esc(w.hosts)}</p>` : "")
-    + sections
+    + tuning + sections
     + `<p class="service-note" data-service-note="common">${esc(w.commonNote)}</p><p id="service-status" role="status" class="service-note"></p></section></main>`;
 }
 
@@ -160,6 +153,8 @@ async function open(url) {
 
 export function mountServices(root = document.getElementById("services-root")) {
   if (!root) return;
+  // The frame only where the page carries its mount point (the desktop app; the public web copy has none).
+  if (document.getElementById("saku-frame")) void mountServicesFrame();
   const locale = localeNow();
   root.innerHTML = servicesMarkup(locale);
   document.title = wording(locale).title;
@@ -168,6 +163,28 @@ export function mountServices(root = document.getElementById("services-root")) {
     try { await open(button.dataset.serviceUrl); }
     catch { const status = document.getElementById("service-status"); if (status) status.textContent = wording(locale).openFailed; }
   }));
+}
+
+// The shared frame (Owner 2026-10-14). Loaded only on the page, so the gates can render servicesMarkup in Node.
+let servicesFrame = null;
+async function mountServicesFrame() {
+  if (servicesFrame) return servicesFrame.render();
+  const [{ mountFrame }, ActiveSaku, Library, Validator] = await Promise.all([
+    import("./app-frame.mjs"), import("./active-saku.mjs"), import("./character-library.mjs"), import("../v1/adopted-schema-validator.mjs"),
+  ]);
+  servicesFrame = mountFrame({
+    page: "services",
+    current: () => "svc",
+    read: () => { const active = ActiveSaku.getActive(); return { active, entry: Library.entryForActive(Library.list(), active) }; },
+    check: async character => Validator.validateCompleteAdoptedCharacter(character, await Validator.loadAdoptedSchema()).errors,
+    getLocale: localeNow,
+    setLocale: next => {
+      try { localStorage.setItem("saku.ui.locale", next === "en-US" ? "en-US" : "ja-JP"); } catch { /* blocked */ }
+      window.dispatchEvent(new CustomEvent("saku-ui-locale-changed", { detail: { locale: next } }));
+      mountServices();
+    },
+  });
+  return servicesFrame;
 }
 
 if (typeof document !== "undefined" && document.getElementById("services-root")) mountServices();

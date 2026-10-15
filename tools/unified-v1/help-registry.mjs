@@ -6,6 +6,7 @@
 // -------------------------------------------------------------------------
 
 // Help を付ける field キー（Builder/Trainer 共通で同一定義を使う）。
+import { adoptCss } from "./adopt-css.mjs";
 export const HELP_FIELDS = [
   "character_id", "display_name", "catalog_code", "catalog_group", "role_label",
   "purpose_summary", "primary_value", "character_role", "values",
@@ -52,9 +53,8 @@ export const HELP_CSS = `
 // Builder / Trainer 共通の attach。root 内の [data-help] を拾い、click / Enter / Space / touch で開く。
 // Escape / outside click / Close で閉じる。フォーカス移動可能。
 export function attachHelp(root, i18n){
-  if(!document.getElementById("saku-help-style")){
-    const st=document.createElement("style"); st.id="saku-help-style"; st.textContent=HELP_CSS; document.head.appendChild(st);
-  }
+  // Adopted, not a run-time <style> element: the app's CSP drops those (2026-10-14 keying).
+  adoptCss(document, "saku-help-style", HELP_CSS);
   let pop=null, opener=null;
   const close=()=>{ if(pop){ pop.remove(); pop=null; } if(opener){ opener.setAttribute("aria-expanded","false"); opener.focus?.(); opener=null; } };
   const open=(btn)=>{

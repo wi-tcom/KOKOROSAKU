@@ -3,9 +3,31 @@ const DEFAULT_LOCALE = "ja-JP";
 
 // Static Desktop shell/help resources. Runtime paths and imported Character data are excluded.
 const EN = new Map(Object.entries({
+  // β.12 Agent Skills export (英語翻訳チーム 2026-10-04).
+  "スキルとして書き出す（任意）":"Export as a skill (optional)",
+  "スキルとして保存する":"Save as a skill",
+  "保存をキャンセルしました。":"Saving was cancelled.",
+  "このキャラクターは前の版で取り込んだため、書き出しに必要なライセンスの情報がありません。「①キャラクター選択」から、パックをもう一度取り込んでください。":"This Character was imported with an earlier version, so the license information needed for the export is missing. Import the pack again from “① Choose a Character”.",
+  "このキャラクターのパックのライセンス（LICENSE.md）が残っていません。「①キャラクター選択」から、パックをもう一度取り込んでください。":"The license of this Character's pack (LICENSE.md) is no longer available. Import the pack again from “① Choose a Character”.",
+  "パックのライセンス（LICENSE.md）の版を読み取れないため、書き出しませんでした。":"The version of the pack's license (LICENSE.md) could not be read, so nothing was exported.",
+  "このキャラクターのパックは署名の確かめに通っていないため、書き出せません。":"This Character's pack did not pass the signature check, so it cannot be exported.",
+  "キャラクターの ID が 64 文字を超えるため、スキルの名前にできません。":"The Character's ID is longer than 64 characters, so it cannot be used as a skill name.",
+  "キャラクターの ID がスキルの名前の決まりに合わないため、書き出せません。":"The Character's ID does not follow the rules for skill names, so it cannot be exported.",
   // Strings that showed Japanese in English (ライター&SNS review 15, 2026-09-30; 英語翻訳チーム U1, Wi-t_Site 09a59e4).
   "席 8（論理上の人）":"Seat 8 — Human (logical)",
   "キャラクターを読み込む":"Import a Character",
+  "パックから取り込み済み":"Imported from a pack","自作の ZIP から取り込み済み":"Imported from a self-made ZIP","AMU Studio からの戻しを取り込み済み":"Imported from AMU Studio (a return)","個別ファイル（パックの確かめなし）":"Single file (no pack check)","新規作成（未保存）":"New (not saved)","確かめていない":"Not checked","この版では読めない形式":"A format this version cannot read","失敗":"Failed","不明":"Unknown",
+  "AI動作の調整をするキャラクターを選んでから、⑤の「AI動作の調整を開く」を押してください。":"Choose the Character whose AI behavior you want to adjust, then press “Open Adjust AI behavior” in ⑤.",
+  "新規作成中のキャラクター（名前未入力）です。②キャラクター編集で名前と中身を書いてください。":"A new Character with no name yet. Write its name and content in ② Edit the Character.",
+  "一覧の行が分からないため、書き出しません。①キャラクター選択で選び直してください。":"Not exported because the row in the list cannot be identified. Choose the Character again in ① Choose a Character.",
+  "このキャラクターは出どころが分からないため、書き出しません。取り込み直してください。":"Not exported because where this Character came from is not known. Import it again.",
+  "見本（サンプル）のキャラクターは読むだけです。どの形でも書き出せません（見本の使用条件）。":"Sample Characters are for reading only. They cannot be exported in any form (the samples' terms of use).",
+  "パックの使用条件が分からないため、書き出しません。パックを取り込み直してください。":"Not exported because the pack's terms of use are not known. Import the pack again.",
+  "パックのキャラクターは .json／.yaml では書き出せません。書き出せるのは自作のキャラクターだけです。":"A pack Character cannot be exported as .json / .yaml. Only self-made Characters can be exported this way.",
+  "編集していないパックのキャラクターは、自作の ZIP にはできません。②で編集して保存したものは書き出せます。":"A pack Character that has not been edited cannot be made into a self-made ZIP. A pack Character edited and saved in ② can be exported.",
+  "AMU Studio から戻ってきたキャラクターは、いまは .zip にしません（AMU Studio へ戻すファイルは β.5 の後に作ります）。":"A Character returned from AMU Studio is not exported as a .zip for now (the file that goes back to AMU Studio will come after β.5).",
+  "この戻しの元のパックが一覧に無いため、書き出しません。元のパックを取り込んでから書き出してください。":"Not exported because the pack this return came from is not in the list. Import that pack first, then export.",
+  "取り込み済み":"Imported","取り込まなかった":"Not imported",
   "読み込み履歴":"Import history",
   "キャラクターを探す":"Find a Character",
   "職能CSVを読み込む":"Import an occupation CSV",
@@ -125,8 +147,8 @@ const EN = new Map(Object.entries({
   "外す":"Remove",
   "参考資料を添付する":"Attach reference material",
   "サポートサービスは準備中です。紹介ページでサービスの内容をご覧いただけます。":"The support services are in preparation. You can read about them on the overview page (in Japanese).",
-  "この Character は旧形式（SAKU-CHARACTER）で作られているため、この SAKU Builder では開けません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。":"This Character was made in an older format (SAKU-CHARACTER), so this SAKU Builder cannot open it. To use it, create it again in “02 Create or edit a Character”.",
-  "このファイルには Schema の宣言がないため、取り込めません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。":"This file has no Schema declaration, so it cannot be imported. To use it, create it again in “02 Create or edit a Character”.",
+  "この Character は旧形式（SAKU-CHARACTER）で作られているため、この SAKU Builder では開けません。使う場合は、「②キャラクター編集」で新しく作り直してください。":"This Character was made in an older format (SAKU-CHARACTER), so this SAKU Builder cannot open it. To use it, create it again in “② Edit the Character”.",
+  "このファイルには Schema の宣言がないため、取り込めません。使う場合は、「②キャラクター編集」で新しく作り直してください。":"This file has no Schema declaration, so it cannot be imported. To use it, create it again in “② Edit the Character”.",
   "読み込めたか AI に聞く（任意）":"Ask the AI what it loaded (optional)",
   "読み込めたかどうかは、AI に申告してもらう以外に確かめる方法がありません。下の依頼文を貼り、返ってきた行をそのまま貼り戻してください。":"There is no way to check what the AI loaded other than to have the AI report it. Paste the request below, and paste the returned lines back here as they are.",
   "依頼文をコピーする":"Copy the request",
@@ -192,6 +214,64 @@ const EN = new Map(Object.entries({
   "開始方法":"Start from","組み込みSample3、検証済みWIT package、または空のCharacterから開始します。":"Start with bundled Sample3, a validated WIT package, or an empty Character.",
   "Sample3を開く":"Open Sample3","Packageをimport":"Import package","新規作成":"Create new",
   "SAKU Character Pack（`.zip`）をここへドロップ":"Drop a SAKU Character Pack (`.zip`) here",
+  // 2026-10-14 (Owner 画面改修): the redesigned screens. Provisional English; to 英語翻訳チーム together (Q20).
+  "準備と進め方":"Setup and steps",
+  "Workspace を選び、はじめに・ヘルプを確かめます。進め方が分からないときは、下のガイドの順に進めてください。":"Choose a Workspace, and check Getting Started and Help. If you are not sure how to proceed, follow the guide below in order.",
+  "はじめての方へ：5 つの手順で進めます":"First time? Follow these five steps",
+  "1. Workspace を選ぶ":"1. Choose a Workspace",
+  "作ったキャラクターを置く場所を選びます。":"Choose where the Characters you make are kept.",
+  "Workspace を選ぶ":"Choose a Workspace",
+  "2. キャラクターを用意する":"2. Prepare a Character",
+  "①でパック・ファイル・サンプルを読み込むか、新規作成します。":"In ①, import a pack or a file, load the samples, or create a new Character.",
+  "①キャラクター選択へ":"Go to ① Choose a Character",
+  "3. 定義を埋めて保存する":"3. Fill in the definition and save",
+  "②で、上のバーが全部埋まるまで書き、保存します。":"In ②, write until the bar at the top is full, then save.",
+  "②キャラクター編集へ":"Go to ② Edit the Character",
+  "4. AI で動かす":"4. Run it on an AI",
+  "③で貼り付ける文をコピーし、お使いの AI に渡します。":"In ③, copy the text to paste and give it to the AI you use.",
+  "③実行（プロンプト）へ":"Go to ③ Run (prompt)",
+  "5. 書き出す":"5. Export",
+  "④で .zip・Agent Skills・.json／.yaml に書き出します。":"In ④, export as a .zip, as Agent Skills, or as .json / .yaml.",
+  "④出力へ":"Go to ④ Export",
+  "キャラクター選択":"Choose a Character",
+  "入手されたSAKU Character Pack(.zip)か本ツールで作成したキャラクター定義(.yamlや.json)、またはサンプルを読み込み一覧から１体を選びます。サンプルは得意領域を 1 つに絞っています。":"Import a SAKU Character Pack (.zip) you have obtained or a Character definition made with this tool (.yaml or .json), or load the samples, and choose one Character from the list. Each sample covers one area of expertise only.",
+  "PACKインポート":"Import a pack",
+  "個別ファイルインポート":"Import a single file",
+  "サンプル読み込む":"Load the samples",
+  "SAKU Character Pack（.zip）／SAKU キャラクター（.zip）／個別ファイル（.yaml／.json）をここへドロップ":"Drop a SAKU Character Pack (.zip), a SAKU Character (.zip) or a single file (.yaml / .json) here",
+  "上の「キャラクターを読み込む」から追加してください。":"Add one with “Import a Character” above.",
+  "実行（プロンプト）":"Run (prompt)",
+  "← SAKU診療所・AMUトレーニングセンターへ":"← To SAKU Repair Desk · AMU Evaluation Center",
+  "Agentスキルとして書き出す(Agent Skills)":"Export as an agent skill (Agent Skills)",
+  "Agent Skills は、AI の道具が読み込める「スキル」の形式です。貼り付けなくても、道具がこのキャラクターの定義を読み込んで使えます。書き出しは ④出力 で行います。書き出したものに WI-T.COM の署名は付きません。席 8 の決まりを守るかどうかは、使う AI しだいです。":"Agent Skills is a “skill” format that AI tools can load. Instead of pasting, the tool loads this Character's definition and uses it. You export it in ④ Export. The export carries no WI-T.COM signature. Whether the Seat 8 rules are followed depends on the AI you use.",
+  "Agentスキルとして書き出す(Agent Skills) →":"Export as an agent skill (Agent Skills) →",
+  "出力":"Export",
+  "選択中のキャラクターを、使い道に合わせて書き出します。どの書き出しにも WI-T.COM の署名は付きません。":"Export the selected Character in the form that fits how you will use it. No export carries a WI-T.COM signature.",
+  "書き出すキャラクターを選んでください。":"Choose the Character to export.",
+  "書き出す前の確認":"Before exporting",
+  "ContactGuard（連絡先の紛れ込みの検査）：待機中":"ContactGuard (a check for contact details that slipped in): waiting","書き出す中身を見る（Character.json）":"Show what will be exported (Character.json)","AI の道具が読み込める「スキル」のフォルダーを、ZIP で保存します。パックのキャラクターは、パックの使用条件のまま使い、ほかの人には渡せません。":"Saves a “skill” folder that AI tools can load, as a ZIP. A pack Character stays under the pack's terms of use and may not be passed to others.","くわしく":"Details",
+  "書き出す中身（上の定義）と、ContactGuard の結果を確かめました":"I have checked what will be exported (the definition above) and the ContactGuard result",
+  "SAKU キャラクターを書き出す（.zip）":"Export the SAKU Character (.zip)",
+  "AMU Studio で読み込めます。この SAKU Builder にも読み戻せます。ファイル名は「ID.saku-character.zip」です。パックのキャラクターを編集したものは、元のパックとその使用条件の識別子を目録に書きます（自己申告）。":"AMU Studio can import it, and this SAKU Builder can import it back. The file name is “ID.saku-character.zip”. For an edited pack Character, the manifest records the original pack and the identifier of its terms of use (self-reported).",
+  ".zip を書き出す":"Export .zip",
+  "キャラクター定義を書き出す（.json／.yaml）":"Export the Character definition (.json / .yaml)",
+  "AI プラットフォームに渡すための 1 つのファイルです。この SAKU Builder の「個別ファイルインポート」で読み戻せます。":"A single file to give to an AI platform. It can be imported back into this SAKU Builder with “Import a single file”.",
+  ".json を書き出す":"Export .json",
+  ".yaml を書き出す":"Export .yaml",
+  "ファイルをドロップして読み込む":"Drop a file here to import it",
+  "AMU Studio から戻ってきたキャラクターは、いまは .zip にしません（AMU Studio へ戻すファイルは β.5 の後に作ります）。.json／.yaml と Agent Skills では書き出せます。":"A Character returned from AMU Studio is not exported as a .zip for now (the file that goes back to AMU Studio will come after β.5). It can be exported as .json / .yaml and as Agent Skills.",
+  "ContactGuard（連絡先の紛れ込みの検査）：検知なし・確かめ済み":"ContactGuard (a check for contact details that slipped in): nothing detected · checked",
+  "ContactGuard（連絡先の紛れ込みの検査）：検知なし。上の中身を確かめて、下のチェックを入れてください":"ContactGuard (a check for contact details that slipped in): nothing detected. Check the content above and tick the box below",
+  "採択済みSchemaに合わないため、書き出しを止めます。②キャラクター編集で直してください":"It does not match the adopted Schema, so the export is stopped. Fix it in ② Edit the Character",
+  "採択済みSchemaに合わないため、書き出しませんでした。②キャラクター編集で直してください。":"Not exported because it does not match the adopted Schema. Fix it in ② Edit the Character.",
+  "署名検証に失敗したため取り込みませんでした。":"Not imported because signature verification failed.",
+  "署名検証に失敗したため取り込みませんでした。配布元から入手し直してください。":"Not imported because signature verification failed. Get it again from the distributor.",
+  "署名検証に失敗したため取り込みませんでした。AMU Studio で作り直すか、元のパックを取り込み直してください。":"Not imported because signature verification failed. Make it again in AMU Studio, or import the original pack again.",
+  "「書き出す中身を見る」で中身を確かめてから、「書き出す中身（上の定義）と、ContactGuard の結果を確かめました」にチェックを入れてください。":"Check the content with “Show what will be exported”, then tick “I have checked what will be exported (the definition above) and the ContactGuard result”.",
+  "保存をやめました。":"Saving was cancelled.",
+  "AI動作の調整をするキャラクターを選んでください。":"Choose the Character whose AI behavior you want to adjust.",
+  "①キャラクター選択でキャラクターを選んでください。":"Choose a Character in ① Choose a Character.",
+  " — 次に、②キャラクター編集か③実行（プロンプト）へ進んでください。":" — Next, go to ② Edit the Character or ③ Run (prompt).",
   "Builder / Trainer":"Builder / Trainer","Builderはauthoring、Trainerは観察Candidateです。CanonicalやAuthorityを変更しません。":"Builder authors content; Trainer produces observation Candidates. Neither changes Canonical data or Authority.",
   "Builderを開く":"Open Builder","Unified V1プロファイル":"Unified V1 profile","Trainerを開く":"Open Trainer",
   "保存場所":"Data locations","確認中":"Checking","Uninstallはアプリを対象とし、workspaceとprojectsは保持します。同期フォルダや別checkoutをruntime inputとして使いません。":"Uninstall removes the app while preserving workspaces and projects. Synchronized folders and other checkouts are not runtime inputs.",
@@ -209,6 +289,8 @@ const EN = new Map(Object.entries({
 }));
 
 const LONG_EN = new Map(Object.entries({
+  // β.12 Agent Skills export lead (ライター&SNS / 英語翻訳チーム 2026-10-04; no product names, Owner 2026-10-04).
+  "このキャラクターを、「スキル」の形式（Agent Skills）を読み込める AI の道具向けのフォルダーとして、ZIP で保存します。中身は、上の貼り付ける文と同じ定義、キャラクターの正本、席 8 の決まり、出どころの記録です（パックのキャラクターは、パックのライセンスも入ります）。書き出したものには、WI-T.COM の署名はまだ付きません。パックのキャラクターを書き出したものには、パックの使用条件がそのまま及びます。使える範囲は、パックのライセンスの文書のとおりです。スキルの配布サイト、公開のリポジトリ、ほかの組織と共有する作業場所など、第三者が取り出せる場所に置くことはできません。同梱のライセンスの文書と出どころの記録は、外したり書き換えたりしないでください。自作のキャラクターには、ライセンスの宣言は入りません。読み込む側の道具は、席 8 の決まりを守らせる仕組みを持ちません。守るかどうかは、使う AI しだいです。":"Save this Character as a ZIP of a folder for AI tools that can load the “skill” format (Agent Skills). It contains the same definition as the text to paste above, the Character's authoritative version, the rules for Seat 8 — Human (logical), and the provenance record (for a Character from a pack, the pack's license is included too). The export does not yet carry a WI-T.COM signature. The pack's terms of use apply as they are to an export of a Character from a pack. How it may be used is as set out in the pack's license. It may not be placed anywhere a third party can retrieve it, such as a skill distribution site, a public repository, or a workspace shared with another organization. Please do not remove or rewrite the included license and the provenance record. An export of a Character you made yourself includes no license declaration. The tool that loads it has no mechanism to make the AI follow the Seat 8 rules. Whether they are followed depends on the AI you use.",
   "ダウンロードしたWIT Package ZIPは展開せず、そのままUIで選択するかホームへドロップします。ZIP直下の":"Keep the downloaded WIT Package ZIP intact and select it in the UI or drop it onto the home screen. Only ",
   "と":" and ",
   "だけを受け付け、manifest必須項目、minimum app version、content type、lowercase SHA-256を決定論的に検証します。手動展開、インストール先へのコピー、shell操作は不要です。":" at the ZIP root are accepted. Required manifest fields, minimum app version, content type, and lowercase SHA-256 are checked deterministically. Manual extraction, copying into the install directory, and shell operations are not required.",
@@ -231,8 +313,8 @@ const LONG_EN = new Map(Object.entries({
   "— 次に、編集するか、AI プラットフォームで動かすかを選んでください。":" — next, choose whether to edit this Character or run it on an AI platform.",
   "この Character は採択済み Schema に合わないため、02 でも 03 でも開けません。一覧から削除できます。":"This Character does not match the adopted Schema, so it cannot be opened in 02 or 03. You can delete it from the list.",
   "— 貼り付けてもCharacterは変更されません。":" — pasting it does not change the Character.",
-  "「01 キャラクターを選択する」からキャラクターを選択してください。":"Choose a Character from “01 Choose a Character”.",
-  "「01 キャラクターを選択する」からキャラクターを選んでください。":"Choose a Character from “01 Choose a Character”.",
+  "「①キャラクター選択」からキャラクターを選択してください。":"Choose a Character from “① Choose a Character”.",
+  "「①キャラクター選択」からキャラクターを選んでください。":"Choose a Character from “① Choose a Character”.",
   "向いている仕事":"Suitable work",
   "最新 revision":"Latest revision",
   "2. 貼り付ける文をコピーする":"2. Copy the text to paste",
@@ -280,6 +362,12 @@ const LONG_EN = new Map(Object.entries({
 // Whole-sentence templates for messages that carry run-time values ({name} is replaced after translation).
 // The key is the Japanese template exactly as desktop/app.mjs writes it; the value is the 英語翻訳チーム's English.
 const EN_FORMAT = new Map(Object.entries({
+  "ファイルを読めませんでした: {reason}":"Could not read the file ({reason})",
+  // β.12 Agent Skills export (英語翻訳チーム 2026-10-04).
+  "保存しました: {path}":"Saved: {path}",
+  "ブラウザへダウンロードを要求しました: {filename}":"Asked the browser to download: {filename}",
+  "保存できませんでした（{reason}）。":"Could not save ({reason}).",
+  "書き出せませんでした（{code}）。":"Could not export ({code}).",
   // 英語翻訳チーム U2 (Wi-t_Site c60e232).
   "{reason} このPackageは内容からSchemaを推測せず拒否しました。Source Ownerから、Active Unified Schema identityと変換来歴をmanifestへ結び付けたReplacement Packageを取得してください。":"{reason} This Package was refused without guessing its Schema from the contents. Get a Replacement Package from the Source Owner in which the Active Unified Schema identity and the conversion provenance are bound to the manifest.",
   "{reason} conformance_expectations の locator が requirement_id と別の要件を指しているため、このCharacterは取り込みません（Schema の規則: 参照不一致は fail closed）。Builder側では内容を書き換えず、作成元／配布元から修正版を入手してください。":"{reason} This Character is not imported because a locator in conformance_expectations points to a different requirement from its requirement_id (Schema rule: a reference mismatch fails closed). Builder does not rewrite the contents; get a corrected version from the author or distributor.",
@@ -288,7 +376,7 @@ const EN_FORMAT = new Map(Object.entries({
   "{before}… → {after}…（本文は不変・locator と revision のみ）":"{before}… → {after}… (text unchanged; only the locator and revision)",
   "{name}（削除済み）":"{name} (deleted)",
   "一覧 {active}件（削除済み {deleted}件）":"List: {active} (deleted: {deleted})",
-  "一覧 {active}件 — この画面でCharacter dataは変更しません（Viewer data mutation: 0）":"List: {active} — this screen does not change Character data (Viewer data mutation: 0)",
+  "一覧 {active}件 — この画面ではキャラクターの中身を変えません。":"List: {active} — this screen does not change the Characters' content.",
   " ほか{count}件":" and {count} more",
   "{count}件は取り込めませんでした: {names}{more} — {recovery}":"Could not import {count}: {names}{more} — {recovery}",
   "一覧に保存できませんでした: {failure}":"Could not save to the list: {failure}",
@@ -301,24 +389,36 @@ const EN_FORMAT = new Map(Object.entries({
   "{reason} Packageを選び直すかHelpを確認してください。":"{reason} Select a different Package or check Help.",
   "{reason} 取り込みは行いませんでした。":"{reason} Nothing was imported.",
   "署名検証に失敗したため取り込みませんでした: {detail}":"Not imported because signature verification failed: {detail}",
+  // 2026-10-14 (G1, self-made ZIP import). Provisional English; the redesign's new texts go to 英語翻訳チーム together (Q20).
+  "SAKU のキャラクターの ZIP の決まりに合わないため、取り込みませんでした（{codes}）。":"Not imported because it does not follow the rules for a SAKU Character ZIP ({codes}).",
+  "取り込みを確定できなかったため、一覧には加えませんでした: {detail}":"Nothing was added to the list because the import could not be completed: {detail}",
+  "自作のキャラクターの ZIP: {name}（rev {revision}）。":"Self-made Character ZIP: {name} (rev {revision}).",
+  // ④ 出力 (2026-10-14). Provisional English; to 英語翻訳チーム with the redesign's texts (Q20).
+  "パックのキャラクターを編集したものです（元：{pack} {version}）。パックの使用条件が続きます。再配布はできません。改変ありとして扱われます。":"This is an edited pack Character (original: {pack} {version}). The pack's terms of use still apply. It may not be redistributed. It is treated as modified.",
+  "ContactGuard（連絡先の紛れ込みの検査）：{hits}を検知。書き出しを止めます":"ContactGuard (a check for contact details that slipped in): {hits} detected. The export is stopped",
+  "{label}を保存しました: {path}":"Saved {label}: {path}",
+  "保存できませんでした: {reason}":"Could not save: {reason}",
+  "ブラウザへダウンロードを要求しました: {filename}":"Asked the browser to download: {filename}",
+  "ContactGuard が {hits} を検知したため、書き出しませんでした。":"Not exported because ContactGuard detected {hits}.",
+  "ZIP を作れませんでした: {codes}":"Could not make the ZIP: {codes}",
   "{reason} 配布元から入手し直してください。":"{reason} Get it again from the distributor.",
   "{pack} {version}: {count}体（運用区分 {classes}）。{signature}。保存先: {path}":"{pack} {version}: {count} Characters (operation class {classes}). {signature}. Saved to: {path}",
   "{reason} AMU Studio で作り直すか、元のパックを取り込み直してください。":"{reason} Make it again in AMU Studio, or import the original pack again.",
   "対象: {fields}":"Fields: {fields}",
   "AMU Studio からの戻し: {name} rev {revision}。編集依頼: {note}（{fields}）。{relation} {signature}。workspace には保存していません。":"Returned from AMU Studio: {name} rev {revision}. Edit request: {note} ({fields}). {relation} {signature}. Not saved to the workspace.",
-  "{name}（rev {revision}）を一覧に追加しました（workspace には保存していません）。{relation} 詳細の「AMU からの編集依頼」を確認してから編集してください。":"Added {name} (rev {revision}) to the list (not saved to the workspace). {relation} Check \"Edit request from AMU\" in the details before you edit.",
+  "{name}（rev {revision}）を一覧に追加しました（workspace には保存していません）。{relation} 詳細の「AMU からの編集依頼」を確認してから編集してください。":"Added {name} (rev {revision}) to the list (not saved to the workspace). {relation} Check “Edit request from AMU” in the details before you edit.",
   "{filename}: Characterが見つかりません":"{filename}: no Character found",
-  "{count}件は取り込めませんでした（locator＝参照位置が要件とずれています）: {lines}{more} 「locator を修復して読み込む」は requirement_id から参照位置を計算し直すだけで、本文は変えません（修復後は新しい revision になります）。":"Could not import {count} (the locator, the reference position, does not match its requirement): {lines}{more} \"Repair locators and load\" only recalculates the reference positions from requirement_id and does not change the text (after the repair there is a new revision).",
+  "{count}件は取り込めませんでした（locator＝参照位置が要件とずれています）: {lines}{more} 「locator を修復して読み込む」は requirement_id から参照位置を計算し直すだけで、本文は変えません（修復後は新しい revision になります）。":"Could not import {count} (the locator, the reference position, does not match its requirement): {lines}{more} “Repair locators and load” only recalculates the reference positions from requirement_id and does not change the text (after the repair, there is a new revision).",
   "locator を修復して読み込む（{count}件）":"Repair locators and load ({count})",
   "{name}: {count}件は requirement_id が見つからず修復できません":"{name}: {count} cannot be repaired because their requirement_id is not found",
-  "{count}件の locator を修復して一覧に追加しました: {detail}。{unrepaired} 詳細の「locator 修復」行に記録があります。":"Repaired the locators of {count} and added them to the list: {detail}. {unrepaired} The \"Locator repair\" row in the details keeps a record.",
+  "{count}件の locator を修復して一覧に追加しました: {detail}。{unrepaired} 詳細の「locator 修復」行に記録があります。":"Repaired the locators of {count} and added them to the list: {detail}. {unrepaired} The “Locator repair” row in the details keeps a record.",
   " 修復できなかったもの: {list}":" Not repaired: {list}",
   "{name} は {field} が未設定のため編集画面へ渡せません。取り込んだファイルに {field} を追加してください。":"{name} cannot be passed to the edit screen because {field} is not set. Add {field} to the imported file.",
   "{name} は Schema が判定できないため開けません（{code}）。一覧から削除できます。":"{name} cannot be opened because its Schema cannot be determined ({code}). You can delete it from the list.",
   "{name} を選択しました。":"Selected {name}.",
   "{name} を一覧に戻しました。":"Restored {name} to the list.",
-  "{name} を削除しました。「削除済み」フィルタで元に戻せます。":"Deleted {name}. You can restore it with the \"Deleted\" filter.",
-  "{count}件を削除しました。「削除済み」を「含めて表示」にすると元に戻せます。":"Deleted {count}. To restore them, set \"Deleted\" to \"Include\".",
+  "{name} を削除しました。「削除済み」フィルタで元に戻せます。":"Deleted {name}. You can restore it with the “Deleted” filter.",
+  "{count}件を削除しました。「削除済み」を「含めて表示」にすると元に戻せます。":"Deleted {count}. To restore them, set “Deleted” to “Include”.",
   "{count}件を消去しました。":"Erased {count}.",
   // Seat 8 follows D-20260928-seat-roles (ライター&SNS 2026-09-30; 英語翻訳チーム).
   "席 2〜7：{count}/6 ＋ 席 8（論理上の人）":"Seats 2–7: {count}/6 + Seat 8 — Human (logical)",
@@ -380,7 +480,13 @@ document.querySelectorAll("[data-desktop-locale]").forEach(button => button.addE
 locale = normalize(new URLSearchParams(location.search).get("ui_locale") || localStorage.getItem(STORAGE_KEY));
 new MutationObserver(records => {
   if (applying) return;
-  for (const record of records) for (const node of record.addedNodes) if (node.nodeType === 1 || node.nodeType === 3) applyTree(node.nodeType === 1 ? node : node.parentElement);
+  // A node can already be gone when its record arrives (a line written twice in one turn). A text node then has no
+  // parent, and applyTree(null) threw and dropped the rest of the batch, so the line actually shown stayed untranslated.
+  for (const record of records) for (const node of record.addedNodes) {
+    if (node.nodeType !== 1 && node.nodeType !== 3) continue;
+    const root = node.nodeType === 1 ? node : node.parentElement;
+    if (root && root.isConnected) applyTree(root);
+  }
 }).observe(document.body, { subtree: true, childList: true, characterData: true });
 applyTree();
 function format(template, params = {}) {

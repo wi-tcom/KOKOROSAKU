@@ -51,31 +51,12 @@ const tauri = await json("src-tauri/tauri.conf.json");
 assert.equal(contract.source_sha256, "b4a8aa8aacb262eb6a1484a30dfb0943cb355aefa8b75a10cd9e829728e0189c");
 assert.equal(contract.source_bytes, 99553);
 
+// 2026-10-14 (Owner, 結果 168): ② is in the third, changeable layer — rebuilding it is allowed and its look is not pinned.
+// Removed here: the byte digests of the inline CSS, the header and the toolbar projection; the chapter count and
+// nesting; the colour tokens, the 440px column, the sticky preview and the breakpoints; the ホーム link. Kept: the
+// controls and functions that must not vanish silently, and what cannot be seen (offline fonts, no external URL,
+// the list editing, the save feedback, the locale handling).
 const style = block(html, /<style>[\s\S]*?<\/style>/, "Golden inline style");
-const header = block(html, /<header>[\s\S]*?<\/header>/, "Golden header");
-assert.equal(digest(style), contract.source_style_sha256, "Owner Golden inline CSS must be byte-identical");
-assert.equal(bytes(style), contract.source_style_bytes);
-assert.equal(digest(header), contract.source_header_sha256, "Owner Golden header must be byte-identical");
-assert.equal(bytes(header), contract.source_header_bytes);
-
-const projectedToolbar = removeBalancedElement(toolbarBlock(html), '<div class="desktop-toolbar-additions">');
-assert.equal(digest(normalized(projectedToolbar)), contract.source_toolbar_projection_sha256, "Golden toolbar projection changed");
-
-const sectionTags = [...html.matchAll(/<\/?section\b[^>]*>/g)].map(match => match[0]);
-let sectionDepth = 0;
-let maximumSectionDepth = 0;
-for (const tag of sectionTags) {
-  sectionDepth += tag.startsWith("</") ? -1 : 1;
-  assert.ok(sectionDepth >= 0, "chapter section closes before it opens");
-  maximumSectionDepth = Math.max(maximumSectionDepth, sectionDepth);
-}
-assert.equal(sectionDepth, 0, "chapter section tags must be balanced");
-// The chapter model follows the latest Owner direction: the standalone Persona
-// Test chapter moved into 04 Trainer, organization participation is MACHI-owned
-// and is no longer authored here, and a consolidated 人間と引き渡し chapter was
-// added. The count is pinned to the contract rather than to a stale literal.
-assert.equal(sectionTags.filter(tag => !tag.startsWith("</")).length, contract.chapter_count, `Golden Builder must retain ${contract.chapter_count} chapters`);
-assert.equal(maximumSectionDepth, 1, "Golden chapters must remain independent top-level siblings");
 
 for (const id of contract.required_control_ids) assert.match(html, new RegExp(`id=["']${id}["']`), `Golden control missing: ${id}`);
 for (const id of contract.deprecated_noncanonical_controls) assert.doesNotMatch(html, new RegExp(`id=["']${id}["']`), `deprecated semantic control restored: ${id}`);
@@ -91,15 +72,10 @@ assert.doesNotMatch(html, /fonts\.googleapis|fonts\.gstatic|Shippori Mincho|EDO 
 // screen with the rest of them. Its styling pin goes with it.
 assert.match(html, /class="desktop-toolbar-additions"/);
 for (const id of ["collapseAll", "expandAll", "desktopWorkspaceSelect", "desktopPackageImport"]) assert.match(html, new RegExp(`id=["']${id}["']`));
-assert.match(html, /id="openDesktopHome" href="\.\.\/index\.html\?stay=1" hidden/);
 assert.doesNotMatch(html, /class="ch-body"/);
 
-for (const token of ["--ground:#E4E6DF", "--surface:#F2F3EE", "--surface-2:#EBEDE6", "--sumi:#22241F", "--accent:#4A5560", "minmax(0,440px)"]) assert.ok(style.includes(token), `Golden presentation token missing: ${token}`);
-for (const breakpoint of contract.presentation.responsive_breakpoints_px) assert.match(style, new RegExp(`max-width:${breakpoint}px`), `Golden responsive breakpoint missing: ${breakpoint}`);
-assert.match(style, /\.preview\{position:sticky;top:0;height:100vh/);
 
 for (const font of ["Noto Serif JP", "Yu Mincho", "Noto Sans JP", "Yu Gothic UI", "Meiryo"]) assert.ok(additions.includes(font), `offline font fallback missing: ${font}`);
-for (const breakpoint of contract.presentation.desktop_addition_breakpoints_px) assert.match(additions, new RegExp(`max-width:\\s*${breakpoint}px`), `Desktop addition breakpoint missing: ${breakpoint}`);
 assert.doesNotMatch(additions, /@font-face|https?:\/\/|prefers-color-scheme\s*:\s*dark|color-scheme\s*:\s*dark/i);
 for (const forbidden of ["body", "header", ".toolbar", ".wrap", ".form", ".preview", ".chapter", "input", "select", "textarea", "button"]) {
   const escaped = forbidden.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -143,11 +119,10 @@ assert.match(ui, /任意スキルの採否が未定（\(\\d\+\)件\[）\)\]/, "o
 // app.mjs rather than in the markup. Both routes must still exist and be reachable.
 const shell = desktop + desktopApp;
 assert.ok(shell.includes("./tools/saku-builder.html?desktop=app") && shell.includes("./tools/saku-builder.html?desktop=new"), "desktop shell must link to the Builder for both edit and new entries");
-assert.equal((desktop.match(/data-desktop-locale=/g) || []).length, 2);
+assert.ok(desktop.includes('<div id="saku-frame" class="saku-frame"></div>'), "the desktop page mounts the shared frame (its 日本語／English replace the old pair)");
 assert.match(desktop, /class="boot-pending"/);
 assert.match(desktop, /__SAKU_DESKTOP_BOOT_FALLBACK/);
 assert.match(desktop, /HOST_BOOT_FAILED/);
-assert.match(desktop, /id="view-characters"/);
 assert.match(desktop, /id="viewer-panel"/);
 assert.doesNotMatch(desktopApp, /location\.replace\("\.\/tools\/saku-builder\.html\?desktop=app"\)/);
 assert.ok(desktopApp.includes("./tools/saku-builder.html?desktop=new"), "desktop app must offer the new-Character entry into the Builder");
@@ -164,9 +139,7 @@ assert.ok(unifiedV1Builder.includes('try{ stored=localStorage.getItem("saku.ui.l
 
 console.log("OWNER_GOLDEN_PRESENTATION_BASE_AND_FUNCTIONAL_SURFACE PASS");
 console.log(`OWNER_SOURCE_REFERENCE ${contract.source_sha256} ${contract.source_bytes} bytes`);
-console.log(`GOLDEN_STYLE ${contract.source_style_sha256} ${contract.source_style_bytes} bytes`);
-console.log(`GOLDEN_HEADER ${contract.source_header_sha256} ${contract.source_header_bytes} bytes`);
-console.log(`GOLDEN_CHAPTER_STRUCTURE ${contract.chapter_count}/${contract.chapter_count} TOP_LEVEL PASS`);
+console.log("GOLDEN_LOOK_PINS REMOVED 2026-10-14 (結果 168: the third layer is not pinned)");
 console.log(`GOLDEN_ACTIVE_CONTROLS ${contract.required_control_ids.length}/${contract.required_control_ids.length} PASS`);
 console.log(`GOLDEN_FUNCTIONS ${contract.golden_function_names.length}/${contract.golden_function_names.length} PASS`);
 // Context Help and Save feedback are Desktop additions: every rule must live in the

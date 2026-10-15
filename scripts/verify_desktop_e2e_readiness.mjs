@@ -109,7 +109,7 @@ const loadGoldenPreserving=async(src)=>{
 const loadHome=async(src)=>{
   const frame=document.createElement("iframe");frame.style.cssText="width:1280px;height:820px;border:0";frame.src=src;document.getElementById("frames").append(frame);
   await new Promise(resolve=>frame.addEventListener("load",resolve,{once:true}));
-  await poll(()=>frame.contentDocument.getElementById("selected-character"));
+  await poll(()=>frame.contentDocument.querySelector("#saku-frame .sf-who"));
   await wait(400);
   return frame;
 };
@@ -129,12 +129,12 @@ try{
   const openRoute=async code=>{
     let routeFrame;
     if(code==="01"){
-      routeFrame=await loadHome("/desktop/index.html");click(routeFrame.contentDocument.getElementById("view-characters"));
+      routeFrame=await loadHome("/desktop/index.html");click(routeFrame.contentDocument.querySelector('#saku-frame [data-sf-screen="select"]'));
       await poll(()=>routeFrame.contentDocument.getElementById("viewer-panel").hidden===false);
     }else if(code==="02"){
       routeFrame=await loadGoldenPreserving("/tools/saku-builder.html?desktop=app");
     }else if(code==="03"){
-      routeFrame=await loadHome("/desktop/index.html");click(routeFrame.contentDocument.getElementById("run-on-ai-platform"));
+      routeFrame=await loadHome("/desktop/index.html");click(routeFrame.contentDocument.querySelector('#saku-frame [data-sf-screen="run"]'));
       await poll(()=>routeFrame.contentDocument.getElementById("platform-panel").hidden===false);
     }else{
       routeFrame=await loadTrainer("/tools/saku-trainer.html");
@@ -295,25 +295,26 @@ try{
   const hd=homeFrame.contentDocument, hw=homeFrame.contentWindow;
   // The subject line is always present, so "未選択" has somewhere to be said;
   // the panel that used to appear only when something was selected is gone.
-  const panel=hd.getElementById("selected-character");
+  // 2026-10-14: the subject line is the shared frame's selected-Character line, on every screen.
+  const panel=hd.querySelector("#saku-frame .sf-who");
   check(Boolean(panel),"workspace home has a subject line");
-  check(panel.dataset.selected==="true","workspace home shows the current SAKU");
-  check((hd.getElementById("selected-character-name").textContent||"").includes("継続テスト"),"workspace home names the current SAKU");
+  check(Boolean(hd.querySelector("#saku-frame [data-sf-clear]")),"workspace home shows the current SAKU (and can clear it)");
+  check((hd.querySelector("#saku-frame .sf-who-name").textContent||"").includes("継続テスト"),"workspace home names the current SAKU");
   // Without a native host there is no Workspace, so drive the state the host
   // would have reported and read the announcement that follows from it.
   const runtime={workspace:"C:/ws",first_run:false,install_dir:"i",config_dir:"c",log_dir:"l",cache_dir:"ca"};
   hw.__saku_home.renderState(runtime);
-  check((hd.getElementById("host-status").textContent||"").includes("編集するか、AI プラットフォームで動かすか"),"the announcement points at what to do next");
-  hd.getElementById("view-characters").click();
-  hd.getElementById("viewer-back").click();
+  check((hd.getElementById("host-status").textContent||"").includes("②キャラクター編集か③実行（プロンプト）"),"the announcement points at what to do next");
+  hd.querySelector('#saku-frame [data-sf-screen="select"]').click();await wait(200);
+  hd.querySelector('#saku-frame [data-sf-screen="prep"]').click();await wait(200);
   check(hw.localStorage.getItem("saku.workspace.active")!==null,"returning to TOP keeps the current SAKU");
-  check(hd.getElementById("selected-character").dataset.selected==="true","TOP still shows the current SAKU");
+  check((hd.querySelector("#saku-frame .sf-who-name").textContent||"").includes("継続テスト"),"TOP still shows the current SAKU");
   hw.confirm=()=>true;
-  hd.getElementById("active-saku-clear").click();
+  hd.querySelector("#saku-frame [data-sf-clear]").click();await wait(300);
   check(hw.localStorage.getItem("saku.workspace.active")===null,"start over leaves the workspace");
-  check(hd.getElementById("selected-character-name").textContent==="未選択","start over reports 未選択");
+  check(hd.querySelector("#saku-frame .sf-who-name").textContent==="未選択","start over reports 未選択");
   hw.__saku_home.renderState(runtime);
-  check((hd.getElementById("host-status").textContent||"").includes("キャラクターを選択してください"),"with no subject the announcement asks for one");
+  check((hd.getElementById("host-status").textContent||"").includes("キャラクターを選んでください"),"with no subject the announcement asks for one");
   hw.__saku_home.renderState({...runtime,first_run:true});
   check((hd.getElementById("host-status").textContent||"").includes("Workspaceを選択"),"with no Workspace the announcement asks for that first");
   session.setActive(subject,{source:"test"});

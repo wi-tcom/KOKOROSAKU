@@ -205,7 +205,8 @@ const zipArchive = path.join(zipWorkspace, `${PACKAGE_PREFIX}.zip`);
 const zipExtracted = path.join(zipWorkspace, "extracted", PACKAGE_PREFIX);
 const quotePowerShell = value => `'${String(value).replaceAll("'", "''")}'`;
 const runPowerShell = command => new Promise((resolve, reject) => {
-  const process = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", command], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
+  // Windows PowerShell on Windows; PowerShell 7 (pwsh) elsewhere, as on the Linux CI runner (node-gates).
+  const process = spawn(globalThis.process.platform === "win32" ? "powershell.exe" : "pwsh", ["-NoProfile", "-NonInteractive", "-Command", command], { windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
   let output = "", errors = "";
   process.stdout.on("data", chunk => { output += chunk; });
   process.stderr.on("data", chunk => { errors += chunk; });

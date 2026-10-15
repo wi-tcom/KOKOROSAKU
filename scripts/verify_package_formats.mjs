@@ -64,7 +64,7 @@ const app = await read("desktop/app.mjs");
 const index = await read("desktop/index.html");
 const i18n = await read("desktop/i18n.mjs");
 for (const [name, text] of [["desktop/app.mjs", app], ["desktop/index.html", index], ["desktop/i18n.mjs", i18n]]) check(!/witpkg/i.test(text), `FMT-PAGE ${name} carries no .witpkg wording`);
-check(index.includes("SAKU Character Pack（`.zip`）をここへドロップ") && i18n.includes('"SAKU Character Pack（`.zip`）をここへドロップ":"Drop a SAKU Character Pack (`.zip`) here"'), "FMT-PAGE drop zone names the pack only (ja/en)");
+check(index.includes("SAKU Character Pack（.zip）／SAKU キャラクター（.zip）／個別ファイル（.yaml／.json）をここへドロップ") && i18n.includes('"SAKU Character Pack（.zip）／SAKU キャラクター（.zip）／個別ファイル（.yaml／.json）をここへドロップ":') && !/\.amupkg/.test(index.slice(index.indexOf('id="drop-zone"'), index.indexOf("</div>", index.indexOf('id="drop-zone"')))), "FMT-PAGE the drop line names the pack, the SAKU Character ZIP and single files, and not .amupkg (Owner 2026-10-14, Q7) (ja/en)");
 check(app.includes('code === "PACKAGE_FORMAT_AMU_CHARACTER_FILE" || code === "PACKAGE_FORMAT_INDIVIDUAL_FILE"'), "FMT-PAGE importRecovery passes the two new refusals through verbatim");
 const handOff = app.slice(app.indexOf("function handOffImport("), app.indexOf("async function handOffCharacterPack("));
 check(!handOff.includes("saku.desktop.pendingPack") && handOff.includes("PACKAGE_RESULT_UNEXPECTED"), "FMT-PAGE handOffImport has no envelope branch; a pack-less IMPORTED result is refused");
@@ -115,7 +115,7 @@ if (existsSync(sakuReturn)) {
 
 // ── 4. browser: the two refusals reach the screen ───────────────────────────
 {
-  const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+  const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
   if (!existsSync(chrome)) skipped.push("FMT-UI Chrome not found");
   else if (!existsSync(path.join(ROOT, ".desktop-dist/index.html"))) skipped.push("FMT-UI .desktop-dist not prepared (run desktop:prepare)");
   else {

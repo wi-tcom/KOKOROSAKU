@@ -42,8 +42,8 @@ const help = (jaLabel, enLabel, jaWhat, enWhat, jaExample, enExample, jaCaution,
     example: { ja: jaExample, en: enExample },
     caution: { ja: jaCaution, en: enCaution },
     relatedAiBehavior: {
-      ja: "関連するAIの動きは期待される傾向です。実際の応答は、03 で新しい AI 会話に貼って確かめます。",
-      en: "The related AI behavior is an expected tendency. Check the actual responses in 03 by pasting into a new AI conversation.",
+      ja: "関連するAIの動きは期待される傾向です。実際の応答は、③実行（プロンプト）の文を新しい AI 会話に貼って確かめます。",
+      en: "The related AI behavior is an expected tendency. Check the actual responses by pasting the text from ③ Run (prompt) into a new AI conversation.",
     },
     relatedItems: {
       ja: "同じ章の項目と、表示された調整症状を一緒に確認します。",

@@ -141,7 +141,7 @@ assert.equal(await exists(".desktop-dist/tools/unified-v1/preview/catalog-previe
 const SHIPPED_SAMPLE_PATHS = ["tools/unified-v1/sample-pack/sample-characters.json", "resources/sample-source-evidence.json"];
 const shippedSamples = async root => (await Promise.all(SHIPPED_SAMPLE_PATHS.map(async rel => (await stat(path.resolve(ROOT, root, rel)).then(() => true, () => false) ? rel : null)))).filter(Boolean);
 assert.deepEqual(await shippedSamples(".desktop-dist"), [], "the public installer must not carry the retired OSS samples");
-// In their place, AMU Studio's sample pack (saku-pack-sample 1.1.0) is a bundle
+// In their place, AMU Studio's sample pack (saku-pack-sample 1.2.0 since 2026-10-10; 1.1.0 before) is a bundle
 // resource, and 01 offers it with a button that goes through the pack intake.
 const samplePackWiring = (html, app, conf) => {
   const problems = [];
@@ -149,7 +149,7 @@ const samplePackWiring = (html, app, conf) => {
   if (!/\$\("viewer-import-samples"\)\.addEventListener\("click", importSamples\)/.test(app)) problems.push("the sample button is not wired");
   if (!/async function importSamples\(\) \{\s*try \{ handOffImport\(await invoke\("import_bundled_sample_pack"\)\)/.test(app)) problems.push("the sample button does not use the host's pack intake");
   if (!/button\.disabled = !\(nativeEnabled && samplesAvailable\)/.test(app)) problems.push("the sample button is not off when imports are off or the pack is missing");
-  if (conf?.bundle?.resources?.["../desktop/resources/samples/saku-pack-sample-1.1.0.zip"] !== "samples/saku-pack-sample-1.1.0.zip") problems.push("the sample pack is not a bundle resource");
+  if (conf?.bundle?.resources?.["../desktop/resources/samples/saku-pack-sample-1.2.0.zip"] !== "samples/saku-pack-sample-1.2.0.zip") problems.push("the sample pack is not a bundle resource");
   return problems;
 };
 {
@@ -168,13 +168,14 @@ const samplePackWiring = (html, app, conf) => {
   const badgeProblems = source => {
     const problems = [];
     if (!/const isSampleRecord = record => record\?\.provenance\?\.pack_id === SAMPLE_PACK_ID;/.test(source) || !source.includes('const SAMPLE_PACK_ID = "saku-pack-sample";')) problems.push("the sample test is not the signed pack id");
-    if (!source.includes("if (isSampleRecord(record)) badges.append(sampleBadge());")) problems.push("the card has no sample badge");
+    // 2026-10-14: the B2 badge (「WI-T.COM署名有効・サンプル」) says サンプル itself; the separate badge stays for any other sample row.
+    if (!source.includes('if (isSampleRecord(record) && origin.id !== "B2") badges.append(sampleBadge());') || !source.includes("originBadge.textContent = badgeLabel(origin.id, locale());")) problems.push("the card has no sample badge");
     if (!source.includes("const sampleLine = isSampleRecord(record)")) problems.push("the detail has no sample badge");
     if (/※/.test(source.match(/const isSampleRecord[^\n]*/)?.[0] || "")) problems.push("the sample test reads the name");
     return problems;
   };
   assert.deepEqual(badgeProblems(app), [], "the sample badge");
-  assert.ok(badgeProblems(app.replace("if (isSampleRecord(record)) badges.append(sampleBadge());", "")).length > 0, "falsification: a card without the badge is caught");
+  assert.ok(badgeProblems(app.replace('if (isSampleRecord(record) && origin.id !== "B2") badges.append(sampleBadge());', "")).length > 0, "falsification: a card without the badge is caught");
   assert.ok(badgeProblems(app.replace("record?.provenance?.pack_id === SAMPLE_PACK_ID", 'String(record?.name).endsWith("※")')).length > 0, "falsification: a test on the name is caught");
 }
 { // falsification: a dist that still carries them is caught
@@ -273,14 +274,21 @@ const desktopIndex = await read("desktop/index.html");
   assert.equal(codeSigningMode({}), "UNSIGNED");
   assert.equal(codeSigningMode({ SAKU_CODE_SIGNING: "AZURE_ARTIFACT_SIGNING" }), "AZURE_ARTIFACT_SIGNING");
   assert.throws(() => codeSigningMode({ SAKU_CODE_SIGNING: "SIGNED" }), /SAKU_CODE_SIGNING_INVALID/);
-  assert.equal((desktopIndex.match(/<span>CODE_SIGNING = UNSIGNED<\/span>/g) || []).length, 1, "the source footer stays UNSIGNED");
+  // 2026-10-14 keying F1 (Owner 結果 190 対策 D): the footer shows the app's own signature as read on the spot, not the
+  // build's declaration; the declaration stays in the build metadata and the host's report as a record.
+  assert.equal((desktopIndex.match(/<span id="code-signature-view" data-code-signature="CHECKING" data-runtime-value>署名：確かめています…<\/span>/g) || []).length, 1, "the footer starts as 「確かめています」 and is filled from the on-the-spot check");
+  assert.ok(!/CODE_SIGNING = /.test(desktopIndex), "the footer no longer prints the build's declaration");
   const hostMain = await read("src-tauri/src/main.rs");
   assert.match(hostMain, /const CODE_SIGNING: &str = match option_env!\("SAKU_CODE_SIGNING"\) \{ Some\(mode\) => mode, None => "UNSIGNED" \};/);
   assert.match(hostMain, /code_signing: CODE_SIGNING,/);
   assert.doesNotMatch(hostMain, /code_signing: "UNSIGNED"/);
   const builtMeta = JSON.parse(await read(".desktop-dist/resources/build-metadata.json"));
   const builtHome = await read(".desktop-dist/index.html");
-  assert.ok(builtHome.includes(`<span>CODE_SIGNING = ${builtMeta.code_signing}</span>`), "the built footer says what the build metadata says");
+  assert.ok(CODE_SIGNING_MODES.includes(builtMeta.code_signing) && !/CODE_SIGNING = /.test(builtHome), "the build metadata keeps the declaration; the built footer does not print it");
+  assert.match(hostMain, /fn get_code_signature\(/, "the host answers the page with the facts it read");
+  assert.match(hostMain, /std::thread::spawn\(move \|\| \{\s+let facts = code_signature::read_own_signature\(\);/, "the check runs on its own thread after start");
+  const signatureModule = await read("src-tauri/src/code_signature.rs");
+  assert.ok(/fdwRevocationChecks = WTD_REVOKE_NONE/.test(signatureModule) && /WTD_CACHE_ONLY_URL_RETRIEVAL/.test(signatureModule), "the check stays on this PC (no online revocation, cache-only retrieval)");
 }
 {
   // ライター&SNS review 15 (2026-09-30): messages with run-time values are whole-sentence templates, tr("…", {…}),
@@ -298,21 +306,27 @@ const desktopIndex = await read("desktop/index.html");
     assert.equal(holes(formats.get(template)), holes(template), `the English keeps the placeholders: ${template.slice(0, 40)}`);
     assert.doesNotMatch(formats.get(template).replace(/「[^」]*」/g, ""), /[\u3040-\u30ff\u3400-\u9fff]/, `Japanese left in the English: ${template.slice(0, 40)}`);
   }
-  for (const key of ["キャラクターを読み込む", "読み込み履歴", "職能CSVを読み込む", "席 8（論理上の人）", "項目"]) assert.ok(i18nSource.includes(`${JSON.stringify(key)}:`), `EN has: ${key}`);
+  for (const key of ["キャラクターを読み込む", "読み込み履歴", "席 8（論理上の人）", "項目", "出力", "準備と進め方"]) assert.ok(i18nSource.includes(`${JSON.stringify(key)}:`), `EN has: ${key}`);
   assert.doesNotMatch(desktopApp, /人間席8|AI席/, "seat 8 is named as in D-20260928-seat-roles");
   assert.match(i18nSource, /querySelectorAll\("\[aria-label\],\[title\],\[placeholder\]"\)/, "the walker translates placeholder too");
 }
 assert.match(desktopIndex, /rel="icon" href="\.\/icon\.svg"/);
 assert.match(desktopIndex, /data-theme="light"/);
 assert.match(desktopIndex, /class="boot-pending"/);
-assert.match(desktopIndex, /`\.zip`/);
-assert.match(desktopIndex, /href="\.\/tools\/saku-builder\.html\?desktop=app"/);
-assert.match(desktopIndex, /data-desktop-locale="ja-JP"/);
-assert.match(desktopIndex, /data-desktop-locale="en-US"/);
+// 2026-10-14 (Owner 画面改修): the drop line names the pack, the SAKU Character ZIP and single files; the shared frame
+// carries the menu (its link to ②) and 日本語／English.
+assert.ok(desktopIndex.includes("SAKU Character Pack（.zip）／SAKU キャラクター（.zip）／個別ファイル（.yaml／.json）をここへドロップ"));
+assert.match(desktopIndex, /<div id="saku-frame" class="saku-frame"><\/div>/);
+{
+  const frameSource = await readFile(path.join(ROOT, "tools/unified-v1/app-frame.mjs"), "utf8");
+  assert.ok(frameSource.includes('saku-builder.html?desktop=app') && frameSource.includes('data-sf-locale="ja-JP"') && frameSource.includes('data-sf-locale="en-US"'));
+}
 assert.match(desktopIndex, /src="\.\/i18n\.mjs"/);
-for (const id of ["view-characters", "create-edit-character", "run-on-ai-platform", "open-services", "viewer-panel"]) assert.match(desktopIndex, new RegExp(`id="${id}"`));
+for (const id of ["home-content", "viewer-panel", "platform-panel", "export-panel", "tuning-panel"]) assert.match(desktopIndex, new RegExp(`id="${id}"`));
 // Owner 2026-09-27 (AMU DECISION 2026-09-27-11): 04 is the services page, and no Home control leads to the Trainer.
-assert.match(desktopIndex, /id="open-services" href="\.\/tools\/saku-services\.html"/);
+// 2026-10-14: ⑤ is reached from the shared menu bar (app-frame.mjs screenHref "svc"), and the tuning screen leads back there.
+assert.ok((await readFile(path.join(ROOT, "tools/unified-v1/app-frame.mjs"), "utf8")).includes('if (screen === "svc") return `${tools}saku-services.html`;'));
+assert.match(desktopIndex, /id="tuning-back" class="quiet button" href="\.\/tools\/saku-services\.html"/);
 assert.doesNotMatch(desktopIndex, /saku-trainer\.html|platform-to-trainer|data-character-action="train"/);
 // β.9 hands-on (2026-09-28): three sentences still pointed at the Trainer after it left — the status line on
 // choosing a Character, the note on an inadmissible one, and the Home subtitle (試す・確認する). Visible Home and
@@ -332,9 +346,9 @@ for (const [name, source] of [["desktop/index.html", desktopIndex], ["desktop/ap
   const visible = source.split(/\r?\n/).filter(line => !/^\s*\/\//.test(line)).join(" ").replace(/AMU トレーニングセンター/g, "");
   assert.doesNotMatch(visible, /トレーニング[をにのでし]|トレーニングする|試す・確認する/, `${name} still points at the Trainer`);
 }
-assert.match(desktopApp, /次に、編集するか、AI プラットフォームで動かすかを選んでください。/);
+assert.match(desktopApp, /次に、②キャラクター編集か③実行（プロンプト）へ進んでください。/);
 assert.match(desktopApp, /この Character は採択済み Schema に合わないため、02 でも 03 でも開けません。一覧から削除できます。/);
-assert.match(desktopIndex, /選ぶ・作る・AI で動かす・サポートサービス、の 4 つの入口から、目的に合わせて選べます。/);
+assert.ok(desktopIndex.includes("はじめての方へ：5 つの手順で進めます") && (desktopIndex.match(/data-guide-go="/g) || []).length === 5, "準備と進め方 carries the five-step guide (Owner 2026-10-14, Q18)");
 {
   // The services page: the Owner-confirmed v2 texts (AMU DECISION 2026-09-27-14), no prices,
   // no 「認定」, no guarantee sentence on the screen, and every application without a URL
@@ -357,15 +371,18 @@ assert.match(desktopIndex, /選ぶ・作る・AI で動かす・サポートサ�
   assert.deepEqual(SERVICE_LINKS.links.slice(0, 3).map(link => link.id), ["service_intro", "characters_intro", "store_packs"]);
   assert.equal(SERVICE_LINKS.links[1].url, "https://www.wi-t.com/saku-characters");
   assert.equal(SERVICE_LINKS.links[2].url, "https://www.wi-t.com/category/all-products");
-  const pendingLinks = SERVICE_LINKS.links.filter(link => serviceLinkState(link).state === "PENDING");
-  const readyLinks = SERVICE_LINKS.links.filter(link => serviceLinkState(link).state === "READY");
+  // 2026-10-14 (Owner 画面改修): ⑤ shows AI動作の調整, サブスクリプション, キャラクター紹介 and the signature; 紹介ページ and
+  // 登録済みの方 left the page. Buttons are counted over the sections on the page; 「受付の開始は…」 still looks at every link.
+  const shownIds = new Set(w.sections.flatMap(section => section.items.map(item => item.link)));
+  const pendingLinks = SERVICE_LINKS.links.filter(link => shownIds.has(link.id) && serviceLinkState(link).state === "PENDING");
+  const readyLinks = SERVICE_LINKS.links.filter(link => shownIds.has(link.id) && serviceLinkState(link).state === "READY");
   assert.match(pending, /data-services-state="ALL_PENDING"/);
   assert.ok(pending.includes(w.allPending) && w.allPending === "受付の開始は kokoroamu.jp でお知らせします。");
   // Owner 2026-09-28: the services read as 準備中 in words too (ライター&SNS 3c02160, EN 依頼 AL c1a87fe) —
   // the intro says so, what a plan includes is 「含まれます」 / "included", and nothing reads as usable now.
   assert.ok(w.intro.endsWith("いまは準備中です。") && SERVICES_WORDING.en.intro.endsWith("and they are currently in preparation."), "the 04 intro says the services are in preparation");
   for (const [lang, text] of [["ja", JSON.stringify(SERVICES_WORDING.ja)], ["en", JSON.stringify(SERVICES_WORDING.en)]]) assert.doesNotMatch(text, /ご利用いただけます|利用できます|is also available|you can use/i, `04 (${lang}) reads as usable now`);
-  assert.match(desktopIndex, /サポートサービスは準備中です。紹介ページでサービスの内容をご覧いただけます。/);
+  assert.ok(pending.includes('<a class="button-link primary" id="to-tuning" href="../index.html#tuning">AI動作の調整を開く</a>') && pending.indexOf('data-service-block="tuning"') < pending.indexOf('data-service-block="subscriptions"'), "⑤ opens with AI動作の調整 (診断例), leading to the tuning screen (Owner 2026-10-14)");
   assert.doesNotMatch(desktopIndex, /登録・ログインと、\.amupkg への署名の申し込みができます/);
   { const manual = await read("manual/saku-field-guide.html"); const p06 = manual.slice(manual.indexOf('id="P06"'), manual.indexOf('id="P07"'));
     assert.ok(p06.includes("いまは準備中です（登録・申し込みはできません）") && p06.includes("currently in preparation (registration and applications are not yet open)"), "manual P06 says the services are in preparation");
@@ -373,26 +390,25 @@ assert.match(desktopIndex, /選ぶ・作る・AI で動かす・サポートサ�
   assert.equal((pending.match(/data-service-state="PENDING" disabled/g) || []).length, pendingLinks.length, "every link without a URL shows as a button that cannot be pressed");
   for (const link of pendingLinks) assert.ok(pending.includes(`data-service-link="${link.id}" data-service-state="PENDING" disabled>${link.label_ja}<span class="service-pending">準備中</span></button>`), `${link.id} reads 準備中`);
   assert.equal((pending.match(/<button(?![^>]*disabled)/g) || []).length, readyLinks.length, "only links with a URL can be pressed");
-  assert.deepEqual(readyLinks.map(link => link.id), ["service_intro", "characters_intro", "store_packs"]);
+  assert.deepEqual(readyLinks.map(link => link.id), ["characters_intro", "store_packs"]);
   // The characters section (ライター&SNS 2e20567, the same text as AMU Studio): right after the introduction page,
   // two buttons and no line under them, the packs are paid and the price is on the product pages only.
-  { const section = w.sections[1];
+  { const section = w.sections.find(item => item.id === "characters");
     assert.equal(section.id, "characters"); assert.equal(section.title, "キャラクター紹介");
     assert.equal(section.lead, "SAKU Character Pack に収録しているキャラクターを、得意なことと、人に引き継ぐことと一緒に紹介しています。パックは有料です。価格は商品ページに記載しています。");
     assert.deepEqual(section.items.map(item => [item.link, item.lines.length]), [["characters_intro", 0], ["store_packs", 0]]);
-    const en = SERVICES_WORDING.en.sections[1];
+    const en = SERVICES_WORDING.en.sections.find(item => item.id === "characters");
     assert.ok(en.id === "characters" && en.title === "Character introductions" && en.lead.endsWith("The packs are paid. Prices are shown on the product pages."), "EN characters section (英語翻訳チーム 2026-09-30)");
     assert.equal(SERVICES_WORDING.en.linkLabels.characters_intro, "See the Character introductions (in Japanese)");
     assert.equal(SERVICES_WORDING.en.linkLabels.store_packs, "See the packs in the store");
     assert.ok(pending.includes('data-service-link="characters_intro" data-service-url="https://www.wi-t.com/saku-characters">キャラクター紹介を見る<') && pending.includes('data-service-link="store_packs" data-service-url="https://www.wi-t.com/category/all-products">ストアでパックを見る<')); }
   assert.ok(pending.includes(w.hosts), "a button can be pressed, so the page says where the links open (ライター&SNS 2026-09-27)");
   // Falsification: with no URL at all, no button can be pressed and there is no hosts line.
-  { const none = servicesMarkup("ja-JP", { ...SERVICE_LINKS, links: SERVICE_LINKS.links.map(link => ({ ...link, url: null })) }); assert.ok(!/<button(?![^>]*disabled)/.test(none) && !none.includes(w.hosts) && (none.match(/class="service-pending">準備中</g) || []).length === SERVICE_LINKS.links.length); }
-  assert.match(pending, /data-service-link="service_intro" data-service-url="https:\/\/support\.kokoroamu\.jp\/"/);
-  assert.ok(pending.includes("サービスの内容は、kokoroamu.jp の紹介ページでご覧いただけます。") && pending.includes(">紹介ページを見る<"), "the introduction line and button are the confirmed wording");
+  { const none = servicesMarkup("ja-JP", { ...SERVICE_LINKS, links: SERVICE_LINKS.links.map(link => ({ ...link, url: null })) }); assert.ok(!/<button(?![^>]*disabled)/.test(none) && !none.includes(w.hosts) && (none.match(/class="service-pending">準備中</g) || []).length === shownIds.size); }
+  assert.ok(!pending.includes('data-service-link="service_intro"') && !pending.includes(">紹介ページを見る<") && !pending.includes('data-service-link="member_login"') && !pending.includes("登録済みの方"), "紹介ページ and 登録済みの方 left ⑤ (Owner 2026-10-14)");
   for (const text of [w.intro, w.commonNote, ...w.sections.flatMap(section => section.items.flatMap(item => item.lines))]) assert.ok(pending.includes(text), `the page shows: ${text.slice(0, 20)}`);
   assert.ok(w.sections.find(section => section.id === "subscriptions").items[0].lines[0].startsWith("「診療」はソフトウェアの調査と修復のたとえ"), "the clinic text opens with the 診療 sentence");
-  assert.equal(w.sections[0].id, "intro", "the introduction page comes first (Owner 2026-09-27)");
+  assert.deepEqual(w.sections.map(section => section.id), ["subscriptions", "characters", "signature"], "サブスクリプション・キャラクター紹介・WI-T.COM 署名, in that order (Owner 2026-10-14)");
   assert.ok(pending.includes("フォルダーの場所には、Windows のユーザー名が含まれることがあります。"));
   assert.doesNotMatch(pending, /認定|保証|[0-9０-９][0-9０-９,，]*\s*円|¥|￥|\$[0-9]/, "no 認定, no guarantee sentence, no price");
   const ready = servicesMarkup("ja-JP", { ...SERVICE_LINKS, links: SERVICE_LINKS.links.map(link => link.id === "saku_clinic" ? { ...link, url: "https://kokoroamu.jp/clinic" } : link) });
@@ -416,7 +432,7 @@ assert.match(desktopIndex, /選ぶ・作る・AI で動かす・サポートサ�
   }
   assert.ok(enPages[1].includes("Register for SAKU Repair Desk") && enPages[1].includes("Register for AMU Evaluation Center"));
   assert.ok(enPages[0].includes(e.allPending) && (enPages[0].match(/<button(?![^>]*disabled)/g) || []).length === readyLinks.length && (enPages[0].match(/<span class="service-pending">In preparation<\/span>/g) || []).length === pendingLinks.length, "EN: every link without a URL reads In preparation; only links with a URL can be pressed");
-  assert.ok(enPages[0].includes(">View the overview page<") && enPages[0].includes("(in Japanese).") && enPages[0].includes(e.hosts), "EN: the overview page button, its note that the page is Japanese, and where the links open (AG1–AG3)");
+  assert.ok(!enPages[0].includes(">View the overview page<") && enPages[0].includes(e.hosts) && enPages[0].includes(e.tuningOpen), "EN: no overview page button any more; where the links open, and the way to Adjust AI behavior");
   // Falsification: a Japanese label leaking into the English page is caught.
   assert.match(servicesMarkup("en-US", SERVICE_LINKS).replace(e.intro, w.intro), /[ぁ-んァ-ヶ一-龠]/);
 }
@@ -463,8 +479,8 @@ assert.match(desktopApp, /MANIFEST_SCHEMA_ID_MISSING/);
 assert.doesNotMatch(desktopApp, /SAKU Converter|Conversion Receipt|Unified V1 の (Trainer|Builder)/);
 assert.ok(desktopIndex.includes("キャラクターを作る・編集する"), "02's label, which the recreate guidance names");
 assert.equal((desktopApp.match(/で新しく作り直してください。/g) || []).length, 2, "the v1 note and the undeclared-schema refusal both say to recreate it in 02");
-assert.match(desktopApp, /const V1_RECREATE_NOTE = "この Character は旧形式（SAKU-CHARACTER）で作られているため、この SAKU Builder では開けません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。";/);
-assert.match(desktopApp, /このファイルには Schema の宣言がないため、取り込めません。使う場合は、「02 キャラクターを作る・編集する」で新しく作り直してください。/);
+assert.match(desktopApp, /const V1_RECREATE_NOTE = "この Character は旧形式（SAKU-CHARACTER）で作られているため、この SAKU Builder では開けません。使う場合は、「②キャラクター編集」で新しく作り直してください。";/);
+assert.match(desktopApp, /このファイルには Schema の宣言がないため、取り込めません。使う場合は、「②キャラクター編集」で新しく作り直してください。/);
 assert.equal((desktopApp.match(/V1_RECREATE_NOTE/g) || []).length, 3, "the v1 note is used on the detail card and in the status line");
 const hostSource = await read("src-tauri/src/main.rs");
 assert.match(hostSource, /SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE/);

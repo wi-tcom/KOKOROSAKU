@@ -136,7 +136,7 @@ if (existsSync(returnZip)) {
 const PACKS = process.env.SAKU_PACK_FIXTURES || path.resolve(ROOT, "../KOKOROAMU-STUDIO/tests/adapters-character-package/fixtures");
 const supportZip = path.join(PACKS, "saku-pack-support-1.0.0-beta.zip");
 {
-  const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+  const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
   if (!hostResult) { /* skipped above */ }
   else if (!existsSync(chrome)) skipped.push("SR-UI Chrome not found");
   else if (!existsSync(path.join(ROOT, ".desktop-dist/index.html"))) skipped.push("SR-UI .desktop-dist not prepared (run desktop:prepare)");

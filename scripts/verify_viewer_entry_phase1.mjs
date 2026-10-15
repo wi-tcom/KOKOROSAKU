@@ -17,17 +17,21 @@ const i18n = await read("desktop/i18n.mjs");
 const profile = JSON.parse(await read("desktop/resources/profiles/public-oss.json"));
 const sample = JSON.parse(await read("desktop/resources/source/oss-sample-characters.json"));
 
-for (const id of ["view-characters", "create-edit-character", "run-on-ai-platform", "open-services"]) ok(html.includes(`id="${id}"`), `missing home entry ${id}`);
+// 2026-10-14 (Owner 画面改修): the four Home entry cards gave way to the shared menu bar (tools/unified-v1/app-frame.mjs);
+// the screens are panels of this page or the ② and ⑤ pages the menu links to.
+const frameSource = await read("tools/unified-v1/app-frame.mjs");
+ok(html.includes('<div id="saku-frame" class="saku-frame"></div>') && frameSource.includes('export const SCREENS = Object.freeze(["prep", "select", "edit", "run", "out", "svc"]);'), "the menu bar names the six screens");
+for (const id of ["home-content", "viewer-panel", "platform-panel", "export-panel"]) ok(html.includes(`id="${id}"`), `missing screen ${id}`);
 // Owner 2026-09-27: 04 Trainer left the screens; 04 is the services page (AMU DECISION 2026-09-27-11).
 ok(!/saku-trainer\.html/.test(html), "no Home route to the Trainer");
-ok(/saku-builder\.html\?desktop=app/.test(html), "Builder route missing");
+ok(/saku-builder\.html\?desktop=app/.test(frameSource), "Builder route missing");
 // Review Results is no longer its own Home entry: 「AIで試す」 and 「結果を確認する」
 // were two doors into one Trainer. There is now one door, and Review Results
 // lives inside the Trainer it opens. The deep route still has to work.
-ok(/id="open-services" href="\.\/tools\/saku-services\.html"/.test(html), "04 on Home is the services page");
+ok(frameSource.includes('if (screen === "svc") return `${tools}saku-services.html`;'), "⑤ in the menu is the services page");
 for (const id of ["viewer-panel", "viewer-empty", "viewer-import-package", "viewer-results", "viewer-detail", "viewer-package-fields"]) ok(html.includes(`id="${id}"`), `missing Viewer control ${id}`);
 ok(/表示できるCharacterがまだありません/.test(html), "empty state missing");
-ok(/@media\(max-width:900px\).*\.entry-grid.*grid-template-columns:1fr/s.test(css), "one-column responsive rule missing");
+ok(/@media\(max-width:900px\)\{\.guide-steps,\.export-kinds\{grid-template-columns:1fr\}\}/.test(css), "one-column responsive rule missing");
 ok(/focus-visible/.test(css), "keyboard focus style missing");
 
 const frozen = structuredClone(sample);

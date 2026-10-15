@@ -318,7 +318,7 @@ if (existsSync(EDO)) {
 // carrying a wrong locator. The file route receives the swapped fixture and
 // then the positive fixture through the same entry the file picker uses.
 {
-  const chrome = "C:/Program Files/Google/Chrome/Application/chrome.exe";
+  const chrome = process.env.SAKU_CHROME_PATH || "C:/Program Files/Google/Chrome/Application/chrome.exe";
   const supportZip = path.join(PACKS, "saku-pack-support-1.0.0-beta.zip");
   const distReady = existsSync(path.join(ROOT, ".desktop-dist/index.html"));
   if (!existsSync(chrome)) skipped.push("G: Chrome not found — browser end-to-end skipped");

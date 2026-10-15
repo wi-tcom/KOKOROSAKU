@@ -17,6 +17,16 @@ export const TRUSTED_PUBLISHERS = Object.freeze({
   "saku-character-publisher-ed25519.v1": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAi+/pgmkKqlXgPQuVdDavHYeoOZ/zwRxtnZTFoemwWiU=\n-----END PUBLIC KEY-----\n",
   "saku-pack-publisher-ed25519.v1": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4xdWwiNGGd9CbXPUDhTjpQeJqy/eLmC9Dmdu7DBmijI=\n-----END PUBLIC KEY-----\n",
 });
+// What each pinned key may sign: the purposes of the same key in kokoroamu-trust gen 10 (vendored at
+// tools/vendor/kokoroamu-trust-f99fdbe; the pack gate checks the equality). A key verifies only a part its
+// purposes allow — the pack catalog under a character-pack key, a Character or an AMU return manifest under a
+// character-package key (統括 2026-10-08, from the a20 vector of the 1-1 conformance set).
+export const PUBLISHER_PURPOSES = Object.freeze({
+  "saku-character-publisher-ed25519.v1": Object.freeze(["character-package"]),
+  "saku-pack-publisher-ed25519.v1": Object.freeze(["character-pack"]),
+});
+export const PURPOSE_CHARACTER = "character-package";
+export const PURPOSE_PACK = "character-pack";
 export const TRUSTED_PUBLISHERS_SOURCE = Object.freeze({
   repository: "wi-tcom/KOKOROAMU-characterpack",
   main_revision: "b56eace5e5925aba081eb44963c4ffe9e0a347c8",
@@ -70,9 +80,11 @@ export async function publisherFingerprint(publisher_key_id, publishers = TRUSTE
   return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export async function verifyEd25519({ publisher_key_id, digest, signature, publishers = TRUSTED_PUBLISHERS }) {
+export async function verifyEd25519({ publisher_key_id, digest, signature, purpose, publishers = TRUSTED_PUBLISHERS, purposes = PUBLISHER_PURPOSES }) {
   const pem = publishers[publisher_key_id];
   if (!pem) return { state: "UNKNOWN_KEY", detail: `publisher key ${publisher_key_id} is not pinned` };
+  // Checked before the signature: a check that names no purpose, or a key whose purposes do not include it, is refused.
+  if (!purpose || !(purposes[publisher_key_id] || []).includes(purpose)) return { state: "PURPOSE_NOT_ALLOWED", detail: `publisher key ${publisher_key_id} may not sign a ${purpose || "(no purpose named)"}` };
   if (!DIGEST.test(String(digest || ""))) return { state: "FAIL", detail: "digest is not a sha-256 digest string" };
   if (!signature) return { state: "FAIL", detail: "signature is missing" };
   const subtle = globalThis.crypto && globalThis.crypto.subtle;
@@ -96,15 +108,15 @@ export async function verifyEd25519({ publisher_key_id, digest, signature, publi
  * manifest and every Character manifest verify; any FAIL is FAIL; when the
  * runtime cannot verify at all, DIGEST_ONLY — never PASS.
  */
-export async function assessPackSignatures(pack, { publishers = TRUSTED_PUBLISHERS } = {}) {
+export async function assessPackSignatures(pack, { publishers = TRUSTED_PUBLISHERS, purposes = PUBLISHER_PURPOSES } = {}) {
   if (!pack || typeof pack !== "object") return { signature_state: "FAIL", checked: 0, failed: [{ what: "pack", detail: "no pack summary" }], detail: "no pack summary" };
-  const checks = [{ what: "character-pack.json", publisher_key_id: pack.pack_publisher_key_id, digest: pack.pack_manifest_digest, signature: pack.pack_signature }];
-  for (const entry of pack.entries || []) checks.push({ what: entry.file || entry.slug, publisher_key_id: entry.publisher_key_id, digest: entry.package_digest, signature: entry.signature });
+  const checks = [{ what: "character-pack.json", publisher_key_id: pack.pack_publisher_key_id, digest: pack.pack_manifest_digest, signature: pack.pack_signature, purpose: PURPOSE_PACK }];
+  for (const entry of pack.entries || []) checks.push({ what: entry.file || entry.slug, publisher_key_id: entry.publisher_key_id, digest: entry.package_digest, signature: entry.signature, purpose: PURPOSE_CHARACTER });
   const failed = [];
   let unavailable = null;
   let passed = 0;
   for (const check of checks) {
-    const outcome = await verifyEd25519({ ...check, publishers });
+    const outcome = await verifyEd25519({ ...check, publishers, purposes });
     if (outcome.state === "PASS") passed += 1;
     else if (outcome.state === "UNAVAILABLE") unavailable = outcome.detail;
     else failed.push({ what: check.what, detail: outcome.detail, state: outcome.state });
@@ -155,6 +167,10 @@ export function packEntryMeta(pack, signatures, directivesByCharacterId = null) 
       pack_id: pack.pack_id,
       pack_version: pack.pack_version,
       operation_class: entry.operation_class,
+      // summary.license of the entry's portable manifest, for the Agent Skills export (ADR-0026). Empty from older hosts.
+      license: typeof entry.license === "string" ? entry.license : "",
+      // The SHA-256 of the pack's LICENSE.md, kept once per text by the page (character-export.mjs); "" when absent.
+      license_md_sha256: typeof pack.license_md_sha256 === "string" ? pack.license_md_sha256 : "",
       has_directives: Boolean(entry.has_directives),
       ...(directives ? { directives } : {}),
       character_digest: entry.character_digest,
@@ -188,9 +204,9 @@ export function signatureStateText(state, locale = "ja", fingerprint = null) {
 export const SAKU_RETURN_SCHEMA = "AMU-SAKU-RETURN/1.0.0";
 
 /** Signature assessment for a host `saku_return` summary: one manifest, one key. */
-export async function assessReturnSignature(ret, { publishers = TRUSTED_PUBLISHERS } = {}) {
+export async function assessReturnSignature(ret, { publishers = TRUSTED_PUBLISHERS, purposes = PUBLISHER_PURPOSES } = {}) {
   if (!ret || typeof ret !== "object") return { signature_state: "FAIL", detail: "no return summary", fingerprints: {} };
-  const outcome = await verifyEd25519({ publisher_key_id: ret.publisher_key_id, digest: ret.manifest_digest, signature: ret.signature, publishers });
+  const outcome = await verifyEd25519({ publisher_key_id: ret.publisher_key_id, digest: ret.manifest_digest, signature: ret.signature, purpose: PURPOSE_CHARACTER, publishers, purposes });
   if (outcome.state === "PASS") return { signature_state: "PASS", detail: `portable-manifest signature verified under ${ret.publisher_key_id}`, fingerprints: { [ret.publisher_key_id]: await publisherFingerprint(ret.publisher_key_id, publishers) } };
   if (outcome.state === "UNAVAILABLE") return { signature_state: "DIGEST_ONLY", detail: outcome.detail, fingerprints: {} };
   return { signature_state: "FAIL", detail: outcome.detail, state: outcome.state, fingerprints: {} };
