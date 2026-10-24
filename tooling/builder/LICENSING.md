@@ -10,6 +10,8 @@ components must not be treated as one license scope.
 | Public documentation | CC BY 4.0 | [LICENSE-DOCS.md](LICENSE-DOCS.md) |
 | SAKU logo/icon artwork, 著作権が及ぶ範囲において | CC BY 4.0 | [BRAND-ASSET-NOTICE.md](BRAND-ASSET-NOTICE.md) |
 | Third-party components | Per-component licenses | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) |
+| Vendored verification code (the kokoroamu-trust lib, `tools/vendor/kokoroamu-trust-42013dc/lib/**`) | MPL-2.0 | `tools/vendor/kokoroamu-trust-42013dc/LICENSE` |
+| Public trust data (`tools/vendor/kokoroamu-trust-42013dc/trust/v1/**`: public keys, signatures and revocation lists) | CC0-1.0 | `tools/vendor/kokoroamu-trust-42013dc/LICENSE-CC0-1.0.md` |
 | SAKU/KOKOROSAKU/KOKOROAMU/WI-T names and marks | Not licensed by the code/document licenses | [TRADEMARK.md](TRADEMARK.md) |
 
 ## SAKU Builder Public Preview scope
@@ -31,7 +33,7 @@ Its resource profile has `internal_content_count = 0`.
 
 | Resource | Public Preview status | Reason |
 |---|---|---|
-| Built-in Sample Pack | INCLUDED | The installer bundles sample pack 1.1.0 (three sample-mode Characters) under `LicenseRef-WIT-Sample-1.0`, which is not an OSS license; the terms are in the `LICENSE.md` inside the pack ZIP (decision `D-20260924-sample-pack-1-1-0`). It is not included in the ZIP version you try without installing. |
+| Built-in Sample Pack | INCLUDED | The installer bundles sample pack 1.2.0 (three sample-mode Characters) under `LicenseRef-WIT-Sample-1.0`, which is not an OSS license; the terms are in the `LICENSE.md` inside the pack ZIP (decisions `D-20260924-sample-pack-1-1-0` and `D-20261010-sample-pack-1-2-0`). It is not included in the ZIP version you try without installing. |
 | 64 Preview Index | NOT_INCLUDED | Character Catalog licensing/publication scope is separate. |
 | commercial-preview | NOT_INCLUDED | License/publication authority is not specified. |
 | Sample3 | NOT_INCLUDED | `Sample3` is the three open-source sample Characters (CC0-1.0, D-B3), which are no longer distributed as samples (decision `D-20260924-oss-samples-retired`) and are not in the installer. Their data remains in the source and the public tree as test material and stays under CC0-1.0. |
@@ -50,3 +52,7 @@ No absent or internal-only document is incorporated by reference.
   license evidence says otherwise.
 - Public Preview is a distribution state, not Canonical Adoption, Authority,
   Approval, Release execution, or Production status.
+- `tools/vendor/kokoroamu-trust-42013dc/` is a byte-for-byte copy of kokoroamu-trust at commit 42013dc. The installer includes the whole folder, including its three license documents (`LICENSE`, `LICENSE-CC0-1.0.md` and `LICENSING.md`). The origin of the copy and the SHA-256 of each file are recorded in decision `D-20261022-b13-s4-trust-gen11`.
+- The trust data distributed under CC0-1.0 consists only of public keys, signatures and revocation lists. It contains no private keys or credentials.
+- Being free to copy the trust data is separate from trusting it. Trust rests on the root public key built into the app and on checking that root's signature.
+- `tools/vendor/kokoroamu-trust-42013dc/LICENSING.md` is written with the paths of the original kokoroamu-trust repository. It has not been rewritten, so that the bytes of the copy stay unchanged. The original paths correspond to the paths in the installer as follows: `public/lib/**` → `lib/` (MPL-2.0, `LICENSE`), `public/trust/**` → `trust/v1/` (CC0-1.0), `LICENSES/CC0-1.0.md` → `LICENSE-CC0-1.0.md` (all under `tools/vendor/kokoroamu-trust-42013dc/`).

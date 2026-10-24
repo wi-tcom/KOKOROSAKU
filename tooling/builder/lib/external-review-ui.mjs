@@ -13,6 +13,9 @@ import {
 } from "./external-review-intake.mjs";
 import { TUNING_ITEMS } from "./tuning-projection.mjs";
 import * as ActiveSaku from "./active-character.mjs";
+import { keepContextMenuToFieldsInApp } from "./context-menu-guard.mjs";
+// SAKU β.13 S-10 = L3: this page has no shared frame; the right-click menu is kept to the fields here too.
+keepContextMenuToFieldsInApp();
 
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));

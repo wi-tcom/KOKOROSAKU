@@ -1,0 +1,10 @@
+{
+  "bundle": {
+    "windows": {
+      "signCommand": {
+        "cmd": "<WINDOWS_SDK_10.0.26100.0>/x64/signtool.exe",
+        "args": ["sign", "/fd", "SHA256", "/tr", "http://timestamp.acs.microsoft.com", "/td", "SHA256", "/dlib", "<LOCALAPPDATA>/Microsoft/MicrosoftArtifactSigningClientTools/Azure.CodeSigning.Dlib.dll", "/dmdf", "<SIGNING_METADATA_JSON>", "%1"]
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { consumeHandoff } from "../unified-v1/handoff-binding.mjs";
+import { takeTuningHandoff, fieldsWithoutInput, TUNING_HANDOFF_KEY } from "../unified-v1/tuning-handoff.mjs";
 import { confirmDialog, choiceDialog, alertDialog } from "../unified-v1/confirm-dialog.mjs";
 import { confirmWording, fill } from "../unified-v1/confirm-wording.mjs";
 
@@ -568,13 +569,33 @@ function receiveCharacterHandoff(){
       character_revision: route.get("character_revision") || "",
     });
   }catch{
+    try{localStorage.removeItem(TUNING_HANDOFF_KEY);}catch{}
     return {status:"REJECTED",reason:"HANDOFF_STORAGE_READ_FAILED"};
   }
-  if(result.status!=="ACCEPTED") return result;
+  // L12 (統括 照らし 注 1): a tuning left behind by a hand-off that was refused or absent is dropped here, so that it
+  // never fills a later 「編集」 of the same row.
+  if(result.status!=="ACCEPTED"){ try{localStorage.removeItem(TUNING_HANDOFF_KEY);}catch{} return result; }
   const character=result.character;
   if(window.SAKU_UNIFIED?.isUnifiedV1?.(character)){
     if(window.adoptWorkingCharacter?.(character)!==true)
       return {status:"REJECTED",reason:"HANDOFF_CHARACTER_ADOPTION_FAILED"};
+  }
+  // SAKU β.13 L12 (Owner 結果 364, 案 Y): a tuning handed off beside this Character fills the form with the tuned
+  // content, while the opened Character stays the row's own, so the tuning reads as an unsaved change (I-1). A field with
+  // no input travels in the form's `unified` part, so the save keeps it and leaving without saving drops it.
+  const tuning=takeTuningHandoff(localStorage,character);
+  // 結果 420 (統括 2026-10-24): a field ⑤ cannot take a text for opens ② on the row's own Character, at that field; nothing
+  // is put into the form, so the notice is the usual one and nothing reads as unsaved.
+  if(tuning&&tuning.openOnly) return {...result,focusField:tuning.fields[0]||""};
+  if(tuning&&window.SAKU_UNIFIED?.isUnifiedV1?.(character)&&window.SAKU_UNIFIED.isUnifiedV1(tuning.tuned)){
+    if(window.adoptWorkingCharacter?.(tuning.tuned)!==true)
+      return {status:"REJECTED",reason:"TUNING_ADOPTION_FAILED"};
+    const form=window.__saku_data?.();
+    if(form) form._unified_source=JSON.parse(JSON.stringify(character));
+    const formPaths=(window.SAKU_UNIFIED.AUTHORITATIVE_FIELD_MAP||[]).map(entry=>entry.canonical);
+    // L12 NG-1 (統括 案 (b)): this ② was opened from a tuning; leaving it without saving drops the working draft too.
+    window.SAKU_OPENED_FROM_TUNING=true;
+    return {...result,tuning:{itemId:tuning.itemId,withoutInput:fieldsWithoutInput(tuning.fields,formPaths)},focusField:tuning.fields[0]||""};
   }
   return result;
 }
@@ -593,7 +614,17 @@ function announceHandoff(handoff){
   notice.dataset.handoffSchemaId = schemaId || "UNDECLARED";
   const en = locale === "en-US";
   const who = name || (en ? "a Character with no name yet" : "名前未入力のキャラクター");
-  if(handoff.status==="REJECTED"){
+  if(handoff.status!=="REJECTED"&&handoff.tuning){
+    // L12 T-4 (ライター&SNS 2026-10-22 14:19, 英語翻訳チーム 14:58).
+    notice.dataset.handoffState = "POPULATED_FROM_TUNING";
+    const item = handoff.tuning.itemId;
+    // T-4's added sentence (ライター&SNS 15:16, 英語翻訳チーム): only when a tuned field has no input on this screen.
+    const without = handoff.tuning.withoutInput || [];
+    const added = without.length ? (en ? " " + "Fields you adjusted that are not shown in the input fields on this screen are also included when you save, but not if you leave without saving: {fields}.".replace("{fields}", without.join(", ")) : "調整した欄のうち {fields} は、この画面の入力欄には出ませんが、保存すると一緒に入ります（保存せずに離れると入りません）。".replace("{fields}", without.join("・"))) : "";
+    notice.textContent = en
+      ? `The content of Adjust AI behavior (${item}) has been put into the input fields below.${added} Saving creates a new revision; the original Character is not overwritten. If you leave without saving, the adjustment is not kept.`
+      : `AI動作の調整（${item}）の内容を、下の入力欄に入れました。${added}保存すると新しい revision になり、元のキャラクターは上書きしません。保存せずに離れると、調整の内容は残りません。`;
+  }else if(handoff.status==="REJECTED"){
     notice.dataset.handoffState = "HANDOFF_REJECTED";
     notice.textContent = en
       ? `Character handoff rejected (${handoff.reason || "UNKNOWN"}). Nothing was applied. Return to Home and open the Character again.`
@@ -758,6 +789,30 @@ function adoptAuthoringMessage(element) {
   if (host && element && element.parentElement !== host) host.append(element);
 }
 
+// 結果 420 ③ (統括 2026-10-24): ② opened from ⑤ moves to the first tuned field's input and selects it, opening its chapter
+// if it is closed. A field with no input on this screen moves to the notice above the form (T-4) instead.
+function focusHandedField(handoff){
+  const canonical=handoff&&handoff.status==="ACCEPTED"?String(handoff.focusField||""):"";
+  if(!canonical) return;
+  const entry=(window.SAKU_UNIFIED?.AUTHORITATIVE_FIELD_MAP||[]).find(item=>item.canonical===canonical);
+  const input=entry?[...document.querySelectorAll("[data-path]")].find(element=>element.dataset.path===entry.form):null;
+  if(input){
+    const chapter=input.closest("section.chapter");
+    if(chapter&&chapter.classList.contains("is-closed")){chapter.classList.remove("is-closed");chapter.querySelector("h2")?.setAttribute("aria-expanded","true");}
+    input.scrollIntoView({block:"center"});
+    // select() also moves the focus; an input without it (a select) is focused.
+    if(typeof input.select==="function") input.select(); else input.focus();
+    input.dataset.handedFocus=canonical;
+    return;
+  }
+  const notice=document.getElementById("desktopHandoffNotice");
+  if(!notice) return;
+  notice.tabIndex=-1;
+  notice.scrollIntoView({block:"center"});
+  notice.focus();
+  notice.dataset.handedFocus=canonical;
+}
+
 function authoringHasContent() {
   for (const field of document.querySelectorAll("[data-path]")) {
     if (field.type === "checkbox") continue;
@@ -771,6 +826,12 @@ const incomingCharacterHandoff=receiveCharacterHandoff();
 buildAuthoringTop();
 if(typeof window!=="undefined") window.SAKU_ADOPT_MESSAGE=adoptAuthoringMessage;
 announceHandoff(incomingCharacterHandoff);
+// After the page has settled: the notice is moved into the messages area once the form is built, and a moved element
+// loses the focus.
+{
+  const settle=()=>setTimeout(()=>focusHandedField(incomingCharacterHandoff),0);
+  if(document.readyState==="complete") settle(); else window.addEventListener("load",settle,{once:true});
+}
 /* Desktop 専用の読み込み操作は「①キャラクター選択」にある。
    この画面には出さない。 */
 for(const id of ["desktopWorkspaceSelect","desktopPackageImport"]){

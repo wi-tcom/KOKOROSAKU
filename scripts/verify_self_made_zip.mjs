@@ -165,7 +165,8 @@ check(page.includes('import * as SelfMadeZip from "./unified-v1/self-made-charac
   const OLD_HANDOVER = /署名付きパック経由でのみ|署名付きのパックの形でだけ受け取|only through a signed pack|receive it only through/;
   const surfaces = { "tools/saku-builder.html": page, "tools/v1/builder-golden-ui.mjs": read("tools/v1/builder-golden-ui.mjs"), "manual/saku-field-guide.html": manual, "scripts/generate_frozen_ia_manual.mjs": read("scripts/generate_frozen_ia_manual.mjs") };
   for (const [rel, text] of Object.entries(surfaces)) check(!OLD_HANDOVER.test(text), `ZIP-TEXT ${rel} no longer says the Character File reaches AMU/MACHI only through a signed pack`);
-  check((page.match(/MACHI へは、署名付きのパックにして渡します/g) || []).length === 1 && !read("scripts/generate_frozen_ia_manual.mjs").includes("MACHI へは"), "ZIP-TEXT the hand-over sentence is written once on the page, and the manual takes it from the constant");
+  // Owner 結果 424 (2026-10-24): MACHI is not released; the MACHI sentence left the text, and must not come back.
+  check((page.match(/AMU Studio へは「④出力」の「SAKU キャラクターを書き出す（\.zip）」で作る ZIP で取り込めます/g) || []).length === 1 && !page.includes("MACHI へは") && !read("scripts/generate_frozen_ia_manual.mjs").includes("AMU Studio へは「④出力」"), "ZIP-TEXT the hand-over sentence is written once on the page, the manual takes it from the constant, and no MACHI sentence is there");
   check(OLD_HANDOVER.test("AMU/MACHI は署名付きパック経由でのみ受け取る。"), "ZIP-TEXT falsification: the old sentence is detectable");
 }
 

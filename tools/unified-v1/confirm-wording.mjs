@@ -22,6 +22,13 @@ export const CONFIRM_WORDING = Object.freeze({
     // body changed 2026-10-14 (keying 3-21: asked only for a row that would really be replaced); English: 英語翻訳チーム R56 (f4181f9)
     en: { title: "Replace Character", confirm: "Replace", cancel: "Keep both", body: "The same Character (same ID, same origin) is already in the list: 〔name〕" },
   },
+  // L11-2 (SAKU β.13): 01 「自分で作ったキャラクターとして確かめる」 (the body is N-4 by the row's kind, declared-origin.mjs).
+  // N-4 names 「はい」; the title and the cancel: ライター&SNS 2026-10-23 (「〇〇の確認」 as the other dialogs).
+  // English: 英語翻訳チーム 2026-10-23 (a question, so it does not repeat the button's "Confirm").
+  confirmOwnCharacter: {
+    ja: { title: "自分で作ったキャラクターかの確認", confirm: "はい", cancel: "キャンセル" },
+    en: { title: "Is this your own Character?", confirm: "Yes", cancel: "Cancel" },
+  },
   // C. 01 「一覧をクリア」
   clearList: {
     ja: { title: "一覧消去の確認", confirm: "消去する", cancel: "キャンセル", body: "一覧の{N}件をすべて消去してよいですか？\n\nこの操作は元に戻せません。" },

@@ -1,6 +1,6 @@
 {
   "profile": "saku.field-guide-extension@1",
-  "applies_to_app_version": "0.1.0-beta.12",
+  "applies_to_app_version": "0.1.0-beta.13",
   "purpose": "manual/saku-field-guide.data.json に合成される追加内容（項目下の「現在の内容」、選択肢の効果と出典、候補語の方針、正本外項目の注記）。画面と manual の両方がこの合成結果を読む。",
   "content_review": {
     "current_note_ja": {

@@ -13,6 +13,10 @@
 # checkout must never rewrite their line endings. A CRLF here stops 03 outright.
 desktop/resources/base/*.txt -text
 tests/fixtures/platform-prompt-golden/** -text
+# B6-P40: the Agent Skills export without the D layer, compared with AMU Studio's by bytes.
+tests/fixtures/agent-skills-dless-golden/** -text
+# SAKU β.13 S-9: the adopted shared Contract v0.1 and its corrections, pinned by digest (tests/fixtures/contract-v0.1/INDEX.json).
+tests/fixtures/contract-v0.1/** -text
 # The bundled sample pack is pinned by sha256 (main.rs SAMPLE_PACK_SHA256); a
 # checkout must never touch its bytes.
 desktop/resources/samples/** binary

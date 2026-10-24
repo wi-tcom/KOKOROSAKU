@@ -65,7 +65,7 @@ export const SERVICES_WORDING = Object.freeze({
     // 2026-10-14 (Owner 画面改修): the tuning screen is opened from here, as a diagnosis example. Provisional wording.
     tuningKicker: "診断例",
     tuningTitle: "AI動作の調整",
-    tuningLead: "気になる症状から、関係するキャラクターの設定を確かめます。推奨は、適用するまでキャラクターを変えません。",
+    tuningLead: "気になる症状から、関係するキャラクターの設定を確かめます。推奨は、②キャラクター編集で保存するまで、キャラクターを変えません。",
     tuningOpen: "AI動作の調整を開く",
   }),
   en: Object.freeze({
@@ -95,7 +95,7 @@ export const SERVICES_WORDING = Object.freeze({
     openFailed: "Could not open the browser.",
     tuningKicker: "Example diagnosis",
     tuningTitle: "Adjust AI behavior",
-    tuningLead: "Start from a symptom you notice and check the related Character settings. A recommendation does not change the Character until you apply it.",
+    tuningLead: "Start from a symptom you notice and check the related Character settings. A recommendation does not change the Character until you save it in ② Edit the Character.",
     tuningOpen: "Open Adjust AI behavior",
     // The link table (service-links.mjs, shared with AMU) carries the Japanese labels only.
     linkLabels: Object.freeze({ service_intro: "View the overview page", characters_intro: "See the Character introductions (in Japanese)", store_packs: "See the packs in the store", saku_clinic: "Register for SAKU Repair Desk", amu_training: "Register for AMU Evaluation Center", set_plan: "Register for both (bundle)", member_login: "Log in (already registered)", amupkg_signature: "Apply for a signature on an .amupkg" }),
@@ -169,14 +169,19 @@ export function mountServices(root = document.getElementById("services-root")) {
 let servicesFrame = null;
 async function mountServicesFrame() {
   if (servicesFrame) return servicesFrame.render();
-  const [{ mountFrame }, ActiveSaku, Library, Validator] = await Promise.all([
+  const [{ mountFrame }, ActiveSaku, Library, Validator, LegacyOrigin, { badgeFor }] = await Promise.all([
     import("./app-frame.mjs"), import("./active-saku.mjs"), import("./character-library.mjs"), import("../v1/adopted-schema-validator.mjs"),
+    import("./legacy-origin.mjs"), import("./origin-badges.mjs"),
   ]);
+  // The imported packs (K2) as the host reads them; until it answers, the list's pack rows alone (L10, 統括 照らし NG-5).
+  let imported = null;
   servicesFrame = mountFrame({
     page: "services",
     current: () => "svc",
     read: () => { const active = ActiveSaku.getActive(); return { active, entry: Library.entryForActive(Library.list(), active) }; },
     check: async character => Validator.validateCompleteAdoptedCharacter(character, await Validator.loadAdoptedSchema()).errors,
+    // The same mark as ① and ②: an unrecorded row with a known pack Character ID reads 出どころ不明 (NG-4, NG-5).
+    badgeOf: entry => LegacyOrigin.originBadge(entry, Library.list({ includeDeleted: true }), imported, badgeFor),
     getLocale: localeNow,
     setLocale: next => {
       try { localStorage.setItem("saku.ui.locale", next === "en-US" ? "en-US" : "ja-JP"); } catch { /* blocked */ }
@@ -184,6 +189,9 @@ async function mountServicesFrame() {
       mountServices();
     },
   });
+  if (window.__TAURI__?.core?.invoke) {
+    window.__TAURI__.core.invoke("list_imported_pack_ids").then(answer => { imported = answer; }, () => { imported = { status: "UNREADABLE", ids: [] }; }).then(() => servicesFrame.refresh());
+  }
   return servicesFrame;
 }
 

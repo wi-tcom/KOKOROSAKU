@@ -1,0 +1,1 @@
+CC0 1.0 Universal applies only to the paths listed as CC0-1.0 in LICENSING.md (the public trust data: public keys, signatures and revocation lists). Legal code: https://creativecommons.org/publicdomain/zero/1.0/legalcode

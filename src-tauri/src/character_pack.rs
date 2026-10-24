@@ -83,6 +83,9 @@ pub struct CharacterPackImport {
     /// The pack's LICENSE.md as UTF-8 (empty when absent or not UTF-8). SHA256SUMS already bound its bytes. The
     /// Agent Skills export (ADR-0026 §11) bundles it and reads its version; nothing here acts on it.
     pub license_md: String,
+    /// The SHA-256 of the whole pack file (lower-case hex), set by the host after parsing (ADR-0027 §2,
+    /// package_digest). Empty until then.
+    pub zip_sha256: String,
     pub entries: Vec<PackEntryImport>,
     #[serde(skip_serializing)]
     pub files: BTreeMap<String, Vec<u8>>,
@@ -434,6 +437,7 @@ pub fn parse_character_pack(entries: HashMap<String, Vec<u8>>) -> Result<Charact
         digest_state: "SHA256_BINDINGS_VERIFIED",
         signature_state: "NOT_VERIFIED_BY_HOST",
         license_md,
+        zip_sha256: String::new(),
         entries: imports,
         files,
     })

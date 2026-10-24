@@ -644,7 +644,7 @@ function occupationTemplateMarkup() {
 // a .amupkg; MACHI = several Characters, Guild and Corp — Owner 2026-09-28).
 export const COMPARISON_SNAPSHOT = "2026-10-14";
 function comparisonMarkup() {
-  // ライター&SNS の点検（社内の点検の記録）を入れた。MACHI の合議は
+  // ライター&SNS の点検（FROM_WRITER_2026-10-14_SAKU_comparison_table_check.md）を入れた。MACHI の合議は
   // MACHI の書き手（統括、KOKOROMACHI-guild main 1191160）の答え：設計では各メンバーの番で合議を行う
   // （docs/DESIGN_2026-09-29_machi_from_amu.md §4.2、core/machi/team-run.js）が、チームの実行は画面にまだつながっていない
   // ので、設計と製品を分けて書く。公開の状態は 2026-10-14 の GitHub Release（KOKOROSAKU v0.1.0-beta.11、KOKOROAMU

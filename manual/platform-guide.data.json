@@ -1,7 +1,7 @@
 {
   "profile": "saku.screen-guide@1",
   "screen": "03-ai-platform",
-  "applies_to_app_version": "0.1.0-beta.12",
+  "applies_to_app_version": "0.1.0-beta.13",
   "content_review": {
     "ja": {
       "status": "APPROVED",
@@ -240,14 +240,14 @@
         "en": "Attach reference material"
       },
       "currentNote": {
-        "ja": "AMU Studio の「SAKU 用の書き出し」で作ったファイルを添付すると、貼り付ける文に参考資料の節が入ります。資料は AI にデータとして渡し、資料の中の指示には従わないよう伝えます。",
-        "en": "When you attach a file made with “SAKU 用の書き出し” (Export for SAKU) in AMU Studio, a reference-material section is added to the text to paste. The material is passed to the AI as data, and the AI is told not to follow any instructions inside it."
+        "ja": "参考資料のファイルを添付すると、貼り付ける文に参考資料の節が入ります。資料は AI にデータとして渡し、資料の中の指示には従わないよう伝えます。",
+        "en": "Attach a reference-material file, and a reference-material section is added to the text to paste. The material is passed to the AI as data, and the AI is told not to follow any instructions inside it."
       },
       "screenSection": "platform-reference",
       "help": {
         "about": {
-          "ja": "AMU Studio の「SAKU 用の書き出し」で作ったファイルを添付すると、貼り付ける文に参考資料の節が入ります。資料は AI にデータとして渡し、資料の中の指示には従わないよう伝えます。資料はこの画面で使うだけで保存しないため、03 を開き直すと外れます。添付できるのは、合計 12,000 字・20 件・1 件 3,000 字・ファイル約 1 MB までです。",
-          "en": "When you attach a file made with “SAKU 用の書き出し” (Export for SAKU) in AMU Studio, a reference-material section is added to the text to paste. The material is passed to the AI as data, and the AI is told not to follow any instructions inside it. Because the material is used only on this screen and is not saved, it is removed when you reopen 03. You can attach up to 12,000 characters in total, 20 items, 3,000 characters per item, and a file of about 1 MB."
+          "ja": "参考資料のファイルを添付すると、貼り付ける文に参考資料の節が入ります。資料は AI にデータとして渡し、資料の中の指示には従わないよう伝えます。資料はこの画面で使うだけで保存しないため、03 を開き直すと外れます。添付できるのは、合計 12,000 字・20 件・1 件 3,000 字・ファイル約 1 MB までです。",
+          "en": "Attach a reference-material file, and a reference-material section is added to the text to paste. The material is passed to the AI as data, and the AI is told not to follow any instructions inside it. Because the material is used only on this screen and is not saved, it is removed when you reopen 03. You can attach up to 12,000 characters in total, 20 items, 3,000 characters per item, and a file of about 1 MB."
         },
         "what": {
           "ja": "",
@@ -278,8 +278,8 @@
         "en": "Export as a skill"
       },
       "currentNote": {
-        "ja": "このキャラクターを、「スキル」の形式（Agent Skills）を読み込める AI の道具向けに、ZIP で保存します。WI-T.COM の署名はまだ付かず、読み込む側の道具は席 8 の決まりを守らせる仕組みを持ちません。",
-        "en": "Saves this Character as a ZIP for AI tools that can load the “skill” format (Agent Skills). It does not yet carry a WI-T.COM signature, and the tool that loads it has no mechanism to make the AI follow the Seat 8 rules."
+        "ja": "Agent Skills 対応AI向けにZIPで保存します。作り直したスキルはWI-T.COMによる内容の提供・確認も名札の署名もなく、AIが従うことや正確性・安全性・法令適合性は保証されないため、送る内容と出力は自分で確かめてください。",
+        "en": "Saves a ZIP for AI tools that support Agent Skills. WI-T.COM neither provided nor reviewed the content of a regenerated skill, and its name tag carries no WI-T.COM signature; it is not guaranteed that an AI will follow the skill’s instructions or that the content is accurate, safe, or legally compliant, so check what you send and the output yourself."
       },
       "screenSection": "platform-skill-export",
       "help": {
@@ -292,8 +292,8 @@
           "en": ""
         },
         "caution": {
-          "ja": "書き出したものには、WI-T.COM の署名はまだ付きません。パックのキャラクターを書き出したものには、パックの使用条件がそのまま及びます。使える範囲は、パックのライセンスの文書のとおりです。スキルの配布サイト、公開のリポジトリ、ほかの組織と共有する作業場所など、第三者が取り出せる場所に置くことはできません。同梱のライセンスの文書と出どころの記録は、外したり書き換えたりしないでください。自作のキャラクターには、ライセンスの宣言は入りません。読み込む側の道具は、席 8 の決まりを守らせる仕組みを持ちません。守るかどうかは、使う AI しだいです。次の場合は書き出しません。β.11 以前に取り込んだパックのキャラクター（ライセンスの情報が残っていないため。「①キャラクター選択」からパックをもう一度取り込むと書き出せます）、署名の確かめに通らなかったパックのキャラクター、キャラクターの ID が形式の名前の決まり（英小文字・数字・ハイフン、64 文字まで）に合わないとき（ID を縮めたり変えたりはせず、書き出しを止めます）。",
-          "en": "The export does not yet carry a WI-T.COM signature. The pack's terms of use apply as they are to an export of a Character from a pack. How it may be used is as set out in the pack's license. It may not be placed anywhere a third party can retrieve it, such as a skill distribution site, a public repository, or a workspace shared with another organization. Please do not remove or rewrite the included license and the provenance record. An export of a Character you made yourself includes no license declaration. The tool that loads it has no mechanism to make the AI follow the Seat 8 rules. Whether they are followed depends on the AI you use. Nothing is exported in these cases: a Character from a pack imported with β.11 or earlier (the license information is not kept; import the pack again from “① Choose a Character” and you can export it); a Character from a pack that did not pass the signature check; and when the Character ID does not follow the naming rules of the format (lowercase letters a–z, digits and hyphens, up to 64 characters) — the ID is not shortened or changed; the export stops."
+          "ja": "このアプリで作り直したスキルには、WI-T.COM の署名は付きません。配られたままの標準のスキルは、「④出力」の「パック標準を保存」から保存できます。パックのキャラクターを書き出したものには、パックの使用条件がそのまま及びます。使える範囲は、パックのライセンスの文書のとおりです。スキルの配布サイト、公開のリポジトリ、ほかの組織と共有する作業場所など、第三者が取り出せる場所に置くことはできません。同梱のライセンスの文書と出どころの記録は、外したり書き換えたりしないでください。自作のキャラクターには、ライセンスの宣言は入りません。作り直したスキルは、WI-T.COM が内容を提供・確認したものではありません。スキルの指示に AI が従うことや、内容の正確性・安全性・法令適合性は保証されません。送る内容と出力は、使う人が確かめてください。次の場合は書き出しません。β.11 以前に取り込んだパックのキャラクター（ライセンスの情報が残っていないため。「①キャラクター選択」からパックをもう一度取り込むと書き出せます）、署名の確かめに通らなかったパックのキャラクター、キャラクターの ID が形式の名前の決まり（英小文字・数字・ハイフン、64 文字まで）に合わないとき（ID を縮めたり変えたりはせず、書き出しを止めます）。",
+          "en": "Skills regenerated by this app carry no WI-T.COM signature. The standard skill, exactly as distributed, can be saved from “Save the pack standard” in “④ Export”. The pack's terms of use apply as they are to an export of a Character from a pack. How it may be used is as set out in the pack's license. It may not be placed anywhere a third party can retrieve it, such as a skill distribution site, a public repository, or a workspace shared with another organization. Please do not remove or rewrite the included license and the provenance record. An export of a Character you made yourself includes no license declaration. A regenerated skill is not one whose content WI-T.COM provided or checked. It is not guaranteed that an AI will follow the skill’s instructions or that the content is accurate, safe, or legally compliant. The user should check what is sent and the output. Nothing is exported in these cases: a Character from a pack imported with β.11 or earlier (the license information is not kept; import the pack again from “① Choose a Character” and you can export it); a Character from a pack that did not pass the signature check; and when the Character ID does not follow the naming rules of the format (lowercase letters a–z, digits and hyphens, up to 64 characters) — the ID is not shortened or changed; the export stops."
         },
         "usedAt": {
           "ja": "",

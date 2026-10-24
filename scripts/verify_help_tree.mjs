@@ -74,7 +74,6 @@ const guide = JSON.parse(read("manual/saku-field-guide.data.json"));
     const EN_JA_EXCEPTIONS = [
       { reason: "intentional: Japanese example values for free-text fields; the label says they are in Japanese (ライター&SNS 2026-09-27)", allowed: text => text.startsWith("Suggested words (examples in Japanese; free text): ") },
       { reason: "intentional: the button and row show only Japanese on screen, so the text quotes them with an English gloss", allowed: text => !/[ぁ-んァ-ヶ一-龠]/.test(text.replace(/“locator を修復して読み込む”|“locator 修復”/g, "")) },
-      { reason: "一時: AMU Studio's screen name “SAKU 用の書き出し” has no English name yet, so the English quotes it with (Export for SAKU) (英語翻訳チーム 依頼 AH). Remove this exception and the Japanese once AMU gives the screen an English name.", allowed: text => !/[ぁ-んァ-ヶ一-龠]/.test(text.replace(/“SAKU 用の書き出し” \(Export for SAKU\)/g, "")) },
     ];
     const decode = value => value.replace(/&quot;/g, "\"").replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
     const enWithJa = html => [...html.matchAll(/data-en="([^"]*)"/g)].map(match => decode(match[1])).filter(text => /[ぁ-んァ-ヶ一-龠]/.test(text) && !EN_JA_EXCEPTIONS.some(rule => rule.allowed(text)));

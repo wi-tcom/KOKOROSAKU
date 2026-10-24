@@ -1,4 +1,4 @@
-# KOKOROSAKU v0.1.0-beta.12
+# KOKOROSAKU v0.1.0-beta.13
 
 Japanese documentation: [README.ja.md](README.ja.md)
 
@@ -6,42 +6,47 @@ KOKOROSAKU is the public SAKU Builder source and evaluation package. Builder out
 
 ## Install and use
 
-Download the Release asset `SAKU Builder_0.1.0-beta.12_x64-setup.exe` only from the future official GitHub Release. The installer carries a code signature (signer: wi-t.com Inc.). Even with a signature, Windows SmartScreen may display a warning until a reputation has built up. Before running it, verify:
+Download the Release asset `SAKU Builder_0.1.0-beta.13_x64-setup.exe` only from the future official GitHub Release. The installer carries a code signature (signer: wi-t.com Inc.). Even with a signature, Windows SmartScreen may display a warning until a reputation has built up. Before running it, verify:
 
 ```powershell
-(Get-FileHash -Algorithm SHA256 -LiteralPath '.\SAKU Builder_0.1.0-beta.12_x64-setup.exe').Hash.ToLower()
+(Get-FileHash -Algorithm SHA256 -LiteralPath '.\SAKU Builder_0.1.0-beta.13_x64-setup.exe').Hash.ToLower()
 ```
 
-Expected SHA-256: `1c328008673b01037f71894f290e4f19ba6a24e8a98b3bb25d5754587ea78d98` (2,363,544 bytes). The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
+Expected SHA-256: `0d4262ca7fa7cb942c304f72637ed1db206728db0016b20c50bf97faf92045a7` (2,455,112 bytes). The installer is not stored in this git tree or source archive. See [RELEASE_ASSET_MANIFEST.json](RELEASE_ASSET_MANIFEST.json).
 
-## What is new in v0.1.0-beta.12
+## What is new in v0.1.0-beta.13
 
-- **Characters can now be saved in the “skill” format (Agent Skills).** “Save as a skill” in ④ Export saves a skill folder as a ZIP, for AI tools that can load this format. The export does not carry a WI-T.COM signature. When you use a skill in environments other than ours, the check by Seat 8 — Human (logical), the seat where a person decides, is not enforced by our mechanisms. Where it is needed, a person should make the decision.
-- **Which formats you can export depends on where the Character came from.**
-  - A self-made Character: a self-made ZIP (.zip), a skill, or .json / .yaml.
-  - A pack Character (not edited): a skill only. You can use it in your own environment under the pack's terms of use. It may not be passed to anyone outside the licensee of the pack (or, for a corporation, that corporation). Placing it in a public place such as a sharing site also counts as passing it on.
-  - An edited pack Character: a self-made ZIP and a skill. The original pack's terms of use still apply. It cannot be exported as .json / .yaml.
-  - Samples, and Characters whose origin is not known: nothing is exported in any format. Samples are for reading only and cannot be edited and saved either.
-  - In ④, the buttons for formats that cannot be exported are disabled and the reason is shown. Before exporting, you look at what will be exported and at the result of the check for contact details that slipped in, and tick the box.
-- **The screen layout has been reworked.**
-  - A common band sits above Setup and steps and the ① to ⑤ screens: the menu bar (Setup and steps, ① Choose a Character, ② Edit the Character, ③ Run (prompt), ④ Export, ⑤ SAKU Repair Desk · AMU Evaluation Center) and the row for the Character you have selected.
-  - Progress on the 30 items needed for saving is shown as bars in three groups (purpose and role, judgment and handoff to a person, personality axes).
-  - “New” in ② lets you start from a blank Character.
-  - In ②, “Assistants that support the inner life (1+7)” and “SAKU, AMU and MACHI definitions compared” are now chapters that can be collapsed.
-- **The list badges now use the same words as AMU Studio.** The “Origin” row in the details shows the badge and its description.
-- **Packs are imported only after their signature is checked.** A pack that does not pass the check is not kept in the Workspace. When an import is refused, only a short message is shown, and the detailed reason is collapsed under “Details”.
-- **SAKU Builder can now also import self-made Character ZIPs (.saku-character.zip).** The rules are the same as in AMU Studio. When a Character with the same ID and the same origin already exists, you are asked whether to replace it.
-- **Import history** shows the three newest entries; you can scroll to see the rest. Each row shows “Imported” or “Not imported”.
-- **Leaving without saving is now caught.** When you move to another screen or close the window with unsaved work in ②, you can choose “Save and continue”, “Continue without saving” or “Back to editing”. You are not asked when a new Character has nothing written yet, or when you only opened a sample. On the screens with this band, the browser's right-click menu no longer appears outside input fields.
-- **The file save window** (exports in ④ and downloads in ②) now always opens in the Workspace folder. The file type field shows the extension, as in “JSON (*.json)”.
-- **The signature status of the application itself is shown at the bottom of the screen.** It is checked with Windows at startup; for a WI-T.COM signature, “Signature: signed by WI-T.COM (checked)” is shown.
-- Fixed an issue where the status lines went back to Japanese on the English screens.
-- The bundled sample pack is now saku-pack-sample 1.2.0.
-- **We changed the Supplementary Terms for AI Products and Services regarding the use of the export feature.** The changed Supplementary Terms (Section 02, items 6 and 7, and Section 07, item 9) apply to export operations started in SAKU Builder β.12 on or after October 15, 2026, 18:00 (Japan time). They do not apply retroactively to operations started before then. For details, see the [Supplementary Terms for AI Products and Services](https://www.wi-t.com/en-ai-product-terms).
+- **A pack's standard skill can now be saved exactly as distributed.** “Save the pack standard” in ④ Export saves the selected Character's standard skill from the companion ZIP that comes with the pack.
+  - Choose the companion ZIP with “Choose the companion ZIP”, and when the name tag shows “Name tag: WI-T.COM signature valid”, press “Save the standard skill”.
+  - Skills regenerated by this app (“Regenerate and save”) still carry no WI-T.COM signature, as before.
+  - Regardless of the saving method, the resulting file remains subject to the terms applicable to the source Character Pack and Character, including any attribution requirements and restrictions on redistribution.
+- **The signature state of the export layer (the name tag) is now shown with four badges:** Name tag: WI-T.COM signature valid / Name tag: WI-T.COM signature absent / Name tag: WI-T.COM signature unverified / Name tag: WI-T.COM signature verification failed. This badge is separate from the Character badges. “Name tag: WI-T.COM signature verification failed” means that the verification of the name tag's signature did not succeed. This includes cases of modification, corruption, or other verification mismatches, as well as cases where the signing key has been revoked or retired.
+  - A valid signature on the name tag means only that the signed data was signed with the corresponding WI-T.COM key and has not been modified since it was signed. It does not indicate that the contents are accurate, safe, legally compliant, approved by WI-T.COM, or authorized for any particular use.
+- **SAKU Builder now looks at where a Character came from before exporting it.**
+  - Among rows that were saved before β.13 and have no record of where they came from, rows with the same ID as a pack Character are not exported. When the record of an imported pack could not be read, export is stopped for that time only (this does not mean that there is a problem with the Character).
+  - A Character that came back from AMU Studio is exported only when its original pack can be narrowed down to one. When it cannot, import the original pack (the same version), then save and export again.
+- **A Character with no record of where it came from can now be confirmed as your own Character and exported.** This applies to Characters whose references were repaired when they were loaded, those restored from the Workspace when the list was rebuilt, and those carried over from an earlier version of SAKU.
+  - Press “Confirm as your own Character” in the details in ①, then press “Yes” in the “Is this your own Character?” window; you can then export it as your own Character.
+  - This confirmation records the user's declaration only. It does not mean that wi-t.com Inc. has verified or certified authorship, copyright or other rights, or authority to use the Character.
+  - This button does not appear on a row with the same ID as a pack Character. Even after the confirmation, the Character is checked again each time it is exported. If you later import that pack, export is stopped.
+- **Saving in ② Edit the Character now keeps where the original row came from.**
+  - A pack Character you have edited stays an edited pack Character. A row whose origin is not known does not become your own Character by being saved in ②.
+  - When, for example, the row you opened from ① can no longer be found, nothing is saved. What you entered is kept.
+  - “Download” and “Copy” in ② also go through the same check as .json / .yaml in ④, and are refused with the same messages.
+- **The button name in ⑤ “Adjust AI behavior” has been changed from “Apply this change” to “Open in Character editing with this content”.** Pressing it takes you to ② Edit the Character. The Character does not change until you save it in ②.
+- **The right-click menu is now the same on every screen.** Outside input fields, the browser's menu (Back, Reload, Print and so on) is not shown. The same applies to Trainer, the speed test, the external review, the Manual and Help. Inside input fields, only editing items (Cut, Copy, Paste, Select All, Undo, Redo and so on) are shown.
+- **Help, the Manual and Trainer now open in the screen language.** Before, they always opened in Japanese. When you choose a language in the Manual or Trainer, the language you chose is used.
+- The guide cards in the “Setup and steps” help now look like things you can press.
+- **The descriptions for the .json / .yaml export have been revised.** You can read it back with “Import a single file” in this SAKU Builder. To paste into an AI prompt, copy the text to paste in “③ Run (prompt)”. (The .json / .yaml tabs in ② Edit the Character now have the same guidance.)
+- The button in “① Choose a Character” is now named “Load the samples”.
+- **In ⑤ “Adjust AI behavior”, an example that fits the selected symptom and item is shown.** If you press the Tab key while the input field is empty, the example is entered.
+- **Help and the Manual have new content.** The Manual now covers the four name tag badges, the two ways to save in ④, the fact that an adjustment changes nothing until you save it in ②, the steps for “Confirming a Character with no record of where it came from as your own”, and a new card, “Saving or exporting was refused” (the messages shown on screen and a table of the next step). The Help contents page has two new sections: “Saving a pack's standard skill” and “The four name tag badges”.
+- **The scope of application of the Supplementary Terms for AI Products and Services has been expanded to cover the saving and export features.** Section 02, items 6 and 7, and Section 07, item 9 apply to the use of the saving and export features initiated by users in SAKU Builder β.13 or later on or after October 24, 2026, at 20:00 (Japan time). The wording of these provisions remains unchanged. This expansion of scope does not apply retroactively to operations initiated before that date and time. For details, see the [Supplementary Terms for AI Products and Services](https://www.wi-t.com/en-ai-product-terms).
 - As in the previous version, the installer and the application carry a code signature (signer: wi-t.com Inc., with a timestamp from Microsoft's timestamping service).
-- In the public source, three of the npm check scripts, `export:verify`, `packs:release:verify` and `occupation:verify`, do not run. This is because the files they read (copies of references without a license statement, test data, and the internal tool that issues packs) are not included in the public source. This does not affect how the app works.
-- You can install over the previous version (β.11). The list of Characters, the import history and the Workspace location stay as they are. The rows in the list get the β.12 badges. To export a Character from a pack you imported in β.11, import the pack again from “① Choose a Character” (the license information needed for export is recorded when a pack is imported in β.12).
-- The published v0.1.0-beta.11 stays available as it is.
+- You can install over the previous version (β.12). The list of Characters, the import history and the Workspace location stay as they are.
+- To use “Save the pack standard” with a pack imported in β.12 or earlier, import the pack again from “① Choose a Character” (the information needed to check the standard skill is recorded when the pack is imported in β.13). Other exports of packs imported in β.12 work without importing them again (packs imported in β.11 or earlier still need to be imported again for every export, as before).
+- SAKU Builder is available at no charge as open-source software.
+- The published v0.1.0-beta.12 stays available as it is.
 
 ## Try without installing
 
@@ -49,7 +54,7 @@ Serve the source archive root over local HTTP and open `tooling/builder/index.ht
 
 ## Developers
 
-Clone the repository, use Node 24.19.0, run `npm ci`, `npm run desktop:prepare:public`, and then `npm run tauri:build`. See `docs/releases/0.1.0-beta.12/BUILD_ENVELOPE.json` for the exact accepted beta toolchain and build boundary.
+Clone the repository, use Node 24.19.0, run `npm ci`, `npm run desktop:prepare:public`, and then `npm run tauri:build`. See `docs/releases/0.1.0-beta.13/BUILD_ENVELOPE.json` for the exact accepted beta toolchain and build boundary.
 
 ## Licensing and brand
 

@@ -112,7 +112,7 @@
     },
     "rights_statement_owner_confirmed": "背景（和紙地）のみ Gemini 生成由来。クレジット表記の義務なし・商用利用可・背景単体には著作権を主張しない。マークの幾何は当社の公式 SVG（人間創作）。商標は付与しない。ロゴ本体の「生成モデル不使用」証跡は不変。",
     "rights_statement_confirmed_on": "2026-09-21",
-    "rights_basis": "codex-handoff-20260911/brand/logo-family-arcs.md「和紙地（Gemini 生成）の権利の整理（Owner 提示 2026-09-21）」",
+    "rights_basis": "brand/logo-family-arcs.md「和紙地（Gemini 生成）の権利の整理（Owner 提示 2026-09-21）」",
     "background_rights": {
       "origin": "Gemini 生成画像由来",
       "copyright_claimed": false,

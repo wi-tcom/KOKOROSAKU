@@ -14,6 +14,13 @@ import { confirmDialog } from "../tools/unified-v1/confirm-dialog.mjs";
 import { confirmWording, fill } from "../tools/unified-v1/confirm-wording.mjs";
 import { FOLLOW_LINE, HANDOFF_FORMAT, characterPromptText, loadBaseLayer, platformLaunchText } from "../tools/unified-v1/platform-prompt.mjs";
 import * as SkillExport from "../tools/unified-v1/character-export.mjs";
+import { verifyStandardAttachment } from "../tools/unified-v1/agent-skills-attachment.mjs";
+import * as StandardSave from "../tools/unified-v1/standard-save.mjs";
+import { nameplateTrustIndex } from "../tools/unified-v1/pinned-trust.mjs";
+import * as TuningHandoff from "../tools/unified-v1/tuning-handoff.mjs";
+import * as ExportOrigin from "../tools/unified-v1/export-origin.mjs";
+import * as LegacyOrigin from "../tools/unified-v1/legacy-origin.mjs";
+import * as DeclaredOrigin from "../tools/unified-v1/declared-origin.mjs";
 import { buildSelfMadeCharacterZip, checkSelfMadeCharacterZip, storedZip } from "../tools/unified-v1/self-made-character-zip.mjs";
 import { mountFrame } from "../tools/unified-v1/app-frame.mjs";
 import { badgeFor, badgeLabel, badgeDescription } from "../tools/unified-v1/origin-badges.mjs";
@@ -35,6 +42,17 @@ let libraryEntries = [];
 // The saved list as it is now. ③ and ④ read it, not the copy ① keeps for drawing: opened straight after a start, ①
 // had not been drawn and ④ said 「一覧の行が分からない」 (2026-10-14 keying round 2).
 const liveEntries = () => Library.list({ includeDeleted: true });
+// ④ パック標準を保存 (L19): the attachment the host opened, for this session only (design v4 §3.3). Declared here because
+// renderExport may run before the section's code further down.
+// L10 (00A C06-5): the host's answer on the imported packs, read fresh before each export decision; never kept as the
+// set itself between decisions.
+let legacyImported = null;
+// L11 (d): the content digests of the rows a person confirmed, read with K2 (refreshLegacyImported).
+let declaredDigests = new Map();
+let standardAttachment = null;
+let standardReadCode = null;
+let standardTarget = null;
+let standardRun = 0;
 let latestBatch = "";
 let selectedViewerId = "";
 let currentImportResult = null;
@@ -239,6 +257,8 @@ async function refreshState() {
     // and only then say how the binding went, so nothing drawn replaces that.
     renderImportHistory(); renderLibrary(); renderActiveSaku();
     showWorkspaceBinding(bound);
+    // The imported packs (K2) for the marks, once the Workspace is bound (L10, 統括 照らし NG-4).
+    void refreshLegacyImported().then(() => { renderLibrary(); void frame?.refresh(); });
   } catch (error) { revealShell(); showStatus("HOST_STATE_FAILED", String(error), "error"); showRecovery("host", String(error)); }
 }
 
@@ -412,7 +432,7 @@ function renderDetail(record) {
   // which the app's window does not show reliably). The same badge and description as the card.
   {
     const entry = liveEntries().find(item => item.entry_id === record.entry_id) || null;
-    const origin = badgeFor(entry);
+    const origin = originBadgeFor(entry);
     const description = badgeDescription(origin.id, locale(), { pack: entry?.provenance?.edited_from?.pack_id || origin.pack_id || "" });
     addDetailRow(dl, locale() === "en-US" ? "Origin" : "出どころ", `${badgeLabel(origin.id, locale())}${description ? ` — ${description}` : ""}`, false);
   }
@@ -494,6 +514,17 @@ function renderDetail(record) {
   const builder = document.createElement("button"); builder.type = "button"; builder.className = "primary"; builder.dataset.builderCopy = record.id; builder.textContent = "編集する";
   // Owner 2026-09-27: 04 Trainer left the screens (AMU DECISION 2026-09-27-11), so no 「トレーニングする」 here.
   actions.append(builder, platform);
+  // L11-4: 「自分で作ったキャラクターとして確かめる」, only on a row it may be offered for (not on a known pack Character's ID,
+  // not while K2 cannot be read, not on a repaired file that is a pack's Character).
+  {
+    const entry = liveEntries().find(item => item.entry_id === record.entry_id) || null;
+    const declared = DeclaredOrigin.declaredOrigin(entry, liveEntries(), originContext());
+    if (declared.state === "HOLD" && declared.offer) {
+      const own = document.createElement("button"); own.type = "button"; own.className = "button"; own.dataset.confirmOwn = record.entry_id;
+      own.textContent = DeclaredOrigin.CONFIRM_WORDS.action.ja;
+      actions.append(own);
+    }
+  }
   const sampleLine = isSampleRecord(record) ? (() => { const line = document.createElement("p"); line.className = "catalog-badges"; line.append(sampleBadge()); return line; })() : null;
   detail.append(title, ...(sampleLine ? [sampleLine] : []), overview, dl, selectionSection, technical, actions);
 }
@@ -528,7 +559,7 @@ function createCatalogCard(record) {
   const badges = document.createElement("span"); badges.className = "catalog-badges";
   // The signature and origin badge (B1–B9, Owner 2026-10-14): one axis, the WI-T.COM signature.
   const entry = libraryEntries.find(item => item.entry_id === record.entry_id) || null;
-  const origin = entry ? badgeFor(entry) : { id: null, class: "UNKNOWN", pack_id: "" };
+  const origin = originBadgeFor(entry);
   const originBadge = document.createElement("span");
   originBadge.className = `catalog-badge catalog-origin-badge catalog-origin-${String(origin.class).toLowerCase()}`;
   originBadge.dataset.originBadge = origin.id || "";
@@ -940,20 +971,32 @@ async function adoptPendingHandoff() {
   if (subject) await adopt([subject]);
 }
 
+// Owner 結果 188 (Q27): a sample pack Character is for reading — the same reading as ② (saku-builder.html openedIsSample).
+const isSampleEntry = entry => {
+  const from = entry?.provenance?.edited_from || entry?.provenance || null;
+  return Boolean(from && (from.pack_id === SAMPLE_PACK_ID || /^LicenseRef-WIT-Sample-/.test(String(from.license || ""))));
+};
+
 function showTuning(record) {
   showPanel("tuning");
-  setStatus($("tuning-subject"), "TUNING_SUBJECT", tr("{name} — 推奨は適用するまでCharacterを変更しません。", { name: record.name }), "info");
+  setStatus($("tuning-subject"), "TUNING_SUBJECT", tr("{name} — 推奨は、②で保存するまでキャラクターを変えません。", { name: record.name }), "info");
+  const entry = libraryEntries.find(item => item.entry_id === record.entry_id) || null;
   TuningUI.setSubject(record.source_character, {
     observedStates: readObservedStates(record),
-    apply: (character, detail) => {
-      // An explicit Apply produces a Character revision through the same
-      // workspace path as any other edit; Trainer never writes here.
-      ActiveSaku.setActive(character, { source: "tuning-apply", entry_id: record.entry_id });
-      const entry = libraryEntries.find(item => item.entry_id === record.entry_id);
-      if (entry) Library.update(entry.entry_id, character);
-      mirrorToWorkspace([character]);
-      renderLibrary();
-      setStatus($("tuning-subject"), "TUNING_APPLIED", tr("{name} — {item} の内容を適用しました。", { name: record.name, item: detail.item_id }), "success");
+    sample: isSampleEntry(entry),
+    // L12 (Owner 結果 364, D-1〜D-11): the tuning writes nothing — not the list, not the Workspace. A Character the tuning
+    // made wrong against the adopted Schema stops here with its field (D-10); otherwise ② opens with the row's own Character
+    // as the opened one and the tuned content beside it, and only ②'s save writes, through ②'s own path (D-1, D-2).
+    apply: async (character, detail) => {
+      let schema;
+      try { schema = await loadAdoptedSchema(); } catch { return { ok: false, code: "ADOPTED_SCHEMA_UNAVAILABLE" }; }
+      const refusal = TuningHandoff.tuningSchemaRefusal(validateCompleteAdoptedCharacter(record.source_character, schema).errors, validateCompleteAdoptedCharacter(character, schema).errors);
+      if (refusal) return { ok: false, code: refusal.code };
+      ActiveSaku.setActive(record.source_character, { source: "tuning-apply", entry_id: record.entry_id });
+      storeBoundCharacter("saku.desktop.pendingCharacter", record.source_character);
+      TuningHandoff.storeTuningHandoff(localStorage, { original: record.source_character, tuned: character, itemId: detail.item_id, fields: [detail.field], openOnly: detail.openOnly === true });
+      location.href = handoffUrl(record, "builder");
+      return { ok: true };
     },
   });
   $("tuning-back").focus();
@@ -1228,6 +1271,7 @@ frame = typeof document !== "undefined" && document.getElementById("saku-frame")
   setLocale: next => window.SAKU_DESKTOP_I18N?.setLocale(next),
   onNavigate: screen => { if (!Object.hasOwn(PANELS, screen)) return false; void showScreen(screen); return true; },
   onClear: () => clearSelection(),
+  badgeOf: entry => originBadgeFor(entry),
 }) : null;
 if (typeof window !== "undefined") window.addEventListener("hashchange", () => { const name = location.hash.slice(1); if (Object.hasOwn(PANELS, name) && name !== currentScreen) void showScreen(name); });
 
@@ -1243,6 +1287,8 @@ function exportSubject() {
   return { character, entry: exportEntryFor(Library.entryForActive(liveEntries(), active)) };
 }
 async function exportCheck() {
+  // L11: the row is read (exportEntryFor) with K2 and the content digests read fresh, so the refresh comes first.
+  await refreshLegacyImported();
   const { character, entry } = exportSubject();
   if (!character) return { character: null, entry: null, text: "", gate: null };
   const text = characterJsonText(character);
@@ -1255,7 +1301,9 @@ async function renderExport() {
   const lang = locale() === "en-US" ? "en" : "ja";
   if (!character) setStatus($("export-subject"), "EXPORT_READY", "書き出すキャラクターを選んでください。", "info");
   else setStatus($("export-subject"), "EXPORT_SUBJECT", [{ data: character.identity?.display_name || character.identity?.character_id || "" }, ` rev ${character.identity?.character_revision || "?"}`], "info");
+  await refreshLegacyImported();
   renderExportPermissions(entry, character);
+  void evaluateStandard();
   const terms = packTermsNotice(entry);
   const termsSlot = $("export-terms");
   termsSlot.hidden = !terms;
@@ -1297,17 +1345,26 @@ function saveExportBytes({ filename, bytes, text, slot, savedLabel }) {
   return Promise.resolve();
 }
 // Owner 結果 188 (00A QA13 Q27–Q30): what a list row may be exported as, decided once, before any bytes are made.
-const EXPORT_REFUSAL_WORDS = Object.freeze({
-  ENTRY_NOT_RESOLVED: "一覧の行が分からないため、書き出しません。①キャラクター選択で選び直してください。",
-  ORIGIN_UNKNOWN: "このキャラクターは出どころが分からないため、書き出しません。取り込み直してください。",
-  SAMPLE_NOT_EXPORTABLE: "見本（サンプル）のキャラクターは読むだけです。どの形でも書き出せません（見本の使用条件）。",
-  PACK_LICENSE_UNKNOWN: "パックの使用条件が分からないため、書き出しません。パックを取り込み直してください。",
-  PACK_TEXT_NOT_EXPORTABLE: "パックのキャラクターは .json／.yaml では書き出せません。書き出せるのは自作のキャラクターだけです。",
-  PACK_ZIP_NOT_SELF_MADE: "編集していないパックのキャラクターは、自作の ZIP にはできません。②で編集して保存したものは書き出せます。",
-  RETURN_ZIP_LATER: "AMU Studio から戻ってきたキャラクターは、いまは .zip にしません（AMU Studio へ戻すファイルは β.5 の後に作ります）。",
-  RETURN_PACK_UNKNOWN: "この戻しの元のパックが一覧に無いため、書き出しません。元のパックを取り込んでから書き出してください。",
-});
+// The refusals of every export (ライター&SNS; the English is in i18n.mjs): one table, shared with ②'s 「ダウンロード」「コピー」.
+const EXPORT_REFUSAL_WORDS = Object.freeze(Object.fromEntries(Object.entries(ExportOrigin.EXPORT_REFUSAL_WORDS).map(([code, words]) => [code, words.ja])));
+// L10 (00A C06-1〜6): before the kit's table, a row saved with no record of where it came from is checked against the
+// known pack Character IDs (the list's pack rows and the Workspace's imported packs). The kit is not changed.
+async function refreshLegacyImported() {
+  if (!invoke) legacyImported = { status: "NO_HOST", ids: [] };
+  else { try { legacyImported = await invoke("list_imported_pack_ids"); } catch { legacyImported = { status: "UNREADABLE", ids: [] }; } }
+  declaredDigests = await DeclaredOrigin.currentDigests(liveEntries());
+  return legacyImported;
+}
+const originContext = () => ({ imported: legacyImported, digests: declaredDigests });
+// L10 (統括 照らし NG-4, 00A C06-3): the marks of ① and the frame read an unrecorded row that carries a known pack
+// Character ID as 出どころ不明, as its exports do; before the host has answered, the list's pack rows alone.
+// L11-6: a row a person may confirm is marked as it is read for an export (declared-origin.mjs); a held one stays 出どころ不明.
+const originBadgeFor = entry => LegacyOrigin.originBadge(DeclaredOrigin.declaredOrigin(entry, liveEntries(), originContext()).entry || entry, liveEntries(), legacyImported, badgeFor);
 function exportRefusal(entry, kind) {
+  // L11: a row of unknown origin a person may confirm is held by declared-origin.mjs before the kit is asked.
+  if (entry && entry.export_hold) return { code: entry.export_hold, message: EXPORT_REFUSAL_WORDS[entry.export_hold] || tr("書き出せませんでした（{code}）。", { code: entry.export_hold }) };
+  const legacy = LegacyOrigin.legacyExportRefusal(entry, liveEntries(), legacyImported);
+  if (legacy) return { code: legacy.code, message: EXPORT_REFUSAL_WORDS[legacy.code] || tr("書き出せませんでした（{code}）。", { code: legacy.code }) };
   const verdict = SkillExport.exportPermission(entry, kind);
   return verdict.ok ? null : { code: verdict.code, message: EXPORT_REFUSAL_WORDS[verdict.code] || tr("書き出せませんでした（{code}）。", { code: verdict.code }) };
 }
@@ -1352,6 +1409,7 @@ $("export-zip-save").addEventListener("click", async () => {
   const slot = $("export-zip-state");
   const checked = await exportGuarded(slot);
   if (!checked) return;
+  await refreshLegacyImported();
   const zipRefusal = exportRefusal(checked.entry, "zip");
   if (zipRefusal) { slot.hidden = false; setStatus(slot, zipRefusal.code, zipRefusal.message, "warning"); return; }
   // The file that goes back to AMU Studio (signed round trip) comes after β.5 (Owner 結果 172); a return is not
@@ -1392,6 +1450,7 @@ for (const [id, kind] of [["export-json-save", "json"], ["export-yaml-save", "ya
     const slot = $("export-text-state");
     const checked = await exportGuarded(slot);
     if (!checked) return;
+    await refreshLegacyImported();
     const textRefusal = exportRefusal(checked.entry, "text");
     if (textRefusal) { slot.hidden = false; setStatus(slot, textRefusal.code, textRefusal.message, "warning"); return; }
     const text = kind === "json" ? checked.text : characterYamlText(checked.character);
@@ -1420,10 +1479,9 @@ function libraryEntryForPlatform() {
 
 // A return from AMU Studio is exported with its pack's terms (00A 2026-10-14): traced to the pack row in the list.
 // Untraced, it stays as it is and the export stops (RETURN_PACK_UNKNOWN).
+// S-7 (設計 v4 §8.3): a return reads as the pack it is traced to by its digest, never the newest version (export-origin.mjs).
 function exportEntryFor(entry) {
-  if (!entry || Library.originOf(entry).kind !== "AMU_RETURN") return entry;
-  const traced = Library.editedProvenance(entry, liveEntries());
-  return traced ? { ...entry, provenance: traced } : entry;
+  return ExportOrigin.exportEntryFor(entry, liveEntries(), originContext());
 }
 
 function activeCharacterForPlatform() {
@@ -1470,24 +1528,24 @@ const REFERENCE_TEXT_EN = Object.freeze({
   attached: count => `Reference material attached: ${count}. The file was checked for damage; who made it, and whether it was changed after it was exported, were not checked.`,
   refused: "This material could not be attached (nothing was attached). ",
   reasons: Object.freeze({
-    a: "This file was not made with “SAKU 用の書き出し” (Export for SAKU) in AMU Studio. Choose a file made with it.",
-    b: "The contents of the file do not match what is recorded in the file itself. Export it again in AMU Studio.",
-    c: "The material exceeds the limits (12,000 characters in total, 20 items, 3,000 characters per item). Narrow down the material in AMU Studio and export it again.",
-    d: "The file contains material that is not in the folder shared with the 8 seats (AMU's memory). In AMU Studio, export again with only the material in the folder shared with the 8 seats.",
-    e: "An item contains a line identical to a line used as a section boundary, or has two or more title lines. Fix that item in AMU Studio, then export again.",
-    f: "The file is too large (up to about 1 MB). Narrow down the material in AMU Studio and export it again.",
+    a: "This is not in the form of a reference-material file. Choose a reference-material file.",
+    b: "The contents of the file do not match what is recorded in the file. Make the file again.",
+    c: "The material is over the limit (up to 12,000 characters in total, 20 items, and 3,000 characters per item). Use a file with less material.",
+    d: "The file contains material that is not in the shared folder with Seat 8 (AMU's memory). Use a file with only the material from the shared folder with Seat 8.",
+    e: "The material contains a line that is the same as the line used as a separator, or a title that is two or more lines long. Use a file in which that material has been corrected.",
+    f: "The file is too large (up to about 1 MB). Use a file with less material.",
   }),
 });
 const REFERENCE_TEXT = Object.freeze({
   attached: count => `参考資料 ${count} 件を添付しました。ファイルが壊れていないことは確かめましたが、作った人や、書き出した後に手が加えられていないかは確かめていません。`,
   refused: "この資料は添付できませんでした（何も添付していません）。",
   reasons: Object.freeze({
-    a: "AMU Studio の「SAKU 用の書き出し」で作ったファイルではありません。そのファイルを選んでください。",
-    b: "ファイルの中身が、ファイルに記録された内容と食い違っています。AMU Studio で書き出し直してください。",
-    c: "資料が上限を超えています（合計 12,000 字・20 件・1 件 3,000 字まで）。AMU Studio で資料を絞って書き出し直してください。",
-    d: "8 席との共有フォルダーにない資料（AMU の記憶）が入っています。AMU Studio で、8 席との共有フォルダーの資料だけを書き出し直してください。",
-    e: "資料の中に、区切りに使う行と同じ行があるか、題名が 2 行以上あります。AMU Studio でその資料を直してから、書き出し直してください。",
-    f: "ファイルが大きすぎます（約 1 MB まで）。AMU Studio で資料を絞って書き出し直してください。",
+    a: "参考資料のファイルの形ではありません。参考資料のファイルを選んでください。",
+    b: "ファイルの中身が、ファイルに記録された内容と食い違っています。ファイルを作り直してください。",
+    c: "資料が上限を超えています（合計 12,000 字・20 件・1 件 3,000 字まで）。資料を絞ったファイルにしてください。",
+    d: "8 席との共有フォルダーにない資料（AMU の記憶）が入っています。8 席との共有フォルダーの資料だけのファイルにしてください。",
+    e: "資料の中に、区切りに使う行と同じ行があるか、題名が 2 行以上あります。その資料を直したファイルにしてください。",
+    f: "ファイルが大きすぎます（約 1 MB まで）。資料を絞ったファイルにしてください。",
   }),
 });
 let baseLayerProblems = [];
@@ -2059,6 +2117,96 @@ $("platform-copy").addEventListener("click", async () => {
 // 03: the Agent Skills export (ADR-0026; Owner 2026-10-03, β.12). One skill folder in a ZIP, saved through the host's
 // own narrow door (save_skill_export_zip). The layer is unsigned; a pack entry is NOT_VERIFIED (00A 2026-10-04).
 // Wording: ライター&SNS 2026-10-04 (the lead in index.html rewritten, the rest approved as drafted).
+// ── ④ パック標準を保存 (SAKU β.13 L19; ADR-0027 §4.3, design v4 §7.2 and §3.3) ───────────────────────────────────
+// The attachment the host opened is kept for this session only, never written. The kit checks it against the facts of
+// the pack row the Character was chosen from; only a VALID nameplate is saved, with the inner ZIP's bytes as they are.
+// The nameplate mark sits in its own line, apart from the Character, pack and .amupkg marks (ALIGN W-2).
+// S-4 (2026-10-22): the name tag is checked against the trust the app carries, kokoroamu-trust gen 11, read at each check
+// and verified by its root signature, the pinned generation and digest, its revocations and its next_update
+// (pinned-trust.mjs). When it cannot be read, no index is given and the name tag reads 未確認: nothing is saved.
+const STANDARD_TRUST_FILES = new URL("../tools/vendor/kokoroamu-trust-42013dc/trust/v1/", import.meta.url);
+const standardTrustIndex = () => nameplateTrustIndex(async name => {
+  const response = await fetch(new URL(name, STANDARD_TRUST_FILES));
+  if (!response.ok) throw new Error(`${name}: ${response.status}`);
+  return response.text();
+});
+// Texts: ライター&SNS 2026-10-22 (FROM_WRITER_2026-10-22_SAKU_L19_texts.md; the UNVERIFIED and INVALID marks
+// fixed at 11:19 to the Character marks' form, ALIGN §3 L-2). INVALID: Owner 結果 416 (2026-10-24, 法務の続き 5 §3-1).
+const STANDARD_TEXT = Object.freeze({
+  plate: Object.freeze({ VALID: "名札：WI-T.COM署名有効", NONE: "名札：WI-T.COM署名無し", UNVERIFIED: "名札：WI-T.COM署名未確認", INVALID: "名札：WI-T.COM署名検証不成立" }),
+  plateNote: Object.freeze({
+    VALID: "名札の署名を、このアプリの信頼の一覧で確かめられました。名札の署名が有効であることは、署名対象データが当社の対応する鍵で署名され、署名後に変更されていないことを示します。内容の正確性、安全性、法令適合性、当社による承認又は権限付与を示すものではありません。",
+    NONE: "この名札には署名がありません。",
+    UNVERIFIED: "この環境では、WI-T.COM の名札の署名を確かめられませんでした（このアプリの信頼の一覧が古いときや、新しい形の署名のときなど）。変えられたという意味ではありません。",
+    INVALID: "名札の署名の検証が成り立ちませんでした。変更・破損その他の検証不一致を含みます（署名の鍵の失効・引退を含みます）。",
+  }),
+  NOT_A_PACK_ROW: "標準のスキルがあるのは、パックから取り込んで編集していないキャラクターだけです。①でパックのキャラクターを選んでください。",
+  NEEDS_REIMPORT: "このパックは前の版で取り込まれたため、標準のスキルを確かめるための情報がありません。パックを取り込み直してください。",
+  MEMBER_INCOMPLETE: "パックの情報が足りないため、確かめられません。パックを取り込み直してください。",
+  CHARACTER_NOT_IN_ATTACHMENT: "この別添には、選んでいるキャラクターの標準のスキルが入っていません。",
+  PACK_NOT_VERIFIED: "元のパックの署名を確かめられていないため、別添を読みませんでした。",
+  NO_SHA: "この環境では、別添を確かめられませんでした。",
+  PACK_MISMATCH: "この別添は、選んでいるパックのものではありません。同じパック・同じ版の別添を選んでください。",
+  ZIP_INVALID: "別添の ZIP を読めませんでした。パックと一緒に配られた別添の ZIP を、そのまま選んでください。",
+  NOT_PACK_MEMBER: "この名札のキャラクターは、選んでいるパックに入っていません。",
+  saved: "標準のスキルを保存しました：{path}",
+});
+const STANDARD_PACK_MISMATCH = new Set(["ATTACHMENT_PACK_MISMATCH", "ATTACHMENT_PACKAGE_DIGEST_WRONG_KIND", "ATTACHMENT_PACKAGE_DIGEST_MISSING"]);
+function standardRefusalText(code, pack) {
+  if (code === "CHARACTER_NOT_IN_ATTACHMENT") return STANDARD_TEXT.CHARACTER_NOT_IN_ATTACHMENT;
+  // Two cases share ATTACHMENT_PACK_NOT_SELECTED (後の一覧 L18): the pack checked by digest only, or no SHA-256 here.
+  if (code === "ATTACHMENT_PACK_NOT_SELECTED") return pack && pack.verification === "DIGEST_ONLY" ? STANDARD_TEXT.PACK_NOT_VERIFIED : STANDARD_TEXT.NO_SHA;
+  if (STANDARD_PACK_MISMATCH.has(code)) return STANDARD_TEXT.PACK_MISMATCH;
+  return STANDARD_TEXT.ZIP_INVALID;
+}
+async function evaluateStandard() {
+  const run = ++standardRun;
+  const slot = $("export-standard-state"), plate = $("export-standard-plate"), note = $("export-standard-plate-note"), save = $("export-standard-save");
+  if (!slot || !plate || !note || !save) return;
+  standardTarget = null; save.disabled = true; plate.hidden = true; note.hidden = true; slot.hidden = true;
+  plate.textContent = ""; note.textContent = "";
+  delete plate.dataset.nameplate;
+  const say = (code, message) => { slot.hidden = false; setStatus(slot, code, message, "warning"); };
+  // A read the host refused stays said until another companion ZIP is chosen (a redraw must not drop it).
+  if (!standardAttachment) { if (standardReadCode) say(standardReadCode, STANDARD_TEXT.ZIP_INVALID); return; }
+  const entry = Library.entryForActive(liveEntries(), ActiveSaku.getActive());
+  const character = activeCharacterForPlatform();
+  // The facts come from the row the Character was chosen from; nothing is read before they are known (no 「名札：無し」).
+  const { pack, reason } = StandardSave.packFactsFromRows(liveEntries(), entry);
+  if (!pack) { say(`STANDARD_${reason}`, STANDARD_TEXT[reason]); return; }
+  const result = await verifyStandardAttachment({ outerEntries: standardAttachment.outerEntries, innerEntries: standardAttachment.innerEntries, pack, trustIndex: await standardTrustIndex() });
+  if (run !== standardRun) return;
+  const target = StandardSave.standardSaveTarget(result, standardAttachment.outerEntries, String(character?.identity?.character_id || ""));
+  if (target.nameplate) {
+    const state = target.nameplate.state;
+    plate.hidden = false; plate.dataset.nameplate = state; plate.textContent = STANDARD_TEXT.plate[state] || STANDARD_TEXT.plate.UNVERIFIED;
+    note.hidden = false; note.textContent = STANDARD_TEXT.plateNote[state] || STANDARD_TEXT.plateNote.UNVERIFIED;
+    if (target.nameplate.result?.code === "ATTACHMENT_NOT_PACK_MEMBER") say("ATTACHMENT_NOT_PACK_MEMBER", STANDARD_TEXT.NOT_PACK_MEMBER);
+  }
+  if (target.saveable) { standardTarget = target; save.disabled = false; return; }
+  if (target.code) say(target.code, standardRefusalText(target.code, pack));
+}
+if (!invoke && $("export-standard")) $("export-standard").hidden = true;
+$("export-standard-choose")?.addEventListener("click", async () => {
+  if (!invoke) return;
+  let read = null;
+  try { read = await invoke("choose_standard_attachment"); } catch (error) { if (/CANCELLED/.test(String(error))) return; }
+  const decoded = StandardSave.decodeAttachmentRead(read);
+  standardAttachment = decoded.ok ? { outerEntries: decoded.outerEntries, innerEntries: decoded.innerEntries } : null;
+  standardReadCode = decoded.ok ? null : decoded.code;
+  await evaluateStandard();
+});
+$("export-standard-save")?.addEventListener("click", async () => {
+  const target = standardTarget;
+  if (!invoke || !target || !target.saveable) return;
+  const slot = $("export-standard-state");
+  const say = (code, message, kind) => { slot.hidden = false; setStatus(slot, code, message, kind); };
+  const result = await invoke("save_skill_export_zip", { filename: target.file, bytes: Array.from(target.bytes), dialogTitle: locale() === "en-US" ? "Save the pack standard" : "パック標準を保存" }) || { status: "ERROR", reason: "NO_RESULT" };
+  if (result.status === "SAVED") say("STANDARD_SAVED", tr(STANDARD_TEXT.saved, { path: result.path }), "success");
+  else if (result.status === "CANCELLED") say("STANDARD_SAVE_CANCELLED", SKILL_EXPORT_TEXT.cancelled, "info");
+  else say("STANDARD_SAVE_FAILED", tr(SKILL_EXPORT_TEXT.failed, { reason: result.reason || "UNKNOWN" }), "error");
+});
+
 const SKILL_EXPORT_TEXT = Object.freeze({
   saved: "保存しました: {path}",
   cancelled: "保存をキャンセルしました。",
@@ -2078,6 +2226,7 @@ $("platform-skill-export-save").addEventListener("click", async () => {
   const say = (code, message, kind) => { if (slot) { slot.hidden = false; setStatus(slot, code, message, kind); } };
   const character = activeCharacterForPlatform();
   if (!character) return;
+  await refreshLegacyImported();
   const skillRefusal = exportRefusal(exportEntryFor(libraryEntryForPlatform()), "skill");
   if (skillRefusal) { say(skillRefusal.code, skillRefusal.message, "warning"); return; }
   const { options } = handoffOptions({ baseLayer, directives: platformDirectives, glossaryDigest: platformGlossaryDigest }, libraryEntryForPlatform());
@@ -2181,7 +2330,24 @@ $("viewer-results").addEventListener("click", event => { const open = event.targ
 $("viewer-results").addEventListener("change", event => { const input = event.target.closest("[data-compare-id]"); if (!input) return; if (input.checked) compareSelection.add(input.dataset.compareId); else compareSelection.delete(input.dataset.compareId); const card = input.closest(".catalog-card"); if (card) card.dataset.checked = input.checked ? "true" : "false"; updateCompareStatus(); if (!$("compare-panel").hidden) renderComparison(); });
 $("viewer-panel").addEventListener("click", event => {
   const button = event.target.closest("[data-builder-copy]"); if (button) openBuilderCopy(button.dataset.builderCopy);
+  const own = event.target.closest("[data-confirm-own]"); if (own) void confirmOwnCharacter(own.dataset.confirmOwn);
 });
+// L11-2: the person's confirmation, asked in the app's dialog (N-4 by the row's kind). Read fresh first: a row that may no
+// longer be offered (its ID is now a known pack Character's, K2 cannot be read) is not asked about.
+async function confirmOwnCharacter(entryId) {
+  await refreshLegacyImported();
+  const entry = liveEntries().find(item => item.entry_id === entryId) || null;
+  const declared = DeclaredOrigin.declaredOrigin(entry, liveEntries(), originContext());
+  if (!(declared.state === "HOLD" && declared.offer)) { renderLibrary(); return; }
+  const kind = DeclaredOrigin.rowKind(entry).kind;
+  const words = DeclaredOrigin.CONFIRM_WORDS.body[kind];
+  if (!await ask("confirmOwnCharacter", (locale() === "en-US" && words.en) || words.ja)) return;
+  const written = DeclaredOrigin.writeRecord(entryId, await DeclaredOrigin.confirmationRecord(entry));
+  if (!written.ok) showViewerStatus("LIBRARY_SAVE_FAILED", tr("一覧に保存できませんでした: {failure}", { failure: written.reason }), "error");
+  await refreshLegacyImported();
+  renderLibrary();
+  void frame?.refresh();
+}
 $("compare-open").addEventListener("click", () => { renderComparison(); $("compare-panel").hidden = false; $("compare-close").focus(); });
 $("compare-close").addEventListener("click", () => { $("compare-panel").hidden = true; $("compare-open").focus(); });
 $("compare-clear").addEventListener("click", () => { compareSelection.clear(); $("compare-panel").hidden = true; renderCatalog(); });

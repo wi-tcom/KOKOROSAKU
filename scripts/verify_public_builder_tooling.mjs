@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { leaksIn } from "./leak-check.mjs";
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { cp, mkdir, mkdtemp, readFile, readdir, rm, stat } from "node:fs/promises";
@@ -90,7 +91,9 @@ for (const file of publicFiles) {
   if (relative !== ADOPTED_SCHEMA_MEMBER) {
     check(!RETIRED_NAME.test(source), `no retired taxonomy in ${relative}`);
   }
-  check(!/C:\/Users|C:\\Users|OneDrive|(?:^|[^A-Za-z])file:/i.test(source), `no private host path or local protocol in ${relative}`);
+  // SAKU β.13 S-8 + L21: the same leak table as the installer (scripts/leak-check.mjs).
+  const found = leaksIn(relative, source);
+  check(found.length === 0, `no private host path, local protocol, internal record, secret or mail address in ${relative} (${found.join(", ")})`);
 }
 const schemaBytes = await readFile(path.join(PUBLIC, ...ADOPTED_SCHEMA_MEMBER.split("/")));
 const extensionBytes = await readFile(path.join(PUBLIC, "schemas", "character-extension.v1.schema.json"));

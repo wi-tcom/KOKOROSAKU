@@ -12,6 +12,7 @@
 // Pure parts (frameModel, frameMarkup) are exported for the gates; mountFrame touches the DOM.
 import { badgeFor, badgeLabel } from "./origin-badges.mjs";
 import { STEPS, progressFromIssues, firstMissingField } from "./required-progress.mjs";
+import { editableTarget, keepContextMenuToFields } from "./context-menu-guard.mjs";
 
 export const SCREENS = Object.freeze(["prep", "select", "edit", "run", "out", "svc"]);
 
@@ -84,14 +85,14 @@ export function screenHref(page, screen, field = null) {
  * What the selected-Character line shows. active: ActiveSaku.getActive(); entry: the list row it came from
  * (Library.entryForActive); issues: the save check's errors for the Character, or null while not known yet.
  */
-export function frameModel({ active, entry, issues, locale = "ja-JP" }) {
+export function frameModel({ active, entry, issues, locale = "ja-JP", badgeOf = badgeFor }) {
   const t = TEXT[lang(locale)];
   const character = active && active.character;
   if (!character) return { selected: false, name: t.none, revision: "", badge: null, steps: [], message: t.msgNone, link: { screen: "select", label: t.linkNone } };
   const identity = character.identity || {};
   const name = String(identity.display_name || "").trim() || t.unnamed;
   const revision = identity.character_revision ? fill(t.revision, { revision: identity.character_revision }) : "";
-  const badge = entry ? badgeFor(entry) : { id: null, class: "UNKNOWN" };
+  const badge = entry ? badgeOf(entry) : { id: null, class: "UNKNOWN" };
   const badgeView = { id: badge.id, class: badge.class, label: badgeLabel(badge.id, locale) };
   if (!Array.isArray(issues)) return { selected: true, name, revision, badge: badgeView, steps: [], message: t.msgChecking, link: null };
   const progress = progressFromIssues(issues);
@@ -143,21 +144,12 @@ export function frameMarkup({ page, current, model, locale = "ja-JP", clearable 
  *   onNavigate(screen, event, field) — a page with screens of its own may handle a menu click itself (return true);
  *             field is the required field a bar segment or the next-step link points at, or null
  */
-/**
- * The WebView's own right-click menu (戻る・最新の情報に更新・印刷) is not offered outside the fields: 「最新の情報に更新」
- * dropped unsaved input (2026-10-15 keying round 2 m3). In a field, the menu stays for cut, copy and paste.
- */
-export function editableTarget(target) {
-  const element = target && target.nodeType === 1 ? target : target && target.parentElement;
-  return Boolean(element && element.closest && element.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]'));
-}
-function keepContextMenuToFields(doc) {
-  if (doc.__sakuContextMenuKept) return;
-  doc.__sakuContextMenuKept = true;
-  doc.addEventListener("contextmenu", event => { if (!editableTarget(event.target)) event.preventDefault(); });
-}
+// The WebView's own right-click menu is not offered outside the fields (context-menu-guard.mjs: one rule for every page,
+// SAKU β.13 S-10 = L3).
+export { editableTarget };
 
-export function mountFrame({ page, current, read, check, getLocale, setLocale, onNavigate, onClear }) {
+// badgeOf: the page's own reading of a row's mark (L10, 統括 照らし NG-4: legacy-origin.mjs originBadge); the kit's badge otherwise.
+export function mountFrame({ page, current, read, check, getLocale, setLocale, onNavigate, onClear, badgeOf = badgeFor }) {
   keepContextMenuToFields(document);
   let root = document.getElementById("saku-frame");
   if (!root) {
@@ -171,7 +163,7 @@ export function mountFrame({ page, current, read, check, getLocale, setLocale, o
   const render = () => {
     const { active, entry } = read();
     const locale = getLocale();
-    root.innerHTML = frameMarkup({ page, current: current(), model: frameModel({ active, entry, issues, locale }), locale, clearable: typeof onClear === "function" });
+    root.innerHTML = frameMarkup({ page, current: current(), model: frameModel({ active, entry, issues, locale, badgeOf }), locale, clearable: typeof onClear === "function" });
     // The fill is set through the style object: the app's CSP (Tauri adds a nonce) drops inline style attributes, which
     // left every segment fully painted at 0/7 (2026-10-14 keying 1-9).
     for (const fill of root.querySelectorAll("[data-sf-fill]")) fill.style.width = `${Number(fill.dataset.sfFill) || 0}%`;

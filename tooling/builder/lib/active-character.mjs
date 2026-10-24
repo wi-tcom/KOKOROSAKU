@@ -142,6 +142,12 @@ export function markSaved() {
   return true;
 }
 
+/** Drop the working draft only; the Active SAKU stays (SAKU β.13 L12 NG-1: ② left without saving a tuning). */
+export function dropDraft() {
+  dropRaw(DRAFT_KEY);
+  return true;
+}
+
 /**
  * Leave the workspace. This is 「最初から」, not TOP: returning to the workspace
  * home keeps the Active SAKU, while this removes it.

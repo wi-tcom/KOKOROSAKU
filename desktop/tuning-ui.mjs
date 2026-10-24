@@ -10,6 +10,7 @@
 
 import * as Tuning from "../tools/unified-v1/tuning/tuning-projection.mjs";
 import * as Unified from "../tools/unified-v1/unified-schema-v1.mjs";
+import { exampleFor, tabFills, TUNING_EXAMPLE_WORDS } from "../tools/unified-v1/tuning/tuning-examples.mjs";
 
 const $ = id => document.getElementById(id);
 
@@ -37,12 +38,15 @@ let currentCharacter = null;
 let currentItemId = "";
 let observed = {};
 let onApply = null;
+// A sample pack Character is for reading (Owner 結果 188 Q27; L12 D-5): the button stays off and says why beside it.
+let sampleSubject = false;
 
 /** The Character being tuned, and what to do when the Owner applies a change. */
-export function setSubject(character, { observedStates = {}, apply = null } = {}) {
+export function setSubject(character, { observedStates = {}, apply = null, sample = false } = {}) {
   currentCharacter = character || null;
   observed = observedStates || {};
   onApply = apply;
+  sampleSubject = sample === true;
   renderSymptoms();
   renderDetail(currentItemId);
 }
@@ -156,19 +160,55 @@ function renderDetail(itemId) {
   const select = document.createElement("select"); select.id = "tuning-field";
   for (const field of recommendation.saku.fields) { const option = document.createElement("option"); option.value = field; option.textContent = field; select.append(option); }
   const input = document.createElement("textarea"); input.id = "tuning-value"; input.rows = 2;
-  input.placeholder = "例: 新しい根拠がない再検討は行わない";
+  // 結果 420 ①②: the example of the chosen symptom and field (refreshExample); Tab on the empty input puts it in.
+  const tabHint = document.createElement("p"); tabHint.id = "tuning-example-hint"; tabHint.className = "tuning-hint"; tabHint.hidden = true;
+  tabHint.textContent = TUNING_EXAMPLE_WORDS.tabHint.ja;
+  const noText = document.createElement("p"); noText.id = "tuning-example-none"; noText.className = "tuning-hint"; noText.setAttribute("role", "note"); noText.hidden = true;
+  noText.textContent = TUNING_EXAMPLE_WORDS.noText.ja;
   const actions = document.createElement("div"); actions.className = "actions";
   const preview = document.createElement("button"); preview.type = "button"; preview.id = "tuning-preview"; preview.textContent = "Before / After を見る";
-  const apply = document.createElement("button"); apply.type = "button"; apply.id = "tuning-apply"; apply.className = "primary"; apply.textContent = "この内容で適用する";
+  // L12 (Owner 結果 364): the button opens ② with this content; nothing changes until ② saves (D-1〜D-3, T-9).
+  const apply = document.createElement("button"); apply.type = "button"; apply.id = "tuning-apply"; apply.className = "primary"; apply.textContent = "この内容でキャラクター編集を開く";
   apply.disabled = true;
   actions.append(preview, apply);
+  if (sampleSubject) {
+    const sample = document.createElement("span"); sample.id = "tuning-sample-note"; sample.className = "tuning-hint"; sample.setAttribute("role", "note");
+    sample.textContent = "見本（サンプル）のキャラクターは読むだけで、調整を適用できません。自分のキャラクターは「新規作成」から作れます。";
+    apply.setAttribute("aria-describedby", "tuning-sample-note");
+    actions.append(sample);
+  }
+  const note = document.createElement("p"); note.id = "tuning-apply-note"; note.className = "tuning-hint"; note.hidden = sampleSubject;
+  note.textContent = "押すと「②キャラクター編集」に移り、この内容が入力欄に入ります。保存するまで、キャラクターは変わりません。";
   label.append(select, input);
-  editor.append(label, actions);
+  editor.append(label, tabHint, noText, actions, note);
 
   const diff = document.createElement("div"); diff.className = "tuning-diff"; diff.id = "tuning-diff"; diff.hidden = true;
   const status = document.createElement("p"); status.className = "tuning-status"; status.id = "tuning-status"; status.hidden = true;
 
   host.append(title, filed, dl, ...(item.state_model === "PROTECTION" ? [protection] : []), ...lanes, editor, diff, status);
+  refreshExample();
+}
+
+// 結果 420 ①: the example and how the chosen field takes a text. A field that cannot take one (NONE) says so; its button
+// opens ② without a change (統括 2026-10-24), where ③ moves to that field.
+function currentExample() {
+  const select = $("tuning-field");
+  return select ? exampleFor(currentItemId, select.value, window.SAKU_DESKTOP_I18N?.getLocale?.() || "ja-JP") : { kind: "UNKNOWN", text: "" };
+}
+function refreshExample() {
+  const input = $("tuning-value");
+  if (!input) return;
+  const example = currentExample();
+  const none = example.kind === "NONE";
+  input.placeholder = example.text;
+  input.dataset.example = example.text;
+  input.disabled = none;
+  if (none) input.value = "";
+  $("tuning-preview").disabled = none;
+  $("tuning-example-hint").hidden = none || !example.text;
+  $("tuning-example-none").hidden = !none;
+  $("tuning-diff").hidden = true;
+  $("tuning-apply").disabled = sampleSubject || !none;
 }
 
 function showDiff(entries) {
@@ -193,7 +233,8 @@ function showDiff(entries) {
   }
   table.append(head, body);
   host.append(table);
-  return true;
+  // D-7: the button turns on only when something would change (an equal value set again is no change).
+  return preview.diff.some(change => change.result === "APPENDED" || (change.result === "SET" && JSON.stringify(change.before) !== JSON.stringify(change.after)));
 }
 
 export function wire() {
@@ -207,6 +248,17 @@ export function wire() {
     renderDetail(currentItemId);
   });
   const detail = $("tuning-detail");
+  detail.addEventListener("change", event => { if (event.target.id === "tuning-field") refreshExample(); });
+  // 結果 420 ②: Tab on the empty input puts the example in, as it is (no 「例：」); otherwise Tab and Shift+Tab move on.
+  detail.addEventListener("keydown", event => {
+    if (event.target.id !== "tuning-value") return;
+    const input = event.target;
+    if (!tabFills({ key: event.key, shiftKey: event.shiftKey, value: input.value, example: input.dataset.example })) return;
+    event.preventDefault();
+    input.value = input.dataset.example;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  window.addEventListener("saku-ui-locale-changed", () => refreshExample());
   detail.addEventListener("click", event => {
     if (event.target.id === "tuning-preview") {
       const field = $("tuning-field").value;
@@ -214,7 +266,7 @@ export function wire() {
       const status = $("tuning-status");
       if (!value) { status.hidden = false; status.textContent = "追記する内容を入力してください。"; return; }
       // Apply stays closed until a preview has been seen.
-      if (showDiff([{ field, value }])) $("tuning-apply").disabled = false;
+      $("tuning-apply").disabled = !showDiff([{ field, value }]) || sampleSubject;
       status.hidden = true;
       return;
     }
@@ -222,16 +274,31 @@ export function wire() {
       const field = $("tuning-field").value;
       const value = $("tuning-value").value.trim();
       const status = $("tuning-status");
+      if (sampleSubject) return;
+      // NONE: nothing is written here; ② opens on the row's own Character at that field (open_only).
+      if (currentExample().kind === "NONE") {
+        if (typeof onApply !== "function") return;
+        $("tuning-apply").disabled = true;
+        void Promise.resolve(onApply(structuredClone(currentCharacter), { item_id: currentItemId, field, diff: [], openOnly: true })).then(outcome => {
+          if (outcome && outcome.ok === false) { status.hidden = false; status.textContent = `適用できません（${outcome.code}）`; $("tuning-apply").disabled = false; }
+        });
+        return;
+      }
       if (!value) return;
       const result = Tuning.applyRecommendation(currentCharacter, currentItemId, [{ field, value }], { confirmed: true });
       if (!result.applied) { status.hidden = false; status.textContent = `適用できません（${result.code}）`; return; }
       const before = Unified.sentinelViolations(result.character).length + Unified.runtimeValueViolations(result.character).length;
       if (before > 0) { status.hidden = false; status.textContent = "分類ラベルや実行時の値は Character に保存できません。"; return; }
-      if (typeof onApply === "function") onApply(result.character, { item_id: currentItemId, diff: result.diff });
-      currentCharacter = result.character;
-      status.hidden = false; status.textContent = "適用しました。保存すると Character Revision に反映されます。";
+      if (typeof onApply !== "function") return;
+      // The page checks the tuned Character against the adopted Schema and opens ② (L12 D-10, D-2). It writes nothing here.
       $("tuning-apply").disabled = true;
-      renderSymptoms();
+      void Promise.resolve(onApply(result.character, { item_id: currentItemId, field, diff: result.diff })).then(outcome => {
+        if (outcome && outcome.ok === false) {
+          const words = window.SAKU_DESKTOP_I18N?.format ? window.SAKU_DESKTOP_I18N.format("この欄（{field}）には、決まった値か決まった形のものしか入らないため、この文では適用できません。キャラクターは変えていません。", { field }) : "この欄（{field}）には、決まった値か決まった形のものしか入らないため、この文では適用できません。キャラクターは変えていません。".replace("{field}", field);
+          status.hidden = false; status.textContent = outcome.code === "TUNING_SCHEMA_REFUSED" ? `${words}（${outcome.code}）` : `適用できません（${outcome.code}）`;
+          $("tuning-apply").disabled = false;
+        }
+      });
     }
   });
 }
