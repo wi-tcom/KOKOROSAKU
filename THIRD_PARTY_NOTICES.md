@@ -1,5 +1,7 @@
 # Third-Party Notices — SAKU Builder 0.1.0-beta.3 Public Preview
 
+> **Correction note (2026-10-24).** The heading above and the installer SHA-256 in the next paragraph identify SAKU Builder 0.1.0-beta.3. Except for this correction note, the inventory below is unchanged from the version prepared for beta.3. That uncorrected version was included in KOKOROSAKU releases v0.1.0-beta.8 through v0.1.0-beta.13. It was not updated to identify the v0.1.0-beta.13 installer, whose SHA-256 is `0d4262ca7fa7cb942c304f72637ed1db206728db0016b20c50bf97faf92045a7`. A comparison of `src-tauri/Cargo.lock` found no package names added or removed between beta.3 and beta.13; this does not mean that all package versions or other entries below remained unchanged. The Rust standard library (1.97.1), Tauri CLI (2.11.4), and NSIS (3.11) versions listed below match those used to build beta.13. The build-time-only Node.js and npm versions listed below (24.19.0 and 11.17.0) differ from those used to build beta.13 (24.22.1 and 11.19.1).
+
 This inventory is bound to the public Windows installer whose SHA-256 is
 `4b277ead963551ae7f27b60168d72b0a7dfdd2434af39cb256f26917a2eaac63`.
 It corrects the earlier statement that the desktop artifact had no third-party runtime dependencies.
