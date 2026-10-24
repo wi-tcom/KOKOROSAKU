@@ -29,7 +29,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:.github/ISSUE_TEMPLATE/bug_report.yml",
       "artifact_sha256": "98400f30615bf1c0f779e0d2fe6b8cd4c17fc3a8cd5a6b77af3528e12526fa80",
       "bytes": 752
@@ -40,7 +40,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:.github/ISSUE_TEMPLATE/config.yml",
       "artifact_sha256": "8f8fadc243223fee49e417e2bb1cbe949510229f18f1bdb742b4345d8f57bfeb",
       "bytes": 413
@@ -51,7 +51,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:.github/pull_request_template.md",
       "artifact_sha256": "1978f75accbb3f7cecee8804612f5e3480a1e3d52b09fcd5e997176a39c0c408",
       "bytes": 387
@@ -62,7 +62,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:.github/workflows/writer-attribution.yml",
       "artifact_sha256": "7b2c068d2a549fbccd24672d07d6b1f6847ea9ce0cbd61f5a6ba1a6396429db9",
       "bytes": 7132
@@ -96,7 +96,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:CODE_OF_CONDUCT.ja.md",
       "artifact_sha256": "cfa4a0a304c28d022fbb33df96bb9287c183e77b4178f29646e51b35449d360f",
       "bytes": 641
@@ -107,7 +107,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:CODE_OF_CONDUCT.md",
       "artifact_sha256": "4de2decb32d404fb82c5b7a3d328f076eccd4eb0aab25f2602c0beaec70db797",
       "bytes": 379
@@ -118,7 +118,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:COMPATIBILITY.ja.md",
       "artifact_sha256": "e3b18d77a930b4153be1d5477726ab020edddbf75ec907b902247835964c214c",
       "bytes": 1035
@@ -129,7 +129,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:COMPATIBILITY.md",
       "artifact_sha256": "1d073c6b07c257d6ebfeff2e31c179a52f023cf169412aa8af6d4f8ca74dc00f",
       "bytes": 816
@@ -140,7 +140,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:CONTRIBUTING.ja.md",
       "artifact_sha256": "084018892d9bd5599dc9ad772001031bcd41d54c4ee3c216f9666855ff1321b2",
       "bytes": 870
@@ -151,7 +151,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:CONTRIBUTING.md",
       "artifact_sha256": "5f5484835027063ba0e77feef279ce443ca5c70d88b81a1d9ead79aed89345ca",
       "bytes": 502
@@ -184,7 +184,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:LICENSE-POLICY.md",
       "artifact_sha256": "d87bd29e36e7ddd0e725fae3e602bf3d8c030159297211521861894569b3cf22",
       "bytes": 451
@@ -195,7 +195,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:LICENSES/Apache-2.0.txt",
       "artifact_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
       "bytes": 11358
@@ -206,7 +206,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:LICENSES/CC-BY-4.0.md",
       "artifact_sha256": "ee7ba957f65c14cf2aa044c5969ff8602473f1dffbe58f1e3d68bb4acbbd80f4",
       "bytes": 269
@@ -217,7 +217,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:LICENSES/CC0-1.0.md",
       "artifact_sha256": "e681512823420605489bcd7ca1a12f6e669a4c4fa962efa511c12f3ba8003870",
       "bytes": 173
@@ -228,7 +228,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:LICENSES/MPL-2.0.txt",
       "artifact_sha256": "3f3d9e0024b1921b067d6f7f88deb4a60cbe7a78e76c64e3f1d7fc3b779b9d04",
       "bytes": 16726
@@ -261,7 +261,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:PUBLICATION_NOTICE.md",
       "artifact_sha256": "051d6201d1f8255c3fd1c34e35f594570c296115be1edea4b7afec42b43a01f4",
       "bytes": 464
@@ -272,10 +272,10 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:README.ja.md",
-      "artifact_sha256": "d75131d4aa24e6fbdf9f2336289ef349f0e14467c3e30de3f02503246273845c",
-      "bytes": 8966
+      "artifact_sha256": "ae2662294dea4fa7e3a34abfd577878d562d26eec4d93967117c361d083db8cc",
+      "bytes": 9513
     },
     {
       "path": "README.md",
@@ -283,10 +283,10 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:README.md",
-      "artifact_sha256": "f7351af65cb880717c77353cdc282b9515ac8064e19a5d26168f4a2ba0bde76f",
-      "bytes": 8347
+      "artifact_sha256": "c44e91303aaed41d4d3bb0cdb6f52ad7990476d4fdba487e0fa7440c16a7910d",
+      "bytes": 8710
     },
     {
       "path": "RELEASE_ASSET_MANIFEST.json",
@@ -294,7 +294,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:RELEASE_ASSET_MANIFEST.json",
       "artifact_sha256": "252a69120f24b63aa84de988a71e35fe87a3e80f5b59706644600b84b9e96845",
       "bytes": 2493
@@ -305,7 +305,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:SECURITY.ja.md",
       "artifact_sha256": "1b7973327fe8c3d47b0b039de24a21878065f77f84ba1a4ce40cf5d12835e5e0",
       "bytes": 791
@@ -316,7 +316,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:SECURITY.md",
       "artifact_sha256": "fba8d1d009df281683c848f419c21ae70c4ac987b940e5a1ca95bab22528f701",
       "bytes": 505
@@ -327,7 +327,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:SUPPORT.ja.md",
       "artifact_sha256": "8aff6dcd0259dbe40d13599165eff4b16bc4496a674b37528aa967d983be486f",
       "bytes": 728
@@ -338,7 +338,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:SUPPORT.md",
       "artifact_sha256": "51ea3bf12acc7e49103d895827098e945b4e96ff5d0ae6f5cc3fd489651531ca",
       "bytes": 460
@@ -360,7 +360,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:TRADEMARK.ja.md",
       "artifact_sha256": "8e2f5437f673747833f85763aa33c3c364d5aa50becb9c302e23d73e3508be58",
       "bytes": 647
@@ -371,7 +371,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:TRADEMARK.md",
       "artifact_sha256": "e6d7ce663df9ac5945ff173a53fef5d7f56d2d00481fd92e2bb90d20e9a3f583",
       "bytes": 623
@@ -1411,7 +1411,7 @@
       "scope": "02C_GENERATED_PUBLICATION_METADATA",
       "rights_holder": "株式会社wi-t.com",
       "source_repository": "02C_SAKU_OSS_Launch",
-      "exact_revision": "sha256:eb7ab3a96d2c4efde52bf0f288da39af0b910ca30045fb06618b6e69c2a01f90",
+      "exact_revision": "sha256:42d1f565c4784ebcdfe72c01cf3297d1ca361307f69b727cd0cb66eab4d0ed4e",
       "source_path": "generated:public-path-license-map.json",
       "artifact_sha256": "SELF",
       "artifact_hash_note": "SELF_REFERENTIAL_HASH_RECORDED_IN_EXTERNAL_BUILD_MANIFEST",
