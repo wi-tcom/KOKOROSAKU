@@ -17,8 +17,8 @@ export const TRUSTED_PUBLISHERS = Object.freeze({
   "saku-character-publisher-ed25519.v1": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAi+/pgmkKqlXgPQuVdDavHYeoOZ/zwRxtnZTFoemwWiU=\n-----END PUBLIC KEY-----\n",
   "saku-pack-publisher-ed25519.v1": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA4xdWwiNGGd9CbXPUDhTjpQeJqy/eLmC9Dmdu7DBmijI=\n-----END PUBLIC KEY-----\n",
 });
-// What each pinned key may sign: the purposes of the same key in kokoroamu-trust gen 10 (vendored at
-// tools/vendor/kokoroamu-trust-f99fdbe; the pack gate checks the equality). A key verifies only a part its
+// What each pinned key may sign: the purposes of the same key in kokoroamu-trust gen 11, as in gen 10 (vendored at
+// tools/vendor/kokoroamu-trust-42013dc; the pack gate checks the equality). A key verifies only a part its
 // purposes allow — the pack catalog under a character-pack key, a Character or an AMU return manifest under a
 // character-package key (統括 2026-10-08, from the a20 vector of the 1-1 conformance set).
 export const PUBLISHER_PURPOSES = Object.freeze({
@@ -144,6 +144,8 @@ export function packVerification(result, signatures) {
       character_count: pack.character_count || 0,
       catalog_id: pack.catalog_id || "",
       catalog_release_version: pack.catalog_release_version || "",
+      // The SHA-256 of the whole pack file (ADR-0027 §2), from the host; "" from older hosts.
+      zip_sha256: typeof pack.zip_sha256 === "string" ? pack.zip_sha256 : "",
       digest_state: pack.digest_state || "SHA256_BINDINGS_VERIFIED",
       signature_state: signatures.signature_state,
       signature_detail: signatures.detail,
@@ -174,14 +176,40 @@ export function packEntryMeta(pack, signatures, directivesByCharacterId = null) 
       has_directives: Boolean(entry.has_directives),
       ...(directives ? { directives } : {}),
       character_digest: entry.character_digest,
+      // The member's revision (character_revision; ADR-0027 §4.3 members), for a standard attachment's membership.
+      source_version: typeof entry.source_version === "string" ? entry.source_version : "",
       archive_digest: entry.archive_digest,
       publisher_key_id: entry.publisher_key_id,
       publisher_fingerprint: signatures.fingerprints?.[entry.publisher_key_id] || null,
       signature_state: signatures.signature_state,
       catalog_release_version: pack.catalog_release_version,
+      // ADR-0027 §2: the whole pack file's SHA-256, so that a standard attachment can be bound to this pack later.
+      pack_zip_sha256: typeof pack.zip_sha256 === "string" ? pack.zip_sha256 : "",
     });
   }
   return meta;
+}
+
+const HEX64 = /^[a-f0-9]{64}$/;
+/**
+ * The checked original pack's facts for a standard attachment (ADR-0027 §4.3, verifyStandardAttachment's `pack`), from
+ * the host's pack import and the page's signature check. null when they cannot be given: no whole-file SHA-256 (an
+ * older host), a pack whose signatures failed, or an entry without its digest. A pack checked by digest only (no
+ * Ed25519 in this WebView2) is DIGEST_ONLY, which the kit reads as ATTACHMENT_PACK_NOT_SELECTED (UNVERIFIED).
+ * members[].character_id is the entry's slug (= the Character's identity.character_id), never its UUID characterId.
+ */
+export function standardAttachmentPackFacts(pack, signatures) {
+  if (!pack || typeof pack.zip_sha256 !== "string" || !HEX64.test(pack.zip_sha256)) return null;
+  const state = signatures?.signature_state;
+  if (state !== "PASS" && state !== "DIGEST_ONLY") return null;
+  const members = [];
+  for (const entry of pack.entries || []) {
+    if (!entry.slug || !entry.source_version || typeof entry.character_digest !== "string" || !HEX64.test(entry.character_digest)) return null;
+    members.push({ character_id: entry.slug, character_revision: entry.source_version, character_digest: entry.character_digest });
+  }
+  // other_digests only picks the refusal code (WRONG_KIND); the pack's manifest digest is the one at hand.
+  const other_digests = [pack.pack_manifest_digest].filter(d => typeof d === "string" && d.length > 0);
+  return { pack_id: pack.pack_id, pack_version: pack.pack_version, zip_sha256: pack.zip_sha256, verification: state, members, ...(other_digests.length ? { other_digests } : {}) };
 }
 
 /** Human wording for the signature state.  DIGEST_ONLY never says "verified". */

@@ -6,7 +6,7 @@
 //
 // The words are held by ID. WORDING_STATUS stays DRAFT until the Owner approves the wording shared with AMU
 // (統括 METHOD 2026-10-14 §3-4); then only BADGES' labels change.
-//   Japanese: ライター&SNS, internal wording record (4th edition; Owner 2026-10-14
+//   Japanese: ライター&SNS, FROM_WRITER_2026-10-14_badges_unify_SAKU_AMU_ja.md (4th edition; Owner 2026-10-14
 //             「案Aで進めてください」: all four begin with WI-T.COM署名 — 「WI-T.COM署名無し・自作」)
 //   English:  英語翻訳チーム, Wi-t_Site site-content/manuals/translation/2026-10-14_saku-builder-badges_EN.md @58ffbfc
 //             (3rd edition, shared with AMU Studio; 無し = "absent" so the four begin alike)

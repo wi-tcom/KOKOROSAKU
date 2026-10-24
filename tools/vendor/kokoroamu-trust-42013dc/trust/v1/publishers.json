@@ -1,0 +1,102 @@
+{
+  "schema": "KOKOROAMU-TRUST-PUBLISHERS",
+  "version": "1.0",
+  "generation": 11,
+  "issued_at": "2026-10-22T01:14:23Z",
+  "next_update": "2027-01-20T01:14:23Z",
+  "bundle_digest": "sha256-UTyxe3_76xKHWdU-9OlOrZRb35ffLPYNkpFXHm1RvFw",
+  "publishers": [
+    {
+      "publisher_id": "kokoroamu",
+      "name": "KOKOROAMU",
+      "keys": [
+        {
+          "key_id": "pub-kms-1",
+          "alg": "ES256",
+          "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEuC_BSMwGsF9Ye8DqtI038HVnFSSXtjw_2GhX9Ynp7-hXZsFQ7isH01aODKIQ8LxjZ7KP1IY71MBU9F5FusFTww",
+          "purposes": [
+            "character-package",
+            "character-pack"
+          ],
+          "state": "active",
+          "not_before": "2026-08-06T23:43:05Z"
+        },
+        {
+          "key_id": "pub-2026a",
+          "alg": "ES256",
+          "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEJgWK4DMLgRr1kTHRrSs7wf46BRk4kdR9y6P-jnAU2uQt4xItMISCXVgggKVp3Td28sJ8nDjBBDKti-4OWzfv0A",
+          "purposes": [
+            "character-package",
+            "character-pack"
+          ],
+          "state": "retired",
+          "not_before": "2026-08-05T05:20:53Z",
+          "retired_at": "2026-08-11T14:00:00Z"
+        },
+        {
+          "key_id": "saku-character-publisher-ed25519.v1",
+          "alg": "Ed25519",
+          "public_key": "MCowBQYDK2VwAyEAi-_pgmkKqlXgPQuVdDavHYeoOZ_zwRxtnZTFoemwWiU",
+          "purposes": [
+            "character-package"
+          ],
+          "state": "active",
+          "not_before": "2026-09-17T11:16:14Z"
+        },
+        {
+          "key_id": "saku-pack-publisher-ed25519.v1",
+          "alg": "Ed25519",
+          "public_key": "MCowBQYDK2VwAyEA4xdWwiNGGd9CbXPUDhTjpQeJqy_eLmC9Dmdu7DBmijI",
+          "purposes": [
+            "character-pack"
+          ],
+          "state": "active",
+          "not_before": "2026-09-17T11:17:51Z"
+        }
+      ]
+    },
+    {
+      "publisher_id": "erabazu",
+      "name": "ERABAZU",
+      "keys": [
+        {
+          "key_id": "erabazu-publisher-p256.v1",
+          "alg": "ES256",
+          "public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEBAmiKj5D5_xI-9XP3GrKis1VMZSfTVrVNdkB7J6mAY4fAbXPbRrzZI3KTpRLbOc12MTQlYi0iqCp38yhI-KSyg",
+          "purposes": [
+            "occupation-template",
+            "erabazu.release-manifest"
+          ],
+          "state": "active",
+          "not_before": "2026-08-14T11:31:00Z"
+        }
+      ]
+    },
+    {
+      "publisher_id": "wi-t.com",
+      "name": "WI-T.COM",
+      "keys": [
+        {
+          "key_id": "wi-t-countersigner-ed25519.v1",
+          "alg": "Ed25519",
+          "public_key": "MCowBQYDK2VwAyEAg0xOxoezB_Y-oeUcQqK2Zy0XDcyNBRZYFNET6cTYkNs",
+          "purposes": [
+            "amupkg-countersignature"
+          ],
+          "state": "active",
+          "not_before": "2026-10-07T00:28:44Z"
+        },
+        {
+          "key_id": "wi-t-overlay-ed25519.v1",
+          "alg": "Ed25519",
+          "public_key": "MCowBQYDK2VwAyEA78blrQ92US20tIOKhHNM0nrSsEbWwg27TEZIUds2Zgc",
+          "purposes": [
+            "character-export-overlay"
+          ],
+          "state": "active",
+          "not_before": "2026-10-17T00:51:59Z"
+        }
+      ]
+    }
+  ]
+}

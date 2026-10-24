@@ -131,19 +131,19 @@ if (existsSync(amuPrimitives)) {
 // ── 0b. key purposes (統括 2026-10-08, from the a20 vector of the 1-1 conformance set) ──────────────────
 // A pinned key verifies only what its trust purposes allow: the pack catalog only under a character-pack key,
 // a Character (and an AMU return manifest) only under a character-package key. The table equals the vendored
-// kokoroamu-trust gen 10 bundle.
+// kokoroamu-trust gen 11 bundle (the two pinned keys are as in gen 10).
 {
-  const bundle = JSON.parse(readFileSync(path.join(ROOT, "tools/vendor/kokoroamu-trust-f99fdbe/trust/v1/bundle.json"), "utf8"));
+  const bundle = JSON.parse(readFileSync(path.join(ROOT, "tools/vendor/kokoroamu-trust-42013dc/trust/v1/bundle.json"), "utf8"));
   const fromTrust = {};
   const keyBytes = {};
   for (const publisher of bundle.publishers) for (const key of publisher.keys || []) if (Intake.TRUSTED_PUBLISHERS[key.key_id]) { fromTrust[key.key_id] = [...key.purposes].sort(); keyBytes[key.key_id] = Buffer.from(key.public_key, "base64url"); }
-  // AMU TRUST(1) 2026-10-08: the pinned PEMs are the same SPKI bytes as the gen 10 public_key, so a key swap is caught here too.
+  // AMU TRUST(1) 2026-10-08: the pinned PEMs are the same SPKI bytes as the trust's public_key, so a key swap is caught here too.
   for (const [keyId, pemText] of Object.entries(Intake.TRUSTED_PUBLISHERS)) {
     const der = Buffer.from(pemText.replace(/-----(BEGIN|END) PUBLIC KEY-----/g, "").replace(/\s+/g, ""), "base64");
-    check(keyBytes[keyId] && der.equals(keyBytes[keyId]), `PK-PURPOSE the pinned PEM of ${keyId} is the gen 10 public_key, byte for byte`);
+    check(keyBytes[keyId] && der.equals(keyBytes[keyId]), `PK-PURPOSE the pinned PEM of ${keyId} is the gen 11 public_key, byte for byte`);
   }
   const canon = o => JSON.stringify(Object.keys(o).sort().map(k => [k, [...o[k]].sort()]));
-  equal(canon(Intake.PUBLISHER_PURPOSES || {}), canon(fromTrust), "PK-PURPOSE the pinned purposes equal kokoroamu-trust gen 10 for both pinned keys");
+  equal(canon(Intake.PUBLISHER_PURPOSES || {}), canon(fromTrust), "PK-PURPOSE the pinned purposes equal kokoroamu-trust gen 11 for both pinned keys");
   const pem = key => key.publicKey.export({ type: "spki", format: "pem" });
   const charKey = generateKeyPairSync("ed25519"), packKey = generateKeyPairSync("ed25519");
   const publishers = { "t-character": pem(charKey), "t-pack": pem(packKey) };
@@ -206,7 +206,8 @@ if (packsPresent) {
   equal(meta.size, 15, "PK-META one provenance record per Character");
   check([...meta.values()].every(item => item.pack_id === "saku-pack-support" && item.operation_class && item.character_digest && item.signature_state === "PASS" && /^[0-9a-f]{64}$/.test(item.publisher_fingerprint)), "PK-META provenance carries class, digest, signature state and publisher fingerprint");
 } else {
-  cases.push(`PK-FIXTURE production packs not present under ${FIXTURES} — signature checks on real packs skipped (set SAKU_PACK_FIXTURES)`);
+  // 統括's check of #128 (NG-3): a skipped part is not a passed case; the last line names it (NOT_PRESENT / NOT_EVALUATED).
+  console.log(`PK-FIXTURE production packs not present under ${FIXTURES} — signature checks on real packs NOT_RUN (set SAKU_PACK_FIXTURES)`);
 }
 
 // ── 2. Library stores provenance beside the Character ──────────────────────
@@ -301,7 +302,7 @@ try{
 }catch(error){document.getElementById('report').textContent=JSON.stringify({status:'FAIL',passed:checks.length,error:String(error.stack||error),checks,body:doc?.body.innerText.slice(-2500)});document.getElementById('report').dataset.status='FAIL';}
 </script>`;
   if (!existsSync(path.join(ROOT, ".desktop-dist/index.html"))) {
-    cases.push("PK-UI .desktop-dist not prepared — browser end-to-end skipped (run desktop:prepare first)");
+    console.log("PK-UI .desktop-dist not prepared — browser end-to-end NOT_RUN (run desktop:prepare first)");
   } else {
     const mime = { ".mjs": "text/javascript", ".html": "text/html", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml" };
     const server = createServer(async (request, response) => {

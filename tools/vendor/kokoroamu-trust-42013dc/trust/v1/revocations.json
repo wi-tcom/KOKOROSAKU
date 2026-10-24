@@ -1,0 +1,9 @@
+{
+  "schema": "KOKOROAMU-TRUST-REVOCATIONS",
+  "version": "1.0",
+  "generation": 11,
+  "issued_at": "2026-10-22T01:14:23Z",
+  "next_update": "2027-01-20T01:14:23Z",
+  "bundle_digest": "sha256-UTyxe3_76xKHWdU-9OlOrZRb35ffLPYNkpFXHm1RvFw",
+  "revocations": []
+}

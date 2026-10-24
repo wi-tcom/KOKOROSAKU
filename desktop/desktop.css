@@ -262,3 +262,8 @@ button.primary,.button.primary{background:var(--accent);border-color:var(--accen
 .export-preview pre{max-height:16em;overflow:auto;margin:8px 0 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font:12px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
 .export-more{margin:6px 0 10px}
 .export-more p{margin:8px 0 0;font-size:13px;color:var(--muted)}
+/* SAKU β.13 S-10 = L2 (Owner 結果 407 ①, MOCK_2026-10-23_SAKU_b13_L2_help_cards): the Help cards look like something to press — a line in the accent colour on the left, the title in it, a "→" at the bottom right; the pointer or the keyboard on one gives ①'s entry-card ring. */
+.help-grid a{position:relative;border-left:3px solid var(--accent);padding:16px 30px 16px 16px;cursor:pointer}
+.help-grid a strong{color:var(--accent)}
+.help-grid a::after{content:"→";position:absolute;right:12px;bottom:12px;color:var(--accent);font-weight:600}
+.help-grid a:hover,.help-grid a:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent);outline:0}

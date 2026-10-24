@@ -553,7 +553,12 @@ function loadChar(character, { resume = true, activeSource = "" } = {}) {
   if (!clearStoredBuilderLinksForCurrentSession("TRAINER_CHARACTER_REPLACED")) return false;
   resetHandoffUi();
   CHAR = clone(character);
-  if (activeSource) ActiveSaku.setActive(CHAR, { source: activeSource });
+  // 統括 照らし #124 NG-1: the same Character keeps the row it was opened from.
+  if (activeSource) {
+    const prior = ActiveSaku.getActive?.();
+    const sameCharacter = prior && prior.character?.identity?.character_id && prior.character.identity.character_id === CHAR?.identity?.character_id;
+    ActiveSaku.setActive(CHAR, { source: activeSource, entry_id: sameCharacter ? prior.entry_id || null : null });
+  }
   let loaded = resume ? loadSession(localStorage) : { ok: false };
   if (!loaded.ok || loaded.session.source_character.character_id !== (CHAR?.identity?.character_id || "")
     || loaded.session.source_character.character_revision !== String(CHAR?.identity?.character_revision || "")

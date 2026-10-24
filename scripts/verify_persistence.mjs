@@ -37,7 +37,8 @@ check(app.includes('if (Library.summary().total) return { status: "INDEX_NOT_EMP
 check(app.includes("LIBRARY_RECOVERED_FROM_WORKSPACE"), "recovery is announced, not silent");
 const builder = await read("tools/saku-builder.html");
 check(builder.includes('await invoke("save_workspace_character"'), "the Builder Save action writes the current Character to the selected workspace");
-check(builder.includes('window.SAKU_ACTIVE?.setActive(character, { source: "builder-save" })'), "a successful Builder Save makes the saved revision the clean Active SAKU");
+// 統括 照らし #124 NG-1 (S-7): the Workspace-only save keeps the row it was opened from (the new row is not in the list).
+check(builder.includes('window.SAKU_ACTIVE?.setActive(character, { source: "builder-save", entry_id: window.SAKU_ACTIVE?.getActive?.()?.entry_id || null })'), "a successful Builder Save makes the saved revision the clean Active SAKU");
 
 // -- 3. uninstall paths -----------------------------------------------------
 const nsi = await read("src-tauri/windows/installer.nsi");
@@ -55,7 +56,10 @@ check(ja.includes("workspace") && en.includes("workspace"), "both say the worksp
 // -- 4. help matches the behaviour ------------------------------------------
 const help = await read("desktop/help/index.html");
 check(help.includes("com.wi-t.saku-builder"), "help names the removable location");
-check(help.includes("破壊的"), "help says the checkbox is destructive");
+// SAKU β.13 S-11: the help's words changed when the list moved to the Workspace (the approved text: deleting the app data at
+// uninstall leaves the Workspace's characters, imports and .saku-builder, and the list comes back). It checks that meaning now;
+// the installer's own checkbox still says it is destructive (checked above).
+check(help.includes("Uninstall でアプリのデータを削除しても、Workspace の characters・imports・.saku-builder は削除されません。") && help.includes("同じ Workspace を開けば、一覧は元に戻ります。"), "help says what uninstall removes and that the Workspace keeps the list");
 check(help.includes("characters") && help.includes("imports"), "help names the durable workspace locations");
 const started = await read("desktop/help/getting-started.html");
 check(started.includes("復元"), "getting started says the Library can be restored from the workspace");
@@ -104,7 +108,7 @@ const harness = [
   '    throw new Error("UNSUPPORTED_"+name);',
   '  }}};',
   '  check(lib().length===0,"the removable index starts empty, as after a destructive uninstall");',
-  '  d.getElementById("view-characters").click();',
+  '  d.querySelector("[data-sf-screen=select]").click(); // SAKU β.13 S-11: ① is reached from the shared frame (Owner 2026-10-14 画面改修)',
   '  await wait(1400);',
   '  const entries=lib();',
   '  check(entries.length===1,"the Character was rebuilt from the workspace ("+entries.length+")");',
@@ -112,8 +116,8 @@ const harness = [
   '  check(entries[0].source==="WORKSPACE_RECOVERY","the rebuilt entry is labelled as recovered, not as a fresh import");',
   '  check(d.body.textContent.includes("復元"),"the recovery is announced on screen");',
   '  check(d.getElementById("viewer-results").textContent.includes("永続性確認用"),"the recovered Character is discoverable in the list");',
-  '  d.getElementById("viewer-back").click(); await wait(200);',
-  '  d.getElementById("view-characters").click(); await wait(1000);',
+  '  d.querySelector("[data-sf-screen=prep]").click(); await wait(200);',
+  '  d.querySelector("[data-sf-screen=select]").click(); await wait(1000);',
   '  check(lib().length===1,"a populated index is not rebuilt over ("+lib().length+")");',
   '  r.textContent=out.join("\\n"); r.dataset.status="PASS";',
   '}catch(error){ r.textContent=(out.join("\\n")+"\\nFAIL "+error.message).trim(); r.dataset.status="FAIL"; }',

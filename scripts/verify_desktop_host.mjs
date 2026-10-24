@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { LEAK_EXAMPLES, leaksIn } from "./leak-check.mjs";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -212,11 +213,17 @@ assert.match(await read(".desktop-dist/tools/saku-trainer.html"), /<html lang="j
 assert.match(await read(".desktop-dist/tools/unified-v1/review-results.mjs"), /MATCH.*DIFFERENT.*UNKNOWN.*NOT_TESTED.*INVALID/);
 assert.match(await read(".desktop-dist/tools/unified-v1/trainer-ui.mjs"), /trainer-frozen-ia\.mjs/);
 assert.equal((await read(".desktop-dist/tools/saku-builder-unified-v1.html")).match(/data-ui-locale=/g)?.length, 4);
+// SAKU β.13 S-8 + L21: one leak table for the installer and the public web tool (scripts/leak-check.mjs), with its own
+// examples: what it must stop (an escaped Windows path, an internal record folder, a secret, a mail address among them) and
+// what it lets through (the two object keys of L19, an image's @2x, the licence authors in third-party/).
+for (const [relative, text] of LEAK_EXAMPLES.stops) assert.ok(leaksIn(relative, text).length > 0, `the leak check stops ${text} in ${relative}`);
+for (const [relative, text] of LEAK_EXAMPLES.passes) assert.deepEqual(leaksIn(relative, text), [], `the leak check lets through ${text} in ${relative}`);
 for (const file of await files(path.join(ROOT, ".desktop-dist"))) {
   const bytes = await readFile(file);
   if (bytes.includes(0)) continue;
-  const source = bytes.toString("utf8");
-  assert.doesNotMatch(source, /C:\/Users|C:\\Users|OneDrive|(?:^|[^A-Za-z])file:/i, `public desktop leak: ${path.relative(ROOT, file)}`);
+  const relative = path.relative(path.join(ROOT, ".desktop-dist"), file).replaceAll(path.sep, "/");
+  const found = leaksIn(relative, bytes.toString("utf8"));
+  assert.deepEqual(found, [], `public desktop leak (${found.join(", ")}): ${relative}`);
 }
 
 await prepareDesktopAssets("owner-review-internal");
@@ -338,7 +345,7 @@ assert.doesNotMatch(desktopIndex, /saku-trainer\.html|platform-to-trainer|data-c
 {
   const licensing = await read("LICENSING.md");
   assert.equal(licensing, await read("tooling/builder/LICENSING.md"), "tooling/builder/LICENSING.md is the root file");
-  assert.match(licensing, /\| Built-in Sample Pack \| INCLUDED \| The installer bundles sample pack 1\.1\.0 [^|\n]*LicenseRef-WIT-Sample-1\.0/);
+  assert.match(licensing, /\| Built-in Sample Pack \| INCLUDED \| The installer bundles sample pack 1\.2\.0 [^|\n]*LicenseRef-WIT-Sample-1\.0/);
   assert.match(licensing, /\| Sample3 \| NOT_INCLUDED \|/);
   assert.doesNotMatch(licensing, /0\.1\.0-beta\.\d|4b277ead|D-B3 authorizes the exact three/, "LICENSING.md is bound to one version or names the retired samples as bundled");
 }

@@ -12,6 +12,9 @@ import { loadAdoptedSchema, validateCompleteAdoptedCharacter } from '../lib/adop
 import * as ActiveSaku from './active-character.mjs';
 import * as Library from './character-library.mjs';
 import { consumeHandoff } from './handoff-binding.mjs';
+import { keepContextMenuToFieldsInApp } from './context-menu-guard.mjs';
+// SAKU β.13 S-10 = L3: this page has no shared frame; the right-click menu is kept to the fields here too.
+keepContextMenuToFieldsInApp();
 
 // The Trainer hands an external AI the same text 03 does, so it reads the same
 // base layer and the same glossary through the same module (Owner 2026-09-23).
@@ -202,7 +205,8 @@ function bind(){
 function on(id,action){if($(id))$(id).onclick=()=>guard(action);}
 
 async function init(){
-  language=localStorage.getItem('saku.trainer.ux4.locale')==='en'?'en':'ja';
+  // SAKU β.13 Q9-2: the Trainer's own choice when there is one, else the main screen's language.
+  { const own=localStorage.getItem('saku.trainer.ux4.locale'); language=own==='en'||own==='ja'?own:(localStorage.getItem('saku.ui.locale')==='en-US'?'en':'ja'); }
   handoffContext=await loadHandoffContext({baseDirs:['./'],guideUrls:['./manual/saku-field-guide.data.json','./manual/saku-field-guide.data.json']});
   // A Character is admitted here as the import gate admits it: the hand checks and
   // the adopted schema (2026-09-24). Without the schema nothing is admitted.

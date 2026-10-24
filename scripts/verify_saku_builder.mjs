@@ -147,7 +147,7 @@ const fail = (label, message) => fails.push(label + ": " + message);
   ok(api.toPrompt === undefined && api.toGuildJson === undefined, "removed: toPrompt / toGuildJson are no longer page functions");
   ok(api.TABS.map(t => t[0]).join(",") === "yaml,json,test,help", "tabs: character.yaml / Character File / 試験記録 / Help only");
   ok(!api.TABS.some(t => /外部AIプロンプト|Guild概要/.test(t[1])), "tabs: no 外部AIプロンプト / Guild概要 tab");
-  ok(api.TAB_PURPOSE.json.ja.includes("署名やパックを作るときの元になる JSON") && api.TAB_PURPOSE.json.ja.includes("AMU 用 ZIP をダウンロード") && api.TAB_PURPOSE.json.ja.includes("MACHI へは、署名付きのパックにして渡します"), "Character File purpose names the source JSON, the ZIP for AMU and the signed pack for MACHI");
+  ok(api.TAB_PURPOSE.json.ja.includes("署名やパックを作るときの元になる JSON") && api.TAB_PURPOSE.json.ja.includes("AMU 用 ZIP をダウンロード") && !api.TAB_PURPOSE.json.ja.includes("MACHI"), "Character File purpose names the source JSON and the ZIP for AMU, and no longer MACHI (Owner 結果 424)");
 }
 
 // ── 4-b. ContactGuard：初版MVPから継承した外部出力前検査 ──

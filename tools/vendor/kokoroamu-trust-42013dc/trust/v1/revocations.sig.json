@@ -1,0 +1,15 @@
+{
+  "schema": "KOKOROAMU-TRUST-REVOCATIONS",
+  "version": "1.0",
+  "signatures": [
+    {
+      "publisher_id": "kokoroamu-root",
+      "key_id": "root-usb-1",
+      "alg": "ES256",
+      "purpose": "trust-revocations",
+      "created_at": "2026-10-22T01:14:23Z",
+      "payload_digest": "sha256-ldgkIwAe7LJSBjwzekn9LorJAlZrEYCgz9qjSnEZ30A",
+      "sig": "CT23ZHZ4nf-u8qzzhdxS6-J2XgPk8_w6RDX-XKXz7zd2t6V-XRPbpTcQEOJMyATn2xd-Nx_gOoaBlZeKN3YxAg"
+    }
+  ]
+}

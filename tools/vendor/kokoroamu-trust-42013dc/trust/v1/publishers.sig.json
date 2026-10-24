@@ -1,0 +1,15 @@
+{
+  "schema": "KOKOROAMU-TRUST-PUBLISHERS",
+  "version": "1.0",
+  "signatures": [
+    {
+      "publisher_id": "kokoroamu-root",
+      "key_id": "root-usb-1",
+      "alg": "ES256",
+      "purpose": "trust-publishers",
+      "created_at": "2026-10-22T01:14:23Z",
+      "payload_digest": "sha256-pqamPO5vAC3sJicU_NOHPRu86nCaFHDeOsOUazQR7YU",
+      "sig": "VRRpM6UlSdvuxjMF_auvefOoA39asliOWLrMKp7XdK2rpaBmsPhXV0Pyu0XQaa2KSZNXLaWV6fdJkaue4Am2eQ"
+    }
+  ]
+}

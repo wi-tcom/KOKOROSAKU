@@ -198,7 +198,15 @@ ok(APP_VERSION_LINE.test(hostSource), "the host still declares APP_VERSION (the 
 // Re-pinned 2026-10-15 (keying round 3, 統括 m4・m5): Package Import itself is unchanged. The export save dialogs name the
 // extension in the type row (m4) and open in the Workspace folder (export_start_directory, workspace_export_start; the three
 // save commands take the AppHandle; m5). Cargo tests keying_save_dialog_*.
-check(sha256(hostSource.replace(APP_VERSION_LINE, 'const APP_VERSION: &str = "<VERSION>";')), "fc5689027fc466dd3878b4005932aa403a0102dc5815a2a483fec917498b78bd", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
+// Re-pinned 2026-10-22 (SAKU β.13 U1b-2, ADR-0027 GOV-ADR-2026-10-22-01): Package Import adds one value — the SHA-256 of the
+// whole pack file (pack.zip_sha256 = sha256_hex(&bytes), the package_digest of §2); nothing it checks or refuses changes.
+// Around it: the standard attachment picker (choose_standard_attachment, standard_attachment.rs: the host opens the ZIP
+// containers and hands the entries to the page's kit; it writes and signs nothing). Cargo tests in standard_attachment.rs.
+// Re-pinned 2026-10-22 (SAKU β.13 L10, 00A C06-1 (b) and C06-6): Package Import is unchanged. Around it: a read-only
+// command, list_imported_pack_ids (imported_packs.rs), returns the slugs of the committed pack imports. Cargo tests there.
+// Re-pinned 2026-10-24 (SAKU β.13 S-10 = L1): Package Import is unchanged. Around it: the window's setup installs the
+// WebView's menu for a field (mod edit_menu; edit_menu.rs keeps the editing items only). Cargo tests in edit_menu.rs.
+check(sha256(hostSource.replace(APP_VERSION_LINE, 'const APP_VERSION: &str = "<VERSION>";')), "440e4b4c0247764a5ba29f931bbe003925473f22f0933587f9880155078095b3", "Package Import implementation changed outside the reviewed Unified-schema intake, Character Pack intake and durable Character store");
 ok(/SAKU_UNIFIED_CHARACTER_SCHEMA_FROZEN_CANDIDATE/.test(await read("src-tauri/src/main.rs")), "Package Import host does not recognise the active Unified schema");
 // Re-pinned 2026-09-28 (β.9): the profile named the three OSS samples as bundled after they left the
 // installer (D-20260924-oss-samples-retired) and did not name the sample pack 1.1.0 that replaced them

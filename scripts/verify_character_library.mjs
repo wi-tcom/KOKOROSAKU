@@ -175,6 +175,15 @@ try { parseCharacterText("{ broken", "x.json"); assert.fail("should have thrown"
 catch (error) { ok(error instanceof YamlLiteError, "broken JSON is refused with a clear error"); }
 
 // ── the packaged page, in a browser ──────────────────────────────────────────
+// SAKU β.13 S-11: TOP and its buttons were replaced by the shared frame (Owner 2026-10-14 画面改修, 990b1b2): the selected
+// Character is the frame's line (.sf-who-name), ① and 準備と進め方 are its menu ([data-sf-screen]).
+// SAKU β.13 S-11: the hand-off URL carries the Character's own id, not the row key (the Trainer hand-off left; this is ②'s).
+{
+  const app = await readFile(path.join(ROOT, "desktop/app.mjs"), "utf8");
+  const fn = app.slice(app.indexOf("function handoffUrl(record, target)"), app.indexOf("\n}", app.indexOf("function handoffUrl(record, target)")));
+  ok(fn.includes("const id = encodeURIComponent(record.character_id || record.id);") && fn.includes("character_id=${id}"), "the hand-off URL carries the Character's own id");
+}
+
 console.log("SELECTION_SCREEN");
 const chrome = [process.env.SAKU_CHROME_PATH, "C:/Program Files/Google/Chrome/Application/chrome.exe", "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe", "/usr/bin/google-chrome"].filter(Boolean);
 let browser = "";
@@ -202,11 +211,11 @@ try{
   await wait(900);
   const d=f.contentDocument,w=f.contentWindow;
 
-  check(d.getElementById("selected-character-name").textContent==="未選択","TOP says 未選択 before anything is chosen");
+  check(d.querySelector(".sf-who-name").textContent==="未選択","TOP says 未選択 before anything is chosen");
   check(!d.getElementById("step-source"),"the Package / 新規作成 card is gone from TOP");
-  check(d.getElementById("view-characters").textContent.includes("キャラクターを選択する"),"entry 01 reads as choosing a Character");
+  check(d.querySelector("[data-sf-screen=select]").textContent.includes("キャラクター選択"),"entry ① reads as choosing a Character (the shared frame, Owner 2026-10-14)");
 
-  d.getElementById("view-characters").click();
+  d.querySelector("[data-sf-screen=select]").click();
   await wait(600);
   const cards=()=>[...d.querySelectorAll("#viewer-results .catalog-card")];
   check(cards().length===2,"the handoff pack is adopted into the list ("+cards().length+")");
@@ -257,19 +266,19 @@ try{
   const menuActions=[...dialog.querySelectorAll("[data-character-action]")].map(b=>b.dataset.characterAction);
   // Tuning added a fifth action. The guarantee is that the original four are
   // still there, not that the count never changes.
-  check(["view","edit","train","delete"].every(a=>menuActions.includes(a)),"the menu keeps the original four actions ("+menuActions.join(",")+")");
+  check(["view","edit","run","delete"].every(a=>menuActions.includes(a))&&!menuActions.includes("train"),"(SAKU β.13 S-11: 「トレーニングする」 left the screens, Owner 2026-09-27; ③実行 is in its place) the menu keeps the original four actions ("+menuActions.join(",")+")");
   dialog.querySelector('[data-character-action="view"]').click();
   await wait(250);
   check(dialog.open===false,"choosing an action closes the menu");
   check(w.localStorage.getItem("saku.workspace.active")!==null,"choosing 見る makes it the selected Character");
 
-  d.getElementById("viewer-back").click();
+  d.querySelector("[data-sf-screen=prep]").click();
   await wait(200);
-  check(d.getElementById("selected-character-name").textContent!=="未選択","TOP now names the selected Character");
+  check(d.querySelector(".sf-who-name").textContent!=="未選択","TOP now names the selected Character");
   check(d.getElementById("host-status").textContent.includes("編集するか、AI プラットフォームで動かすか")||d.getElementById("host-status").textContent.includes("DESKTOP_HOST"),"TOP moves on from asking for a Character");
 
   // What just arrived, and what is checked, must be findable among many rows.
-  d.getElementById("view-characters").click();
+  d.querySelector("[data-sf-screen=select]").click();
   await wait(300);
   check(cards().some(card=>card.dataset.new==="true"),"the rows that just arrived are marked");
   check(cards().some(card=>card.querySelector(".catalog-badge")),"a newly added row carries a badge");
@@ -285,14 +294,15 @@ try{
   check(pick.dataset.checked==="false","unchecking removes the mark");
 
   // The subject line must not read as one more list row.
-  d.getElementById("viewer-back").click();
+  d.querySelector("[data-sf-screen=prep]").click();
   await wait(250);
-  const subjectStyle=w.getComputedStyle(d.getElementById("selected-character"));
-  check(parseFloat(subjectStyle.borderTopWidth)>=2,"the subject line is drawn heavier than the panels around it ("+subjectStyle.borderTopWidth+")");
-  check(subjectStyle.boxShadow!=="none","the subject line stands off the page");
+  // SAKU β.13 S-11: the subject line is the shared frame's own line (Owner 2026-10-14 画面改修), not a heavier panel on TOP.
+  const subjectLine=d.querySelector(".sf-active");
+  check(subjectLine&&!subjectLine.closest("#viewer-results")&&subjectLine.querySelector(".sf-who-label").textContent==="選択中のキャラクター","the subject line is the frame's own labelled line, not one more list row");
+  check(Boolean(subjectLine.compareDocumentPosition(d.getElementById("viewer-results"))&Node.DOCUMENT_POSITION_FOLLOWING),"the subject line stands above the list");
 
   // The action the Owner reads must say what it does.
-  d.getElementById("view-characters").click();
+  d.querySelector("[data-sf-screen=select]").click();
   await wait(300);
   cards()[0].querySelector("[data-open-id]").click();
   await wait(200);
@@ -347,7 +357,7 @@ try{
   const dr=f.contentDocument;
   const Lib2=await import("/tools/unified-v1/character-library.mjs");
   Lib2.importCharacters([{schema:{schema_id:"saku.character",schema_version:LEGACY_SCHEMA_VERSION},identity:{character_id:"norev",display_name:"版なし"},purpose:{summary:"版なし の概要"},assistant_composition:{seat1:{function:"FRONT_COORDINATOR"},seat2:{function:"SPECIALIST"},seat3:{function:"FACT_CHECKER"},seat4:{function:"SAFETY_BOUNDARY"},seat5:{function:"USER_ADVOCATE"},seat6:{function:"RED_TEAM"},seat7:{function:"FORWARD_DRIVER"},seat8:{function:"HUMAN"}}}],"FILE",{schema:{kind:"LEGACY_SCHEMA_CHARACTER",schema_id:"saku.character",schema_version:LEGACY_SCHEMA_VERSION}});
-  dr.getElementById("view-characters").click();
+  dr.querySelector("[data-sf-screen=select]").click();
   await wait(600);
   const norev=[...dr.querySelectorAll("#viewer-results .catalog-card")].find(card=>card.textContent.includes("版なし"));
   norev.querySelector("[data-open-id]").click();
@@ -361,13 +371,28 @@ try{
   f.src="/index.html";
   await new Promise(res=>f.addEventListener("load",res,{once:true}));
   await wait(700);
-  const d2=f.contentDocument;
-  check(d2.getElementById("selected-character-name").textContent===targetName,"returning to TOP still names the Character (TOP="+d2.getElementById("selected-character-name").textContent+" expected="+targetName+")");
-  d2.getElementById("view-characters").click();
+  let d2=f.contentDocument;
+  check(d2.querySelector(".sf-who-name").textContent===targetName,"returning to TOP still names the Character (TOP="+d2.querySelector(".sf-who-name").textContent+" expected="+targetName+")");
+  d2.querySelector("[data-sf-screen=select]").click();
   await wait(500);
-  const trainerLink=d2.querySelector("#viewer-detail [data-trainer-handoff]");
-  check(Boolean(trainerLink),"the detail pane offers a Trainer handoff");
-  check(!/character_id=entry-/.test(trainerLink.getAttribute("href")),"the Trainer handoff carries the Character's own id, not the row key");
+  // SAKU β.13 S-11: the Trainer hand-off left the screens (Owner 2026-09-27); the detail pane hands off to ② and ③. That the
+  // hand-off URL carries the Character's own id is checked on the source (handoffUrl, below the browser part).
+  check(Boolean(d2.querySelector("#viewer-detail [data-builder-copy]"))&&!d2.querySelector("#viewer-detail [data-trainer-handoff]"),"the detail pane offers the ② hand-off and no Trainer hand-off");
+  // 統括 照らし #128 NG-6 (b): on the screen too, ② is opened with the Character's own id, not the row key.
+  {
+    const moved=new Promise(res=>f.addEventListener("load",res,{once:true}));
+    d2.querySelector("#viewer-detail [data-builder-copy]").click();
+    await moved; await wait(500);
+    const opened=new URL(f.contentWindow.location.href);
+    const id=opened.searchParams.get("character_id")||"";
+    check(/saku-builder\.html$/.test(opened.pathname)&&id&&!/^entry-/.test(id),"② is opened with the Character's own id, not the row key (character_id="+id+")");
+    f.src="/index.html";
+    await new Promise(res=>f.addEventListener("load",res,{once:true}));
+    await wait(700);
+    d2=f.contentDocument;
+    d2.querySelector("[data-sf-screen=select]").click();
+    await wait(500);
+  }
 
   // Clearing asks first, and a refusal really does keep the list. The frame has
   // navigated since the first checks, so read the document it holds now.
@@ -375,13 +400,13 @@ try{
   const cards2=()=>[...d2.querySelectorAll("#viewer-results .catalog-card")];
   const before=cards2().length;
   check(before>0,"the list is still there after the Builder round trip ("+before+")");
-  w2.confirm=()=>false;
+  // SAKU β.13 S-11: the question is the app's own dialog (confirm-dialog.mjs), not window.confirm: it is answered by its buttons.
+  const answer=async choice=>{ await wait(150); const dialog=d2.querySelector("dialog.saku-confirm[open]"); check(Boolean(dialog),"clearing asks first, in the app's dialog"); dialog.querySelector(choice?"[data-confirm-action]":"[data-confirm-cancel]").click(); await wait(250); };
   d2.getElementById("viewer-clear-list").click();
-  await wait(200);
+  await answer(false);
   check(cards2().length===before,"declining the confirmation keeps the list");
-  w2.confirm=()=>true;
   d2.getElementById("viewer-clear-list").click();
-  await wait(250);
+  await answer(true);
   check(cards2().length===0,"confirming clears the list");
   check(d2.getElementById("viewer-empty").hidden===false,"an empty list says so");
 

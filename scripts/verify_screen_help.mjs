@@ -39,7 +39,11 @@ for (const [name, guide] of Object.entries(guides)) {
     assert.ok(field.screenSection, `SH-GUIDE ${name}: ${field.canonicalPath} names a screen section`);
     const note = field.currentNote?.ja || "";
     assert.ok(note && note.length <= 120 && (note.match(/。/g) || []).length <= 2, `SH-GUIDE ${name}: ${field.canonicalPath} note ≤ 120 chars, ≤ 2 sentences (${note.length})`);
-    assert.ok(!/必ず|常に|確実に|保証|絶対|価格|円/.test(note), `SH-GUIDE ${name}: ${field.canonicalPath} note has no assertive / price words`);
+    // 法務の続き 7 §2 (統括 2026-10-24): the legal team's own sentence (P05's short note) says what is not guaranteed. Only that
+    // text is taken out before the check; any 保証 elsewhere still fails (as SC-PLATE does for L-50).
+    const LEGAL_NOTES = ["Agent Skills 対応AI向けにZIPで保存します。作り直したスキルはWI-T.COMによる内容の提供・確認も名札の署名もなく、AIが従うことや正確性・安全性・法令適合性は保証されないため、送る内容と出力は自分で確かめてください。"];
+    const rest = LEGAL_NOTES.reduce((text, legal) => text.split(legal).join(""), note);
+    assert.ok(!/必ず|常に|確実に|保証|絶対|価格|円/.test(rest), `SH-GUIDE ${name}: ${field.canonicalPath} note has no assertive / price words outside the legal team's text`);
     for (const option of field.help?.optionDetails || []) assert.ok(option.effect?.ja && option.effect.source === "OPERATION_FACT" && !/必ず|常に|確実に|保証|絶対/.test(option.effect.ja), `SH-GUIDE ${name}: option ${field.canonicalPath}.${option.value} effect sourced OPERATION_FACT, no assertive words`);
   }
   cases.push(`SH-GUIDE ${name}: every field has a section, a note within the rules and sourced option effects`);
@@ -261,7 +265,7 @@ try{
   check(!/Claude|Codex|Anthropic|OpenAI|Copilot|Gemini/.test(doc.getElementById('platform-skill-export').textContent+doc.getElementById('platform-skills').textContent),'SH-SKILL the section and the 03 explanation name no product (Owner 2026-10-04)');
   // EN: the translation team's strings (2026-10-04), the dialog title and the state line switch too.
   win.SAKU_DESKTOP_I18N.setLocale('en-US');await wait(150);
-  check(doc.getElementById('platform-skill-export-title').textContent==='Export as an agent skill (Agent Skills)'&&save.textContent==='Save as a skill','SH-SKILL-EN the title (renamed 2026-10-14, the Q20 English from the translation team) and the button read English');
+  check(doc.getElementById('platform-skill-export-title').textContent==='Regenerate and save (no WI-T.COM signature on the name tag)'&&save.textContent==='Save as a skill','SH-SKILL-EN the title (renamed for β.13 L19: the regenerated route, 英語翻訳チーム 2026-10-22) and the button read English');
   check(doc.getElementById('platform-skill-export-lead').textContent.startsWith('Save this Character as a ZIP of a folder for AI tools that can load the “skill” format (Agent Skills).'),'SH-SKILL-EN the lead reads the approved English');
   win.__skillSave=null;save.click();await wait(1200);const sentEn=win.__skillSave||{};
   check(sentEn.dialogTitle==='Save as a skill','SH-SKILL-EN the save dialog title is English (got '+sentEn.dialogTitle+')');
@@ -307,7 +311,7 @@ try{
  document.getElementById('report').textContent=JSON.stringify({status:'PASS',checks});document.getElementById('report').dataset.status='PASS';
 }catch(error){document.getElementById('report').textContent=JSON.stringify({status:'FAIL',error:String(error.stack||error),checks,body:doc?.body?.innerText.slice(-1200)});document.getElementById('report').dataset.status='FAIL';}
 </script>`;
-  const stub = "<script>window.__TAURI__={__stub:true,core:{invoke:async(command,args)=>{if(command==='save_skill_export_zip'){window.__skillSave=args;return{status:'SAVED',path:'C:/x/'+args.filename};}if(command==='save_workspace_character')return 'C:/ws/characters/x/character.json';if(command==='get_runtime_state'||command==='runtime_state')return{workspace:'C:/ws',first_run:false,app_version:'0.1.0-beta.3'};if(command==='list_workspace_characters')return{status:'OK',artifacts:[]};return null;}}};</script>";
+  const stub = "<script>window.__TAURI__={__stub:true,core:{invoke:async(command,args)=>{if(command==='list_imported_pack_ids')return{status:'OK',ids:[],unreadable:[]};if(command==='save_skill_export_zip'){window.__skillSave=args;return{status:'SAVED',path:'C:/x/'+args.filename};}if(command==='save_workspace_character')return 'C:/ws/characters/x/character.json';if(command==='get_runtime_state'||command==='runtime_state')return{workspace:'C:/ws',first_run:false,app_version:'0.1.0-beta.3'};if(command==='list_workspace_characters')return{status:'OK',artifacts:[]};return null;}}};</script>";
   const mime = { ".mjs": "text/javascript", ".html": "text/html", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml" };
   const server = createServer(async (request, response) => {
     try {

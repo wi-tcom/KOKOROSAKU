@@ -8556,6 +8556,119 @@
         "en": "Review language behavior"
       },
       "target": "P01"
+    },
+    {
+      "title": {
+        "ja": "保存・書き出しが断られた",
+        "en": "Saving or exporting was refused"
+      },
+      "symptom": {
+        "ja": "④出力や②の保存で、次の文が出たときの対処です。",
+        "en": "What to do when one of these messages appears in ④ Export or when saving in ②."
+      },
+      "refusals": [
+        {
+          "screen": {
+            "ja": "標準のスキルがあるのは、パックから取り込んで編集していないキャラクターだけです。…",
+            "en": "A standard skill exists only for a Character imported from a pack and not edited. …"
+          },
+          "action": {
+            "ja": "①でパックのキャラクターを選んでから、もう一度保存します。",
+            "en": "Choose a pack Character in ①, then save again."
+          }
+        },
+        {
+          "screen": {
+            "ja": "このパックは前の版で取り込まれたため、標準のスキルを確かめるための情報がありません。…",
+            "en": "This pack was imported with an earlier version, so the information needed to check its standard skill is missing. …"
+          },
+          "action": {
+            "ja": "パックを取り込み直します。",
+            "en": "Import the pack again."
+          }
+        },
+        {
+          "screen": {
+            "ja": "この別添には、選んでいるキャラクターの標準のスキルが入っていません。",
+            "en": "This companion ZIP does not contain the standard skill of the selected Character."
+          },
+          "action": {
+            "ja": "そのキャラクターが入っている別添を選びます。",
+            "en": "Choose the companion ZIP that contains that Character."
+          }
+        },
+        {
+          "screen": {
+            "ja": "この別添は、選んでいるパックのものではありません。…",
+            "en": "This companion ZIP is not for the selected pack. …"
+          },
+          "action": {
+            "ja": "同じパック・同じ版の別添を選びます。",
+            "en": "Choose the companion ZIP for the same pack and the same version."
+          }
+        },
+        {
+          "screen": {
+            "ja": "別添の ZIP を読めませんでした。…",
+            "en": "The companion ZIP could not be read. …"
+          },
+          "action": {
+            "ja": "パックと一緒に配られた別添の ZIP を、そのまま選び直します。",
+            "en": "Choose the companion ZIP that came with the pack again, as it is."
+          }
+        },
+        {
+          "screen": {
+            "ja": "この環境では、別添を確かめられませんでした。",
+            "en": "The companion ZIP could not be checked in this environment."
+          },
+          "action": {
+            "ja": "wi-t.com のお問い合わせからお知らせください。",
+            "en": "Let us know through the contact form on wi-t.com."
+          }
+        },
+        {
+          "screen": {
+            "ja": "取り込んだパックの記録を読めなかったため、このキャラクターの出どころを確かめられませんでした。…",
+            "en": "The record of the imported pack could not be read, so where this Character came from could not be checked. …"
+          },
+          "action": {
+            "ja": "もう一度試します。キャラクターに問題があるという意味ではありません。",
+            "en": "Try again. This does not mean that there is a problem with the Character."
+          }
+        },
+        {
+          "screen": {
+            "ja": "このキャラクターは出どころが分からないため、書き出しません。取り込み直してください。",
+            "en": "Not exported because where this Character came from is not known. Import it again."
+          },
+          "action": {
+            "ja": "キャラクターを取り込み直します。",
+            "en": "Import the Character again."
+          }
+        },
+        {
+          "screen": {
+            "ja": "AMU Studio から戻ってきたこのキャラクターは、元のパックを一覧の中で 1 つに決められないため、…",
+            "en": "This Character came back from AMU Studio, and its original pack cannot be narrowed down to one in the list, …"
+          },
+          "action": {
+            "ja": "元のパック（同じ版）を取り込んでから、もう一度保存・書き出しをします。",
+            "en": "Import the original pack (the same version), then save or export again."
+          }
+        },
+        {
+          "screen": {
+            "ja": "出どころの記録が無いキャラクターは、出どころを確かめるまで書き出せません。…",
+            "en": "A Character with no record of where it came from cannot be exported until where it came from is confirmed. …"
+          },
+          "action": {
+            "ja": "自分で作ったものなら、「自分で作ったキャラクターとして確かめる」を押します。パックのキャラクターなら、元のパックを取り込み直してから、②で編集し直します。",
+            "en": "If you made it yourself, press “Confirm as your own Character”. If it is a pack Character, import the original pack again, then edit it again in ②."
+          }
+        }
+      ],
+      "target": "P11"
     }
   ],
   "editable_denominator": 47,
@@ -13864,7 +13977,7 @@
       "unified_v1_64_catalog": "UNDEFINED_NOT_ADOPTED_NOT_MIGRATED"
     }
   },
-  "applies_to_app_version": "0.1.0-beta.12",
+  "applies_to_app_version": "0.1.0-beta.13",
   "extension_profile": "saku.field-guide-extension@1",
   "effect_sources": {
     "PARAMETER_BEHAVIOR_MAP": {

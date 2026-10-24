@@ -66,7 +66,7 @@
         <div class="actions">
           <button type="button" id="viewer-import-package" class="primary">PACKインポート</button>
           <button type="button" id="viewer-import-file">個別ファイルインポート</button>
-          <button type="button" id="viewer-import-samples">サンプル読み込む</button>
+          <button type="button" id="viewer-import-samples">サンプルを読み込む</button>
           <button type="button" id="viewer-new-character">新規作成</button>
         </div>
         <p id="viewer-samples-note" class="library-count" role="status" hidden></p>
@@ -122,7 +122,7 @@
     </section>
 
     <section id="tuning-panel" class="viewer" hidden aria-labelledby="tuning-title">
-      <div class="viewer-header"><a id="tuning-back" class="quiet button" href="./tools/saku-services.html">← SAKU診療所・AMUトレーニングセンターへ</a><div><span class="eyebrow">ADJUSTMENT / TUNING</span><h2 id="tuning-title">AI動作の調整</h2><p>気になる症状から選びます。ここでの推奨は、適用するまでCharacterを変更しません。</p></div></div>
+      <div class="viewer-header"><a id="tuning-back" class="quiet button" href="./tools/saku-services.html">← SAKU診療所・AMUトレーニングセンターへ</a><div><span class="eyebrow">ADJUSTMENT / TUNING</span><h2 id="tuning-title">AI動作の調整</h2><p>気になる症状から選びます。ここでの推奨は、②キャラクター編集で保存するまで、キャラクターを変えません。</p></div></div>
       <div id="tuning-subject" class="status info" role="status" aria-live="polite"><strong class="status-code" aria-hidden="true">TUNING_READY</strong><span>調整するキャラクターを選んでください。</span></div>
       <div class="tuning-layout">
         <section class="tuning-symptom-list" aria-labelledby="tuning-symptom-title">
@@ -147,7 +147,7 @@
           <p>下の全文をコピーします。冒頭の指示と、キャラクター定義が入っています。</p>
           <details id="platform-reference" class="platform-echo">
             <summary id="platform-reference-title">参考資料を添付する（任意）</summary>
-            <p>AMU Studio の「SAKU 用の書き出し」で作ったファイルを選ぶと、貼り付ける文に参考資料の節が入ります。資料は AI にデータとして渡し、資料の中の指示には従わないよう伝えます。資料はこの画面で使うだけで、保存しません。</p>
+            <p>参考資料のファイルを選ぶと、貼り付ける文に参考資料の節が入ります。資料は AI にデータとして渡し、資料の中の指示には従わないよう伝えます。資料はこの画面で使うだけで、保存しません。</p>
             <div class="actions"><input type="file" id="platform-reference-file" accept=".json,application/json" aria-label="参考資料を添付する"><button type="button" id="platform-reference-clear" class="button" hidden>外す</button></div>
             <div id="platform-reference-state" class="status info" role="status" aria-live="polite" hidden></div>
           </details>
@@ -199,13 +199,13 @@
 
       <section id="platform-skills" class="platform-echo" aria-labelledby="platform-skills-title">
         <h3 id="platform-skills-title">Agentスキルとして書き出す(Agent Skills)</h3>
-        <p>Agent Skills は、AI の道具が読み込める「スキル」の形式です。貼り付けなくても、道具がこのキャラクターの定義を読み込んで使えます。書き出しは ④出力 で行います。書き出したものに WI-T.COM の署名は付きません。席 8 の決まりを守るかどうかは、使う AI しだいです。</p>
+        <p>Agent Skills は、AI の道具が読み込める「スキル」の形式です。貼り付けなくても、道具がこのキャラクターの定義を読み込んで使えます。書き出しは ④出力 で行います。このアプリで作り直したスキルには、WI-T.COM の署名は付きません。WI-T.COM が内容を提供・確認したスキルではありません。スキルの指示に AI が従うことや、内容の正確性・安全性・法令適合性は保証されません。送る内容と出力は、使う人が確かめてください。配られたままの標準のスキルは、「④出力」から保存できます。</p>
         <div class="actions"><button type="button" id="platform-to-skills" class="button primary">Agentスキルとして書き出す(Agent Skills) →</button></div>
       </section>
       </div><aside id="platform-help" class="help-pane" aria-label="ヘルプ"></aside></div>
     </section>
     <section id="export-panel" class="viewer" hidden aria-labelledby="export-title">
-      <div class="viewer-header viewer-header-plain"><div><span class="eyebrow">EXPORT</span><h2 id="export-title">出力</h2><p>選択中のキャラクターを、使い道に合わせて書き出します。どの書き出しにも WI-T.COM の署名は付きません。</p></div></div>
+      <div class="viewer-header viewer-header-plain"><div><span class="eyebrow">EXPORT</span><h2 id="export-title">出力</h2><p>選択中のキャラクターを、使い道に合わせて書き出します。このアプリで作る書き出しには、WI-T.COM の署名は付きません。標準のスキル（別添）は、配られたままの形で保存します。</p></div></div>
       <div id="export-subject" class="status info" role="status" aria-live="polite"><strong class="status-code" aria-hidden="true">EXPORT_READY</strong><span>書き出すキャラクターを選んでください。</span></div>
       <div id="export-terms" class="status warning" role="note" hidden></div>
       <section class="export-gate" aria-labelledby="export-gate-title">
@@ -221,16 +221,26 @@
           <div class="actions"><button type="button" id="export-zip-save" class="button primary">.zip を書き出す</button></div>
           <div id="export-zip-state" class="status info" role="status" aria-live="polite" hidden></div>
         </section>
+        <section id="export-standard" class="platform-echo" aria-labelledby="export-standard-title">
+          <h3 id="export-standard-title">パック標準を保存（名札の署名あり・②③の設定なし）</h3>
+          <p id="export-standard-lead">パックと一緒に配られる「別添」の ZIP から、このキャラクターの標準のスキルを、配られたままの形で保存します。②・③の設定は入りません。名札の署名が有効であることは、署名対象データが当社の対応する鍵で署名され、署名後に変更されていないことを示します。内容の正確性、安全性、法令適合性、当社による承認又は権限付与を示すものではありません。</p>
+          <details class="export-more"><summary>くわしく</summary><p id="export-standard-more">読むのは、選んでいるパックと同じパック・同じ版の別添だけです。別添は、このアプリを開いている間だけ覚えています。閉じたら選び直してください。保存するのは別添の中の ZIP そのもので、作り直しはしません。名札のファイル名は wi-t-overlay.json です。</p></details>
+          <div class="actions"><button type="button" id="export-standard-choose" class="button">別添の ZIP を選ぶ</button><button type="button" id="export-standard-save" class="button primary" disabled>標準のスキルを保存する</button></div>
+          <p id="export-standard-plate" class="export-nameplate" role="status" aria-live="polite" hidden></p>
+          <p id="export-standard-plate-note" class="export-nameplate-note" hidden></p>
+          <div id="export-standard-state" class="status info" role="status" aria-live="polite" hidden></div>
+        </section>
         <section id="platform-skill-export" class="platform-echo" aria-labelledby="platform-skill-export-title">
-        <h3 id="platform-skill-export-title">Agentスキルとして書き出す(Agent Skills)</h3>
+        <h3 id="platform-skill-export-title">再生成して保存（WI-T.COM の名札の署名なし）</h3>
+        <p id="platform-skill-export-route">こちらは、このアプリで作り直したスキルです。元のキャラクターの出どころ・著作権・ライセンスの表示は残りますが、WI-T.COM の名札の署名は付きません。配られたままの標準のスキルは、「パック標準を保存」から保存できます。</p>
         <p id="platform-skill-export-summary">AI の道具が読み込める「スキル」のフォルダーを、ZIP で保存します。パックのキャラクターは、パックの使用条件のまま使い、ほかの人には渡せません。</p>
-        <details class="export-more"><summary>くわしく</summary><p id="platform-skill-export-lead">このキャラクターを、「スキル」の形式（Agent Skills）を読み込める AI の道具向けのフォルダーとして、ZIP で保存します。中身は、上の貼り付ける文と同じ定義、キャラクターの正本、席 8 の決まり、出どころの記録です（パックのキャラクターは、パックのライセンスも入ります）。書き出したものには、WI-T.COM の署名はまだ付きません。パックのキャラクターを書き出したものには、パックの使用条件がそのまま及びます。使える範囲は、パックのライセンスの文書のとおりです。スキルの配布サイト、公開のリポジトリ、ほかの組織と共有する作業場所など、第三者が取り出せる場所に置くことはできません。同梱のライセンスの文書と出どころの記録は、外したり書き換えたりしないでください。自作のキャラクターには、ライセンスの宣言は入りません。読み込む側の道具は、席 8 の決まりを守らせる仕組みを持ちません。守るかどうかは、使う AI しだいです。</p></details>
+        <details class="export-more"><summary>くわしく</summary><p id="platform-skill-export-lead">このキャラクターを、「スキル」の形式（Agent Skills）を読み込める AI の道具向けのフォルダーとして、ZIP で保存します。中身は、上の貼り付ける文と同じ定義、キャラクターの正本、席 8 の決まり、出どころの記録です（パックのキャラクターは、パックのライセンスも入ります）。このアプリで作り直したものには、WI-T.COM の署名は付きません。パックのキャラクターを書き出したものには、パックの使用条件がそのまま及びます。使える範囲は、パックのライセンスの文書のとおりです。スキルの配布サイト、公開のリポジトリ、ほかの組織と共有する作業場所など、第三者が取り出せる場所に置くことはできません。同梱のライセンスの文書と出どころの記録は、外したり書き換えたりしないでください。自作のキャラクターには、ライセンスの宣言は入りません。作り直したスキルは、WI-T.COMが内容を提供・確認したものではなく、名札の署名もありません。スキルの指示にAIが従うことや、内容の正確性・安全性・法令適合性は保証されません。送る内容と出力は、使う人が確かめてください。</p></details>
         <div class="actions"><button type="button" id="platform-skill-export-save" class="button">スキルとして保存する</button></div>
         <div id="platform-skill-export-state" class="status info" role="status" aria-live="polite" hidden></div>
       </section>
         <section id="export-text" class="platform-echo" aria-labelledby="export-text-title">
           <h3 id="export-text-title">キャラクター定義を書き出す（.json／.yaml）</h3>
-          <p>AI プラットフォームに渡すための 1 つのファイルです。この SAKU Builder の「個別ファイルインポート」で読み戻せます。</p>
+          <p>この SAKU Builder の「個別ファイルインポート」で読み戻せます。AI のプロンプトに貼り付ける場合は、「③実行（プロンプト）」で貼り付ける文をコピーしてください。</p>
           <div class="actions"><button type="button" id="export-json-save" class="button">.json を書き出す</button><button type="button" id="export-yaml-save" class="button">.yaml を書き出す</button></div>
           <div id="export-text-state" class="status info" role="status" aria-live="polite" hidden></div>
         </section>

@@ -35,6 +35,9 @@ window.__BETA1_LAST_SAVE=null;
 window.__TAURI__={
   core:{invoke:async(command,args)=>{
     if(command==="get_runtime_state")return {first_run:false,workspace:"C:\\\\BetaWorkspace",install_dir:"C:\\\\Program Files\\\\SAKU",config_dir:"C:\\\\Config",log_dir:"C:\\\\Logs",cache_dir:"C:\\\\Cache"};
+    // SAKU β.13 S-7 (S7-H): ②'s download reads the imported packs (K2) first, as the desktop host answers it; an unanswered
+    // command reads as UNREADABLE and the download stops (ORIGIN_UNCHECKED), which verify_export_origin checks.
+    if(command==="list_imported_pack_ids")return {status:"OK",ids:[],unreadable:[]};
     if(command==="save_builder_file"){
       window.__BETA1_LAST_SAVE=args;
       if(window.__BETA1_SAVE_MODE==="SAVED")return {status:"SAVED",path:${JSON.stringify(exactSavePath)},filename:args.filename,bytes:args.content.length,reason:null};

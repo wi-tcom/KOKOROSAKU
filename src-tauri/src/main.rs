@@ -11,14 +11,19 @@ use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 
 mod code_signature;
+mod edit_menu;
 mod character_pack;
 mod saku_return;
+mod standard_attachment;
+mod imported_packs;
 use character_pack::{CharacterPackImport, looks_like_character_pack, parse_character_pack};
 use saku_return::{SakuReturnImport, looks_like_saku_return, parse_saku_return};
+use standard_attachment::{AttachmentRead, ATTACHMENT_OUTER_MAX_ARCHIVE, read_standard_attachment_bytes};
+use imported_packs::{ImportedPackIds, imported_pack_ids_in};
 
 /// How this build is signed, set by the signed build (scripts/prepare_desktop_assets.mjs reads the same value).
 const CODE_SIGNING: &str = match option_env!("SAKU_CODE_SIGNING") { Some(mode) => mode, None => "UNSIGNED" };
-const APP_VERSION: &str = "0.1.0-beta.12";
+const APP_VERSION: &str = "0.1.0-beta.13";
 const CONFIG_FILE: &str = "desktop-host.json";
 const MAX_PACKAGE_BYTES: u64 = 64 * 1024 * 1024;
 const MAX_ARCHIVE_ENTRY_BYTES: usize = 32 * 1024 * 1024;
@@ -1026,7 +1031,12 @@ fn import_package(app: &AppHandle, path: &Path) -> ImportResult {
         Err(error) => return invalid(format!("PACKAGE_READ_FAILED: {error}"), source_path),
     };
     match parse_package(path, &bytes) {
-        Ok(ParsedPackage::CharacterPack(pack)) => import_character_pack(app, pack, source_path),
+        Ok(ParsedPackage::CharacterPack(mut pack)) => {
+            // ADR-0027 §2 (SAKU β.13 U1b-2): the SHA-256 of the whole pack file, the value a standard attachment's
+            // package_digest must carry. Only the host reads the raw bytes.
+            pack.zip_sha256 = sha256_hex(&bytes);
+            import_character_pack(app, pack, source_path)
+        }
         Ok(ParsedPackage::SakuReturn(ret)) => import_saku_return(ret, source_path),
         Ok(ParsedPackage::SelfMade(zip)) => ImportResult {
             status: "IMPORTED",
@@ -1335,6 +1345,26 @@ fn choose_and_import_package(app: AppHandle, window: tauri::Window) -> Result<Im
     Ok(import_package(&app, &selection))
 }
 
+// ADR-0027 §4.2 (SAKU β.13 U1b-2): the standard Agent Skills attachment. The host opens the ZIP containers and hands
+// the entries to the page; the shared kit (agent-skills-attachment.mjs) checks everything. Nothing is written.
+#[tauri::command]
+fn choose_standard_attachment(window: tauri::Window) -> Result<AttachmentRead, String> {
+    let selection = rfd::FileDialog::new()
+        .set_title("Agent スキルの別添を選択")
+        .add_filter("Agent Skills attachment (.zip)", &["zip"])
+        .set_parent(&window)
+        .pick_file()
+        .ok_or_else(|| "ATTACHMENT_SELECTION_CANCELLED".to_string())?;
+    Ok(read_standard_attachment_path(&selection))
+}
+
+fn read_standard_attachment_path(path: &Path) -> AttachmentRead {
+    let too_big = fs::metadata(path).map(|m| m.len() > ATTACHMENT_OUTER_MAX_ARCHIVE as u64).unwrap_or(false);
+    let bytes = if too_big { Vec::new() } else { fs::read(path).unwrap_or_default() };
+    // An empty read (too big, or unreadable) is not a ZIP: ATTACHMENT_ZIP_INVALID from the reader.
+    read_standard_attachment_bytes(&bytes)
+}
+
 // 2026-10-14 keying F3: the individual import used the WebView's own file picker (an <input type="file">), which
 // opened small and folded at the bottom right. The host opens it like the pack picker, over the app's window.
 const MAX_CHARACTER_FILE_BYTES: u64 = 2 * 1024 * 1024;
@@ -1572,6 +1602,17 @@ fn collect_authored(
             Err(error) => unreadable.push(format!("{}: {error}", path_string(&file))),
         }
     }
+}
+
+// SAKU β.13 L10 (00A C06-1 (b), C06-6): the Character IDs of the packs this Workspace imported, read fresh for each
+// export check. Read only.
+#[tauri::command]
+fn list_imported_pack_ids(app: AppHandle) -> Result<ImportedPackIds, String> {
+    let config = read_config(&app)?;
+    Ok(match config.workspace {
+        Some(path) => imported_pack_ids_in(&path),
+        None => ImportedPackIds { status: "NO_WORKSPACE", ids: Vec::new(), unreadable: Vec::new() },
+    })
 }
 
 #[tauri::command]
@@ -1950,6 +1991,15 @@ fn main() {
         .manage(CloseGate::default())
         .manage(CodeSignature::default())
         .setup(|app| {
+            // SAKU β.13 S-10 = L1: the WebView's menu inside a field keeps the editing items only (edit_menu.rs).
+            #[cfg(windows)]
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.with_webview(|webview| {
+                    if let Err(error) = edit_menu::install(&webview) {
+                        eprintln!("SAKU edit menu not set: {error}");
+                    }
+                });
+            }
             let handle = app.handle().clone();
             std::thread::spawn(move || {
                 let facts = code_signature::read_own_signature();
@@ -1985,6 +2035,7 @@ fn main() {
             write_workspace_state,
             write_workspace_migration_backup,
             choose_and_import_package,
+            choose_standard_attachment,
             choose_character_files,
             import_package_path,
             commit_pack_import,
@@ -1996,6 +2047,7 @@ fn main() {
             save_self_made_zip,
             save_skill_export_zip,
             list_workspace_characters,
+            list_imported_pack_ids,
             save_workspace_character
         ])
         .run(tauri::generate_context!())

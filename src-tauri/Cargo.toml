@@ -1,6 +1,6 @@
 [package]
 name = "saku-builder-desktop"
-version = "0.1.0-beta.12"
+version = "0.1.0-beta.13"
 description = "Candidate thin desktop host for SAKU Builder and Trainer"
 authors = ["WI-T.COM"]
 edition = "2024"
@@ -23,6 +23,10 @@ tauri = { version = "=2.11.5", features = [] }
 # WinVerifyTrust on the spot. windows-sys 0.61.2 is already in Cargo.lock (through tauri); no new crate or version.
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "=0.61.2", features = ["Win32_Foundation", "Win32_Security_Cryptography", "Win32_Security_Cryptography_Catalog", "Win32_Security_Cryptography_Sip", "Win32_Security_WinTrust"] }
+# SAKU β.13 S-10 = L1 (統括 2026-10-23): the WebView2 context-menu event (edit_menu.rs). Both are already in Cargo.lock,
+# at these versions, through tauri and wry; no new crate or version.
+webview2-com = "=0.38.2"
+windows = "=0.61.3"
 
 [profile.release]
 codegen-units = 1
